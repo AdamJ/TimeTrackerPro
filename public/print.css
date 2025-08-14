@@ -1,0 +1,180 @@
+
+@media print {
+  /* Reset margins and hide unnecessary elements */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  body {
+    font-family: 'Times New Roman', serif !important;
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
+    color: black !important;
+    background: white !important;
+  }
+
+  /* Hide all elements with print:hidden class */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 0.75in;
+  }
+
+  /* Header styling - invoice-like */
+  nav {
+    border-bottom: 2px solid black !important;
+    margin-bottom: 20pt !important;
+    padding-bottom: 10pt !important;
+  }
+
+  h1 {
+    font-size: 18pt !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1pt !important;
+  }
+
+  h2 {
+    font-size: 14pt !important;
+    font-weight: bold !important;
+    margin-bottom: 12pt !important;
+  }
+
+  h4 {
+    font-size: 12pt !important;
+    font-weight: bold !important;
+    margin-bottom: 8pt !important;
+    margin-top: 12pt !important;
+  }
+
+  /* Card styling - invoice sections */
+  .card {
+    border: 1px solid black !important;
+    margin-bottom: 20pt !important;
+    background: white !important;
+    page-break-inside: avoid;
+  }
+
+  .card-header {
+    border-bottom: 1px solid black !important;
+    padding: 10pt !important;
+    background: #f8f9fa !important;
+  }
+
+  .card-content {
+    padding: 10pt !important;
+  }
+
+  /* Table styling - professional invoice look */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-top: 8pt !important;
+  }
+
+  th {
+    background: #f8f9fa !important;
+    border: 1px solid black !important;
+    padding: 6pt 8pt !important;
+    font-weight: bold !important;
+    text-align: left !important;
+    font-size: 11pt !important;
+  }
+
+  td {
+    border: 1px solid black !important;
+    padding: 6pt 8pt !important;
+    font-size: 11pt !important;
+  }
+
+  /* Summary sections */
+  .summary-section {
+    background: #f8f9fa !important;
+    border: 1px solid black !important;
+    padding: 8pt !important;
+    margin-bottom: 12pt !important;
+  }
+
+  /* Icons - replace with text for print */
+  svg {
+    display: none !important;
+  }
+
+  /* Total duration emphasis */
+  .total-duration {
+    font-weight: bold !important;
+    font-size: 13pt !important;
+  }
+
+  /* Date formatting */
+  .date-header {
+    font-size: 16pt !important;
+    font-weight: bold !important;
+    text-decoration: underline !important;
+  }
+
+  /* Page breaks */
+  .page-break {
+    page-break-before: always;
+  }
+
+  /* Footer-like styling for totals */
+  .daily-total {
+    border-top: 2px solid black !important;
+    margin-top: 12pt !important;
+    padding-top: 8pt !important;
+    font-weight: bold !important;
+  }
+
+  /* Remove shadows and modern styling */
+  .shadow-sm,
+  .shadow,
+  .shadow-lg {
+    box-shadow: none !important;
+  }
+
+  /* Ensure text is black */
+  .text-gray-600,
+  .text-gray-700,
+  .text-gray-900,
+  .text-blue-600,
+  .text-green-600 {
+    color: black !important;
+  }
+
+  /* Button and interactive elements */
+  button,
+  .btn {
+    display: none !important;
+  }
+
+  /* Links */
+  a {
+    color: black !important;
+    text-decoration: none !important;
+  }
+
+  /* Ensure proper spacing */
+  .space-y-4 > * + * {
+    margin-top: 12pt !important;
+  }
+
+  .space-y-2 > * + * {
+    margin-top: 6pt !important;
+  }
+
+  /* Make sure content doesn't get cut off */
+  .max-w-6xl {
+    max-width: none !important;
+  }
+
+  .container {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
