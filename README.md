@@ -5,12 +5,14 @@ A modern, feature-rich time tracking application built with React, TypeScript, a
 ## ✨ Features
 
 ### Core Time Tracking
+
 - **Start/Stop Day Tracking**: Begin and end your work day with clear boundaries
 - **Task Management**: Create, edit, and delete tasks with real-time duration tracking
 - **Project & Client Organization**: Assign tasks to specific projects and clients
 - **Persistent Data**: All data is automatically saved to localStorage
 
 ### Advanced Features
+
 - **Archive System**: Complete days are archived with full task details
 - **Export Capabilities**: Export data as CSV or JSON for external use
 - **Invoice Generation**: Generate invoice data for specific clients and date ranges
@@ -18,6 +20,7 @@ A modern, feature-rich time tracking application built with React, TypeScript, a
 - **Print Support**: Print-friendly archive views for physical records
 
 ### Professional Tools
+
 - **Revenue Tracking**: Automatic calculation of earnings based on hourly rates
 - **Time Analytics**: View total hours and revenue across all projects
 - **Data Export**: Multiple export formats for integration with accounting software
@@ -51,17 +54,20 @@ npm run dev
 ## 📱 Usage Guide
 
 ### Daily Workflow
+
 1. **Morning**: Click "Start Day" to begin tracking
 2. **Throughout the day**: Create new tasks as you switch between different work items
 3. **Evening**: Click "End Day" to stop tracking and review your summary
 4. **Archive**: Click "Post Time to Archive" to save the day permanently
 
 ### Project Management
+
 - Access via Archive → Projects button
 - Set up clients with hourly rates for automatic revenue calculation
 - Assign projects to tasks for better organization
 
 ### Data Export
+
 - Access via Archive → Export button
 - Choose from CSV, JSON, or Invoice formats
 - Filter by date range for specific periods
@@ -70,6 +76,7 @@ npm run dev
 ## 🛠 Technical Details
 
 ### Built With
+
 - **React 18** with TypeScript for type safety
 - **Tailwind CSS** for responsive styling
 - **shadcn/ui** for beautiful, accessible components
@@ -77,12 +84,14 @@ npm run dev
 - **Local Storage** for data persistence
 
 ### Architecture
+
 - **Context API** for state management
 - **Custom hooks** for reusable logic
 - **Component-based** architecture for maintainability
 - **Responsive design** for all device sizes
 
 ### Data Storage
+
 - All data is stored locally in your browser
 - No external servers or accounts required
 - Data persists between sessions
@@ -99,13 +108,15 @@ npm run dev
 ## 🔧 Development
 
 ### Available Scripts
+
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
 
 ### Project Structure
-```
+
+```json
 src/
 ├── components/          # Reusable UI components
 ├── contexts/           # React Context providers
@@ -121,3 +132,7 @@ This project is open source and available under the MIT License.
 ---
 
 **Ready to take control of your time?** Start tracking today and see where your hours really go!
+
+---
+
+> This project originally began as a Lovable prompt [LOVABLE README](info/README-LOVABLE.md)

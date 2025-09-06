@@ -1,6 +1,9 @@
 # Features & Updates
 
- Major Improvements Completed
+Below are the notes from ChatGPT related to updates and improvements requests.
+
+## Major Improvements Completed
+
 1. Fixed Data Persistence
 Added localStorage integration so your data survives page refreshes
 Archive now properly shows saved days instead of being empty
@@ -41,7 +44,8 @@ View analytics in the archive summary cards
 
 ---
 
-✅ New Features Implemented
+## New Features Implemented
+
 1. Task Descriptions
 Added description field to Task interface
 Enhanced NewTaskForm with textarea for descriptions
@@ -99,7 +103,8 @@ Settings Hub: Access Settings from the main navigation for all management tasks
 
 ---
 
-Issues Fixed
+## Issues Fixed
+
 1. Function Hoisting Issue in TaskEditDialog
 The formatTimeForInput function was being called before it was defined
 Moved helper functions to the top of the file
@@ -137,7 +142,8 @@ All the requested features are now implemented and should work:
 
 ---
 
-✅ TaskEditDialog Fixes Completed
+## TaskEditDialog Fixes Completed
+
 I've fixed the TaskEditDialog component with the following improvements:
 
 Key Fixes:

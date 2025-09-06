@@ -42,6 +42,17 @@ export interface TimeEntry {
   hourlyRate?: number;
 }
 
+export interface InvoiceData {
+  client: string;
+  period: { startDate: Date; endDate: Date };
+  projects: { [key: string]: { hours: number; rate: number; amount: number } };
+  summary: {
+    totalHours: number;
+    totalAmount: number;
+  };
+  tasks: Task[];
+}
+
 interface TimeTrackingContextType {
   // Current day state
   isDayStarted: boolean;
@@ -80,7 +91,7 @@ interface TimeTrackingContextType {
   updateCategory: (categoryId: string, updates: Partial<TaskCategory>) => void;
   deleteCategory: (categoryId: string) => void;
 
-  // Time adjustment
+  generateInvoiceData: (clientName: string, startDate: Date, endDate: Date) => InvoiceData;
   adjustTaskTime: (taskId: string, startTime: Date, endTime?: Date) => void;
 
   // Archive management
@@ -91,7 +102,7 @@ interface TimeTrackingContextType {
   // Export functions
   exportToCSV: (startDate?: Date, endDate?: Date) => string;
   exportToJSON: (startDate?: Date, endDate?: Date) => string;
-  generateInvoiceData: (clientName: string, startDate: Date, endDate: Date) => any;
+  // generateInvoiceData: (clientName: string, startDate: Date, endDate: Date) => any;
 
   // Calculated values
   getTotalDayDuration: () => number;
@@ -143,7 +154,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const data = JSON.parse(savedCurrentDay);
         setIsDayStarted(data.isDayStarted);
         setDayStartTime(data.dayStartTime ? new Date(data.dayStartTime) : null);
-        setTasks(data.tasks.map((task: any) => ({
+        setTasks(data.tasks.map((task: Task) => ({
           ...task,
           startTime: new Date(task.startTime),
           endTime: task.endTime ? new Date(task.endTime) : undefined
@@ -158,11 +169,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const savedArchivedDays = localStorage.getItem(STORAGE_KEYS.ARCHIVED_DAYS);
       if (savedArchivedDays) {
         const data = JSON.parse(savedArchivedDays);
-        setArchivedDays(data.map((day: any) => ({
+        setArchivedDays(data.map((day: DayRecord) => ({
           ...day,
           startTime: new Date(day.startTime),
           endTime: new Date(day.endTime),
-          tasks: day.tasks.map((task: unknown) => ({
+          tasks: day.tasks.map((task: Task) => ({
             ...task,
             startTime: new Date(task.startTime),
             endTime: task.endTime ? new Date(task.endTime) : undefined
