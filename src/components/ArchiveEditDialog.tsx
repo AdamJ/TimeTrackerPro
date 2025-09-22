@@ -5,6 +5,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Callout } from "@radix-ui/themes";
+import { InfoCircledIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -119,7 +121,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 
   const handleRestoreDay = () => {
     if (isDayStarted) {
-      if (!confirm('You have an active day. Restoring this day will replace your current work. Continue?')) {
+      if (!confirm('You currently have an active day. Restoring to this day will replace your current work. Continue restoring?')) {
         return;
       }
     }
@@ -162,51 +164,38 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
             <DialogTitle className="flex items-center space-x-2">
               <Calendar className="w-5 h-5 text-blue-600" />
               <span>{formatDate(day.startTime)}</span>
-              {isEditing && (
-                <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                  Editing
-                </span>
-              )}
             </DialogTitle>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 my-4">
               {!isEditing ? (
                 <>
                   <Button
                     onClick={handleRestoreDay}
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="text-green-600 hover:text-green-700"
+                    className="text-blue-600 hover:text-blue-700"
                   >
                     <RotateCcw className="w-4 h-4 mr-2" />
                     Restore
                   </Button>
                   <Button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    variant="destructive"
+                    size="sm"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </Button>
+                  <Button
                     onClick={() => setIsEditing(true)}
-                    variant="outline"
+                    variant="default"
                     size="sm"
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     Edit
                   </Button>
-                  <Button
-                    onClick={() => setShowDeleteConfirm(true)}
-                    variant="outline"
-                    size="sm"
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </Button>
                 </>
               ) : (
                 <>
-                  <Button
-                    onClick={handleSaveDay}
-                    size="sm"
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    Save
-                  </Button>
                   <Button
                     onClick={handleCancel}
                     variant="outline"
@@ -214,25 +203,34 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                   >
                     Cancel
                   </Button>
+                  <Button
+                    onClick={handleSaveDay}
+                    size="sm"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
+                  </Button>
                 </>
               )}
-              <Button
-                onClick={onClose}
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-              >
-                <X className="w-4 h-4" />
-              </Button>
             </div>
           </div>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Day Summary */}
+          {isEditing && (
+            <Callout.Root size="1"  variant="outline">
+              <Callout.Icon>
+                <InfoCircledIcon />
+              </Callout.Icon>
+              <Callout.Text>
+                You will need admin privileges to install and access this application.
+              </Callout.Text>
+            </Callout.Root>
+          )}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Day Summary</CardTitle>
+              <CardTitle className="text-lg">Summary of Day</CardTitle>
             </CardHeader>
             <CardContent>
               {isEditing ? (
@@ -549,7 +547,7 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
 
         <div className="space-y-4">
           <div>
-            <Label>Task Title *</Label>
+            <Label>Task Title <span className="text-red-700">*</span></Label>
             <Input
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
@@ -647,10 +645,17 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={onClose}>
+            <Button
+              variant="outline"
+              onClick={onClose}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={!formData.title.trim()}>
+            <Button
+              onClick={handleSave}
+              disabled={!formData.title.trim()}
+              variant="default"
+            >
               Save Changes
             </Button>
           </div>

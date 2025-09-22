@@ -76,30 +76,33 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({ isOpen, 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <Tag className="w-5 h-5" />
-            <span>Category Management</span>
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center space-x-2">
+              <Tag className="w-5 h-5" />
+              <span>Category Management</span>
+            </DialogTitle>
+            <div className="flex items-center space-x-2 my-4">
+              {/* Add New Category Button */}
+              {!isAddingNew && (
+                <Button
+                  onClick={() => setIsAddingNew(true)}
+                  className="w-full"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Category
+                </Button>
+              )}
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Add New Category Button */}
-          {!isAddingNew && (
-            <Button
-              onClick={() => setIsAddingNew(true)}
-              className="w-full"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add New Category
-            </Button>
-          )}
-
           {/* Add/Edit Category Form */}
           {isAddingNew && (
             <Card>
               <CardHeader>
                 <CardTitle>
-                  {editingCategory ? 'Edit Category' : 'Add New Category'}
+                  {editingCategory ? 'Edit Category' : 'Add Category'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -164,7 +167,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({ isOpen, 
 
                   <div className="flex space-x-2">
                     <Button type="submit">
-                      {editingCategory ? 'Update Category' : 'Add Category'}
+                      {editingCategory ? 'Update' : 'Add'}
                     </Button>
                     <Button type="button" variant="outline" onClick={resetForm}>
                       Cancel

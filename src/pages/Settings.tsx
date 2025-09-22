@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { ArchiveIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProjectManagement } from '@/components/ProjectManagement';
 import { CategoryManagement } from '@/components/CategoryManagement';
@@ -38,21 +39,33 @@ const SettingsContent: React.FC = () => {
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link
-                to="/"
-                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Timer</span>
-              </Link>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
                 <SettingsIcon className="w-6 h-6" />
                 <span>Settings & Management</span>
               </h1>
             </div>
+            <div className="flex space-x-2 print:hidden">
+              <Link
+                to="/archive"
+                className="flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input"
+              >
+                <ArchiveIcon className="w-4 h-4" />
+                <span>Archive</span>
+              </Link>
+            </div>
           </div>
         </div>
       </nav>
+
+      <div className="max-w-6xl mx-auto pt-6 pb-0 pl-6 print:hidden">
+        <Link
+          to="/"
+          className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 print:hidden"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Timer</span>
+        </Link>
+      </div>
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto p-6">
@@ -93,13 +106,12 @@ const SettingsContent: React.FC = () => {
                 <p className="text-gray-600 mb-4">
                   Manage your projects, clients, and hourly rates. Projects help organize your tasks and calculate revenue automatically.
                 </p>
-                <Button
-                  onClick={() => setShowProjectManagement(true)}
-                  className="w-full"
-                >
-                  <Briefcase className="w-4 h-4 mr-2" />
-                  Manage Projects
-                </Button>
+                <Link to="/projectlist">
+                  <Button variant="outline" className="w-full">
+                    <Briefcase className="w-4 h-4 mr-2" />
+                    Manage Projects
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
@@ -117,6 +129,7 @@ const SettingsContent: React.FC = () => {
                 </p>
                 <Button
                   onClick={() => setShowCategoryManagement(true)}
+                  variant="secondary"
                   className="w-full"
                 >
                   <Tag className="w-4 h-4 mr-2" />
@@ -139,6 +152,7 @@ const SettingsContent: React.FC = () => {
                 </p>
                 <Button
                   onClick={() => setShowExportDialog(true)}
+                  variant='secondary'
                   className="w-full"
                 >
                   <Download className="w-4 h-4 mr-2" />

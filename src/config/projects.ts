@@ -13,15 +13,15 @@ export const DEFAULT_PROJECTS: ProjectCategory[] = [
   //   color: '#3B82F6'
   // },
   {
-    name: 'CAS Product and Design',
-    client: 'Component Assembly Systems',
+    name: 'Product and Design',
+    client: 'CAS',
     hourlyRate: 100,
     color: '#3B82F6'
   },
   {
-    name: 'Structure Cloud',
-    client: 'CF Data Systems',
-    hourlyRate: 175,
+    name: 'Cloud',
+    client: 'CF',
+    hourlyRate: 100,
     color: '#8B5CF6'
   }
 ];

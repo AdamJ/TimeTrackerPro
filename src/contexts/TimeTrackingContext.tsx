@@ -527,8 +527,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
             task.client || '',
             `"${task.title}"`,
             hours,
-            task.startTime.toLocaleTimeString(),
-            task.endTime?.toLocaleTimeString() || '',
+            task.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
+task.endTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) || '',
             project?.hourlyRate || '',
             amount
           ];

@@ -6,9 +6,10 @@ import { ExportDialog } from '@/components/ExportDialog';
 import { ProjectManagement } from '@/components/ProjectManagement';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Archive as ArchiveIcon, Printer, ArrowLeft, Download, Briefcase } from 'lucide-react';
+import { Archive as ArchiveIcon, Printer, ArrowLeft, Download, Briefcase, CogIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DayRecord } from '@/contexts/TimeTrackingContext';
+import SiteNavigationMenu from '@/components/Navigation';
 
 const ArchiveContent: React.FC = () => {
   const { archivedDays, getTotalHoursForPeriod, getRevenueForPeriod } = useTimeTracking();
@@ -40,59 +41,16 @@ const ArchiveContent: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Navigation Header */}
-      <nav className="bg-white shadow-sm border-b print:shadow-none print:border-b-2 print:border-black">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link
-                to="/"
-                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 print:hidden"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Timer</span>
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
-                <ArchiveIcon className="w-6 h-6" />
-                <span>Time Archive</span>
-              </h1>
-            </div>
-
-            <div className="flex space-x-2 print:hidden">
-              <Link
-                to="/settings"
-                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
-              >
-                <span>Settings</span>
-              </Link>
-              <Button
-                onClick={() => setShowProjectManagement(true)}
-                variant="outline"
-                className="flex items-center space-x-2"
-              >
-                <Briefcase className="w-4 h-4" />
-                <span>Projects</span>
-              </Button>
-              <Button
-                onClick={() => setShowExportDialog(true)}
-                variant="outline"
-                className="flex items-center space-x-2"
-              >
-                <Download className="w-4 h-4" />
-                <span>Export</span>
-              </Button>
-              <Button
-                onClick={handlePrint}
-                variant="outline"
-                className="flex items-center space-x-2"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Print</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+      <SiteNavigationMenu />
+      <div className="max-w-6xl mx-auto pt-6 pb-0 pl-6 print:hidden">
+        <Link
+          to="/"
+          className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 print:hidden"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Timer</span>
+        </Link>
+      </div>
       {/* Main Content */}
       <div className="max-w-6xl mx-auto p-6 print:p-4">
         {sortedDays.length === 0 ? (
@@ -115,7 +73,7 @@ const ArchiveContent: React.FC = () => {
               <Card>
                 <CardContent className="p-4">
                   <div className="text-2xl font-bold text-blue-600">{sortedDays.length}</div>
-                  <div className="text-sm text-gray-600">Days Tracked</div>
+                  <div className="text-sm text-gray-600">Total Days Tracked</div>
                 </CardContent>
               </Card>
               <Card>
