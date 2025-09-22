@@ -102,18 +102,26 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
     return newDate;
   };
 
-  const generateTimeOptions = (): string[] => {
-    const options: string[] = [];
+  type TimeOption = { value: string; label: string };
+  const generateTimeOptions = (): TimeOption[] => {
+    const options: TimeOption[] = [];
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 15) {
-        const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        options.push(timeStr);
+        const value = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const date = new Date();
+        date.setHours(hour, minute, 0, 0);
+        const label = date.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+        options.push({ value, label });
       }
     }
     return options;
   };
 
-  const timeOptions = generateTimeOptions();
+  const timeOptions: TimeOption[] = generateTimeOptions();
 
   const handleCancel = () => {
     // Reset form to original values
@@ -304,9 +312,9 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
-                      {timeOptions.map((time) => (
-                        <SelectItem key={time} value={time}>
-                          {time}
+                      {timeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -326,9 +334,9 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
-                      {timeOptions.map((time) => (
-                        <SelectItem key={time} value={time}>
-                          {time}
+                      {timeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
                         </SelectItem>
                       ))}
                     </SelectContent>

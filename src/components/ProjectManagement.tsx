@@ -81,34 +81,36 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({ isOpen, on
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <Briefcase className="w-5 h-5" />
-            <span>Project Management</span>
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center space-x-2">
+              <Briefcase className="w-5 h-5" />
+              <span>Project Management</span>
+            </DialogTitle>
+            <div className="flex items-center space-x-2 my-4">
+              {!isAddingNew && (
+                <>
+                <Button
+                  onClick={handleResetToDefaults}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Reset to Defaults
+                </Button>
+                <Button
+                  onClick={() => setIsAddingNew(true)}
+                  className="w-full"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Project
+                </Button>
+                </>
+              )}
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Add New Project Button */}
-          {!isAddingNew && (
-            <div className="space-y-3">
-              <Button
-                onClick={() => setIsAddingNew(true)}
-                className="w-full"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add New Project
-              </Button>
-              <Button
-                onClick={handleResetToDefaults}
-                variant="outline"
-                className="w-full"
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Reset to Defaults
-              </Button>
-            </div>
-          )}
-
           {/* Add/Edit Project Form */}
           {isAddingNew && (
             <Card>
@@ -185,7 +187,7 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({ isOpen, on
           {/* Projects List */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">
-              Existing Projects ({projects.length})
+              Projects ({projects.length})
             </h3>
 
             {projects.length === 0 ? (

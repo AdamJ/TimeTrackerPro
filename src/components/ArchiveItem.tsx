@@ -16,7 +16,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 
   const handleRestore = () => {
     if (isDayStarted) {
-      if (!confirm('You have an active day. Restoring this day will replace your current work. Continue?')) {
+      if (!confirm('You currently have an active day. Restoring to this day will replace your current work. Continue restoring?')) {
         return;
       }
     }
@@ -24,7 +24,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
   };
 
   return (
-    <Card className="print:shadow-none print:border print:border-black print:mb-8">
+    <Card className="print:shadow-none print:mb-4">
       <CardHeader className="print:pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
@@ -34,16 +34,16 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
           <div className="flex space-x-2 print:hidden">
             <Button
               onClick={handleRestore}
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="flex items-center space-x-2 text-green-600 hover:text-green-700"
+              className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
             >
               <RotateCcw className="w-4 h-4" />
               <span>Restore</span>
             </Button>
             <Button
               onClick={() => onEdit(day)}
-              variant="outline"
+              variant="default"
               size="sm"
               className="flex items-center space-x-2"
             >
@@ -75,7 +75,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
           </div>
 
           {/* Tasks Table */}
-          <div className="print:mt-4">
+          <div className="print:mt-2">
             <h4 className="font-medium text-gray-900 print:text-black mb-2">
               Tasks ({day.tasks.length})
             </h4>
@@ -93,6 +93,9 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
                   <TableRow key={task.id} className="print:border-black">
                     <TableCell className="font-medium print:text-black">
                       {task.title}
+                      <div className="font-medium text-sm italic text-gray-400 print:text-gray-600">
+                        {task.description}
+                      </div>
                     </TableCell>
                     <TableCell className="print:text-black">
                       {formatTime(task.startTime)}
