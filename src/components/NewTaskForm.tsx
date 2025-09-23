@@ -116,9 +116,6 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
           </div>
 
           <div className="flex space-x-2">
-            <Button type="submit" disabled={!title.trim()}>
-              Start Task
-            </Button>
             <Button
               type="button"
               onClick={() => {
@@ -128,9 +125,16 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
                 setSelectedProject('');
                 setSelectedCategory('');
               }}
-              variant="outline"
+              variant="ghost"
             >
               Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="default"
+              disabled={!title.trim()}
+            >
+              Start Task
             </Button>
           </div>
         </form>

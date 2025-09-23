@@ -100,15 +100,6 @@ const ProjectContent: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Navigation Header */}
       <SiteNavigationMenu />
-      <div className="max-w-6xl mx-auto pt-6 pb-0 pl-6 print:hidden">
-        <Link
-          to="/"
-          className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 print:hidden"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Timer</span>
-        </Link>
-      </div>
       {/* Main Content */}
       <div className="max-w-6xl mx-auto p-6 print:p-4">
         <div className="flex items-center justify-between">
@@ -123,12 +114,12 @@ const ProjectContent: React.FC = () => {
                   variant="outline"
                   className="w-full"
                 >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Reset to Defaults
+                  <RotateCcw className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:block">Reset to Defaults</span>
                 </Button>
                 <Button onClick={() => setIsAddingNew(true)} className="w-full">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Project
+                  <Plus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:block">Add Project</span>
                 </Button>
               </>
             )}
@@ -140,12 +131,12 @@ const ProjectContent: React.FC = () => {
                   className="w-full"
                   disabled
                 >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Reset to Defaults
+                  <RotateCcw className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:block">Reset to Defaults</span>
                 </Button>
                 <Button onClick={() => setIsAddingNew(true)} className="w-full" disabled>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Project
+                  <Plus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:block">Add Project</span>
                 </Button>
               </>
             )}
