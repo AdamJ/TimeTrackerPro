@@ -9,16 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Archive as Edit,
-  ArrowLeft,
+  Edit,
   Briefcase,
   Trash2,
   RotateCcw,
   Plus
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { DayRecord } from '@/contexts/TimeTrackingContext';
 import SiteNavigationMenu from '@/components/Navigation';
+import { Badge } from '@radix-ui/themes';
 
 const ProjectContent: React.FC = () => {
   const {
@@ -104,6 +102,7 @@ const ProjectContent: React.FC = () => {
       <div className="max-w-6xl mx-auto p-6 print:p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
+            <Briefcase className="w-6 h-6" />
             <span>Project List</span>
           </h1>
           <div className="flex space-x-2 print:hidden">
@@ -231,11 +230,11 @@ const ProjectContent: React.FC = () => {
               </div>
 
               <div className="flex space-x-2">
-                <Button type="submit">
-                  {editingProject ? 'Update Project' : 'Add Project'}
-                </Button>
-                <Button type="button" variant="outline" onClick={resetForm}>
+                <Button type="button" variant="ghost" onClick={resetForm}>
                   Cancel
+                </Button>
+                <Button type="submit" variant="default">
+                  {editingProject ? 'Update Project' : 'Add Project'}
                 </Button>
               </div>
             </form>
@@ -281,9 +280,9 @@ const ProjectContent: React.FC = () => {
                                 {project.name}
                               </h4>
                               {project.id.startsWith('default-') && (
-                                <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                                <Badge variant="surface" color="blue">
                                   Default
-                                </span>
+                                </Badge>
                               )}
                             </div>
                             <p className="text-sm text-gray-600">

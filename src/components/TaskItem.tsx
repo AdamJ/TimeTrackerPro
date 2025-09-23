@@ -3,8 +3,9 @@ import { Task, useTimeTracking } from '@/contexts/TimeTrackingContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { TaskEditDialog } from '@/components/TaskEditDialog';
-import { Edit, Trash2, Clock } from 'lucide-react';
+import { Edit, Trash2, Clock, ClipboardCheck } from 'lucide-react';
 import { formatDuration, formatTime } from '@/utils/timeUtil';
+import { Badge } from '@radix-ui/themes';
 
 interface TaskItemProps {
   task: Task;
@@ -27,7 +28,9 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
   return (
     <>
-      <Card className={`transition-all duration-200 ${isActive ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:shadow-md'}`}>
+      <Card className={
+        `transition-all duration-200 ${isActive ? 'ring-2 ring-blue-500 bg-white' : 'hover:shadow-md'}`
+        }>
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -41,9 +44,9 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 )}
                 <h3 className="font-medium text-gray-900">{task.title}</h3>
                 {isActive && (
-                  <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full font-medium">
+                  <Badge variant="solid" color="indigo">
                     Active
-                  </span>
+                  </Badge>
                 )}
               </div>
 
@@ -61,23 +64,26 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 <span className="flex items-center space-x-1">
                   <span>Duration: {formatDuration(duration)}</span>
                 </span>
+              </div>
+              <div className="flex items-center flex-wrap gap-2 mt-3">
                 {category && (
-                  <span
-                    className="px-2 py-1 text-xs rounded-full text-white"
-                    style={{ backgroundColor: category.color }}
+                  <Badge
+                    radius="full"
+                    style={{ backgroundColor: category.color, color: '#fff' }}
                   >
                     {category.name}
-                  </span>
+                  </Badge>
                 )}
                 {task.project && (
-                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                  <Badge color="gray" variant="outline" radius="full">
                     {task.project}
-                  </span>
+                  </Badge>
                 )}
                 {task.client && (
-                  <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">
+                  <Badge color="cyan" radius="full">
+                    <ClipboardCheck className="w-3 h-3 inline-flex" />
                     {task.client}
-                  </span>
+                  </Badge>
                 )}
               </div>
             </div>
@@ -90,7 +96,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 className="flex items-center space-x-1"
               >
                 <Edit className="w-3 h-3" />
-                <span>Edit</span>
+                <span className="hidden sm:block">Edit</span>
               </Button>
               <Button
                 onClick={() => onDelete(task.id)}
@@ -99,7 +105,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50"
               >
                 <Trash2 className="w-3 h-3" />
-                <span>Delete</span>
+                <span className="hidden sm:block">Delete</span>
               </Button>
             </div>
           </div>

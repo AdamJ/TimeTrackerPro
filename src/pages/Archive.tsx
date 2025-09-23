@@ -6,7 +6,7 @@ import { ExportDialog } from '@/components/ExportDialog';
 import { ProjectManagement } from '@/components/ProjectManagement';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Archive as ArchiveIcon, Printer, ArrowLeft, Download, Briefcase, CogIcon } from 'lucide-react';
+import { Archive as ArchiveIcon, Database } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DayRecord } from '@/contexts/TimeTrackingContext';
 import SiteNavigationMenu from '@/components/Navigation';
@@ -43,6 +43,14 @@ const ArchiveContent: React.FC = () => {
       {/* Navigation Header */}
       <SiteNavigationMenu />
       {/* Main Content */}
+      <div className="max-w-6xl mx-auto p-6 print:p-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
+            <Database className="w-6 h-6" />
+            <span>Archives</span>
+          </h1>
+        </div>
+      </div>
       <div className="max-w-6xl mx-auto p-6 print:p-4">
         {sortedDays.length === 0 ? (
           <Card className="text-center py-12 print:hidden">

@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ProjectManagement } from '@/components/ProjectManagement';
-import { CategoryManagement } from '@/components/CategoryManagement';
 import { ExportDialog } from '@/components/ExportDialog';
 import {
   Briefcase,
   Tag,
   Download,
   Database,
-  Trash2
+  Trash2,
+  CogIcon
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTimeTracking, TimeTrackingProvider } from '@/contexts/TimeTrackingContext';
@@ -17,8 +16,6 @@ import SiteNavigationMenu from '@/components/Navigation';
 
 const SettingsContent: React.FC = () => {
   const { archivedDays, projects, categories } = useTimeTracking();
-  const [showProjectManagement, setShowProjectManagement] = useState(false);
-  const [showCategoryManagement, setShowCategoryManagement] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
 
   const handleClearAllData = () => {
@@ -35,10 +32,18 @@ const SettingsContent: React.FC = () => {
       {/* Navigation Header */}
       <SiteNavigationMenu />
       {/* Main Content */}
+      <div className="max-w-6xl mx-auto p-6 print:p-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
+            <CogIcon className="w-6 h-6" />
+            <span>Settings</span>
+          </h1>
+        </div>
+      </div>
       <div className="max-w-6xl mx-auto p-6">
         <div className="grid gap-6">
           {/* Overview Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-4">
                 <div className="text-2xl font-bold text-blue-600">{archivedDays.length}</div>
@@ -94,14 +99,12 @@ const SettingsContent: React.FC = () => {
                 <p className="text-gray-600 mb-4">
                   Create and manage task categories like Development, Design, Meetings, etc. Categories help classify your work.
                 </p>
-                <Button
-                  onClick={() => setShowCategoryManagement(true)}
-                  variant="secondary"
-                  className="w-full"
-                >
-                  <Tag className="w-4 h-4 mr-2" />
-                  Manage Categories
-                </Button>
+                <Link to="/categories">
+                  <Button variant="outline" className="w-full">
+                    <Briefcase className="w-4 h-4 mr-2" />
+                    Manage Categories
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
@@ -190,16 +193,6 @@ const SettingsContent: React.FC = () => {
       </div>
 
       {/* Dialogs */}
-      <ProjectManagement
-        isOpen={showProjectManagement}
-        onClose={() => setShowProjectManagement(false)}
-      />
-
-      <CategoryManagement
-        isOpen={showCategoryManagement}
-        onClose={() => setShowCategoryManagement(false)}
-      />
-
       <ExportDialog
         isOpen={showExportDialog}
         onClose={() => setShowExportDialog(false)}
