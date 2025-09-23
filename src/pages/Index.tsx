@@ -75,7 +75,7 @@ const TimeTrackerContent = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
        <SiteNavigationMenu />
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
         <div className="space-y-6">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
             <DashboardIcon className="w-6 h-6" />

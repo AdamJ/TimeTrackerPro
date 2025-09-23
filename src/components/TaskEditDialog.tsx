@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Save, X } from 'lucide-react';
+import { Clock, Save } from 'lucide-react';
 import { useTimeTracking, Task } from '@/contexts/TimeTrackingContext';
 import { formatTime, formatDate } from '@/utils/timeUtil';
 
@@ -201,7 +201,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="title">Task Title *</Label>
+                <Label htmlFor="title">Task Title <span className="text-red-700">*</span></Label>
                 <Input
                   id="title"
                   value={formData.title}
@@ -360,8 +360,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={handleCancel}>
-              <X className="w-4 h-4 mr-2" />
+            <Button variant="ghost" onClick={handleCancel}>
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={!formData.title.trim() || !hasChanges}>

@@ -64,6 +64,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter task title"
             className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            required
             autoFocus
           />
 
@@ -78,7 +79,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
             {categories.length > 0 && (
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select category (optional)" />
+                  <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((category) => (
@@ -99,7 +100,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
             {projects.length > 0 && (
               <Select value={selectedProject} onValueChange={setSelectedProject}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select project (optional)" />
+                  <SelectValue placeholder="Select a project" />
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map((project) => (
