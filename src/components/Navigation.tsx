@@ -5,21 +5,29 @@ import {
   Item,
   Viewport
 } from '@radix-ui/react-navigation-menu';
+import { useTimeTracking } from '@/contexts/TimeTrackingContext';
 import { Button } from '@/components/ui/button';
 import { ExportDialog } from '@/components/ExportDialog';
 import { ProjectManagement } from '@/components/ProjectManagement';
-import { ArchiveEditDialog } from '@/components/ArchiveEditDialog';
 import { Link } from 'react-router-dom';
-import { CogIcon, ArchiveIcon, Briefcase, ProjectorIcon, Database } from 'lucide-react';
-import { DayRecord } from '@/contexts/TimeTrackingContext';
+import { CogIcon, Printer, Database, CalendarClock } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import { formatDuration } from '@/utils/timeUtil';
 
 const SiteNavigationMenu = () => {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showProjectManagement, setShowProjectManagement] = useState(false);
+
   const handlePrint = () => {
     window.print();
   };
+
+  const {
+    isDayStarted,
+    tasks,
+    getTotalDayDuration
+  } = useTimeTracking();
+  const runningTime = isDayStarted ? getTotalDayDuration() : 0;
 
   return (
     <>
@@ -36,7 +44,25 @@ const SiteNavigationMenu = () => {
             </Link>
           </h1>
         </Item>
+          {isDayStarted && tasks.length > 0 && (
+            <Item>
+              <span className="text-lg text-gray-900 font-bold inline-flex">
+                <CalendarClock className="mr-1 text-gray-900" />
+                {formatDuration(runningTime)}
+              </span>
+            </Item>
+          )}
         <div className="flex space-x-4">
+          <Item>
+            <Button
+              onClick={handlePrint}
+              variant="outline"
+              className="flex items-center space-x-2"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Print</span>
+            </Button>
+          </Item>
           {/* <Item>
             <NavLink
                 to="/projectlist"
