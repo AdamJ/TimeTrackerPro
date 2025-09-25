@@ -511,7 +511,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
     }
 
-    const headers = ['Date', 'Project', 'Client', 'Task', 'Duration (Hours)', 'Start Time', 'End Time', 'Hourly Rate', 'Amount'];
+    const headers = ['Date', 'Project', 'Client', 'Task', 'Description', 'Duration (Hours)', 'Start Time', 'End Time', 'Hourly Rate', 'Amount'];
     const rows = [headers.join(',')];
 
     filteredDays.forEach(day => {
@@ -526,6 +526,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
             task.project || '',
             task.client || '',
             `"${task.title}"`,
+            `"${task.description}"`,
             hours,
             task.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
 task.endTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) || '',
