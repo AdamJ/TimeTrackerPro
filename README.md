@@ -92,7 +92,8 @@ npm run dev
 
 ### Data Storage
 
-- All data is stored locally in your browser
+- By default, all data is stored locally in your browser
+- Optionally, data can be stored in a [Supabase](https://www.supabase.com) project
 - No external servers or accounts required
 - Data persists between sessions
 - Export capabilities for backup and integration
