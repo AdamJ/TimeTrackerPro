@@ -39,7 +39,7 @@ const SiteNavigationMenu = () => {
               to="/"
               className="flex items-center text-gray-900 hover:text-blue-700 print:hidden"
             >
-              <img src="favicon.ico" alt="Logo" className="w-8 h-8 sm:mr-2" />
+              <img src="favicon.png" alt="Logo" className="w-8 h-8 sm:mr-2" />
               <span className="hidden sm:block">TimeTracker</span>
             </Link>
           </h1>
