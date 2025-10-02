@@ -1,8 +1,10 @@
 import { TimeTrackingProvider } from '@/contexts/TimeTrackingContext';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
+import { useAuth } from '@/hooks/useAuth';
 import { DaySummary } from '@/components/DaySummary';
 import { NewTaskForm } from '@/components/NewTaskForm';
 import { TaskItem } from '@/components/TaskItem';
+import { SyncStatus } from '@/components/SyncStatus';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, Archive as ArchiveIcon, Play, CogIcon } from 'lucide-react';
@@ -12,11 +14,15 @@ import { DashboardIcon } from '@radix-ui/react-icons';
 import SiteNavigationMenu from '@/components/Navigation';
 
 const TimeTrackerContent = () => {
+  const { isAuthenticated } = useAuth();
   const {
     isDayStarted,
     dayStartTime,
     currentTask,
     tasks,
+    isSyncing,
+    lastSyncTime,
+    refreshFromDatabase,
     startDay,
     endDay,
     startNewTask,
@@ -34,7 +40,13 @@ const TimeTrackerContent = () => {
     endDay();
   };
 
-  const handleNewTask = (title: string, description?: string, project?: string, client?: string, category?: string) => {
+  const handleNewTask = (
+    title: string,
+    description?: string,
+    project?: string,
+    client?: string,
+    category?: string
+  ) => {
     startNewTask(title, description, project, client, category);
   };
 
@@ -45,12 +57,15 @@ const TimeTrackerContent = () => {
   const handlePostDay = () => {
     postDay();
   };
-  const { archivedDays, getTotalHoursForPeriod, getRevenueForPeriod } = useTimeTracking();
-  const totalHours = archivedDays.length > 0 ? getTotalHoursForPeriod(new Date(0), new Date()) : 0;
-  const sortedDays = [...archivedDays].sort((a, b) =>
-    new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+  const { archivedDays, getTotalHoursForPeriod, getRevenueForPeriod } =
+    useTimeTracking();
+  const totalHours =
+    archivedDays.length > 0
+      ? getTotalHoursForPeriod(new Date(0), new Date())
+      : 0;
+  const sortedDays = [...archivedDays].sort(
+    (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
   );
-
 
   // Calculate running timer for navigation
   const runningTime = isDayStarted ? getTotalDayDuration() : 0;
@@ -59,40 +74,52 @@ const TimeTrackerContent = () => {
   if (!isDayStarted && dayStartTime && tasks.length > 0) {
     return (
       <>
-      <SiteNavigationMenu />
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        <DaySummary
-          tasks={tasks}
-          totalDuration={getTotalDayDuration()}
-          dayStartTime={dayStartTime}
-          onPostDay={handlePostDay}
-        />
-      </div>
+        <SiteNavigationMenu />
+        <div className="max-w-4xl mx-auto p-6 space-y-6">
+          <DaySummary
+            tasks={tasks}
+            totalDuration={getTotalDayDuration()}
+            dayStartTime={dayStartTime}
+            onPostDay={handlePostDay}
+          />
+        </div>
       </>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-       <SiteNavigationMenu />
+      <SiteNavigationMenu />
       {/* Main Content */}
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         <div className="space-y-6">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
-            <DashboardIcon className="w-6 h-6" />
-            <span>Dashboard</span>
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
+              <DashboardIcon className="w-6 h-6" />
+              <span>Dashboard</span>
+            </h1>
+            <SyncStatus
+              isAuthenticated={isAuthenticated}
+              lastSyncTime={lastSyncTime}
+              isSyncing={isSyncing}
+              onRefresh={refreshFromDatabase}
+            />
+          </div>
           {/* Summary Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
             <Card>
               <CardContent className="p-4">
-                <div className="text-2xl font-bold text-blue-600">{sortedDays.length}</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {sortedDays.length}
+                </div>
                 <div className="text-sm text-gray-600">Days Tracked</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-2xl font-bold text-green-600">{totalHours}h</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {totalHours}h
+                </div>
                 <div className="text-sm text-gray-600">Total Hours</div>
               </CardContent>
             </Card>
@@ -121,7 +148,8 @@ const TimeTrackerContent = () => {
             </CardHeader>
             <CardContent>
               <p className="text-gray-600 mb-4">
-                Click the button below to start tracking your work time for today.
+                Click the button below to start tracking your work time for
+                today.
               </p>
               <Button
                 onClick={handleStartDay}
@@ -144,7 +172,9 @@ const TimeTrackerContent = () => {
                     key={task.id}
                     task={task}
                     isActive={currentTask?.id === task.id}
-                    currentDuration={currentTask?.id === task.id ? getCurrentTaskDuration() : 0}
+                    currentDuration={
+                      currentTask?.id === task.id ? getCurrentTaskDuration() : 0
+                    }
                     onDelete={handleTaskDelete}
                   />
                 ))}

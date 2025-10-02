@@ -5,12 +5,14 @@ The TimeTrackerPro app now supports both authenticated and unauthenticated usage
 ## 🔐 Authentication Features
 
 ### **Authenticated Users (Supabase)**
+
 - Data synced across devices
 - Cloud backup and restore
 - Secure user accounts
 - Automatic data migration from localStorage
 
 ### **Unauthenticated Users (Local Storage)**
+
 - Works completely offline
 - No account required
 - Data stored locally in browser
@@ -19,6 +21,7 @@ The TimeTrackerPro app now supports both authenticated and unauthenticated usage
 ## 🚀 Setup Instructions
 
 ### 1. Environment Variables
+
 Copy `.env.example` to `.env` and add your Supabase credentials:
 
 ```bash
@@ -26,15 +29,18 @@ cp .env.example .env
 ```
 
 Edit `.env`:
+
 ```
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key_here
 ```
 
 ### 2. Database Setup
+
 Run the SQL commands in `supabase/schema.sql` in your Supabase dashboard to create the required tables.
 
 ### 3. Run the App
+
 ```bash
 npm install
 npm run dev
@@ -43,12 +49,14 @@ npm run dev
 ## 📱 How It Works
 
 ### **Without Supabase Configuration**
+
 - App automatically uses localStorage
 - All features work normally
 - No authentication required
 - Data stays on device
 
 ### **With Supabase Configuration**
+
 - Users can choose to sign in or continue without account
 - Authenticated users get cloud sync
 - Unauthenticated users still use localStorage
@@ -61,16 +69,19 @@ When a user signs in for the first time, their existing localStorage data is aut
 ## 🛠️ Technical Implementation
 
 ### **Data Service Abstraction**
+
 - `LocalStorageService`: Handles browser storage
 - `SupabaseService`: Handles cloud storage
 - Automatic service selection based on auth status
 
 ### **Authentication Context**
+
 - Manages user authentication state
 - Provides sign in/up/out functions
 - Handles session management
 
 ### **Components**
+
 - `UserMenu`: Shows auth status and options
 - `AuthDialog`: Sign in/up modal
 - Seamless integration with existing UI
@@ -85,17 +96,20 @@ When a user signs in for the first time, their existing localStorage data is aut
 ## 📊 Data Storage
 
 ### **Current Day Data**
+
 - Active tasks with full metadata (title, description, project, client, category)
 - Day start/end times
 - Current task information
 - Real-time duration tracking
 
 ### **Archived Days**
+
 - Completed day records with task details
 - Individual task records in relational format
 - Searchable by project, client, category, date ranges
 
 ### **Projects & Categories**
+
 - User-defined projects with hourly rates
 - Custom categories with colors
 - Proper relational storage for advanced filtering

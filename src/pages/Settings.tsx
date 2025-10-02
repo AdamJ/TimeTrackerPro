@@ -20,8 +20,16 @@ const SettingsContent: React.FC = () => {
   const [showExportDialog, setShowExportDialog] = useState(false);
 
   const handleClearAllData = () => {
-    if (confirm('Are you sure you want to clear ALL data? This action cannot be undone and will remove all archived days, projects, and categories.')) {
-      if (confirm('This will permanently delete everything. Are you absolutely sure?')) {
+    if (
+      confirm(
+        'Are you sure you want to clear ALL data? This action cannot be undone and will remove all archived days, projects, and categories.'
+      )
+    ) {
+      if (
+        confirm(
+          'This will permanently delete everything. Are you absolutely sure?'
+        )
+      ) {
         localStorage.clear();
         window.location.reload();
       }
@@ -47,19 +55,25 @@ const SettingsContent: React.FC = () => {
           <div className="grid grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-4">
-                <div className="text-2xl font-bold text-blue-600">{archivedDays.length}</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {archivedDays.length}
+                </div>
                 <div className="text-sm text-gray-600">Archived Days</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-2xl font-bold text-green-600">{projects.length}</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {projects.length}
+                </div>
                 <div className="text-sm text-gray-600">Projects</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-2xl font-bold text-purple-600">{categories.length}</div>
+                <div className="text-2xl font-bold text-purple-600">
+                  {categories.length}
+                </div>
                 <div className="text-sm text-gray-600">Categories</div>
               </CardContent>
             </Card>
@@ -77,7 +91,8 @@ const SettingsContent: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-4">
-                  Manage your projects, clients, and hourly rates. Projects help organize your tasks and calculate revenue automatically.
+                  Manage your projects, clients, and hourly rates. Projects help
+                  organize your tasks and calculate revenue automatically.
                 </p>
                 <Link to="/projectlist">
                   <Button variant="outline" className="w-full">
@@ -98,7 +113,8 @@ const SettingsContent: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-4">
-                  Create and manage task categories like Development, Design, Meetings, etc. Categories help classify your work.
+                  Create and manage task categories like Development, Design,
+                  Meetings, etc. Categories help classify your work.
                 </p>
                 <Link to="/categories">
                   <Button variant="outline" className="w-full">
@@ -119,11 +135,12 @@ const SettingsContent: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-4">
-                  Export your time tracking data as CSV or JSON files. Generate invoice data for specific clients and date ranges.
+                  Export your time tracking data as CSV or JSON files. Generate
+                  invoice data for specific clients and date ranges.
                 </p>
                 <Button
                   onClick={() => setShowExportDialog(true)}
-                  variant='secondary'
+                  variant="secondary"
                   className="w-full"
                 >
                   <Download className="w-4 h-4 mr-2" />
@@ -142,7 +159,8 @@ const SettingsContent: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-4">
-                  Manage your stored data. All data is stored locally in your browser. Use export before clearing data.
+                  Manage your stored data. All data is stored locally in your
+                  browser. Use export before clearing data.
                 </p>
                 <div className="space-y-2">
                   <Link to="/archive">
@@ -172,18 +190,29 @@ const SettingsContent: React.FC = () => {
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Getting Started</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">
+                    Getting Started
+                  </h4>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Set up projects with hourly rates for automatic revenue calculation</li>
-                    <li>• Create categories to classify different types of work</li>
+                    <li>
+                      • Set up projects with hourly rates for automatic revenue
+                      calculation
+                    </li>
+                    <li>
+                      • Create categories to classify different types of work
+                    </li>
                     <li>• Use task descriptions for detailed work notes</li>
                   </ul>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Best Practices</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">
+                    Best Practices
+                  </h4>
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• Export your data regularly as backup</li>
-                    <li>• Adjust task times in 15-minute intervals for accuracy</li>
+                    <li>
+                      • Adjust task times in 15-minute intervals for accuracy
+                    </li>
                     <li>• Use consistent project and category naming</li>
                   </ul>
                 </div>

@@ -6,4 +6,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.warn('Supabase env vars not found. Supabase sync will be disabled.');
 }
 
-export const supabase = createClient(SUPABASE_URL ?? '', SUPABASE_ANON_KEY ?? '');
+export const supabase = createClient(
+  SUPABASE_URL ?? '',
+  SUPABASE_ANON_KEY ?? ''
+);
