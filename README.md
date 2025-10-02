@@ -51,13 +51,20 @@ cd <YOUR_PROJECT_NAME>
 # Install dependencies
 npm install
 
+# 🔒 IMPORTANT: Setup environment variables for cloud sync (optional)
+cp .env.example .env
+# Edit .env with your Supabase credentials (see .env.example for instructions)
+
 # Start development server
 npm run dev
 ```
 
 ### First Time Setup
 
-1. **Optional - Supabase Setup**: For cloud sync, copy `.env.example` to `.env` and add your Supabase credentials
+1. **🔒 Environment Setup** (Optional - for cloud sync):
+   - Copy `.env.example` to `.env`
+   - Add your Supabase URL and anon key (see `.env.example` for detailed instructions)
+   - **⚠️ Never commit .env to version control!**
 2. **Start Your First Day**: Click "Start Day" to begin time tracking
 3. **Authentication** (Optional): Click "Sign In" in the top-right corner to enable cloud sync
 4. **Add Projects** (Optional): Go to Archive → Projects to set up your clients and hourly rates
