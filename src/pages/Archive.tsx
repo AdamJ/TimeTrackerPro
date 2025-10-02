@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { TimeTrackingProvider, DayRecord } from '@/contexts/TimeTrackingContext';
+import {
+  TimeTrackingProvider,
+  DayRecord
+} from '@/contexts/TimeTrackingContext';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { ArchiveItem } from '@/components/ArchiveItem';
 import { ArchiveEditDialog } from '@/components/ArchiveEditDialog';
@@ -12,19 +15,24 @@ import { Link } from 'react-router-dom';
 import SiteNavigationMenu from '@/components/Navigation';
 
 const ArchiveContent: React.FC = () => {
-  const { archivedDays, getTotalHoursForPeriod, getRevenueForPeriod } = useTimeTracking();
+  const { archivedDays, getTotalHoursForPeriod, getRevenueForPeriod } =
+    useTimeTracking();
   const [editingDay, setEditingDay] = useState<DayRecord | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showProjectManagement, setShowProjectManagement] = useState(false);
 
   // Sort archived days from newest to oldest
-  const sortedDays = [...archivedDays].sort((a, b) =>
-    new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+  const sortedDays = [...archivedDays].sort(
+    (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
   );
 
   // Calculate summary stats
-  const totalHours = archivedDays.length > 0 ? getTotalHoursForPeriod(new Date(0), new Date()) : 0;
-  const totalRevenue = archivedDays.length > 0 ? getRevenueForPeriod(new Date(0), new Date()) : 0;
+  const totalHours =
+    archivedDays.length > 0
+      ? getTotalHoursForPeriod(new Date(0), new Date())
+      : 0;
+  const totalRevenue =
+    archivedDays.length > 0 ? getRevenueForPeriod(new Date(0), new Date()) : 0;
 
   const handlePrint = () => {
     window.print();
@@ -71,19 +79,27 @@ const ArchiveContent: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
               <Card>
                 <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-blue-600">{sortedDays.length}</div>
-                  <div className="text-sm text-gray-600">Total Days Tracked</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {sortedDays.length}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Total Days Tracked
+                  </div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-green-600">{totalHours}h</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {totalHours}h
+                  </div>
                   <div className="text-sm text-gray-600">Total Hours</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-purple-600">${totalRevenue}</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    ${totalRevenue}
+                  </div>
                   <div className="text-sm text-gray-600">Total Revenue</div>
                 </CardContent>
               </Card>
@@ -92,11 +108,7 @@ const ArchiveContent: React.FC = () => {
             {/* Archived Days */}
             <div className="space-y-4">
               {sortedDays.map((day) => (
-                <ArchiveItem
-                  key={day.id}
-                  day={day}
-                  onEdit={handleEdit}
-                />
+                <ArchiveItem key={day.id} day={day} onEdit={handleEdit} />
               ))}
             </div>
           </div>
