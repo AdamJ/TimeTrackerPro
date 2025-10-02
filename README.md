@@ -2,6 +2,17 @@
 
 A modern, feature-rich time tracking application built with React, TypeScript, and Tailwind CSS. Perfect for freelancers, consultants, and professionals who need to track time, manage projects, and generate invoices.
 
+## 🔐 Authentication & Data Storage
+
+**NEW**: TimeTracker Pro now supports both authenticated and guest usage!
+
+- **🔄 Cloud Sync**: Sign in with Supabase to sync data across devices
+- **💾 Local Storage**: Use without an account - data stays on your device
+- **🔄 Data Migration**: Existing data automatically migrates when you sign in
+- **⚡ Offline-First**: Full functionality available with or without internet
+
+See [AUTHENTICATION.md](./AUTHENTICATION.md) for detailed setup instructions.
+
 ## ✨ Features
 
 ### Core Time Tracking
@@ -9,7 +20,7 @@ A modern, feature-rich time tracking application built with React, TypeScript, a
 - **Start/Stop Day Tracking**: Begin and end your work day with clear boundaries
 - **Task Management**: Create, edit, and delete tasks with real-time duration tracking
 - **Project & Client Organization**: Assign tasks to specific projects and clients
-- **Persistent Data**: All data is automatically saved to localStorage
+- **Persistent Data**: Data saved to localStorage (guest) or Supabase (authenticated)
 
 ### Advanced Features
 
@@ -46,10 +57,12 @@ npm run dev
 
 ### First Time Setup
 
-1. **Start Your First Day**: Click "Start Day" to begin time tracking
-2. **Add Projects** (Optional): Go to Archive → Projects to set up your clients and hourly rates
-3. **Create Tasks**: Use "New Task" to start tracking specific work items
-4. **End Your Day**: Click "End Day" when finished, then "Post Time to Archive"
+1. **Optional - Supabase Setup**: For cloud sync, copy `.env.example` to `.env` and add your Supabase credentials
+2. **Start Your First Day**: Click "Start Day" to begin time tracking
+3. **Authentication** (Optional): Click "Sign In" in the top-right corner to enable cloud sync
+4. **Add Projects** (Optional): Go to Archive → Projects to set up your clients and hourly rates
+5. **Create Tasks**: Use "New Task" to start tracking specific work items
+6. **End Your Day**: Click "End Day" when finished, then "Post Time to Archive"
 
 ## 📱 Usage Guide
 

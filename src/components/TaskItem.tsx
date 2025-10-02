@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Task, useTimeTracking } from '@/contexts/TimeTrackingContext';
+import { Task } from '@/contexts/TimeTrackingContext';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { TaskEditDialog } from '@/components/TaskEditDialog';

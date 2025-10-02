@@ -6,7 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Calendar as CalendarIcon, FileText, Database } from 'lucide-react';
-import { useTimeTracking } from '@/contexts/TimeTrackingContext';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { formatDate } from '@/utils/timeUtil';
 import { cn } from '@/lib/util';
 
@@ -43,7 +43,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose }) =
         filename = `timetracker_export${dateRange}.json`;
         mimeType = 'application/json';
         break;
-      case 'invoice':
+      case 'invoice': {
         if (!selectedClient || !startDate || !endDate) {
           alert('Please select a client and date range for invoice generation');
           return;
@@ -53,6 +53,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose }) =
         filename = `invoice_${selectedClient.replace(/\s+/g, '_')}${dateRange}.json`;
         mimeType = 'application/json';
         break;
+      }
     }
 
     // Create and download file

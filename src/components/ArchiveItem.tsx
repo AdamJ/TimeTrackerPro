@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Calendar, Clock, Edit, RotateCcw } from 'lucide-react';
 import { formatDuration, formatTime, formatDate } from '@/utils/timeUtil';
-import { DayRecord, useTimeTracking } from '@/contexts/TimeTrackingContext';
+import { DayRecord } from '@/contexts/TimeTrackingContext';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 
 interface ArchiveItemProps {
   day: DayRecord;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useTimeTracking, TimeTrackingProvider } from '@/contexts/TimeTrackingContext';
+import { TimeTrackingProvider, DayRecord } from '@/contexts/TimeTrackingContext';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { ArchiveItem } from '@/components/ArchiveItem';
 import { ArchiveEditDialog } from '@/components/ArchiveEditDialog';
 import { ExportDialog } from '@/components/ExportDialog';
@@ -8,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Archive as ArchiveIcon, Database } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { DayRecord } from '@/contexts/TimeTrackingContext';
 import SiteNavigationMenu from '@/components/Navigation';
 
 const ArchiveContent: React.FC = () => {

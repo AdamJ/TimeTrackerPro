@@ -5,7 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Edit, Trash2, Tag, TagIcon } from 'lucide-react';
-import { useTimeTracking, TaskCategory, TimeTrackingProvider } from '@/contexts/TimeTrackingContext';
+import { TimeTrackingProvider } from '@/contexts/TimeTrackingContext';
+import { TaskCategory } from '@/config/categories';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 import SiteNavigationMenu from '@/components/Navigation';
 import { StackIcon } from '@radix-ui/react-icons';
 

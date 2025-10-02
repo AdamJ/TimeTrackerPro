@@ -11,7 +11,8 @@ import {
   CogIcon
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useTimeTracking, TimeTrackingProvider } from '@/contexts/TimeTrackingContext';
+import { TimeTrackingProvider } from '@/contexts/TimeTrackingContext';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 import SiteNavigationMenu from '@/components/Navigation';
 
 const SettingsContent: React.FC = () => {

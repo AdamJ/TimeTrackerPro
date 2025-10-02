@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { DEFAULT_CATEGORIES, TaskCategory } from '@/config/categories';
 import { DEFAULT_PROJECTS, ProjectCategory } from '@/config/projects';
+import { useAuth } from '@/hooks/useAuth';
+import { createDataService, DataService } from '@/services/dataService';
 
 export interface Task {
   id: string;
@@ -113,131 +115,173 @@ interface TimeTrackingContextType {
 
 const TimeTrackingContext = createContext<TimeTrackingContextType | undefined>(undefined);
 
-export const useTimeTracking = () => {
-  const context = useContext(TimeTrackingContext);
-  if (!context) {
-    throw new Error('useTimeTracking must be used within TimeTrackingProvider');
-  }
-  return context;
-};
+export { TimeTrackingContext };
 
 const STORAGE_KEYS = {
-  CURRENT_DAY: 'timetracker_current_day',
-  ARCHIVED_DAYS: 'timetracker_archived_days',
-  PROJECTS: 'timetracker_projects',
-  CATEGORIES: 'timetracker_categories'
+	CURRENT_DAY: 'timetracker_current_day',
+	ARCHIVED_DAYS: 'timetracker_archived_days',
+	PROJECTS: 'timetracker_projects',
+	CATEGORIES: 'timetracker_categories'
 };
 
 // Convert ProjectCategory to Project by adding an id
 const convertDefaultProjects = (defaultProjects: ProjectCategory[]): Project[] => {
-  return defaultProjects.map((project, index) => ({
-    ...project,
-    id: `default-${index}-${project.name.toLowerCase().replace(/\s+/g, '-')}`
-  }));
+	return defaultProjects.map((project, index) => ({
+		...project,
+		id: `default-${index}-${project.name.toLowerCase().replace(/\s+/g, '-')}`
+	}));
 };
 
 export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isDayStarted, setIsDayStarted] = useState(false);
-  const [dayStartTime, setDayStartTime] = useState<Date | null>(null);
-  const [currentTask, setCurrentTask] = useState<Task | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [archivedDays, setArchivedDays] = useState<DayRecord[]>([]);
-  const [projects, setProjects] = useState<Project[]>(convertDefaultProjects(DEFAULT_PROJECTS));
-  const [categories, setCategories] = useState<TaskCategory[]>(DEFAULT_CATEGORIES);
+	const { isAuthenticated, loading: authLoading } = useAuth();
+	const [dataService, setDataService] = useState<DataService | null>(null);
+	const [isDayStarted, setIsDayStarted] = useState(false);
+	const [dayStartTime, setDayStartTime] = useState<Date | null>(null);
+	const [currentTask, setCurrentTask] = useState<Task | null>(null);
+	const [tasks, setTasks] = useState<Task[]>([]);
+	const [currentTime, setCurrentTime] = useState(new Date());
+	const [archivedDays, setArchivedDays] = useState<DayRecord[]>([]);
+	const [projects, setProjects] = useState<Project[]>(convertDefaultProjects(DEFAULT_PROJECTS));
+	const [categories, setCategories] = useState<TaskCategory[]>(DEFAULT_CATEGORIES);
+	const [loading, setLoading] = useState(true);
 
-  // Load data from localStorage on mount
-  useEffect(() => {
-    try {
-      const savedCurrentDay = localStorage.getItem(STORAGE_KEYS.CURRENT_DAY);
-      if (savedCurrentDay) {
-        const data = JSON.parse(savedCurrentDay);
-        setIsDayStarted(data.isDayStarted);
-        setDayStartTime(data.dayStartTime ? new Date(data.dayStartTime) : null);
-        setTasks(data.tasks.map((task: Task) => ({
-          ...task,
-          startTime: new Date(task.startTime),
-          endTime: task.endTime ? new Date(task.endTime) : undefined
-        })));
-        setCurrentTask(data.currentTask ? {
-          ...data.currentTask,
-          startTime: new Date(data.currentTask.startTime),
-          endTime: data.currentTask.endTime ? new Date(data.currentTask.endTime) : undefined
-        } : null);
-      }
+	// Initialize data service when auth state changes
+	useEffect(() => {
+		if (!authLoading) {
+			const service = createDataService(isAuthenticated);
+			setDataService(service);
+		}
+	}, [isAuthenticated, authLoading]);
 
-      const savedArchivedDays = localStorage.getItem(STORAGE_KEYS.ARCHIVED_DAYS);
-      if (savedArchivedDays) {
-        const data = JSON.parse(savedArchivedDays);
-        setArchivedDays(data.map((day: DayRecord) => ({
-          ...day,
-          startTime: new Date(day.startTime),
-          endTime: new Date(day.endTime),
-          tasks: day.tasks.map((task: Task) => ({
-            ...task,
-            startTime: new Date(task.startTime),
-            endTime: task.endTime ? new Date(task.endTime) : undefined
-          }))
-        })));
-      }
+	// Load data when data service is available
+	useEffect(() => {
+		const loadData = async () => {
+			if (!dataService) return;
 
-      const savedProjects = localStorage.getItem(STORAGE_KEYS.PROJECTS);
-      if (savedProjects) {
-        const parsedProjects = JSON.parse(savedProjects);
-        // Merge default projects with saved projects, avoiding duplicates
-        const defaultProjects = convertDefaultProjects(DEFAULT_PROJECTS);
-        const mergedProjects = [...defaultProjects];
+			setLoading(true);
+			try {
+				// Load current day
+				const currentDay = await dataService.getCurrentDay();
+				if (currentDay) {
+					setIsDayStarted(currentDay.isDayStarted);
+					setDayStartTime(currentDay.dayStartTime);
+					setTasks(currentDay.tasks);
+					setCurrentTask(currentDay.currentTask);
+				}
 
-        // Add saved projects that don't conflict with default ones
-        parsedProjects.forEach((savedProject: Project) => {
-          const existsInDefaults = defaultProjects.some(
-            defaultProject => defaultProject.name === savedProject.name && defaultProject.client === savedProject.client
-          );
-          if (!existsInDefaults) {
-            mergedProjects.push(savedProject);
-          }
-        });
+				// Load archived days
+				const archived = await dataService.getArchivedDays();
+				setArchivedDays(archived);
 
-        setProjects(mergedProjects);
-      } else {
-        // If no saved projects, use defaults
-        setProjects(convertDefaultProjects(DEFAULT_PROJECTS));
-      }
+				// Load projects
+				const loadedProjects = await dataService.getProjects();
+				if (loadedProjects.length > 0) {
+					// Merge default projects with saved projects, avoiding duplicates
+					const defaultProjects = convertDefaultProjects(DEFAULT_PROJECTS);
+					const mergedProjects = [...defaultProjects];
 
-      const savedCategories = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
-      if (savedCategories) {
-        setCategories(JSON.parse(savedCategories));
-      }
-    } catch (error) {
-      console.error('Error loading data from localStorage:', error);
-    }
-  }, []);
+					// Add saved projects that don't conflict with default ones
+					loadedProjects.forEach((savedProject: Project) => {
+						const existsInDefaults = defaultProjects.some(
+							defaultProject => defaultProject.name === savedProject.name && defaultProject.client === savedProject.client
+						);
+						if (!existsInDefaults) {
+							mergedProjects.push(savedProject);
+						}
+					});
 
-  // Save current day data to localStorage
-  useEffect(() => {
-    const currentDayData = {
-      isDayStarted,
-      dayStartTime,
-      currentTask,
-      tasks
-    };
-    localStorage.setItem(STORAGE_KEYS.CURRENT_DAY, JSON.stringify(currentDayData));
-  }, [isDayStarted, dayStartTime, currentTask, tasks]);
+					setProjects(mergedProjects);
+				} else {
+					setProjects(convertDefaultProjects(DEFAULT_PROJECTS));
+				}
 
-  // Save archived days to localStorage
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.ARCHIVED_DAYS, JSON.stringify(archivedDays));
-  }, [archivedDays]);
+				// Load categories
+				const loadedCategories = await dataService.getCategories();
+				if (loadedCategories.length > 0) {
+					setCategories(loadedCategories);
+				}
 
-  // Save projects to localStorage
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
-  }, [projects]);
+				// If switching from localStorage to Supabase, migrate data
+				if (isAuthenticated && dataService) {
+					await dataService.migrateFromLocalStorage();
+				}
+			} catch (error) {
+				console.error('Error loading data:', error);
+			} finally {
+				setLoading(false);
+			}
+		};
 
-  // Save categories to localStorage
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
-  }, [categories]);
+		loadData();
+	}, [dataService, isAuthenticated]);
+
+	// Save current day data when it changes
+	const saveCurrentDay = useCallback(async () => {
+		if (!dataService) return;
+
+		try {
+			await dataService.saveCurrentDay({
+				isDayStarted,
+				dayStartTime,
+				currentTask,
+				tasks
+			});
+		} catch (error) {
+			console.error('Error saving current day:', error);
+		}
+	}, [dataService, isDayStarted, dayStartTime, currentTask, tasks]);
+
+	// Save current day data when it changes
+	useEffect(() => {
+		if (!loading) {
+			saveCurrentDay();
+		}
+	}, [isDayStarted, dayStartTime, currentTask, tasks, saveCurrentDay, loading]);
+
+	// Save archived days when they change
+	useEffect(() => {
+		const saveArchivedDays = async () => {
+			if (!dataService || loading) return;
+
+			try {
+				await dataService.saveArchivedDays(archivedDays);
+			} catch (error) {
+				console.error('Error saving archived days:', error);
+			}
+		};
+
+		saveArchivedDays();
+	}, [archivedDays, dataService, loading]);
+
+	// Save projects when they change
+	useEffect(() => {
+		const saveProjects = async () => {
+			if (!dataService || loading) return;
+
+			try {
+				await dataService.saveProjects(projects);
+			} catch (error) {
+				console.error('Error saving projects:', error);
+			}
+		};
+
+		saveProjects();
+	}, [projects, dataService, loading]);
+
+	// Save categories when they change
+	useEffect(() => {
+		const saveCategories = async () => {
+			if (!dataService || loading) return;
+
+			try {
+				await dataService.saveCategories(categories);
+			} catch (error) {
+				console.error('Error saving categories:', error);
+			}
+		};
+
+		saveCategories();
+	}, [categories, dataService, loading]);
 
   // Update current time every second
   useEffect(() => {
@@ -362,18 +406,30 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setProjects(defaultProjects);
   };
 
-  // Archive management functions
-  const updateArchivedDay = (dayId: string, updates: Partial<DayRecord>) => {
-    setArchivedDays(prev => prev.map(day =>
-      day.id === dayId ? { ...day, ...updates } : day
-    ));
-  };
+	// Archive management functions
+	const updateArchivedDay = async (dayId: string, updates: Partial<DayRecord>) => {
+		if (!dataService) return;
 
-  const deleteArchivedDay = (dayId: string) => {
-    setArchivedDays(prev => prev.filter(day => day.id !== dayId));
-  };
+		try {
+			await dataService.updateArchivedDay(dayId, updates);
+			setArchivedDays(prev => prev.map(day =>
+				day.id === dayId ? { ...day, ...updates } : day
+			));
+		} catch (error) {
+			console.error('Error updating archived day:', error);
+		}
+	};
 
-  const restoreArchivedDay = (dayId: string) => {
+	const deleteArchivedDay = async (dayId: string) => {
+		if (!dataService) return;
+
+		try {
+			await dataService.deleteArchivedDay(dayId);
+			setArchivedDays(prev => prev.filter(day => day.id !== dayId));
+		} catch (error) {
+			console.error('Error deleting archived day:', error);
+		}
+	};  const restoreArchivedDay = (dayId: string) => {
     const dayToRestore = archivedDays.find(day => day.id === dayId);
     if (!dayToRestore) return;
 
