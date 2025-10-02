@@ -1,4 +1,5 @@
-import { TimeTrackingProvider, useTimeTracking } from '@/contexts/TimeTrackingContext';
+import { TimeTrackingProvider } from '@/contexts/TimeTrackingContext';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { DaySummary } from '@/components/DaySummary';
 import { NewTaskForm } from '@/components/NewTaskForm';
 import { TaskItem } from '@/components/TaskItem';

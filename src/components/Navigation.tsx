@@ -5,10 +5,12 @@ import {
   Item,
   Viewport
 } from '@radix-ui/react-navigation-menu';
-import { useTimeTracking } from '@/contexts/TimeTrackingContext';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { Button } from '@/components/ui/button';
 import { ExportDialog } from '@/components/ExportDialog';
 import { ProjectManagement } from '@/components/ProjectManagement';
+import { UserMenu } from '@/components/UserMenu';
+import { AuthDialog } from '@/components/AuthDialog';
 import { Link } from 'react-router-dom';
 import { CogIcon, Printer, Database, CalendarClock } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
@@ -17,6 +19,7 @@ import { formatDuration } from '@/utils/timeUtil';
 const SiteNavigationMenu = () => {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showProjectManagement, setShowProjectManagement] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   const handlePrint = () => {
     window.print();
@@ -53,6 +56,9 @@ const SiteNavigationMenu = () => {
             </Item>
           )}
         <div className="flex space-x-4">
+          <Item>
+            <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
+          </Item>
           <Item>
             <Button
               onClick={handlePrint}
@@ -103,6 +109,11 @@ const SiteNavigationMenu = () => {
         <Viewport className="relative mt-2.5 h-[var(--radix-navigation-menu-viewport-height)] w-full origin-[top_center] overflow-hidden rounded-md bg-white transition-[width,_height] duration-300 data-[state=closed]:animate-scaleOut data-[state=open]:animate-scaleIn sm:w-[var(--radix-navigation-menu-viewport-width)]" />
       </div>
     </NavigationMenu>
+
+    <AuthDialog
+      isOpen={showAuthDialog}
+      onClose={() => setShowAuthDialog(false)}
+    />
 
     <ExportDialog
       isOpen={showExportDialog}
