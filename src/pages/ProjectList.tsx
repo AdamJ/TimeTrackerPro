@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import {
-  useTimeTracking,
   TimeTrackingProvider,
   Project
 } from '@/contexts/TimeTrackingContext';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

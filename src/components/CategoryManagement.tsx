@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Edit, Trash2, Tag } from 'lucide-react';
-import { useTimeTracking, TaskCategory } from '@/contexts/TimeTrackingContext';
+import { TaskCategory } from '@/config/categories';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 
 interface CategoryManagementProps {
   isOpen: boolean;

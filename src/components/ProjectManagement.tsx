@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Edit, Trash2, Briefcase, RotateCcw } from 'lucide-react';
-import { useTimeTracking, Project } from '@/contexts/TimeTrackingContext';
+import { Project } from '@/contexts/TimeTrackingContext';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { DEFAULT_PROJECTS } from '@/config/projects';
 
 interface ProjectManagementProps {

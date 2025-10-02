@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus } from 'lucide-react';
-import { useTimeTracking } from '@/contexts/TimeTrackingContext';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 
 interface NewTaskFormProps {
   onSubmit: (title: string, description?: string, project?: string, client?: string, category?: string) => void;

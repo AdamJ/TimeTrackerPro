@@ -16,7 +16,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Calendar, Clock, X, Save, Trash2, Edit, Plus, AlertTriangle, RotateCcw } from 'lucide-react';
 import { formatDuration, formatTime, formatDate } from '@/utils/timeUtil';
-import { DayRecord, Task, useTimeTracking } from '@/contexts/TimeTrackingContext';
+import { DayRecord, Task } from '@/contexts/TimeTrackingContext';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 
 interface ArchiveEditDialogProps {
   day: DayRecord;
