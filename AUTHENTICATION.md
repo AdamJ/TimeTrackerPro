@@ -85,19 +85,20 @@ When a user signs in for the first time, their existing localStorage data is aut
 ## 📊 Data Storage
 
 ### **Current Day Data**
-- Active tasks and timer state
+- Active tasks with full metadata (title, description, project, client, category)
 - Day start/end times
 - Current task information
+- Real-time duration tracking
 
 ### **Archived Days**
-- Completed day records
-- Task history
-- Time tracking data
+- Completed day records with task details
+- Individual task records in relational format
+- Searchable by project, client, category, date ranges
 
 ### **Projects & Categories**
-- User-defined projects
-- Custom categories
-- Configuration data
+- User-defined projects with hourly rates
+- Custom categories with colors
+- Proper relational storage for advanced filtering
 
 ## 🔧 Development
 
