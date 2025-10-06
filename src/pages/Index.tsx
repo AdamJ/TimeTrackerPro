@@ -1,10 +1,8 @@
 import { TimeTrackingProvider } from '@/contexts/TimeTrackingContext';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
-import { useAuth } from '@/hooks/useAuth';
 import { DaySummary } from '@/components/DaySummary';
 import { NewTaskForm } from '@/components/NewTaskForm';
 import { TaskItem } from '@/components/TaskItem';
-import { SyncStatus } from '@/components/SyncStatus';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, Archive as ArchiveIcon, Play, CogIcon } from 'lucide-react';
@@ -14,15 +12,11 @@ import { DashboardIcon } from '@radix-ui/react-icons';
 import SiteNavigationMenu from '@/components/Navigation';
 
 const TimeTrackerContent = () => {
-  const { isAuthenticated } = useAuth();
   const {
     isDayStarted,
     dayStartTime,
     currentTask,
     tasks,
-    isSyncing,
-    lastSyncTime,
-    refreshFromDatabase,
     startDay,
     endDay,
     startNewTask,
@@ -98,12 +92,6 @@ const TimeTrackerContent = () => {
               <DashboardIcon className="w-6 h-6" />
               <span>Dashboard</span>
             </h1>
-            <SyncStatus
-              isAuthenticated={isAuthenticated}
-              lastSyncTime={lastSyncTime}
-              isSyncing={isSyncing}
-              onRefresh={refreshFromDatabase}
-            />
           </div>
           {/* Summary Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">

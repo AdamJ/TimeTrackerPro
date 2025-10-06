@@ -29,7 +29,7 @@ export function SyncStatus({
     return (
       <div className="flex items-center gap-2 text-sm text-gray-500">
         <CloudOff className="h-4 w-4" />
-        <span>Local storage only</span>
+        <span className="hidden sm:block">Local storage only</span>
       </div>
     );
   }
@@ -43,22 +43,21 @@ export function SyncStatus({
       {isSyncing ? (
         <>
           <RefreshCw className="h-4 w-4 animate-spin" />
-          <span className="text-blue-600">Syncing...</span>
+          <span className="hidden md:block text-blue-600">Syncing...</span>
         </>
       ) : (
         <>
           <Cloud className="h-4 w-4 text-green-600" />
-          <span className="text-green-600">
+          <span className="hidden md:block text-green-600">
             Synced{' '}
             {lastSyncTime ? new Date(lastSyncTime).toLocaleTimeString() : 'now'}
           </span>
           {onRefresh && (
             <Button
-              variant="ghost"
-              size="sm"
+              variant="outline"
               onClick={onRefresh}
               disabled={isSyncing}
-              className="h-6 px-2 ml-2"
+              className="transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input"
             >
               <RefreshCw className="h-3 w-3" />
             </Button>

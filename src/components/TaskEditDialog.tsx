@@ -104,6 +104,15 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
   };
 
   type TimeOption = { value: string; label: string };
+  function formatTime12Hour(date: Date | undefined): string {
+    if (!date) return '-';
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours === 0 ? 12 : hours;
+    return `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+  }
   const generateTimeOptions = (): TimeOption[] => {
     const options: TimeOption[] = [];
     for (let hour = 0; hour < 24; hour++) {
@@ -111,11 +120,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
         const value = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         const date = new Date();
         date.setHours(hour, minute, 0, 0);
-        const label = date.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        });
+        const label = formatTime12Hour(date);
         options.push({ value, label });
       }
     }

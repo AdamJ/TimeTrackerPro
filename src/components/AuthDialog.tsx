@@ -80,10 +80,37 @@ export const AuthDialog: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signin-email">Email</Label>
+                <Input
+                  id="signin-email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signin-password">Password</Label>
+                <Input
+                  id="signin-password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </form>
+            {/*<Tabs defaultValue="signin" className="w-full">
               <TabsList className="grid w-full grid-cols-1">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
-                {/* <TabsTrigger value="signup">Sign Up</TabsTrigger> */}
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signin" className="space-y-4">
@@ -115,6 +142,7 @@ export const AuthDialog: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                   </Button>
                 </form>
               </TabsContent>
+              */}
 
               {/* <TabsContent value="signup" className="space-y-4">
                 <form onSubmit={handleSignUp} className="space-y-4">
@@ -145,8 +173,8 @@ export const AuthDialog: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                     {loading ? 'Creating account...' : 'Create Account'}
                   </Button>
                 </form>
-              </TabsContent> */}
-            </Tabs>
+              </TabsContent>
+            </Tabs> */}
 
             {error && (
               <Alert className="mt-4">
