@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Calendar, Clock, X, Save, Trash2, Edit, Plus, AlertTriangle, RotateCcw } from 'lucide-react';
-import { formatDuration, formatTime, formatDate } from '@/utils/timeUtil';
+import { formatDuration, formatDate } from '@/utils/timeUtil';
 import { DayRecord, Task } from '@/contexts/TimeTrackingContext';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 
@@ -25,6 +25,7 @@ interface ArchiveEditDialogProps {
   onClose: () => void;
 }
 
+
 // Helper functions
 function formatTimeForInput(date: Date): string {
   const hours = date.getHours().toString().padStart(2, '0');
@@ -32,12 +33,26 @@ function formatTimeForInput(date: Date): string {
   return `${hours}:${minutes}`;
 }
 
-function generateTimeOptions(): string[] {
-  const options: string[] = [];
+function formatTime12Hour(date: Date | undefined): string {
+  if (!date) return '-';
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours === 0 ? 12 : hours;
+  return `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+}
+
+type TimeOption = { value: string; label: string };
+function generateTimeOptions(): TimeOption[] {
+  const options: TimeOption[] = [];
   for (let hour = 0; hour < 24; hour++) {
     for (let minute = 0; minute < 60; minute += 15) {
-      const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-      options.push(timeStr);
+      const value = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      const date = new Date();
+      date.setHours(hour, minute, 0, 0);
+      const label = formatTime12Hour(date);
+      options.push({ value, label });
     }
   }
   return options;
@@ -247,9 +262,9 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
-                          {timeOptions.map((time) => (
-                            <SelectItem key={time} value={time}>
-                              {time}
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -265,9 +280,9 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
-                          {timeOptions.map((time) => (
-                            <SelectItem key={time} value={time}>
-                              {time}
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -288,11 +303,11 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="font-medium text-gray-900">Start Time:</span>
-                    <span className="ml-2 text-gray-600">{formatTime(day.startTime)}</span>
+                    <span className="ml-2 text-gray-600">{formatTime12Hour(day.startTime)}</span>
                   </div>
                   <div>
                     <span className="font-medium text-gray-900">End Time:</span>
-                    <span className="ml-2 text-gray-600">{formatTime(day.endTime)}</span>
+                    <span className="ml-2 text-gray-600">{formatTime12Hour(day.endTime)}</span>
                   </div>
                   <div>
                     <span className="font-medium text-gray-900">Total Duration:</span>
@@ -370,9 +385,9 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                             </div>
                           )}
                         </TableCell>
-                        <TableCell>{formatTime(task.startTime)}</TableCell>
+                        <TableCell>{formatTime12Hour(task.startTime)}</TableCell>
                         <TableCell>
-                          {task.endTime ? formatTime(task.endTime) : '-'}
+                          {task.endTime ? formatTime12Hour(task.endTime) : '-'}
                         </TableCell>
                         <TableCell>{formatDuration(task.duration || 0)}</TableCell>
                         {isEditing && (
@@ -619,9 +634,9 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
-                  {timeOptions.map((time) => (
-                    <SelectItem key={time} value={time}>
-                      {time}
+                  {timeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -635,9 +650,9 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
                   <SelectValue placeholder="Select end time" />
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
-                  {timeOptions.map((time) => (
-                    <SelectItem key={time} value={time}>
-                      {time}
+                  {timeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -15,6 +15,8 @@ import { Link } from 'react-router-dom';
 import { CogIcon, Printer, Database, CalendarClock } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { formatDuration } from '@/utils/timeUtil';
+import { SyncStatus } from '@/components/SyncStatus';
+import { useAuth } from '@/hooks/useAuth';
 
 const SiteNavigationMenu = () => {
   const [showExportDialog, setShowExportDialog] = useState(false);
@@ -25,11 +27,17 @@ const SiteNavigationMenu = () => {
     window.print();
   };
 
+  const { isAuthenticated } = useAuth();
+
   const {
     isDayStarted,
     tasks,
-    getTotalDayDuration
+    getTotalDayDuration,
+    isSyncing,
+    lastSyncTime,
+    refreshFromDatabase,
   } = useTimeTracking();
+
   const runningTime = isDayStarted ? getTotalDayDuration() : 0;
 
   return (
@@ -57,29 +65,15 @@ const SiteNavigationMenu = () => {
           )}
         <div className="flex space-x-4">
           <Item>
-            <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
-          </Item>
-          <Item>
             <Button
               onClick={handlePrint}
               variant="outline"
               className="flex items-center space-x-2"
             >
               <Printer className="w-4 h-4" />
-              <span>Print</span>
+              <span className="hidden sm:block">Print</span>
             </Button>
           </Item>
-          {/* <Item>
-            <NavLink
-                to="/projectlist"
-                className={({ isActive }) =>
-                  `flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input ... ${isActive ? 'bg-blue-200 hover:bg-accent hover:text-accent-foreground' : 'bg-white'}`
-                }
-              >
-              <Briefcase className="w-4 h-4" />
-              <span className="hidden sm:block">Projects</span>
-            </NavLink>
-          </Item> */}
           <Item>
             <NavLink
               to="/archive"
@@ -101,6 +95,17 @@ const SiteNavigationMenu = () => {
               <CogIcon className="w-4 h-4" />
               <span className="hidden sm:block">Settings</span>
             </NavLink>
+          </Item>
+          <Item>
+            <div className="flex space-x-4">
+              <SyncStatus
+                isAuthenticated={isAuthenticated}
+                lastSyncTime={lastSyncTime}
+                isSyncing={isSyncing}
+                onRefresh={refreshFromDatabase}
+              />
+              <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
+            </div>
           </Item>
         </div>
       </List>
