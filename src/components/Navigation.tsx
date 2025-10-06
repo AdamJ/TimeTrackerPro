@@ -54,16 +54,22 @@ const SiteNavigationMenu = () => {
               <span className="hidden sm:block">TimeTracker</span>
             </Link>
           </h1>
-        </Item>
           {isDayStarted && tasks.length > 0 && (
-            <Item>
-              <span className="text-lg text-gray-900 font-bold inline-flex">
-                <CalendarClock className="mr-1 text-gray-900" />
-                {formatDuration(runningTime)}
-              </span>
-            </Item>
+            <span className="ml-4 text-lg text-gray-900 font-bold inline-flex">
+              <CalendarClock className="mr-1 text-gray-900" />
+              {formatDuration(runningTime)}
+            </span>
           )}
+        </Item>
         <div className="flex space-x-4">
+          <Item>
+                          <SyncStatus
+                isAuthenticated={isAuthenticated}
+                lastSyncTime={lastSyncTime}
+                isSyncing={isSyncing}
+                onRefresh={refreshFromDatabase}
+              />
+          </Item>
           <Item>
             <Button
               onClick={handlePrint}
@@ -98,12 +104,12 @@ const SiteNavigationMenu = () => {
           </Item>
           <Item>
             <div className="flex space-x-4">
-              <SyncStatus
+              {/* <SyncStatus
                 isAuthenticated={isAuthenticated}
                 lastSyncTime={lastSyncTime}
                 isSyncing={isSyncing}
                 onRefresh={refreshFromDatabase}
-              />
+              /> */}
               <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
             </div>
           </Item>
