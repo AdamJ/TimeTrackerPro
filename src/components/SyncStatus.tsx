@@ -30,34 +30,24 @@ export function SyncStatus({
   if (!isAuthenticated) {
     return (
       <div className="flex items-center gap-2 text-sm text-gray-500">
-      <Tooltip.Provider>
-        <Tooltip.Root>
-          <Tooltip.Trigger asChild>
-            <button className="inline-flex size-[35px] items-center justify-center rounded-full bg-white text-violet11 shadow-[0_2px_10px] shadow-violet-200 focus:shadow-[0_0_0_2px]">
-              <CloudOff className="h-4 w-4 text-violet-900" />
-            </button>
-          </Tooltip.Trigger>
-          <Tooltip.Portal>
-            <Tooltip.Content
-              className="select-none rounded bg-white px-[15px] py-2.5 text-[15px] leading-none text-violet11 shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] will-change-[transform,opacity] data-[state=delayed-open]:data-[side=bottom]:animate-slideUpAndFade data-[state=delayed-open]:data-[side=left]:animate-slideRightAndFade data-[state=delayed-open]:data-[side=right]:animate-slideLeftAndFade data-[state=delayed-open]:data-[side=top]:animate-slideDownAndFade"
-              sideOffset={5}
-            >
-              Data saved to local storage only
-              <Tooltip.Arrow className="fill-white" />
-            </Tooltip.Content>
-          </Tooltip.Portal>
-        </Tooltip.Root>
-      </Tooltip.Provider>
-      {/* <button
-          className="transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-violet-50 border border-violet-200 hover:bg-accent hover:accent-foreground hover:border-input"
-          aria-label="Data is syncing"
-          disabled
-        >
-          <CloudOff className="h-4 w-4 text-violet-900" /> */}
-          {/* <span className="hidden md:block text-blue-600">Syncing...</span> */}
-        {/* </button> */}
-
-        {/* <span className="hidden sm:block">Local storage only</span> */}
+        <Tooltip.Provider>
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+              <button className="inline-flex size-[35px] items-center justify-center rounded-full bg-white text-violet11 shadow-[0_2px_10px] shadow-violet-200 focus:shadow-[0_0_0_2px]">
+                <CloudOff className="h-4 w-4 text-violet-900" />
+              </button>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content
+                className="select-none rounded bg-white px-[15px] py-2.5 text-[15px] leading-none text-violet11 shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] will-change-[transform,opacity] data-[state=delayed-open]:data-[side=bottom]:animate-slideUpAndFade data-[state=delayed-open]:data-[side=left]:animate-slideRightAndFade data-[state=delayed-open]:data-[side=right]:animate-slideLeftAndFade data-[state=delayed-open]:data-[side=top]:animate-slideDownAndFade"
+                sideOffset={5}
+              >
+                Data saved to local storage only
+                <Tooltip.Arrow className="fill-white" />
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
+        </Tooltip.Provider>
       </div>
     );
   }
@@ -76,7 +66,6 @@ export function SyncStatus({
             disabled
           >
             <RefreshCw className="h-4 w-4 animate-spin" />
-            {/* <span className="hidden md:block text-blue-600">Syncing...</span> */}
           </button>
         </>
       ) : (

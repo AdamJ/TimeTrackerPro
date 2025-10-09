@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   NavigationMenu,
   List,
@@ -63,12 +63,12 @@ const SiteNavigationMenu = () => {
         </Item>
         <div className="flex space-x-4">
           <Item>
-                          <SyncStatus
-                isAuthenticated={isAuthenticated}
-                lastSyncTime={lastSyncTime}
-                isSyncing={isSyncing}
-                onRefresh={refreshFromDatabase}
-              />
+            <SyncStatus
+              isAuthenticated={isAuthenticated}
+              lastSyncTime={lastSyncTime}
+              isSyncing={isSyncing}
+              onRefresh={refreshFromDatabase}
+            />
           </Item>
           <Item>
             <Button
@@ -83,9 +83,9 @@ const SiteNavigationMenu = () => {
           <Item>
             <NavLink
               to="/archive"
-                className={({ isActive }) =>
-                  `transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input ... ${isActive ? 'bg-blue-200 hover:bg-accent hover:text-accent-foreground' : 'bg-white'}`
-                }
+              className={({ isActive }) =>
+                `transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input ... ${isActive ? 'bg-blue-200 hover:bg-accent hover:text-accent-foreground' : 'bg-white'}`
+              }
             >
               <Database className="w-4 h-4" />
               <span className="hidden sm:block">Archives</span>
@@ -94,9 +94,9 @@ const SiteNavigationMenu = () => {
           <Item>
             <NavLink
               to="/settings"
-                className={({ isActive }) =>
-                  `transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input ... ${isActive ? 'bg-blue-200 hover:bg-accent hover:text-accent-foreground' : 'bg-white'}`
-                }
+              className={({ isActive }) =>
+                `transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input ... ${isActive ? 'bg-blue-200 hover:bg-accent hover:text-accent-foreground' : 'bg-white'}`
+              }
             >
               <CogIcon className="w-4 h-4" />
               <span className="hidden sm:block">Settings</span>
@@ -104,12 +104,6 @@ const SiteNavigationMenu = () => {
           </Item>
           <Item>
             <div className="flex space-x-4">
-              {/* <SyncStatus
-                isAuthenticated={isAuthenticated}
-                lastSyncTime={lastSyncTime}
-                isSyncing={isSyncing}
-                onRefresh={refreshFromDatabase}
-              /> */}
               <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
             </div>
           </Item>
@@ -117,7 +111,9 @@ const SiteNavigationMenu = () => {
       </List>
 
       <div className="perspective-[2000px] absolute left-0 top-full flex w-full justify-center">
-        <Viewport className="relative mt-2.5 h-[var(--radix-navigation-menu-viewport-height)] w-full origin-[top_center] overflow-hidden rounded-md bg-white transition-[width,_height] duration-300 data-[state=closed]:animate-scaleOut data-[state=open]:animate-scaleIn sm:w-[var(--radix-navigation-menu-viewport-width)]" />
+        <Viewport
+          className="relative mt-2.5 h-[var(--radix-navigation-menu-viewport-height)] w-full origin-[top_center] overflow-hidden rounded-md bg-white transition-[width,_height] duration-300 data-[state=closed]:animate-scaleOut data-[state=open]:animate-scaleIn sm:w-[var(--radix-navigation-menu-viewport-width)]"
+        />
       </div>
     </NavigationMenu>
 

@@ -25,13 +25,15 @@ export const TaskItem: React.FC<TaskItemProps> = ({
   const [showEditDialog, setShowEditDialog] = useState(false);
 
   const duration = task.duration || (isActive ? currentDuration : 0);
-  const category = categories.find(c => c.id === task.category);
+  const category = categories.find((c) => c.id === task.category);
 
   return (
     <>
-      <Card className={
-        `transition-all duration-200 ${isActive ? 'ring-2 ring-blue-500 bg-white' : 'hover:shadow-md'}`
-        }>
+      <Card
+        className={`transition-all duration-200 ${
+          isActive ? 'ring-2 ring-blue-500 bg-white' : 'hover:shadow-md'
+        }`}
+      >
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">

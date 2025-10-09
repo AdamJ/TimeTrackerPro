@@ -1,20 +1,11 @@
 import React, { useState } from 'react';
-import {
-  TimeTrackingProvider,
-  Project
-} from '@/contexts/TimeTrackingContext';
+import { TimeTrackingProvider, Project } from '@/contexts/TimeTrackingContext';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Edit,
-  Briefcase,
-  Trash2,
-  RotateCcw,
-  Plus
-} from 'lucide-react';
+import { Edit, Briefcase, Trash2, RotateCcw, Plus } from 'lucide-react';
 import SiteNavigationMenu from '@/components/Navigation';
 import { Badge } from '@radix-ui/themes';
 
@@ -133,7 +124,11 @@ const ProjectContent: React.FC = () => {
                   <RotateCcw className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:block">Reset to Defaults</span>
                 </Button>
-                <Button onClick={() => setIsAddingNew(true)} className="w-full" disabled>
+                <Button
+                  onClick={() => setIsAddingNew(true)}
+                  className="w-full"
+                  disabled
+                >
                   <Plus className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:block">Add Project</span>
                 </Button>
@@ -144,103 +139,101 @@ const ProjectContent: React.FC = () => {
       </div>
       {/* Add/Edit Project Form */}
       {isAddingNew && (
-      <div className="max-w-6xl mx-auto p-6 print:p-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {editingProject ? 'Edit Project' : 'Add New Project'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">
-                    Project Name <span className="text-red-700">*</span>
-                  </Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        name: e.target.value
-                      }))
-                    }
-                    placeholder="Enter project name"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="client">
-                    Client Name <span className="text-red-700">*</span>
-                  </Label>
-                  <Input
-                    id="client"
-                    value={formData.client}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        client: e.target.value
-                      }))
-                    }
-                    placeholder="Enter client name"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
-                  <Input
-                    id="hourlyRate"
-                    type="number"
-                    step="01.00"
-                    value={formData.hourlyRate}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        hourlyRate: e.target.value
-                      }))
-                    }
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="color">Project Color</Label>
-                  <div className="flex items-center space-x-2">
+        <div className="max-w-6xl mx-auto p-6 print:p-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {editingProject ? 'Edit Project' : 'Add New Project'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">
+                      Project Name <span className="text-red-700">*</span>
+                    </Label>
                     <Input
-                      id="color"
-                      type="color"
-                      value={formData.color}
+                      id="name"
+                      value={formData.name}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          color: e.target.value
+                          name: e.target.value
                         }))
                       }
-                      className="w-16 h-10"
+                      placeholder="Enter project name"
+                      required
                     />
-                    <span className="text-sm text-gray-500">
-                      {formData.color}
-                    </span>
+                  </div>
+                  <div>
+                    <Label htmlFor="client">
+                      Client Name <span className="text-red-700">*</span>
+                    </Label>
+                    <Input
+                      id="client"
+                      value={formData.client}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          client: e.target.value
+                        }))
+                      }
+                      placeholder="Enter client name"
+                      required
+                    />
                   </div>
                 </div>
-              </div>
-
-              <div className="flex space-x-2">
-                <Button type="button" variant="ghost" onClick={resetForm}>
-                  Cancel
-                </Button>
-                <Button type="submit" variant="default">
-                  {editingProject ? 'Update Project' : 'Add Project'}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
+                    <Input
+                      id="hourlyRate"
+                      type="number"
+                      step="01.00"
+                      value={formData.hourlyRate}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          hourlyRate: e.target.value
+                        }))
+                      }
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="color">Project Color</Label>
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        id="color"
+                        type="color"
+                        value={formData.color}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            color: e.target.value
+                          }))
+                        }
+                        className="w-16 h-10"
+                      />
+                      <span className="text-sm text-gray-500">
+                        {formData.color}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <Button type="button" variant="ghost" onClick={resetForm}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="default">
+                    {editingProject ? 'Update Project' : 'Add Project'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       )}
       <div className="max-w-6xl mx-auto p-6 print:p-4">
         {/* Projects List */}
@@ -248,7 +241,6 @@ const ProjectContent: React.FC = () => {
           <h3 className="text-lg font-semibold">
             Current Projects ({projects.length})
           </h3>
-
           {projects.length === 0 ? (
             <Card>
               <CardContent className="text-center py-8">
@@ -296,7 +288,6 @@ const ProjectContent: React.FC = () => {
                           </div>
                         </div>
                       </div>
-
                       <div className="flex space-x-2">
                         <Button
                           size="sm"

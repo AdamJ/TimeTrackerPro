@@ -1,21 +1,34 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Edit, Trash2, Briefcase, RotateCcw } from 'lucide-react';
 import { Project } from '@/contexts/TimeTrackingContext';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
-import { DEFAULT_PROJECTS } from '@/config/projects';
 
 interface ProjectManagementProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const ProjectManagement: React.FC<ProjectManagementProps> = ({ isOpen, onClose }) => {
-  const { projects, addProject, updateProject, deleteProject, resetProjectsToDefaults } = useTimeTracking();
+export const ProjectManagement: React.FC<ProjectManagementProps> = ({
+  isOpen,
+  onClose
+}) => {
+  const {
+    projects,
+    addProject,
+    updateProject,
+    deleteProject,
+    resetProjectsToDefaults
+  } = useTimeTracking();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [formData, setFormData] = useState({
@@ -42,7 +55,9 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({ isOpen, on
     const projectData = {
       name: formData.name.trim(),
       client: formData.client.trim(),
-      hourlyRate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : undefined,
+      hourlyRate: formData.hourlyRate
+        ? parseFloat(formData.hourlyRate)
+        : undefined,
       color: formData.color
     };
 
@@ -73,7 +88,11 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({ isOpen, on
   };
 
   const handleResetToDefaults = () => {
-    if (confirm('Are you sure you want to reset all projects to defaults? This will remove any custom projects you\'ve added.')) {
+    if (
+      confirm(
+        "Are you sure you want to reset all projects to defaults? This will remove any custom projects you've added."
+      )
+    ) {
       resetProjectsToDefaults();
     }
   };
@@ -90,21 +109,21 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({ isOpen, on
             <div className="flex items-center space-x-2 my-4">
               {!isAddingNew && (
                 <>
-                <Button
-                  onClick={handleResetToDefaults}
-                  variant="outline"
-                  className="w-full"
-                >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Reset to Defaults
-                </Button>
-                <Button
-                  onClick={() => setIsAddingNew(true)}
-                  className="w-full"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Project
-                </Button>
+                  <Button
+                    onClick={handleResetToDefaults}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Reset to Defaults
+                  </Button>
+                  <Button
+                    onClick={() => setIsAddingNew(true)}
+                    className="w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Project
+                  </Button>
                 </>
               )}
             </div>
@@ -128,7 +147,12 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({ isOpen, on
                       <Input
                         id="name"
                         value={formData.name}
-                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            name: e.target.value
+                          }))
+                        }
                         placeholder="Enter project name"
                         required
                       />
@@ -138,7 +162,12 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({ isOpen, on
                       <Input
                         id="client"
                         value={formData.client}
-                        onChange={(e) => setFormData(prev => ({ ...prev, client: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            client: e.target.value
+                          }))
+                        }
                         placeholder="Enter client name"
                         required
                       />
@@ -153,7 +182,12 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({ isOpen, on
                         type="number"
                         step="0.01"
                         value={formData.hourlyRate}
-                        onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            hourlyRate: e.target.value
+                          }))
+                        }
                         placeholder="0.00"
                       />
                     </div>
@@ -164,10 +198,17 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({ isOpen, on
                           id="color"
                           type="color"
                           value={formData.color}
-                          onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              color: e.target.value
+                            }))
+                          }
                           className="w-16 h-10"
                         />
-                        <span className="text-sm text-gray-500">{formData.color}</span>
+                        <span className="text-sm text-gray-500">
+                          {formData.color}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -195,13 +236,19 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({ isOpen, on
               <Card>
                 <CardContent className="text-center py-8">
                   <Briefcase className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No projects yet. Add your first project to get started!</p>
+                  <p className="text-gray-600">
+                    No projects yet. Add your first project to get started!
+                  </p>
                 </CardContent>
               </Card>
             ) : (
               <div className="grid gap-4">
                 {projects.map((project) => (
-                  <Card key={project.id} className="border-l-4" style={{ borderLeftColor: project.color }}>
+                  <Card
+                    key={project.id}
+                    className="border-l-4"
+                    style={{ borderLeftColor: project.color }}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -212,14 +259,18 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({ isOpen, on
                             />
                             <div>
                               <div className="flex items-center space-x-2">
-                                <h4 className="font-semibold text-gray-900">{project.name}</h4>
+                                <h4 className="font-semibold text-gray-900">
+                                  {project.name}
+                                </h4>
                                 {project.id.startsWith('default-') && (
                                   <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
                                     Default
                                   </span>
                                 )}
                               </div>
-                              <p className="text-sm text-gray-600">{project.client}</p>
+                              <p className="text-sm text-gray-600">
+                                {project.client}
+                              </p>
                               {project.hourlyRate && (
                                 <p className="text-sm text-green-600 font-medium">
                                   ${project.hourlyRate}/hour

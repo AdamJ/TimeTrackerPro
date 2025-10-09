@@ -1,11 +1,31 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Calendar as CalendarIcon, FileText, Database } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import {
+  Download,
+  Calendar as CalendarIcon,
+  FileText,
+  Database
+} from 'lucide-react';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { formatDate } from '@/utils/timeUtil';
 import { cn } from '@/lib/util';
@@ -15,22 +35,40 @@ interface ExportDialogProps {
   onClose: () => void;
 }
 
-export const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose }) => {
-  const { exportToCSV, exportToJSON, generateInvoiceData, projects, archivedDays } = useTimeTracking();
+export const ExportDialog: React.FC<ExportDialogProps> = ({
+  isOpen,
+  onClose
+}) => {
+  const {
+    exportToCSV,
+    exportToJSON,
+    generateInvoiceData,
+    projects,
+    archivedDays
+  } = useTimeTracking();
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
-  const [exportType, setExportType] = useState<'csv' | 'json' | 'invoice'>('csv');
+  const [exportType, setExportType] = useState<'csv' | 'json' | 'invoice'>(
+    'csv'
+  );
   const [selectedClient, setSelectedClient] = useState<string>('');
 
   // Get unique clients from projects
-  const clients = Array.from(new Set(projects.map(p => p.client))).filter(Boolean);
+  const clients = Array.from(new Set(projects.map((p) => p.client))).filter(
+    Boolean
+  );
 
   const handleExport = () => {
     let content = '';
     let filename = '';
     let mimeType = '';
 
-    const dateRange = startDate && endDate ? `_${startDate.toISOString().split('T')[0]}_to_${endDate.toISOString().split('T')[0]}` : '';
+    const dateRange =
+      startDate && endDate
+        ? `_${startDate.toISOString().split('T')[0]}_to_${
+            endDate.toISOString().split('T')[0]
+          }`
+        : '';
 
     switch (exportType) {
       case 'csv':
@@ -48,9 +86,16 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose }) =
           alert('Please select a client and date range for invoice generation');
           return;
         }
-        const invoiceData = generateInvoiceData(selectedClient, startDate, endDate);
+        const invoiceData = generateInvoiceData(
+          selectedClient,
+          startDate,
+          endDate
+        );
         content = JSON.stringify(invoiceData, null, 2);
-        filename = `invoice_${selectedClient.replace(/\s+/g, '_')}${dateRange}.json`;
+        filename = `invoice_${selectedClient.replace(
+          /\s+/g,
+          '_'
+        )}${dateRange}.json`;
         mimeType = 'application/json';
         break;
       }
@@ -87,7 +132,12 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose }) =
               <CardTitle className="text-lg">Export Type</CardTitle>
             </CardHeader>
             <CardContent>
-              <Select value={exportType} onValueChange={(value: 'csv' | 'json' | 'invoice') => setExportType(value)}>
+              <Select
+                value={exportType}
+                onValueChange={(value: 'csv' | 'json' | 'invoice') =>
+                  setExportType(value)
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -129,12 +179,12 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose }) =
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !startDate && "text-muted-foreground"
+                          'w-full justify-start text-left font-normal',
+                          !startDate && 'text-muted-foreground'
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {startDate ? formatDate(startDate) : "Pick a date"}
+                        {startDate ? formatDate(startDate) : 'Pick a date'}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -155,12 +205,12 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose }) =
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !endDate && "text-muted-foreground"
+                          'w-full justify-start text-left font-normal',
+                          !endDate && 'text-muted-foreground'
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {endDate ? formatDate(endDate) : "Pick a date"}
+                        {endDate ? formatDate(endDate) : 'Pick a date'}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -184,7 +234,10 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose }) =
                 <CardTitle className="text-lg">Client Selection</CardTitle>
               </CardHeader>
               <CardContent>
-                <Select value={selectedClient} onValueChange={setSelectedClient}>
+                <Select
+                  value={selectedClient}
+                  onValueChange={setSelectedClient}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select client for invoice" />
                   </SelectTrigger>
@@ -209,7 +262,9 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose }) =
               <div className="text-sm text-gray-600 space-y-1">
                 <p>Total archived days: {archivedDays.length}</p>
                 {startDate && endDate && (
-                  <p>Date range: {formatDate(startDate)} to {formatDate(endDate)}</p>
+                  <p>
+                    Date range: {formatDate(startDate)} to {formatDate(endDate)}
+                  </p>
                 )}
                 {exportType === 'invoice' && selectedClient && (
                   <p>Client: {selectedClient}</p>
@@ -225,7 +280,10 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ isOpen, onClose }) =
             </Button>
             <Button
               onClick={handleExport}
-              disabled={exportType === 'invoice' && (!selectedClient || !startDate || !endDate)}
+              disabled={
+                exportType === 'invoice' &&
+                (!selectedClient || !startDate || !endDate)
+              }
             >
               <Download className="w-4 h-4 mr-2" />
               Export

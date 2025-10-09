@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, Save } from 'lucide-react';
 import { Task } from '@/contexts/TimeTrackingContext';
@@ -24,8 +35,13 @@ function formatTimeForInput(date: Date): string {
   return `${hours}:${minutes}`;
 }
 
-export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, onClose }) => {
-  const { updateTask, adjustTaskTime, projects, categories } = useTimeTracking();
+export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
+  task,
+  isOpen,
+  onClose
+}) => {
+  const { updateTask, adjustTaskTime, projects, categories } =
+    useTimeTracking();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -44,7 +60,8 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
   // Reset form when task changes or dialog opens
   useEffect(() => {
     if (isOpen && task) {
-      const projectId = projects.find(p => p.name === task.project)?.id || 'none';
+      const projectId =
+        projects.find((p) => p.name === task.project)?.id || 'none';
 
       setFormData({
         title: task.title || '',
@@ -65,7 +82,8 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
   // Track changes
   useEffect(() => {
     if (task && isOpen) {
-      const projectId = projects.find(p => p.name === task.project)?.id || 'none';
+      const projectId =
+        projects.find((p) => p.name === task.project)?.id || 'none';
       const originalData = {
         title: task.title || '',
         description: task.description || '',
@@ -78,8 +96,10 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
         endTime: task.endTime ? formatTimeForInput(task.endTime) : ''
       };
 
-      const dataChanged = JSON.stringify(formData) !== JSON.stringify(originalData);
-      const timeChanged = JSON.stringify(timeData) !== JSON.stringify(originalTimeData);
+      const dataChanged =
+        JSON.stringify(formData) !== JSON.stringify(originalData);
+      const timeChanged =
+        JSON.stringify(timeData) !== JSON.stringify(originalTimeData);
 
       setHasChanges(dataChanged || timeChanged);
     }
@@ -117,7 +137,9 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
     const options: TimeOption[] = [];
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 15) {
-        const value = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const value = `${hour.toString().padStart(2, '0')}:${minute
+          .toString()
+          .padStart(2, '0')}`;
         const date = new Date();
         date.setHours(hour, minute, 0, 0);
         const label = formatTime12Hour(date);
@@ -132,7 +154,8 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
   const handleCancel = () => {
     // Reset form to original values
     if (task) {
-      const projectId = projects.find(p => p.name === task.project)?.id || 'none';
+      const projectId =
+        projects.find((p) => p.name === task.project)?.id || 'none';
 
       setFormData({
         title: task.title || '',
@@ -156,8 +179,14 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
       return;
     }
 
-    const selectedProject = formData.project !== 'none' ? projects.find(p => p.id === formData.project) : undefined;
-    const selectedCategory = formData.category !== 'none' ? categories.find(c => c.id === formData.category) : undefined;
+    const selectedProject =
+      formData.project !== 'none'
+        ? projects.find((p) => p.id === formData.project)
+        : undefined;
+    const selectedCategory =
+      formData.category !== 'none'
+        ? categories.find((c) => c.id === formData.category)
+        : undefined;
 
     // Update task details
     const taskUpdates: Partial<Task> = {
@@ -173,13 +202,19 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
     // Update times if they've changed
     if (timeData.startTime) {
       const newStartTime = parseTimeInput(timeData.startTime, task.startTime);
-      const newEndTime = timeData.endTime ? parseTimeInput(timeData.endTime, task.startTime) : undefined;
+      const newEndTime = timeData.endTime
+        ? parseTimeInput(timeData.endTime, task.startTime)
+        : undefined;
 
       // Check if times have actually changed
-      const startTimeChanged = newStartTime.getTime() !== task.startTime.getTime();
-      const endTimeChanged = (newEndTime && task.endTime && newEndTime.getTime() !== task.endTime.getTime()) ||
-                            (newEndTime && !task.endTime) ||
-                            (!newEndTime && task.endTime);
+      const startTimeChanged =
+        newStartTime.getTime() !== task.startTime.getTime();
+      const endTimeChanged =
+        (newEndTime &&
+          task.endTime &&
+          newEndTime.getTime() !== task.endTime.getTime()) ||
+        (newEndTime && !task.endTime) ||
+        (!newEndTime && task.endTime);
 
       if (startTimeChanged || endTimeChanged) {
         adjustTaskTime(task.id, newStartTime, newEndTime);
@@ -207,11 +242,15 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="title">Task Title <span className="text-red-700">*</span></Label>
+                <Label htmlFor="title">
+                  Task Title <span className="text-red-700">*</span>
+                </Label>
                 <Input
                   id="title"
                   value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, title: e.target.value }))
+                  }
                   placeholder="Enter task title"
                 />
               </div>
@@ -221,7 +260,12 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value
+                    }))
+                  }
                   placeholder="Enter task description (optional)"
                   className="min-h-[80px] resize-none"
                 />
@@ -230,19 +274,35 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>Category</Label>
-                  <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, category: value }))
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select category">
                         {formData.category && formData.category !== 'none' ? (
                           <div className="flex items-center space-x-2">
                             <div
                               className="w-3 h-3 rounded-full border"
-                              style={{ backgroundColor: categories.find(c => c.id === formData.category)?.color || '#gray' }}
+                              style={{
+                                backgroundColor:
+                                  categories.find(
+                                    (c) => c.id === formData.category
+                                  )?.color || '#gray'
+                              }}
                             />
-                            <span>{categories.find(c => c.id === formData.category)?.name}</span>
+                            <span>
+                              {
+                                categories.find(
+                                  (c) => c.id === formData.category
+                                )?.name
+                              }
+                            </span>
                           </div>
                         ) : (
-                          "Select category"
+                          'Select category'
                         )}
                       </SelectValue>
                     </SelectTrigger>
@@ -265,16 +325,31 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
 
                 <div>
                   <Label>Project</Label>
-                  <Select value={formData.project} onValueChange={(value) => setFormData(prev => ({ ...prev, project: value }))}>
+                  <Select
+                    value={formData.project}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, project: value }))
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select project">
                         {formData.project && formData.project !== 'none' ? (
                           <div className="flex flex-col">
-                            <span>{projects.find(p => p.id === formData.project)?.name}</span>
-                            <span className="text-sm text-gray-500">{projects.find(p => p.id === formData.project)?.client}</span>
+                            <span>
+                              {
+                                projects.find((p) => p.id === formData.project)
+                                  ?.name
+                              }
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              {
+                                projects.find((p) => p.id === formData.project)
+                                  ?.client
+                              }
+                            </span>
                           </div>
                         ) : (
-                          "Select project"
+                          'Select project'
                         )}
                       </SelectValue>
                     </SelectTrigger>
@@ -284,7 +359,9 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
                         <SelectItem key={project.id} value={project.id}>
                           <div className="flex flex-col">
                             <span>{project.name}</span>
-                            <span className="text-sm text-gray-500">{project.client}</span>
+                            <span className="text-sm text-gray-500">
+                              {project.client}
+                            </span>
                           </div>
                         </SelectItem>
                       ))}
@@ -300,7 +377,8 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
             <CardHeader>
               <CardTitle className="text-lg">Time Adjustment</CardTitle>
               <p className="text-sm text-gray-600">
-                Times are automatically rounded to the nearest 15-minute interval
+                Times are automatically rounded to the nearest 15-minute
+                interval
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -311,10 +389,15 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>Start Time</Label>
-                  <Select value={timeData.startTime} onValueChange={(value) => setTimeData(prev => ({ ...prev, startTime: value }))}>
+                  <Select
+                    value={timeData.startTime}
+                    onValueChange={(value) =>
+                      setTimeData((prev) => ({ ...prev, startTime: value }))
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select start time">
-                        {timeData.startTime || "Select start time"}
+                        {timeData.startTime || 'Select start time'}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
@@ -328,15 +411,25 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
                 </div>
 
                 <div>
-                  <Label>End Time {!task.endTime && "(Currently Active)"}</Label>
+                  <Label>
+                    End Time {!task.endTime && '(Currently Active)'}
+                  </Label>
                   <Select
                     value={timeData.endTime}
-                    onValueChange={(value) => setTimeData(prev => ({ ...prev, endTime: value }))}
+                    onValueChange={(value) =>
+                      setTimeData((prev) => ({ ...prev, endTime: value }))
+                    }
                     disabled={!task.endTime}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={task.endTime ? "Select end time" : "Task is active"}>
-                        {task.endTime ? (timeData.endTime || "Select end time") : "Task is active"}
+                      <SelectValue
+                        placeholder={
+                          task.endTime ? 'Select end time' : 'Task is active'
+                        }
+                      >
+                        {task.endTime
+                          ? timeData.endTime || 'Select end time'
+                          : 'Task is active'}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
@@ -354,10 +447,12 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
               <div className="bg-gray-50 p-3 rounded-md text-sm">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="font-medium">Current Start:</span> {formatTime(task.startTime)}
+                    <span className="font-medium">Current Start:</span>{' '}
+                    {formatTime(task.startTime)}
                   </div>
                   <div>
-                    <span className="font-medium">Current End:</span> {task.endTime ? formatTime(task.endTime) : 'Active'}
+                    <span className="font-medium">Current End:</span>{' '}
+                    {task.endTime ? formatTime(task.endTime) : 'Active'}
                   </div>
                 </div>
               </div>
@@ -369,7 +464,10 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({ task, isOpen, on
             <Button variant="ghost" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={!formData.title.trim() || !hasChanges}>
+            <Button
+              onClick={handleSave}
+              disabled={!formData.title.trim() || !hasChanges}
+            >
               <Save className="w-4 h-4 mr-2" />
               {hasChanges ? 'Save Changes' : 'No Changes'}
             </Button>

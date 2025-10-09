@@ -1,13 +1,25 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus } from 'lucide-react';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 
 interface NewTaskFormProps {
-  onSubmit: (title: string, description?: string, project?: string, client?: string, category?: string) => void;
+  onSubmit: (
+    title: string,
+    description?: string,
+    project?: string,
+    client?: string,
+    category?: string
+  ) => void;
 }
 
 export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
@@ -18,8 +30,10 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isOpen, setIsOpen] = useState(false);
 
-  const selectedProjectData = projects.find(p => p.id === selectedProject);
-  const selectedCategoryData = categories.find(c => c.id === selectedCategory);
+  const selectedProjectData = projects.find((p) => p.id === selectedProject);
+  const selectedCategoryData = categories.find(
+    (c) => c.id === selectedCategory
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +91,10 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {categories.length > 0 && (
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
@@ -98,7 +115,10 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
             )}
 
             {projects.length > 0 && (
-              <Select value={selectedProject} onValueChange={setSelectedProject}>
+              <Select
+                value={selectedProject}
+                onValueChange={setSelectedProject}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a project" />
                 </SelectTrigger>
@@ -107,7 +127,9 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
                     <SelectItem key={project.id} value={project.id}>
                       <div className="flex flex-col">
                         <span>{project.name}</span>
-                        <span className="text-sm text-gray-500">{project.client}</span>
+                        <span className="text-sm text-gray-500">
+                          {project.client}
+                        </span>
                       </div>
                     </SelectItem>
                   ))}
@@ -130,11 +152,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              variant="default"
-              disabled={!title.trim()}
-            >
+            <Button type="submit" variant="default" disabled={!title.trim()}>
               Start Task
             </Button>
           </div>

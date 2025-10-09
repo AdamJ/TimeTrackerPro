@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,9 +19,15 @@ interface CategoryManagementProps {
   onClose: () => void;
 }
 
-export const CategoryManagement: React.FC<CategoryManagementProps> = ({ isOpen, onClose }) => {
-  const { categories, addCategory, updateCategory, deleteCategory } = useTimeTracking();
-  const [editingCategory, setEditingCategory] = useState<TaskCategory | null>(null);
+export const CategoryManagement: React.FC<CategoryManagementProps> = ({
+  isOpen,
+  onClose
+}) => {
+  const { categories, addCategory, updateCategory, deleteCategory } =
+    useTimeTracking();
+  const [editingCategory, setEditingCategory] = useState<TaskCategory | null>(
+    null
+  );
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -63,14 +74,26 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({ isOpen, 
   };
 
   const handleDelete = (categoryId: string) => {
-    if (confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
+    if (
+      confirm(
+        'Are you sure you want to delete this category? This action cannot be undone.'
+      )
+    ) {
       deleteCategory(categoryId);
     }
   };
 
   const predefinedColors = [
-    '#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444',
-    '#06B6D4', '#84CC16', '#F97316', '#6B7280', '#EC4899'
+    '#3B82F6',
+    '#8B5CF6',
+    '#10B981',
+    '#F59E0B',
+    '#EF4444',
+    '#06B6D4',
+    '#84CC16',
+    '#F97316',
+    '#6B7280',
+    '#EC4899'
   ];
 
   return (
@@ -85,10 +108,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({ isOpen, 
             <div className="flex items-center space-x-2 my-4">
               {/* Add New Category Button */}
               {!isAddingNew && (
-                <Button
-                  onClick={() => setIsAddingNew(true)}
-                  className="w-full"
-                >
+                <Button onClick={() => setIsAddingNew(true)} className="w-full">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Category
                 </Button>
@@ -113,7 +133,12 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({ isOpen, 
                     <Input
                       id="name"
                       value={formData.name}
-                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          name: e.target.value
+                        }))
+                      }
                       placeholder="Enter category name"
                       required
                     />
@@ -124,7 +149,12 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({ isOpen, 
                     <Textarea
                       id="description"
                       value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          description: e.target.value
+                        }))
+                      }
                       placeholder="Enter category description (optional)"
                       className="min-h-[80px] resize-none"
                     />
@@ -138,10 +168,17 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({ isOpen, 
                           id="color"
                           type="color"
                           value={formData.color}
-                          onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              color: e.target.value
+                            }))
+                          }
                           className="w-16 h-10"
                         />
-                        <span className="text-sm text-gray-500">{formData.color}</span>
+                        <span className="text-sm text-gray-500">
+                          {formData.color}
+                        </span>
                         <div
                           className="w-8 h-8 rounded-full border-2 border-gray-300"
                           style={{ backgroundColor: formData.color }}
@@ -150,14 +187,20 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({ isOpen, 
 
                       {/* Predefined Colors */}
                       <div className="flex flex-wrap gap-2">
-                        <span className="text-sm text-gray-600 w-full">Quick colors:</span>
+                        <span className="text-sm text-gray-600 w-full">
+                          Quick colors:
+                        </span>
                         {predefinedColors.map((color) => (
                           <button
                             key={color}
                             type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, color }))}
+                            onClick={() =>
+                              setFormData((prev) => ({ ...prev, color }))
+                            }
                             className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${
-                              formData.color === color ? 'border-gray-800' : 'border-gray-300'
+                              formData.color === color
+                                ? 'border-gray-800'
+                                : 'border-gray-300'
                             }`}
                             style={{ backgroundColor: color }}
                           />
@@ -189,13 +232,19 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({ isOpen, 
               <Card>
                 <CardContent className="text-center py-8">
                   <Tag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No categories yet. Add your first category to get started!</p>
+                  <p className="text-gray-600">
+                    No categories yet. Add your first category to get started!
+                  </p>
                 </CardContent>
               </Card>
             ) : (
               <div className="grid gap-4">
                 {categories.map((category) => (
-                  <Card key={category.id} className="border-l-4" style={{ borderLeftColor: category.color }}>
+                  <Card
+                    key={category.id}
+                    className="border-l-4"
+                    style={{ borderLeftColor: category.color }}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -205,9 +254,13 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({ isOpen, 
                               style={{ backgroundColor: category.color }}
                             />
                             <div>
-                              <h4 className="font-semibold text-gray-900">{category.name}</h4>
+                              <h4 className="font-semibold text-gray-900">
+                                {category.name}
+                              </h4>
                               {category.description && (
-                                <p className="text-sm text-gray-600 mt-1">{category.description}</p>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {category.description}
+                                </p>
                               )}
                             </div>
                           </div>

@@ -9,7 +9,6 @@ import { TimeTrackingProvider } from '@/contexts/TimeTrackingContext';
 import { TaskCategory } from '@/config/categories';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 import SiteNavigationMenu from '@/components/Navigation';
-import { StackIcon } from '@radix-ui/react-icons';
 
 const CategoryContent: React.FC = () => {
   const { categories, addCategory, updateCategory, deleteCategory } =
@@ -163,7 +162,6 @@ const CategoryContent: React.FC = () => {
                   <Label htmlFor="color">Category Color</Label>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2">
-                      {/* <span className="text-sm text-gray-500">{formData.color}</span> */}
                       <Input
                         id="color"
                         type="color"
