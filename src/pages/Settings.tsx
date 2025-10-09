@@ -78,7 +78,6 @@ const SettingsContent: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-
           {/* Management Sections */}
           <div className="grid gap-6 md:grid-cols-2">
             {/* Project Management */}
@@ -102,7 +101,6 @@ const SettingsContent: React.FC = () => {
                 </Link>
               </CardContent>
             </Card>
-
             {/* Category Management */}
             <Card>
               <CardHeader>
@@ -124,7 +122,6 @@ const SettingsContent: React.FC = () => {
                 </Link>
               </CardContent>
             </Card>
-
             {/* Data Export */}
             <Card>
               <CardHeader>
@@ -148,7 +145,6 @@ const SettingsContent: React.FC = () => {
                 </Button>
               </CardContent>
             </Card>
-
             {/* Data Management */}
             <Card>
               <CardHeader>
@@ -181,7 +177,6 @@ const SettingsContent: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-
           {/* Quick Tips */}
           <Card>
             <CardHeader>
@@ -221,7 +216,6 @@ const SettingsContent: React.FC = () => {
           </Card>
         </div>
       </div>
-
       {/* Dialogs */}
       <ExportDialog
         isOpen={showExportDialog}

@@ -9,7 +9,7 @@ import { ArchiveEditDialog } from '@/components/ArchiveEditDialog';
 import { ExportDialog } from '@/components/ExportDialog';
 import { ProjectManagement } from '@/components/ProjectManagement';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Archive as ArchiveIcon, Database } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SiteNavigationMenu from '@/components/Navigation';

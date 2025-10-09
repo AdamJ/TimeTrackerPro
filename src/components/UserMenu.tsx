@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { User, UserCheck, UserLock, LogOut } from 'lucide-react';
+import { UserCheck, UserLock, LogOut } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,

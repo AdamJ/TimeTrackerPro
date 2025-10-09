@@ -5,9 +5,7 @@ import { NewTaskForm } from '@/components/NewTaskForm';
 import { TaskItem } from '@/components/TaskItem';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Archive as ArchiveIcon, Play, CogIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { formatDuration } from '@/utils/timeUtil';
+import { Archive as Play } from 'lucide-react';
 import { DashboardIcon } from '@radix-ui/react-icons';
 import SiteNavigationMenu from '@/components/Navigation';
 
@@ -51,8 +49,7 @@ const TimeTrackerContent = () => {
   const handlePostDay = () => {
     postDay();
   };
-  const { archivedDays, getTotalHoursForPeriod, getRevenueForPeriod } =
-    useTimeTracking();
+  const { archivedDays, getTotalHoursForPeriod } = useTimeTracking();
   const totalHours =
     archivedDays.length > 0
       ? getTotalHoursForPeriod(new Date(0), new Date())
@@ -112,17 +109,6 @@ const TimeTrackerContent = () => {
               </CardContent>
             </Card>
           </div>
-
-          {/* Archived Days */}
-          {/* <div className="space-y-4">
-            {sortedDays.map((day) => (
-              <ArchiveItem
-                key={day.id}
-                day={day}
-                onEdit={handleEdit}
-              />
-            ))}
-          </div> */}
         </div>
       </div>
       <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -151,7 +137,6 @@ const TimeTrackerContent = () => {
         ) : (
           <>
             <NewTaskForm onSubmit={handleNewTask} />
-
             {tasks.length > 0 && (
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900">Tasks</h2>
@@ -168,7 +153,6 @@ const TimeTrackerContent = () => {
                 ))}
               </div>
             )}
-
             <Card className="bg-red-50 border-red-200">
               <CardContent className="p-4">
                 <Button

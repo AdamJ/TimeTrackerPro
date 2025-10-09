@@ -1,7 +1,14 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
 import { Calendar, Clock, Edit, RotateCcw } from 'lucide-react';
 import { formatDuration, formatTime, formatDate } from '@/utils/timeUtil';
 import { DayRecord } from '@/contexts/TimeTrackingContext';
@@ -17,7 +24,11 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 
   const handleRestore = () => {
     if (isDayStarted) {
-      if (!confirm('You currently have an active day. Restoring to this day will replace your current work. Continue restoring?')) {
+      if (
+        !confirm(
+          'You currently have an active day. Restoring to this day will replace your current work. Continue restoring?'
+        )
+      ) {
         return;
       }
     }
@@ -83,10 +94,18 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
             <Table>
               <TableHeader>
                 <TableRow className="print:border-black">
-                  <TableHead className="print:text-black print:font-bold">Task</TableHead>
-                  <TableHead className="print:text-black print:font-bold">Start Time</TableHead>
-                  <TableHead className="print:text-black print:font-bold">End Time</TableHead>
-                  <TableHead className="print:text-black print:font-bold">Duration</TableHead>
+                  <TableHead className="print:text-black print:font-bold">
+                    Task
+                  </TableHead>
+                  <TableHead className="print:text-black print:font-bold">
+                    Start Time
+                  </TableHead>
+                  <TableHead className="print:text-black print:font-bold">
+                    End Time
+                  </TableHead>
+                  <TableHead className="print:text-black print:font-bold">
+                    Duration
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

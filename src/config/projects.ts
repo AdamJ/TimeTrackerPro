@@ -19,8 +19,8 @@ export const DEFAULT_PROJECTS: ProjectCategory[] = [
     color: '#3B82F6'
   },
   {
-    name: 'Cloud',
-    client: 'CF',
+    name: 'Personal',
+    client: 'AJ',
     hourlyRate: 100,
     color: '#8B5CF6'
   }

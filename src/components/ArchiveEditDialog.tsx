@@ -3,18 +3,41 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/components/ui/dialog';
-import { Callout } from "@radix-ui/themes";
+import { Callout } from '@radix-ui/themes';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar, Clock, X, Save, Trash2, Edit, Plus, AlertTriangle, RotateCcw } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
+import {
+  Calendar,
+  Clock,
+  X,
+  Save,
+  Trash2,
+  Edit,
+  Plus,
+  AlertTriangle,
+  RotateCcw
+} from 'lucide-react';
 import { formatDuration, formatDate } from '@/utils/timeUtil';
 import { DayRecord, Task } from '@/contexts/TimeTrackingContext';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
@@ -24,7 +47,6 @@ interface ArchiveEditDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
 
 // Helper functions
 function formatTimeForInput(date: Date): string {
@@ -48,7 +70,9 @@ function generateTimeOptions(): TimeOption[] {
   const options: TimeOption[] = [];
   for (let hour = 0; hour < 24; hour++) {
     for (let minute = 0; minute < 60; minute += 15) {
-      const value = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      const value = `${hour.toString().padStart(2, '0')}:${minute
+        .toString()
+        .padStart(2, '0')}`;
       const date = new Date();
       date.setHours(hour, minute, 0, 0);
       const label = formatTime12Hour(date);
@@ -63,7 +87,13 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   isOpen,
   onClose
 }) => {
-  const { updateArchivedDay, deleteArchivedDay, restoreArchivedDay, projects, categories, isDayStarted } = useTimeTracking();
+  const {
+    updateArchivedDay,
+    deleteArchivedDay,
+    restoreArchivedDay,
+    categories,
+    isDayStarted
+  } = useTimeTracking();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -137,7 +167,11 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 
   const handleRestoreDay = () => {
     if (isDayStarted) {
-      if (!confirm('You currently have an active day. Restoring to this day will replace your current work. Continue restoring?')) {
+      if (
+        !confirm(
+          'You currently have an active day. Restoring to this day will replace your current work. Continue restoring?'
+        )
+      ) {
         return;
       }
     }
@@ -150,13 +184,15 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   };
 
   const handleTaskSave = (updatedTask: Task) => {
-    const updatedTasks = tasks.map(t => t.id === updatedTask.id ? updatedTask : t);
+    const updatedTasks = tasks.map((t) =>
+      t.id === updatedTask.id ? updatedTask : t
+    );
     setTasks(updatedTasks);
     setEditingTask(null);
   };
 
   const handleTaskDelete = (taskId: string) => {
-    const updatedTasks = tasks.filter(t => t.id !== taskId);
+    const updatedTasks = tasks.filter((t) => t.id !== taskId);
     setTasks(updatedTasks);
   };
 
@@ -212,17 +248,10 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                 </>
               ) : (
                 <>
-                  <Button
-                    onClick={handleCancel}
-                    variant="outline"
-                    size="sm"
-                  >
+                  <Button onClick={handleCancel} variant="outline" size="sm">
                     Cancel
                   </Button>
-                  <Button
-                    onClick={handleSaveDay}
-                    size="sm"
-                  >
+                  <Button onClick={handleSaveDay} size="sm">
                     <Save className="w-4 h-4 mr-2" />
                     Save
                   </Button>
@@ -235,12 +264,13 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
         <div className="space-y-6">
           {/* Day Summary */}
           {isEditing && (
-            <Callout.Root size="1"  variant="outline">
+            <Callout.Root size="1" variant="outline">
               <Callout.Icon>
                 <InfoCircledIcon />
               </Callout.Icon>
               <Callout.Text>
-                You will need admin privileges to install and access this application.
+                You will need admin privileges to install and access this
+                application.
               </Callout.Text>
             </Callout.Root>
           )}
@@ -256,7 +286,9 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                       <Label>Start Time</Label>
                       <Select
                         value={dayData.startTime}
-                        onValueChange={(value) => setDayData(prev => ({ ...prev, startTime: value }))}
+                        onValueChange={(value) =>
+                          setDayData((prev) => ({ ...prev, startTime: value }))
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -274,7 +306,9 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                       <Label>End Time</Label>
                       <Select
                         value={dayData.endTime}
-                        onValueChange={(value) => setDayData(prev => ({ ...prev, endTime: value }))}
+                        onValueChange={(value) =>
+                          setDayData((prev) => ({ ...prev, endTime: value }))
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -293,7 +327,12 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                     <Label>Notes</Label>
                     <Textarea
                       value={dayData.notes}
-                      onChange={(e) => setDayData(prev => ({ ...prev, notes: e.target.value }))}
+                      onChange={(e) =>
+                        setDayData((prev) => ({
+                          ...prev,
+                          notes: e.target.value
+                        }))
+                      }
                       placeholder="Add notes about this day (optional)"
                       className="min-h-[80px] resize-none"
                     />
@@ -302,15 +341,23 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
               ) : (
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-medium text-gray-900">Start Time:</span>
-                    <span className="ml-2 text-gray-600">{formatTime12Hour(day.startTime)}</span>
+                    <span className="font-medium text-gray-900">
+                      Start Time:
+                    </span>
+                    <span className="ml-2 text-gray-600">
+                      {formatTime12Hour(day.startTime)}
+                    </span>
                   </div>
                   <div>
                     <span className="font-medium text-gray-900">End Time:</span>
-                    <span className="ml-2 text-gray-600">{formatTime12Hour(day.endTime)}</span>
+                    <span className="ml-2 text-gray-600">
+                      {formatTime12Hour(day.endTime)}
+                    </span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-900">Total Duration:</span>
+                    <span className="font-medium text-gray-900">
+                      Total Duration:
+                    </span>
                     <div className="flex items-center space-x-2 mt-1">
                       <Clock className="w-4 h-4 text-green-600" />
                       <span className="font-semibold text-green-600">
@@ -320,7 +367,9 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                   </div>
                   <div>
                     <span className="font-medium text-gray-900">Tasks:</span>
-                    <span className="ml-2 text-gray-600">{tasks.length} total</span>
+                    <span className="ml-2 text-gray-600">
+                      {tasks.length} total
+                    </span>
                   </div>
                   {day.notes && (
                     <div className="col-span-2">
@@ -332,7 +381,6 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
               )}
             </CardContent>
           </Card>
-
           {/* Tasks Detail */}
           <Card>
             <CardHeader>
@@ -353,14 +401,18 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                 </TableHeader>
                 <TableBody>
                   {tasks.map((task) => {
-                    const category = categories.find(c => c.id === task.category);
+                    const category = categories.find(
+                      (c) => c.id === task.category
+                    );
                     return (
                       <TableRow key={task.id}>
                         <TableCell className="font-medium">
                           <div>
                             <div>{task.title}</div>
                             {task.description && (
-                              <div className="text-sm text-gray-500 mt-1">{task.description}</div>
+                              <div className="text-sm text-gray-500 mt-1">
+                                {task.description}
+                              </div>
                             )}
                           </div>
                         </TableCell>
@@ -378,18 +430,26 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                         <TableCell>
                           {task.project && (
                             <div>
-                              <div className="text-sm font-medium">{task.project}</div>
+                              <div className="text-sm font-medium">
+                                {task.project}
+                              </div>
                               {task.client && (
-                                <div className="text-xs text-gray-500">{task.client}</div>
+                                <div className="text-xs text-gray-500">
+                                  {task.client}
+                                </div>
                               )}
                             </div>
                           )}
                         </TableCell>
-                        <TableCell>{formatTime12Hour(task.startTime)}</TableCell>
+                        <TableCell>
+                          {formatTime12Hour(task.startTime)}
+                        </TableCell>
                         <TableCell>
                           {task.endTime ? formatTime12Hour(task.endTime) : '-'}
                         </TableCell>
-                        <TableCell>{formatDuration(task.duration || 0)}</TableCell>
+                        <TableCell>
+                          {formatDuration(task.duration || 0)}
+                        </TableCell>
                         {isEditing && (
                           <TableCell>
                             <div className="flex space-x-2">
@@ -426,9 +486,12 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                 <div className="flex items-center space-x-3">
                   <AlertTriangle className="w-5 h-5 text-red-600" />
                   <div className="flex-1">
-                    <h4 className="font-medium text-red-900">Delete Archived Day</h4>
+                    <h4 className="font-medium text-red-900">
+                      Delete Archived Day
+                    </h4>
                     <p className="text-sm text-red-700 mt-1">
-                      Are you sure you want to delete this archived day? This action cannot be undone.
+                      Are you sure you want to delete this archived day? This
+                      action cannot be undone.
                     </p>
                   </div>
                   <div className="flex space-x-2">
@@ -498,7 +561,8 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
 
   useEffect(() => {
     if (isOpen && task) {
-      const projectId = projects.find(p => p.name === task.project)?.id || 'none';
+      const projectId =
+        projects.find((p) => p.name === task.project)?.id || 'none';
 
       setFormData({
         title: task.title || '',
@@ -533,11 +597,19 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
   };
 
   const handleSave = () => {
-    const selectedProject = formData.project !== 'none' ? projects.find(p => p.id === formData.project) : undefined;
-    const selectedCategory = formData.category !== 'none' ? categories.find(c => c.id === formData.category) : undefined;
+    const selectedProject =
+      formData.project !== 'none'
+        ? projects.find((p) => p.id === formData.project)
+        : undefined;
+    const selectedCategory =
+      formData.category !== 'none'
+        ? categories.find((c) => c.id === formData.category)
+        : undefined;
 
     const newStartTime = parseTimeInput(timeData.startTime, task.startTime);
-    const newEndTime = timeData.endTime ? parseTimeInput(timeData.endTime, task.startTime) : undefined;
+    const newEndTime = timeData.endTime
+      ? parseTimeInput(timeData.endTime, task.startTime)
+      : undefined;
 
     const updatedTask: Task = {
       ...task,
@@ -548,7 +620,9 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
       category: selectedCategory?.id || undefined,
       startTime: newStartTime,
       endTime: newEndTime,
-      duration: newEndTime ? newEndTime.getTime() - newStartTime.getTime() : task.duration
+      duration: newEndTime
+        ? newEndTime.getTime() - newStartTime.getTime()
+        : task.duration
     };
 
     onSave(updatedTask);
@@ -563,10 +637,14 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
 
         <div className="space-y-4">
           <div>
-            <Label>Task Title <span className="text-red-700">*</span></Label>
+            <Label>
+              Task Title <span className="text-red-700">*</span>
+            </Label>
             <Input
               value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, title: e.target.value }))
+              }
               placeholder="Enter task title"
             />
           </div>
@@ -575,7 +653,12 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
             <Label>Description</Label>
             <Textarea
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value
+                }))
+              }
               placeholder="Enter task description (optional)"
               className="min-h-[80px] resize-none"
             />
@@ -584,7 +667,12 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Category</Label>
-              <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+              <Select
+                value={formData.category}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, category: value }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -607,7 +695,12 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
 
             <div>
               <Label>Project</Label>
-              <Select value={formData.project} onValueChange={(value) => setFormData(prev => ({ ...prev, project: value }))}>
+              <Select
+                value={formData.project}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, project: value }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select project" />
                 </SelectTrigger>
@@ -617,7 +710,9 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
                     <SelectItem key={project.id} value={project.id}>
                       <div className="flex flex-col">
                         <span>{project.name}</span>
-                        <span className="text-sm text-gray-500">{project.client}</span>
+                        <span className="text-sm text-gray-500">
+                          {project.client}
+                        </span>
                       </div>
                     </SelectItem>
                   ))}
@@ -629,7 +724,12 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Start Time</Label>
-              <Select value={timeData.startTime} onValueChange={(value) => setTimeData(prev => ({ ...prev, startTime: value }))}>
+              <Select
+                value={timeData.startTime}
+                onValueChange={(value) =>
+                  setTimeData((prev) => ({ ...prev, startTime: value }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -645,7 +745,12 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
 
             <div>
               <Label>End Time</Label>
-              <Select value={timeData.endTime} onValueChange={(value) => setTimeData(prev => ({ ...prev, endTime: value }))}>
+              <Select
+                value={timeData.endTime}
+                onValueChange={(value) =>
+                  setTimeData((prev) => ({ ...prev, endTime: value }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select end time" />
                 </SelectTrigger>
@@ -661,10 +766,7 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button
-              variant="outline"
-              onClick={onClose}
-            >
+            <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <Button
