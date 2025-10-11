@@ -1,12 +1,9 @@
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { cn } from "@/lib/util"
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
+
 
 
 // Format: { THEME_NAME: CSS_SELECTOR }

@@ -2,13 +2,10 @@ import * as React from "react"
 import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
 import { type VariantProps } from "class-variance-authority"
 
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
 import { toggleVariants } from "@/components/ui/toggle"
+
+import { cn } from "@/lib/util"
 
 const ToggleGroupContext = React.createContext<
   VariantProps<typeof toggleVariants>
