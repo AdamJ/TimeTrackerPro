@@ -12,42 +12,18 @@ export function useRealtimeSync({
   isAuthenticated,
   enabled = true
 }: RealtimeSyncOptions) {
-  // Periodic sync - check for updates every 120 minutes
+  // DISABLED: Periodic sync for single-device usage
+  // Only sync manually when user explicitly requests it
   useEffect(() => {
-    if (!enabled || !isAuthenticated) return;
-
-    const interval = setInterval(() => {
-      console.log('🔄 Checking for updates from other devices...');
-      onCurrentDayUpdate();
-    }, 120 * 60 * 1000); // 120 minutes
-
-    return () => clearInterval(interval);
+    console.log('🔄 Real-time sync disabled for single-device usage');
+    return;
   }, [enabled, isAuthenticated, onCurrentDayUpdate]);
 
-  // Real-time subscription (future enhancement)
+  // DISABLED: Real-time subscription for single-device usage
   const subscribeToChanges = useCallback(() => {
-    if (!enabled || !isAuthenticated) return;
-
-    const subscription = supabase
-      .channel('current_day_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'current_day'
-        },
-        (payload) => {
-          console.log('🔔 Real-time update detected:', payload);
-          onCurrentDayUpdate();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [enabled, isAuthenticated, onCurrentDayUpdate]);
+    console.log('🔄 Real-time subscription disabled for single-device usage');
+    return () => {};
+  }, []);
 
   return { subscribeToChanges };
 }

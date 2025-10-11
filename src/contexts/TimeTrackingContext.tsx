@@ -3,7 +3,8 @@ import React, {
   useContext,
   useState,
   useEffect,
-  useCallback
+  useCallback,
+  useRef
 } from 'react';
 import { DEFAULT_CATEGORIES, TaskCategory } from '@/config/categories';
 import { DEFAULT_PROJECTS, ProjectCategory } from '@/config/projects';
@@ -72,10 +73,12 @@ interface TimeTrackingContextType {
   // Timer state
   currentTime: Date;
 
-  // Sync state
+  // Sync state - manual sync only
   isSyncing: boolean;
   lastSyncTime: Date | null;
+  hasUnsavedChanges: boolean;
   refreshFromDatabase: () => void;
+  forceSyncToDatabase: () => void; // Manual sync function
 
   // Archive state
   archivedDays: DayRecord[];
@@ -177,6 +180,12 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Debounce refs to manage timeouts
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const currentTaskTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedStateRef = useRef<string>(''); // Track last saved state to prevent duplicate saves
 
   // Initialize data service when auth state changes
   useEffect(() => {
@@ -258,23 +267,40 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     loadData();
   }, [dataService, isAuthenticated]);
 
-  // Save current day data when it changes
+  // Stable reference to the actual save function
+  const saveCurrentDayRef = useRef<() => Promise<void>>();
+
+  // Refs to hold the latest state without causing effect reruns
+  const latestStateRef = useRef({
+    isDayStarted,
+    dayStartTime,
+    currentTask,
+    tasks
+  });
+
+  // Update the ref whenever state changes
+  useEffect(() => {
+    latestStateRef.current = {
+      isDayStarted,
+      dayStartTime,
+      currentTask,
+      tasks
+    };
+  }, [isDayStarted, dayStartTime, currentTask, tasks]);
+
+  // Save current day data when it changes (with stable reference)
   const saveCurrentDay = useCallback(async () => {
     if (!dataService) return;
 
     try {
       setIsSyncing(true);
+      const state = latestStateRef.current;
       console.log('💾 Syncing current day to database...', {
-        tasksCount: tasks.length,
-        isDayStarted,
-        hasCurrentTask: !!currentTask
+        tasksCount: state.tasks.length,
+        isDayStarted: state.isDayStarted,
+        hasCurrentTask: !!state.currentTask
       });
-      await dataService.saveCurrentDay({
-        isDayStarted,
-        dayStartTime,
-        currentTask,
-        tasks
-      });
+      await dataService.saveCurrentDay(state);
       setLastSyncTime(new Date());
       console.log('✅ Current day synced successfully');
     } catch (error) {
@@ -282,7 +308,59 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setIsSyncing(false);
     }
-  }, [dataService, isDayStarted, dayStartTime, currentTask, tasks]);
+  }, [dataService]);
+
+  // Create a stable save function that doesn't change reference frequently
+  const stableSaveCurrentDay = useCallback(async () => {
+    await saveCurrentDay();
+  }, [saveCurrentDay]);
+
+  // DISABLED: Automatic debounced saves for single-device usage
+  // Data will only be saved on:
+  // 1. Day end (postDay)
+  // 2. Manual sync (forceSyncToDatabase)
+  // 3. Window beforeunload (browser close)
+  // 4. Component unmount
+
+  // Manual save function for immediate saves (bypasses debouncing)
+  const saveImmediately = useCallback(async () => {
+    if (!dataService) return;
+    await stableSaveCurrentDay();
+  }, [dataService, stableSaveCurrentDay]);
+
+  // Manual sync function - saves ALL data types
+  const forceSyncToDatabase = useCallback(async () => {
+    if (!dataService) {
+      console.log('❌ No data service available for sync');
+      return;
+    }
+
+    console.log('🔄 Manual sync: Saving all data to database...');
+    setIsSyncing(true);
+
+    try {
+      // Save all data types in parallel
+      const savePromises = [
+        // Current day data
+        stableSaveCurrentDay(),
+        // Projects
+        dataService.saveProjects(projects),
+        // Categories
+        dataService.saveCategories(categories),
+        // Archived days
+        dataService.saveArchivedDays(archivedDays)
+      ];
+
+      await Promise.all(savePromises);
+      setLastSyncTime(new Date());
+      setHasUnsavedChanges(false); // Clear unsaved changes flag
+      console.log('✅ Manual sync completed successfully');
+    } catch (error) {
+      console.error('❌ Manual sync failed:', error);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [dataService, stableSaveCurrentDay, projects, categories, archivedDays]);
 
   // Load current day data (for periodic sync)
   const loadCurrentDay = useCallback(async () => {
@@ -311,70 +389,48 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [dataService, loading]);
 
-  // Setup periodic sync
-  useRealtimeSync({
-    onCurrentDayUpdate: loadCurrentDay,
-    isAuthenticated,
-    enabled: !loading
-  });
+  // Setup periodic sync - DISABLED for single device usage
+  // useRealtimeSync({
+  //   onCurrentDayUpdate: loadCurrentDay,
+  //   isAuthenticated,
+  //   enabled: !loading
+  // });
 
-  // Save current day data when it changes
+  // DISABLED: Automatic saves - only save on critical events for single-device usage
+  // Critical events that trigger saves:
+  // 1. Day end (postDay)
+  // 2. Window close (beforeunload)
+  // 3. Manual sync button
+
+  // Track changes to mark as unsaved
   useEffect(() => {
-    if (!loading) {
-      saveCurrentDay();
+    // Mark as having unsaved changes whenever state changes
+    // (but not during initial loading)
+    if (!loading && dataService) {
+      setHasUnsavedChanges(true);
     }
-  }, [isDayStarted, dayStartTime, currentTask, tasks, saveCurrentDay, loading]);
+  }, [isDayStarted, dayStartTime, tasks, currentTask, archivedDays, projects, categories, loading, dataService]);
 
-  // Save archived days when they change
+  // Save on window close to prevent data loss
   useEffect(() => {
-    const saveArchivedDays = async () => {
-      if (!dataService || loading) return;
-
-      try {
-        await dataService.saveArchivedDays(archivedDays);
-      } catch (error) {
-        console.error('Error saving archived days:', error);
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      // Only save if we have unsaved changes
+      if (dataService && (isDayStarted || tasks.length > 0)) {
+        console.log('💾 Saving before window close...');
+        stableSaveCurrentDay();
+        // Don't prevent closing, just save
       }
     };
 
-    saveArchivedDays();
-  }, [archivedDays, dataService, loading]);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [dataService, isDayStarted, tasks, stableSaveCurrentDay]);
 
-  // Save projects when they change
-  useEffect(() => {
-    const saveProjects = async () => {
-      if (!dataService || loading) return;
-
-      try {
-        await dataService.saveProjects(projects);
-      } catch (error) {
-        console.error('Error saving projects:', error);
-      }
-    };
-
-    saveProjects();
-  }, [projects, dataService, loading]);
-
-  // Save categories when they change
-  useEffect(() => {
-    const saveCategories = async () => {
-      if (!dataService || loading) return;
-
-      try {
-        await dataService.saveCategories(categories);
-      } catch (error) {
-        console.error('Error saving categories:', error);
-      }
-    };
-
-    saveCategories();
-  }, [categories, dataService, loading]);
-
-  // Update current time every second
+  // Update current time every 30 seconds (instead of every second for better performance)
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000);
+    }, 30000); // 30 seconds instead of 1 second
     return () => clearInterval(timer);
   }, []);
 
@@ -400,6 +456,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     setIsDayStarted(false);
     console.log('Day ended');
+    // Save immediately since this is a critical action
+    saveImmediately();
   };
 
   const startNewTask = (
@@ -437,6 +495,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setTasks((prev) => [...prev, newTask]);
     setCurrentTask(newTask);
     console.log('New task started:', title);
+    // Save immediately since this is a critical action
+    saveImmediately();
   };
 
   const updateTask = (taskId: string, updates: Partial<Task>) => {
@@ -457,7 +517,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     console.log('Task deleted:', taskId);
   };
 
-  const postDay = (notes?: string) => {
+  const postDay = async (notes?: string) => {
     if (!dayStartTime) return;
 
     const dayRecord: DayRecord = {
@@ -476,16 +536,28 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setDayStartTime(null);
     setCurrentTask(null);
     setTasks([]);
+    setIsDayStarted(false);
     console.log('Day posted to archive');
+
+    // Save immediately since this is a critical action
+    if (dataService) {
+      try {
+        await dataService.saveArchivedDays([...archivedDays, dayRecord]);
+        console.log('✅ Archive saved immediately');
+      } catch (error) {
+        console.error('❌ Error saving archive immediately:', error);
+      }
+    }
   };
 
-  // Project management functions
+  // Project management functions - NO AUTOMATIC SAVING
   const addProject = (project: Omit<Project, 'id'>) => {
     const newProject: Project = {
       ...project,
       id: Date.now().toString()
     };
     setProjects((prev) => [...prev, newProject]);
+    console.log('📋 Project added (not saved automatically)');
   };
 
   const updateProject = (projectId: string, updates: Partial<Project>) => {
@@ -494,10 +566,12 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         project.id === projectId ? { ...project, ...updates } : project
       )
     );
+    console.log('📋 Project updated (not saved automatically)');
   };
 
   const deleteProject = (projectId: string) => {
     setProjects((prev) => prev.filter((project) => project.id !== projectId));
+    console.log('📋 Project deleted (not saved automatically)');
   };
 
   const resetProjectsToDefaults = () => {
@@ -558,13 +632,14 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     console.log('Day restored from archive');
   };
 
-  // Category management functions
+  // Category management functions - NO AUTOMATIC SAVING
   const addCategory = (category: Omit<TaskCategory, 'id'>) => {
     const newCategory: TaskCategory = {
       ...category,
       id: Date.now().toString()
     };
     setCategories((prev) => [...prev, newCategory]);
+    console.log('🏷️ Category added (not saved automatically)');
   };
 
   const updateCategory = (
@@ -576,12 +651,14 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         category.id === categoryId ? { ...category, ...updates } : category
       )
     );
+    console.log('🏷️ Category updated (not saved automatically)');
   };
 
   const deleteCategory = (categoryId: string) => {
     setCategories((prev) =>
       prev.filter((category) => category.id !== categoryId)
     );
+    console.log('🏷️ Category deleted (not saved automatically)');
   };
 
   // Time adjustment function (rounds to nearest 15 minutes)
@@ -837,7 +914,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         currentTime,
         isSyncing,
         lastSyncTime,
+        hasUnsavedChanges,
         refreshFromDatabase: loadCurrentDay,
+        forceSyncToDatabase,
         archivedDays,
         projects,
         categories,

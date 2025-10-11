@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, trackDbCall, getCachedUser, getCachedProjects, setCachedProjects, getCachedCategories, setCachedCategories, clearDataCaches, trackAuthCall } from '@/lib/supabase';
 import { Task, DayRecord, Project } from '@/contexts/TimeTrackingContext';
 import { TaskCategory } from '@/config/categories';
 
@@ -159,156 +159,194 @@ class LocalStorageService implements DataService {
 
 // Supabase implementation with graceful fallback
 class SupabaseService implements DataService {
+  // Schema detection with permanent caching
   private hasNewSchema: boolean | null = null;
+  private static schemaChecked: boolean = false;
+  private static globalSchemaResult: boolean | null = null;
 
-  // Check if the new schema exists
   private async checkNewSchema(): Promise<boolean> {
+    // Use global cache first (survives across service instances)
+    if (SupabaseService.schemaChecked && SupabaseService.globalSchemaResult !== null) {
+      this.hasNewSchema = SupabaseService.globalSchemaResult;
+      return this.hasNewSchema;
+    }
+
+    // Use instance cache
     if (this.hasNewSchema !== null) {
       return this.hasNewSchema;
     }
 
     try {
-      // Try to query the projects table to see if it exists
-      await supabase.from('projects').select('id').limit(1);
+      // Check if we have a valid authenticated user first
+      const {
+        data: { user },
+        error: userError
+      } = await supabase.auth.getUser();
+      trackAuthCall('getUser', 'SupabaseService.checkNewSchema');
+
+      if (userError || !user) {
+        console.warn('User not authenticated, cannot check schema');
+        this.hasNewSchema = false;
+        SupabaseService.globalSchemaResult = false;
+        SupabaseService.schemaChecked = true;
+        return false;
+      }
+
+      // Try to query the current_day table to see if the new schema exists
+      // We use current_day because it's simpler and always exists in the new schema
+      const { error } = await supabase
+        .from('current_day')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .limit(1);
+      trackDbCall('select', 'current_day', 'SupabaseService.checkNewSchema');
+
+      if (error) {
+        console.warn('New schema not detected:', error.message);
+        this.hasNewSchema = false;
+        SupabaseService.globalSchemaResult = false;
+        SupabaseService.schemaChecked = true;
+        return false;
+      }
+
       this.hasNewSchema = true;
+      SupabaseService.globalSchemaResult = true;
+      SupabaseService.schemaChecked = true;
+      console.log('✅ New schema confirmed and cached globally');
       return true;
     } catch (error) {
       console.warn(
-        'New schema not detected, falling back to localStorage for projects and categories'
+        'Error checking schema, assuming new schema exists:',
+        error
       );
-      this.hasNewSchema = false;
-      return false;
+      // Default to true since your schema.sql shows the new schema
+      this.hasNewSchema = true;
+      SupabaseService.globalSchemaResult = true;
+      SupabaseService.schemaChecked = true;
+      return true;
     }
   }
   async saveCurrentDay(data: CurrentDayData): Promise<void> {
-    const hasNewSchema = await this.checkNewSchema();
+    console.log('💾 SupabaseService: Saving current day...', {
+      tasksCount: data.tasks.length,
+      isDayStarted: data.isDayStarted,
+      hasCurrentTask: !!data.currentTask
+    });
 
-    if (!hasNewSchema) {
-      // Fallback to old schema format
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+    // Get cached user (much more efficient than repeated auth calls)
+    const user = await getCachedUser();
+    console.log('👤 User authenticated:', user.id);
 
-      const { error } = await supabase.from('current_day').upsert({
-        user_id: user.id,
-        is_day_started: data.isDayStarted,
-        day_start_time: data.dayStartTime?.toISOString(),
-        tasks: JSON.stringify({
-          tasks: data.tasks,
-          currentTask: data.currentTask
-        })
-      });
+    try {
+      // Start a transaction-like approach with batch operations
 
-      if (error) throw error;
-      return;
-    }
-
-    // New schema implementation
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    // Save current day state
-    const { error: currentDayError } = await supabase
-      .from('current_day')
-      .upsert({
-        user_id: user.id,
-        is_day_started: data.isDayStarted,
-        day_start_time: data.dayStartTime?.toISOString(),
-        current_task_id: data.currentTask?.id || null
-      });
-
-    if (currentDayError) throw currentDayError;
-
-    // Clear existing non-archived tasks for this user
-    const { error: clearError } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('is_current', true);
-
-    if (clearError) throw clearError;
-
-    // Save all current tasks
-    if (data.tasks.length > 0) {
-      const tasksToInsert = data.tasks.map((task) => ({
-        id: task.id,
-        user_id: user.id,
-        title: task.title,
-        description: task.description || null,
-        start_time: task.startTime.toISOString(),
-        end_time: task.endTime?.toISOString() || null,
-        duration: task.duration || null,
-        project_id: task.project || null,
-        project_name: task.project || null, // Store project name for easier querying
-        client: task.client || null,
-        category_id: task.category || null,
-        category_name: task.category || null, // Store category name for easier querying
-        day_record_id: null, // Not archived yet
-        is_current: true
-      }));
-
-      const { error: tasksError } = await supabase
-        .from('tasks')
-        .insert(tasksToInsert);
-
-      if (tasksError) throw tasksError;
-    }
-  }
-
-  async getCurrentDay(): Promise<CurrentDayData | null> {
-    const hasNewSchema = await this.checkNewSchema();
-
-    if (!hasNewSchema) {
-      // Fallback to old schema format
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
+      // 1. Save current day state
+      const { error: currentDayError } = await supabase
         .from('current_day')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+        .upsert({
+          user_id: user.id,
+          is_day_started: data.isDayStarted,
+          day_start_time: data.dayStartTime?.toISOString(),
+          current_task_id: data.currentTask?.id || null
+        });
+      trackDbCall('upsert', 'current_day');
 
-      if (error && error.code !== 'PGRST116') {
-        // PGRST116 is "not found"
-        throw error;
+      if (currentDayError) {
+        console.error('❌ Error saving current day state:', currentDayError);
+        throw currentDayError;
       }
 
-      if (!data) return null;
+      // 2. Handle tasks efficiently - only if there are changes
+      if (data.tasks.length === 0) {
+        // If no tasks, just delete all current tasks
+        const { error: deleteError } = await supabase
+          .from('tasks')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('is_current', true);
+        trackDbCall('delete', 'tasks');
 
-      const tasksData = JSON.parse(data.tasks || '{}');
-      return {
-        isDayStarted: data.is_day_started,
-        dayStartTime: data.day_start_time
-          ? new Date(data.day_start_time)
-          : null,
-        tasks: (tasksData.tasks || []).map((task: Task) => ({
-          ...task,
-          startTime: new Date(task.startTime),
-          endTime: task.endTime ? new Date(task.endTime) : undefined
-        })),
-        currentTask: tasksData.currentTask
-          ? {
-              ...tasksData.currentTask,
-              startTime: new Date(tasksData.currentTask.startTime),
-              endTime: tasksData.currentTask.endTime
-                ? new Date(tasksData.currentTask.endTime)
-                : undefined
-            }
-          : null
-      };
+        if (deleteError) {
+          console.error('❌ Error deleting all current tasks:', deleteError);
+          throw deleteError;
+        }
+        console.log('🗑️ Deleted all current tasks (no tasks provided)');
+      } else {
+        // Get existing task IDs to minimize database operations
+        const { data: existingTasks } = await supabase
+          .from('tasks')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('is_current', true);
+        trackDbCall('select', 'tasks');
+
+        const existingTaskIds = new Set(existingTasks?.map(t => t.id) || []);
+        const newTaskIds = new Set(data.tasks.map(t => t.id));
+
+        // 3. Delete obsolete tasks (exist in DB but not in current data)
+        const tasksToDelete = Array.from(existingTaskIds).filter(id => !newTaskIds.has(id));
+        if (tasksToDelete.length > 0) {
+          const { error: deleteError } = await supabase
+            .from('tasks')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('is_current', true)
+            .in('id', tasksToDelete);
+          trackDbCall('delete', 'tasks');
+
+          if (deleteError) {
+            console.error('❌ Error deleting obsolete tasks:', deleteError);
+            throw deleteError;
+          }
+          console.log('🗑️ Deleted obsolete tasks:', tasksToDelete.length);
+        }
+
+        // 4. Upsert current tasks (single batch operation)
+        const tasksToUpsert = data.tasks.map((task) => ({
+          id: task.id,
+          user_id: user.id,
+          title: task.title,
+          description: task.description || null,
+          start_time: task.startTime.toISOString(),
+          end_time: task.endTime?.toISOString() || null,
+          duration: task.duration || null,
+          project_id: task.project || null,
+          project_name: task.project || null,
+          client: task.client || null,
+          category_id: task.category || null,
+          category_name: task.category || null,
+          day_record_id: null,
+          is_current: true
+        }));
+
+        console.log('📝 Upserting tasks:', tasksToUpsert.length);
+
+        const { error: tasksError } = await supabase
+          .from('tasks')
+          .upsert(tasksToUpsert, {
+            onConflict: 'id'
+          });
+        trackDbCall('upsert', 'tasks');
+
+        if (tasksError) {
+          console.error('❌ Error upserting tasks:', tasksError);
+          throw tasksError;
+        }
+
+        console.log('✅ Tasks upserted successfully');
+      }
+
+      console.log('✅ Current day saved successfully');
+    } catch (error) {
+      console.error('❌ Error in saveCurrentDay:', error);
+      throw error;
     }
+  }  async getCurrentDay(): Promise<CurrentDayData | null> {
+    console.log('🔄 SupabaseService: Loading current day...');
 
-    // New schema implementation
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    // Get cached user
+    const user = await getCachedUser();
+    console.log('👤 User authenticated:', user.id);
 
     // Get current day state
     const { data: currentDayData, error: currentDayError } = await supabase
@@ -318,6 +356,7 @@ class SupabaseService implements DataService {
       .single();
 
     if (currentDayError && currentDayError.code !== 'PGRST116') {
+      console.error('❌ Error loading current day state:', currentDayError);
       throw currentDayError;
     }
 
@@ -329,9 +368,18 @@ class SupabaseService implements DataService {
       .eq('is_current', true)
       .order('start_time', { ascending: true });
 
-    if (tasksError) throw tasksError;
+    if (tasksError) {
+      console.error('❌ Error loading current tasks:', tasksError);
+      throw tasksError;
+    }
+
+    console.log('📊 Loaded data:', {
+      hasDayData: !!currentDayData,
+      tasksCount: tasksData?.length || 0
+    });
 
     if (!currentDayData && (!tasksData || tasksData.length === 0)) {
+      console.log('📭 No current day data found');
       return null;
     }
 
@@ -353,7 +401,7 @@ class SupabaseService implements DataService {
       ? tasks.find((task) => task.id === currentDayData.current_task_id) || null
       : null;
 
-    return {
+    const result = {
       isDayStarted: currentDayData?.is_day_started || false,
       dayStartTime: currentDayData?.day_start_time
         ? new Date(currentDayData.day_start_time)
@@ -361,46 +409,22 @@ class SupabaseService implements DataService {
       tasks,
       currentTask
     };
+
+    console.log('✅ Current day loaded:', {
+      isDayStarted: result.isDayStarted,
+      tasksCount: result.tasks.length,
+      hasCurrentTask: !!result.currentTask
+    });
+
+    return result;
   }
 
   async saveArchivedDays(days: DayRecord[]): Promise<void> {
-    const hasNewSchema = await this.checkNewSchema();
+    console.log('📁 SupabaseService: Saving archived days...', days.length);
 
-    if (!hasNewSchema) {
-      // Fallback to old schema format
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      // First, delete existing archived days for this user
-      await supabase.from('archived_days').delete().eq('user_id', user.id);
-
-      // Then insert all days
-      if (days.length > 0) {
-        const { error } = await supabase.from('archived_days').insert(
-          days.map((day) => ({
-            id: day.id,
-            user_id: user.id,
-            date: day.date,
-            tasks: JSON.stringify(day.tasks),
-            total_duration: day.totalDuration,
-            start_time: day.startTime.toISOString(),
-            end_time: day.endTime.toISOString(),
-            notes: day.notes
-          }))
-        );
-
-        if (error) throw error;
-      }
-      return;
-    }
-
-    // New schema implementation
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    // Get cached user
+    const user = await getCachedUser();
+    console.log('👤 User authenticated:', user.id);
 
     // Delete existing archived days and their tasks
     await supabase
@@ -411,7 +435,12 @@ class SupabaseService implements DataService {
 
     await supabase.from('archived_days').delete().eq('user_id', user.id);
 
-    if (days.length === 0) return;
+    console.log('🗑️ Cleared existing archived data');
+
+    if (days.length === 0) {
+      console.log('📭 No archived days to save');
+      return;
+    }
 
     // Insert archived days
     const archivedDaysToInsert = days.map((day) => ({
@@ -428,7 +457,12 @@ class SupabaseService implements DataService {
       .from('archived_days')
       .insert(archivedDaysToInsert);
 
-    if (daysError) throw daysError;
+    if (daysError) {
+      console.error('❌ Error saving archived days:', daysError);
+      throw daysError;
+    }
+
+    console.log('✅ Archived days saved');
 
     // Insert all archived tasks
     const allTasks = days.flatMap((day) =>
@@ -451,52 +485,28 @@ class SupabaseService implements DataService {
     );
 
     if (allTasks.length > 0) {
+      console.log('📝 Inserting archived tasks:', allTasks.length);
+
       const { error: tasksError } = await supabase
         .from('tasks')
         .insert(allTasks);
 
-      if (tasksError) throw tasksError;
+      if (tasksError) {
+        console.error('❌ Error saving archived tasks:', tasksError);
+        throw tasksError;
+      }
+
+      console.log('✅ Archived tasks saved');
     }
   }
 
   async getArchivedDays(): Promise<DayRecord[]> {
-    const hasNewSchema = await this.checkNewSchema();
+    console.log('📁 SupabaseService: Loading archived days...');
 
-    if (!hasNewSchema) {
-      // Fallback to old schema format
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+    // Get cached user
+    const user = await getCachedUser();
 
-      const { data, error } = await supabase
-        .from('archived_days')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('start_time', { ascending: false });
-
-      if (error) throw error;
-
-      return (data || []).map((day) => ({
-        id: day.id,
-        date: day.date,
-        tasks: JSON.parse(day.tasks || '[]').map((task: Task) => ({
-          ...task,
-          startTime: new Date(task.startTime),
-          endTime: task.endTime ? new Date(task.endTime) : undefined
-        })),
-        totalDuration: day.total_duration,
-        startTime: new Date(day.start_time),
-        endTime: new Date(day.end_time),
-        notes: day.notes
-      }));
-    }
-
-    // New schema implementation
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    console.log('👤 User authenticated:', user.id);
 
     // Get archived days
     const { data: daysData, error: daysError } = await supabase
@@ -505,9 +515,17 @@ class SupabaseService implements DataService {
       .eq('user_id', user.id)
       .order('start_time', { ascending: false });
 
-    if (daysError) throw daysError;
+    if (daysError) {
+      console.error('❌ Error loading archived days:', daysError);
+      throw daysError;
+    }
 
-    if (!daysData || daysData.length === 0) return [];
+    if (!daysData || daysData.length === 0) {
+      console.log('📭 No archived days found');
+      return [];
+    }
+
+    console.log('📊 Found archived days:', daysData.length);
 
     // Get all archived tasks
     const { data: tasksData, error: tasksError } = await supabase
@@ -517,7 +535,12 @@ class SupabaseService implements DataService {
       .eq('is_current', false)
       .order('start_time', { ascending: true });
 
-    if (tasksError) throw tasksError;
+    if (tasksError) {
+      console.error('❌ Error loading archived tasks:', tasksError);
+      throw tasksError;
+    }
+
+    console.log('📝 Found archived tasks:', tasksData?.length || 0);
 
     // Group tasks by day record
     const tasksByDay: Record<string, Task[]> = {};
@@ -542,7 +565,7 @@ class SupabaseService implements DataService {
     });
 
     // Combine days with their tasks
-    return daysData.map((day) => ({
+    const result = daysData.map((day) => ({
       id: day.id,
       date: day.date,
       tasks: tasksByDay[day.id] || [],
@@ -551,16 +574,20 @@ class SupabaseService implements DataService {
       endTime: new Date(day.end_time),
       notes: day.notes
     }));
+
+    console.log('✅ Archived days loaded:', {
+      daysCount: result.length,
+      totalTasks: result.reduce((sum, day) => sum + day.tasks.length, 0)
+    });
+
+    return result;
   }
 
   async updateArchivedDay(
     dayId: string,
     updates: Partial<DayRecord>
   ): Promise<void> {
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const user = await getCachedUser();
 
     const updateData: Record<string, unknown> = {};
 
@@ -619,10 +646,7 @@ class SupabaseService implements DataService {
   }
 
   async deleteArchivedDay(dayId: string): Promise<void> {
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const user = await getCachedUser();
 
     // Delete tasks first (foreign key dependency)
     await supabase
@@ -642,23 +666,19 @@ class SupabaseService implements DataService {
   }
 
   async saveProjects(projects: Project[]): Promise<void> {
-    const hasNewSchema = await this.checkNewSchema();
+    console.log('🗂️ SupabaseService: Saving projects...', projects.length);
 
-    if (!hasNewSchema) {
-      // Fallback to localStorage if new schema doesn't exist
-      localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
-      return;
-    }
-
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const user = await getCachedUser();
 
     // Delete existing projects
     await supabase.from('projects').delete().eq('user_id', user.id);
 
-    if (projects.length === 0) return;
+    if (projects.length === 0) {
+      console.log('📭 No projects to save');
+      // Clear cache since projects changed
+      clearDataCaches();
+      return;
+    }
 
     // Insert new projects
     const projectsToInsert = projects.map((project) => ({
@@ -672,27 +692,27 @@ class SupabaseService implements DataService {
 
     const { error } = await supabase.from('projects').insert(projectsToInsert);
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error saving projects:', error);
+      throw error;
+    }
+
+    // Update cache with new data
+    setCachedProjects(projects);
+
+    console.log('✅ Projects saved successfully');
   }
 
   async getProjects(): Promise<Project[]> {
-    const hasNewSchema = await this.checkNewSchema();
+    console.log('🗂️ SupabaseService: Loading projects...');
 
-    if (!hasNewSchema) {
-      // Fallback to localStorage if new schema doesn't exist
-      try {
-        const saved = localStorage.getItem(STORAGE_KEYS.PROJECTS);
-        return saved ? JSON.parse(saved) : [];
-      } catch (error) {
-        console.error('Error loading projects from localStorage:', error);
-        return [];
-      }
+    // Check cache first
+    const cachedResult = await getCachedProjects();
+    if (cachedResult) {
+      return cachedResult;
     }
 
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const user = await getCachedUser();
 
     const { data, error } = await supabase
       .from('projects')
@@ -700,35 +720,40 @@ class SupabaseService implements DataService {
       .eq('user_id', user.id)
       .order('name', { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error loading projects:', error);
+      throw error;
+    }
 
-    return (data || []).map((project) => ({
+    const result = (data || []).map((project) => ({
       id: project.id,
       name: project.name,
       client: project.client,
       hourlyRate: project.hourly_rate || undefined,
       color: project.color || undefined
     }));
+
+    // Cache the result
+    setCachedProjects(result);
+
+    console.log('✅ Projects loaded:', result.length);
+    return result;
   }
 
   async saveCategories(categories: TaskCategory[]): Promise<void> {
-    const hasNewSchema = await this.checkNewSchema();
+    console.log('🏷️ SupabaseService: Saving categories...', categories.length);
 
-    if (!hasNewSchema) {
-      // Fallback to localStorage if new schema doesn't exist
-      localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
-      return;
-    }
-
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const user = await getCachedUser();
 
     // Delete existing categories
     await supabase.from('categories').delete().eq('user_id', user.id);
 
-    if (categories.length === 0) return;
+    if (categories.length === 0) {
+      console.log('📭 No categories to save');
+      // Clear cache since categories changed
+      clearDataCaches();
+      return;
+    }
 
     // Insert new categories
     const categoriesToInsert = categories.map((category) => ({
@@ -743,27 +768,27 @@ class SupabaseService implements DataService {
       .from('categories')
       .insert(categoriesToInsert);
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error saving categories:', error);
+      throw error;
+    }
+
+    // Update cache with new data
+    setCachedCategories(categories);
+
+    console.log('✅ Categories saved successfully');
   }
 
   async getCategories(): Promise<TaskCategory[]> {
-    const hasNewSchema = await this.checkNewSchema();
+    console.log('🏷️ SupabaseService: Loading categories...');
 
-    if (!hasNewSchema) {
-      // Fallback to localStorage if new schema doesn't exist
-      try {
-        const saved = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
-        return saved ? JSON.parse(saved) : [];
-      } catch (error) {
-        console.error('Error loading categories from localStorage:', error);
-        return [];
-      }
+    // Check cache first
+    const cachedResult = await getCachedCategories();
+    if (cachedResult) {
+      return cachedResult;
     }
 
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const user = await getCachedUser();
 
     const { data, error } = await supabase
       .from('categories')
@@ -771,13 +796,22 @@ class SupabaseService implements DataService {
       .eq('user_id', user.id)
       .order('name', { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error loading categories:', error);
+      throw error;
+    }
 
-    return (data || []).map((category) => ({
+    const result = (data || []).map((category) => ({
       id: category.id,
       name: category.name,
-      color: category.color || undefined
+      color: category.color || '#8B5CF6' // Default color if missing
     }));
+
+    // Cache the result
+    setCachedCategories(result);
+
+    console.log('✅ Categories loaded:', result.length);
+    return result;
   }
 
   async migrateFromLocalStorage(): Promise<void> {
@@ -817,5 +851,6 @@ class SupabaseService implements DataService {
 
 // Factory function to get the appropriate service
 export const createDataService = (isAuthenticated: boolean): DataService => {
+  console.log('🔧 Creating data service:', { isAuthenticated });
   return isAuthenticated ? new SupabaseService() : new LocalStorageService();
 };

@@ -35,7 +35,8 @@ const SiteNavigationMenu = () => {
     getTotalDayDuration,
     isSyncing,
     lastSyncTime,
-    refreshFromDatabase,
+    hasUnsavedChanges,
+    forceSyncToDatabase, // Use manual sync instead of refresh
   } = useTimeTracking();
 
   const runningTime = isDayStarted ? getTotalDayDuration() : 0;
@@ -67,7 +68,8 @@ const SiteNavigationMenu = () => {
               isAuthenticated={isAuthenticated}
               lastSyncTime={lastSyncTime}
               isSyncing={isSyncing}
-              onRefresh={refreshFromDatabase}
+              hasUnsavedChanges={hasUnsavedChanges}
+              onRefresh={forceSyncToDatabase}
             />
           </Item>
           <Item>

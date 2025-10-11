@@ -3,14 +3,11 @@ import { type DialogProps } from "@radix-ui/react-dialog"
 import { Command as CommandPrimitive } from "cmdk"
 import { Search } from "lucide-react"
 
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
 
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+
+import { cn } from "@/lib/util"
 
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,

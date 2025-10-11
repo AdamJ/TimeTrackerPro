@@ -1,13 +1,10 @@
 import * as React from "react"
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
 import { ButtonProps, buttonVariants } from "@/components/ui/button"
+
+import { cn } from "@/lib/util"
 
 const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
   <nav

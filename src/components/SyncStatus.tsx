@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Cloud, CloudOff, RefreshCw } from 'lucide-react';
+import { useState, useEffect, memo, useCallback } from 'react';
+import { Cloud, CloudOff, RefreshCw, Save, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, Tooltip } from "radix-ui";
 import { Cross2Icon } from "@radix-ui/react-icons";
@@ -9,13 +9,15 @@ interface SyncStatusProps {
   lastSyncTime?: Date | null;
   isSyncing?: boolean;
   onRefresh?: () => void;
+  hasUnsavedChanges?: boolean;
 }
 
-export function SyncStatus({
+export const SyncStatus = memo(function SyncStatus({
   isAuthenticated,
   lastSyncTime,
-  isSyncing,
-  onRefresh
+  isSyncing = false,
+  onRefresh,
+  hasUnsavedChanges = false
 }: SyncStatusProps) {
   const [showStatus, setShowStatus] = useState(false);
 
@@ -26,6 +28,10 @@ export function SyncStatus({
       return () => clearTimeout(timer);
     }
   }, [isSyncing]);
+
+  const handleRefresh = useCallback(() => {
+    onRefresh?.();
+  }, [onRefresh]);
 
   if (!isAuthenticated) {
     return (
@@ -73,10 +79,16 @@ export function SyncStatus({
           <Popover.Root>
             <Popover.Trigger asChild>
               <button
-                className="transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input"
-                aria-label="Data is synced"
+                className={`transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input ${
+                  hasUnsavedChanges ? 'bg-orange-50 border-orange-200' : 'bg-white'
+                }`}
+                aria-label={hasUnsavedChanges ? "Unsaved changes" : "Manual sync mode"}
               >
-                <Cloud className="h-4 w-4 text-green-600" />
+                {hasUnsavedChanges ? (
+                  <Save className="h-4 w-4 text-orange-600" />
+                ) : (
+                  <Cloud className="h-4 w-4 text-green-600" />
+                )}
               </button>
             </Popover.Trigger>
             <Popover.Portal>
@@ -85,18 +97,30 @@ export function SyncStatus({
                 sideOffset={5}
               >
                 <div className="flex flex-col gap-2.5">
-                  <span className="hidden md:block text-green-600">
-                    Last synced with database at {' '}
-                    {lastSyncTime ? new Date(lastSyncTime).toLocaleTimeString() : 'now'}
+                  <span className="text-sm font-medium">
+                    Manual Sync Mode
                   </span>
+                  <span className="text-xs text-gray-500">
+                    Data saves only when you click "Save" or end the day
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Last sync: {lastSyncTime ? new Date(lastSyncTime).toLocaleTimeString() : 'Never'}
+                  </span>
+                  {hasUnsavedChanges && (
+                    <div className="flex items-center gap-1 text-orange-600 text-xs">
+                      <AlertCircle className="h-3 w-3" />
+                      You have unsaved changes
+                    </div>
+                  )}
                   {onRefresh && (
                     <Button
-                      variant="outline"
-                      onClick={onRefresh}
+                      variant={hasUnsavedChanges ? "default" : "outline"}
+                      onClick={handleRefresh}
                       disabled={isSyncing}
-                      className="transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input"
+                      className="transition-all duration-200 flex items-center space-x-2"
                     >
-                      Sync <RefreshCw className="h-3 w-3" />
+                      {hasUnsavedChanges ? 'Save Now' : 'Save to Database'}
+                      <Save className="h-3 w-3" />
                     </Button>
                   )}
                 </div>
@@ -114,4 +138,4 @@ export function SyncStatus({
       )}
     </div>
   );
-}
+});

@@ -1,14 +1,11 @@
 import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
 
 import { buttonVariants } from "@/components/ui/button"
+
+import { cn } from "@/lib/util"
 
 const AlertDialog = AlertDialogPrimitive.Root
 

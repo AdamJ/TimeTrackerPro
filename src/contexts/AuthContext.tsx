@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, clearUserCache, trackAuthCall } from '@/lib/supabase';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -35,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const {
         data: { session }
       } = await supabase.auth.getSession();
+      trackAuthCall('getSession', 'AuthContext.getInitialSession');
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -46,6 +47,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const {
       data: { subscription }
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔐 Auth state changed:', event);
+      trackAuthCall('onAuthStateChange', `AuthContext.${event}`);
+
+      // Clear user cache when auth state changes
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+        clearUserCache();
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -55,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    trackAuthCall('signInWithPassword', 'AuthContext.signIn');
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -63,6 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signUp = async (email: string, password: string) => {
+    trackAuthCall('signUp', 'AuthContext.signUp');
     const { error } = await supabase.auth.signUp({
       email,
       password
@@ -71,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signOut = async () => {
+    trackAuthCall('signOut', 'AuthContext.signOut');
     const { error } = await supabase.auth.signOut();
     return { error };
   };
