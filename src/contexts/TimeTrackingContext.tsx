@@ -188,12 +188,20 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentTaskTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedStateRef = useRef<string>(''); // Track last saved state to prevent duplicate saves
+  const currentAuthStateRef = useRef<boolean>(false); // Track current auth state without triggering re-renders
 
   // Initialize data service when auth state changes
   useEffect(() => {
-    const handleAuthStateChange = async () => {
-      if (authLoading) return;
+    if (!authLoading) {
+      const service = createDataService(isAuthenticated);
+      setDataService(service);
+      currentAuthStateRef.current = isAuthenticated;
+    }
+  }, [isAuthenticated, authLoading]);
 
+  // Handle logout data sync separately
+  useEffect(() => {
+    const handleLogout = async () => {
       // Detect logout: was authenticated, now not authenticated
       if (previousAuthState === true && !isAuthenticated && dataService) {
         console.log('🔄 User logged out - syncing data to localStorage for offline access');
@@ -204,16 +212,13 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           console.error('❌ Error syncing data to localStorage on logout:', error);
         }
       }
-
-      // Update the data service
-      const newService = createDataService(isAuthenticated);
-      setDataService(newService);
-
       // Update previous auth state
       setPreviousAuthState(isAuthenticated);
     };
 
-    handleAuthStateChange();
+    if (!authLoading) {
+      handleLogout();
+    }
   }, [isAuthenticated, authLoading, previousAuthState, dataService]);
 
   // Load data when data service is available
@@ -275,14 +280,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         }
 
         // If switching from localStorage to Supabase, migrate data
-        if (isAuthenticated && dataService) {
+        if (currentAuthStateRef.current && dataService) {
           await dataService.migrateFromLocalStorage();
-        }
-
-        // If switching from Supabase to localStorage (logout), sync data for offline access
-        if (!isAuthenticated && dataService) {
-          // We need the previous service (Supabase) to sync data TO localStorage
-          // This will be handled by the auth state change cleanup
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -292,7 +291,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     loadData();
-  }, [dataService, isAuthenticated]);
+  }, [dataService]);
 
   // Stable reference to the actual save function
   const saveCurrentDayRef = useRef<() => Promise<void>>();
