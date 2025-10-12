@@ -167,6 +167,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { isAuthenticated, loading: authLoading, user } = useAuth();
   const [dataService, setDataService] = useState<DataService | null>(null);
+  const [previousAuthState, setPreviousAuthState] = useState<boolean | null>(null);
   const [isDayStarted, setIsDayStarted] = useState(false);
   const [dayStartTime, setDayStartTime] = useState<Date | null>(null);
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
@@ -190,11 +191,30 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Initialize data service when auth state changes
   useEffect(() => {
-    if (!authLoading) {
-      const service = createDataService(isAuthenticated);
-      setDataService(service);
-    }
-  }, [isAuthenticated, authLoading]);
+    const handleAuthStateChange = async () => {
+      if (authLoading) return;
+
+      // Detect logout: was authenticated, now not authenticated
+      if (previousAuthState === true && !isAuthenticated && dataService) {
+        console.log('🔄 User logged out - syncing data to localStorage for offline access');
+        try {
+          // Use the current (Supabase) service to sync data to localStorage before switching
+          await dataService.migrateToLocalStorage();
+        } catch (error) {
+          console.error('❌ Error syncing data to localStorage on logout:', error);
+        }
+      }
+
+      // Update the data service
+      const newService = createDataService(isAuthenticated);
+      setDataService(newService);
+
+      // Update previous auth state
+      setPreviousAuthState(isAuthenticated);
+    };
+
+    handleAuthStateChange();
+  }, [isAuthenticated, authLoading, previousAuthState, dataService]);
 
   // Load data when data service is available
   useEffect(() => {
@@ -257,6 +277,12 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         // If switching from localStorage to Supabase, migrate data
         if (isAuthenticated && dataService) {
           await dataService.migrateFromLocalStorage();
+        }
+
+        // If switching from Supabase to localStorage (logout), sync data for offline access
+        if (!isAuthenticated && dataService) {
+          // We need the previous service (Supabase) to sync data TO localStorage
+          // This will be handled by the auth state change cleanup
         }
       } catch (error) {
         console.error('Error loading data:', error);
