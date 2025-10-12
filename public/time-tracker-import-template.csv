@@ -1,0 +1,3 @@
+id,user_id,title,description,start_time,end_time,duration,project_id,project_name,client,category_id,category_name,day_record_id,is_current,inserted_at,updated_at
+"task-001","","Example Task","Task description","2025-10-12T09:00:00.000Z","2025-10-12T10:30:00.000Z",5400000,"proj-001","Web Development","Acme Corp","cat-001","Development","day-001",false,"2025-10-12T10:30:00.000Z","2025-10-12T10:30:00.000Z"
+"task-002","","Another Task","Another task description","2025-10-12T11:00:00.000Z","2025-10-12T12:00:00.000Z",3600000,"proj-002","Marketing","Acme Corp","cat-002","Marketing","day-001",false,"2025-10-12T12:00:00.000Z","2025-10-12T12:00:00.000Z"
