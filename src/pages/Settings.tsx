@@ -127,21 +127,20 @@ const SettingsContent: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Download className="w-5 h-5" />
-                  <span>Data Export</span>
+                  <span>Exports/Imports</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-4">
-                  Export your time tracking data as CSV or JSON files. Generate
-                  invoice data for specific clients and date ranges.
+                  Export your time tracking data as CSV or JSON files. Generate invoice data for specific clients and date ranges. You can also import data from CSV files.
                 </p>
                 <Button
                   onClick={() => setShowExportDialog(true)}
-                  variant="secondary"
+                  variant="outline"
                   className="w-full"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Export Data
+                  Data Export/Import
                 </Button>
               </CardContent>
             </Card>

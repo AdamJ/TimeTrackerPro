@@ -129,6 +129,7 @@ interface TimeTrackingContextType {
   // Export functions
   exportToCSV: (startDate?: Date, endDate?: Date) => string;
   exportToJSON: (startDate?: Date, endDate?: Date) => string;
+  importFromCSV: (csvContent: string) => Promise<{ success: boolean; message: string; importedCount: number }>;
   // generateInvoiceData: (clientName: string, startDate: Date, endDate: Date) => any;
 
   // Calculated values
@@ -164,7 +165,7 @@ const convertDefaultProjects = (
 export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   children
 }) => {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading, user } = useAuth();
   const [dataService, setDataService] = useState<DataService | null>(null);
   const [isDayStarted, setIsDayStarted] = useState(false);
   const [dayStartTime, setDayStartTime] = useState<Date | null>(null);
@@ -765,17 +766,24 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     }
 
+    // CSV headers matching database schema exactly
     const headers = [
-      'Date',
-      'Project',
-      'Client',
-      'Task',
-      'Description',
-      'Duration (Hours)',
-      'Start Time',
-      'End Time',
-      'Hourly Rate',
-      'Amount'
+      'id',
+      'user_id',
+      'title',
+      'description',
+      'start_time',
+      'end_time',
+      'duration',
+      'project_id',
+      'project_name',
+      'client',
+      'category_id',
+      'category_name',
+      'day_record_id',
+      'is_current',
+      'inserted_at',
+      'updated_at'
     ];
     const rows = [headers.join(',')];
 
@@ -783,31 +791,30 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       day.tasks.forEach((task) => {
         if (task.duration) {
           const project = projects.find((p) => p.name === task.project);
-          const hours =
-            Math.round((task.duration / (1000 * 60 * 60)) * 100) / 100;
-          const amount = project?.hourlyRate
-            ? Math.round(hours * project.hourlyRate * 100) / 100
-            : '';
+          const category = categories.find((c) => c.name === task.category);
+
+          // Format timestamps as ISO strings for database compatibility
+          const startTimeISO = task.startTime.toISOString();
+          const endTimeISO = task.endTime?.toISOString() || '';
+          const currentTimeISO = new Date().toISOString();
 
           const row = [
-            day.date,
-            task.project || '',
-            task.client || '',
+            `"${task.id}"`,
+            `"${user?.id || ''}"`, // user_id from auth context
             `"${task.title}"`,
-            `"${task.description}"`,
-            hours,
-            task.startTime.toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
-            }),
-            task.endTime?.toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
-            }) || '',
-            project?.hourlyRate || '',
-            amount
+            `"${task.description || ''}"`,
+            `"${startTimeISO}"`,
+            `"${endTimeISO}"`,
+            task.duration || '', // duration in milliseconds
+            `"${project?.id || ''}"`, // project_id
+            `"${task.project || ''}"`, // project_name (denormalized)
+            `"${task.client || ''}"`,
+            `"${category?.id || ''}"`, // category_id
+            `"${task.category || ''}"`, // category_name (denormalized)
+            `"${day.id}"`, // day_record_id
+            'false', // is_current - archived tasks are not current
+            `"${currentTimeISO}"`, // inserted_at
+            `"${currentTimeISO}"` // updated_at
           ];
           rows.push(row.join(','));
         }
@@ -904,6 +911,182 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   };
 
+  const importFromCSV = async (csvContent: string): Promise<{ success: boolean; message: string; importedCount: number }> => {
+    try {
+      const lines = csvContent.split('\n').filter(line => line.trim());
+      if (lines.length === 0) {
+        return { success: false, message: 'CSV file is empty', importedCount: 0 };
+      }
+
+      const headerLine = lines[0];
+      const expectedHeaders = [
+        'id', 'user_id', 'title', 'description', 'start_time', 'end_time',
+        'duration', 'project_id', 'project_name', 'client', 'category_id',
+        'category_name', 'day_record_id', 'is_current', 'inserted_at', 'updated_at'
+      ];
+
+      // Validate headers
+      const headers = headerLine.split(',').map(h => h.trim().replace(/"/g, ''));
+      const missingHeaders = expectedHeaders.filter(h => !headers.includes(h));
+      if (missingHeaders.length > 0) {
+        return {
+          success: false,
+          message: `CSV missing required headers: ${missingHeaders.join(', ')}`,
+          importedCount: 0
+        };
+      }
+
+      const tasksByDay: { [dayId: string]: { tasks: Task[], dayRecord: Partial<DayRecord> } } = {};
+      let importedCount = 0;
+
+      // Process each data line
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        try {
+          // Parse CSV line (handle quoted values)
+          const values: string[] = [];
+          let current = '';
+          let inQuotes = false;
+
+          for (let j = 0; j < line.length; j++) {
+            const char = line[j];
+            if (char === '"') {
+              inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+              values.push(current.trim());
+              current = '';
+            } else {
+              current += char;
+            }
+          }
+          values.push(current.trim()); // Add last value
+
+          if (values.length !== headers.length) {
+            console.warn(`Skipping malformed CSV line ${i + 1}: expected ${headers.length} columns, got ${values.length}`);
+            continue;
+          }
+
+          // Create task object from CSV data
+          const taskData: { [key: string]: string } = {};
+          headers.forEach((header, index) => {
+            taskData[header] = values[index].replace(/^"|"$/g, ''); // Remove quotes
+          });
+
+          // Validate required fields
+          if (!taskData.id || !taskData.title || !taskData.start_time) {
+            console.warn(`Skipping incomplete task on line ${i + 1}: missing required fields`);
+            continue;
+          }
+
+          const task: Task = {
+            id: taskData.id,
+            title: taskData.title,
+            description: taskData.description || undefined,
+            startTime: new Date(taskData.start_time),
+            endTime: taskData.end_time ? new Date(taskData.end_time) : undefined,
+            duration: taskData.duration ? parseInt(taskData.duration) : undefined,
+            project: taskData.project_name || undefined,
+            client: taskData.client || undefined,
+            category: taskData.category_name || undefined,
+          };
+
+          // Validate dates
+          if (isNaN(task.startTime.getTime())) {
+            console.warn(`Skipping task with invalid start_time on line ${i + 1}`);
+            continue;
+          }
+
+          if (task.endTime && isNaN(task.endTime.getTime())) {
+            task.endTime = undefined;
+          }
+
+          const dayRecordId = taskData.day_record_id;
+          if (!dayRecordId) {
+            console.warn(`Skipping task without day_record_id on line ${i + 1}`);
+            continue;
+          }
+
+          // Group tasks by day
+          if (!tasksByDay[dayRecordId]) {
+            tasksByDay[dayRecordId] = {
+              tasks: [],
+              dayRecord: {
+                id: dayRecordId,
+                date: task.startTime.toISOString().split('T')[0],
+                startTime: task.startTime,
+                endTime: task.endTime || task.startTime,
+                totalDuration: 0,
+                tasks: []
+              }
+            };
+          }
+
+          tasksByDay[dayRecordId].tasks.push(task);
+
+          // Update day record bounds
+          if (task.startTime < (tasksByDay[dayRecordId].dayRecord.startTime || new Date())) {
+            tasksByDay[dayRecordId].dayRecord.startTime = task.startTime;
+          }
+          if (task.endTime && task.endTime > (tasksByDay[dayRecordId].dayRecord.endTime || new Date(0))) {
+            tasksByDay[dayRecordId].dayRecord.endTime = task.endTime;
+          }
+
+          importedCount++;
+        } catch (error) {
+          console.warn(`Error parsing line ${i + 1}:`, error);
+          continue;
+        }
+      }
+
+      // Create day records and add to archived days
+      const newArchivedDays: DayRecord[] = [];
+
+      for (const [dayId, { tasks, dayRecord }] of Object.entries(tasksByDay)) {
+        const totalDuration = tasks.reduce((sum, task) => sum + (task.duration || 0), 0);
+
+        const completeDay: DayRecord = {
+          id: dayRecord.id!,
+          date: dayRecord.date!,
+          tasks: tasks,
+          totalDuration: totalDuration,
+          startTime: dayRecord.startTime!,
+          endTime: dayRecord.endTime!,
+          notes: dayRecord.notes
+        };
+
+        newArchivedDays.push(completeDay);
+      }
+
+      // Merge with existing archived days (avoid duplicates)
+      const existingIds = new Set(archivedDays.map(day => day.id));
+      const uniqueNewDays = newArchivedDays.filter(day => !existingIds.has(day.id));
+
+      const updatedArchivedDays = [...archivedDays, ...uniqueNewDays];
+      setArchivedDays(updatedArchivedDays);
+
+      // Save to storage
+      if (dataService) {
+        await dataService.saveArchivedDays(updatedArchivedDays);
+      }
+
+      return {
+        success: true,
+        message: `Successfully imported ${importedCount} tasks in ${uniqueNewDays.length} days`,
+        importedCount
+      };
+
+    } catch (error) {
+      console.error('CSV import error:', error);
+      return {
+        success: false,
+        message: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        importedCount: 0
+      };
+    }
+  };
+
   return (
     <TimeTrackingContext.Provider
       value={{
@@ -939,6 +1122,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         adjustTaskTime,
         exportToCSV,
         exportToJSON,
+        importFromCSV,
         generateInvoiceData,
         getTotalDayDuration,
         getCurrentTaskDuration,
