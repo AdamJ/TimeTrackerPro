@@ -28,10 +28,10 @@ export interface DataService {
   saveArchivedDays: (days: DayRecord[]) => Promise<void>;
   getArchivedDays: () => Promise<DayRecord[]>;
   updateArchivedDay: (
-    dayId: string,
+    id: string,
     updates: Partial<DayRecord>
   ) => Promise<void>;
-  deleteArchivedDay: (dayId: string) => Promise<void>;
+  deleteArchivedDay: (id: string) => Promise<void>;
 
   // Projects operations
   saveProjects: (projects: Project[]) => Promise<void>;
@@ -41,8 +41,9 @@ export interface DataService {
   saveCategories: (categories: TaskCategory[]) => Promise<void>;
   getCategories: () => Promise<TaskCategory[]>;
 
-  // Utility methods
+  // Migration operations
   migrateFromLocalStorage: () => Promise<void>;
+  migrateToLocalStorage: () => Promise<void>;
 }
 
 // localStorage implementation
@@ -154,6 +155,10 @@ class LocalStorageService implements DataService {
 
   async migrateFromLocalStorage(): Promise<void> {
     // No-op for localStorage service
+  }
+
+  async migrateToLocalStorage(): Promise<void> {
+    // No-op for localStorage service - already in localStorage
   }
 }
 
@@ -816,35 +821,156 @@ class SupabaseService implements DataService {
 
   async migrateFromLocalStorage(): Promise<void> {
     try {
+      console.log('🔄 Checking for localStorage data to migrate...');
       const localService = new LocalStorageService();
 
-      // Migrate projects
+      // Check if there's actually meaningful data in localStorage before migrating
       const projects = await localService.getProjects();
-      if (projects.length > 0) {
-        await this.saveProjects(projects);
-      }
-
-      // Migrate categories
       const categories = await localService.getCategories();
-      if (categories.length > 0) {
-        await this.saveCategories(categories);
-      }
-
-      // Migrate current day
       const currentDay = await localService.getCurrentDay();
-      if (currentDay) {
-        await this.saveCurrentDay(currentDay);
-      }
-
-      // Migrate archived days
       const archivedDays = await localService.getArchivedDays();
-      if (archivedDays.length > 0) {
-        await this.saveArchivedDays(archivedDays);
+
+      const hasProjects = projects.length > 0;
+      const hasCategories = categories.length > 0;
+      const hasCurrentDay = currentDay && (currentDay.tasks.length > 0 || currentDay.isDayStarted);
+      const hasArchivedDays = archivedDays.length > 0;
+
+      console.log('📊 localStorage data check:', {
+        hasProjects,
+        hasCategories,
+        hasCurrentDay,
+        hasArchivedDays,
+        projectsCount: projects.length,
+        categoriesCount: categories.length,
+        currentDayTasks: currentDay?.tasks.length || 0,
+        archivedDaysCount: archivedDays.length
+      });
+
+      // Only migrate if there's substantial data in localStorage
+      // This prevents overwriting Supabase data with empty localStorage after logout/login
+      if (!hasProjects && !hasCategories && !hasCurrentDay && !hasArchivedDays) {
+        console.log('✅ No meaningful localStorage data found - skipping migration');
+        return;
       }
 
-      console.log('Data migration from localStorage completed');
+      // Check if Supabase already has data - if so, be more cautious
+      const existingCurrentDay = await this.getCurrentDay();
+      const existingArchivedDays = await this.getArchivedDays();
+      const existingProjects = await this.getProjects();
+
+      const hasExistingData = (
+        (existingCurrentDay && (existingCurrentDay.tasks.length > 0 || existingCurrentDay.isDayStarted)) ||
+        existingArchivedDays.length > 0 ||
+        existingProjects.length > 0
+      );
+
+      if (hasExistingData) {
+        console.log('⚠️ Supabase already contains data - being cautious with migration');
+
+        // Only migrate if localStorage has MORE recent or substantial data
+        const shouldMigrateCurrentDay = hasCurrentDay && (!existingCurrentDay ||
+          (currentDay?.tasks.length ?? 0) > existingCurrentDay.tasks.length);
+
+        const shouldMigrateArchived = hasArchivedDays &&
+          archivedDays.length > existingArchivedDays.length;
+
+        console.log('🔍 Migration decision:', {
+          shouldMigrateCurrentDay,
+          shouldMigrateArchived,
+          localCurrentDayTasks: currentDay?.tasks.length || 0,
+          existingCurrentDayTasks: existingCurrentDay?.tasks.length || 0,
+          localArchivedDays: archivedDays.length,
+          existingArchivedDays: existingArchivedDays.length
+        });
+
+        // Only migrate current day if localStorage has more data
+        if (shouldMigrateCurrentDay) {
+          console.log('📱 Migrating current day from localStorage (has more data)');
+          if (currentDay) {
+            await this.saveCurrentDay(currentDay);
+          } else {
+            console.warn('⚠️ Tried to migrate current day, but currentDay is null or undefined.');
+          }
+        }
+
+        // Only migrate archived days if localStorage has more data
+        if (shouldMigrateArchived) {
+          console.log('📚 Migrating archived days from localStorage (has more data)');
+          await this.saveArchivedDays(archivedDays);
+        }
+
+        // Always migrate projects and categories if they exist (they're less likely to conflict)
+        if (hasProjects) {
+          console.log('📋 Migrating projects from localStorage');
+          await this.saveProjects(projects);
+        }
+
+        if (hasCategories) {
+          console.log('🏷️ Migrating categories from localStorage');
+          await this.saveCategories(categories);
+        }
+      } else {
+        // No existing data in Supabase, safe to migrate everything
+        console.log('✅ No existing Supabase data - safe to migrate all localStorage data');
+
+        if (hasProjects) {
+          await this.saveProjects(projects);
+        }
+
+        if (hasCategories) {
+          await this.saveCategories(categories);
+        }
+
+        if (hasCurrentDay) {
+          await this.saveCurrentDay(currentDay);
+        }
+
+        if (hasArchivedDays) {
+          await this.saveArchivedDays(archivedDays);
+        }
+      }
+
+      console.log('✅ Data migration from localStorage completed safely');
     } catch (error) {
-      console.error('Error migrating data from localStorage:', error);
+      console.error('❌ Error migrating data from localStorage:', error);
+    }
+  }
+
+  async migrateToLocalStorage(): Promise<void> {
+    try {
+      console.log('🔄 Migrating current data TO localStorage for offline access...');
+      const localService = new LocalStorageService();
+
+      // Get current data from Supabase
+      const currentDay = await this.getCurrentDay();
+      const archivedDays = await this.getArchivedDays();
+      const projects = await this.getProjects();
+      const categories = await this.getCategories();
+
+      // Save to localStorage
+      if (currentDay) {
+        await localService.saveCurrentDay(currentDay);
+        console.log('📱 Current day synced to localStorage');
+      }
+
+      if (archivedDays.length > 0) {
+        await localService.saveArchivedDays(archivedDays);
+        console.log(`📚 ${archivedDays.length} archived days synced to localStorage`);
+      }
+
+      if (projects.length > 0) {
+        await localService.saveProjects(projects);
+        console.log(`📋 ${projects.length} projects synced to localStorage`);
+      }
+
+      if (categories.length > 0) {
+        await localService.saveCategories(categories);
+        console.log(`🏷️ ${categories.length} categories synced to localStorage`);
+      }
+
+      console.log('✅ Data successfully synced to localStorage for offline access');
+    } catch (error) {
+      console.error('❌ Error migrating data to localStorage:', error);
     }
   }
 }

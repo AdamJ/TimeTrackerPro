@@ -703,6 +703,8 @@ Fill in their data following the format
 Import successfully with proper error handling and feedback
 See clear results through the inline alert system
 
+[CSV_TEMPLATES_README.md](../CSV_TEMPLATES_README.md)
+
 #### New files created
 
 - CSV_TEMPLATES_README.md
@@ -711,3 +713,54 @@ See clear results through the inline alert system
 - ./test-csv-import.js
 - ./test-error-handling.js
 - ./test-full-import.js
+
+## Data was removed from DB once user logs out without ending day
+
+### 🐛 Root Cause Analysis:
+
+1. User logs in: Data service switches to SupabaseService
+1. User creates time entries: They get saved to Supabase database ✅
+1. User logs out:
+    - Data service switches to LocalStorageService
+    - There's NO reverse migration from Supabase to localStorage
+    - App now reads from empty localStorage 📱
+1. User logs back in:
+    - Data service switches back to SupabaseService
+    migrateFromLocalStorage() runs and might overwrite Supabase data with empty localStorage data! ⚠️
+
+### 🎉 Solution Summary
+I've successfully identified and fixed the critical data loss bug in your TimeTrackerPro application! Here's what was happening and how I fixed it:
+
+🐛 The Problem:
+When users logged out, their Supabase data stayed in the database ✅
+But when they logged back in, the app's migration logic would run migrateFromLocalStorage()
+This function would blindly overwrite Supabase data with whatever was in localStorage (often empty data)
+Result: Data loss! 😱
+🛠️ The Solution:
+Smart Migration Logic:
+
+Only migrates localStorage data if it contains meaningful information
+Checks existing Supabase data before overwriting
+Uses intelligent conflict resolution (only overwrites if localStorage has MORE data)
+Logout Data Preservation:
+
+Added migrateToLocalStorage() method
+Automatically syncs Supabase data TO localStorage when user logs out
+Users can continue working offline without losing their authenticated session data
+Authentication State Tracking:
+
+Detects when users transition from authenticated to not authenticated
+Automatically preserves data during these transitions
+Comprehensive logging for debugging
+✅ Benefits:
+No more data loss during login/logout cycles
+Seamless offline/online transitions
+Smart conflict resolution protects existing data
+Better user experience with uninterrupted workflow
+🧪 To Test:
+Log in and create time entries
+Log out (check console for sync messages)
+Log back in - your original data should still be there!
+Try working offline after logout - data will be preserved
+
+[AUTH_DATA_PERSISTENCE_FIX.md](../AUTH_DATA_PERSISTENCE_FIX.md)
