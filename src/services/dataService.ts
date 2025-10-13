@@ -922,11 +922,7 @@ class SupabaseService implements DataService {
         }
 
         if (hasCurrentDay) {
-          if (currentDay != null) {
-            await this.saveCurrentDay(currentDay);
-          } else {
-            console.error('❌ hasCurrentDay is true but currentDay is null or undefined');
-          }
+          await this.saveCurrentDay(currentDay);
         }
 
         if (hasArchivedDays) {
