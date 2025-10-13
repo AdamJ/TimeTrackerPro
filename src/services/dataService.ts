@@ -869,7 +869,7 @@ class SupabaseService implements DataService {
 
         // Only migrate if localStorage has MORE recent or substantial data
         const shouldMigrateCurrentDay = hasCurrentDay && (!existingCurrentDay ||
-          currentDay!.tasks.length > existingCurrentDay.tasks.length);
+          (currentDay?.tasks.length ?? 0) > existingCurrentDay.tasks.length);
 
         const shouldMigrateArchived = hasArchivedDays &&
           archivedDays.length > existingArchivedDays.length;
