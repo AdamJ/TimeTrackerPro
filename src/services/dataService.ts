@@ -886,7 +886,11 @@ class SupabaseService implements DataService {
         // Only migrate current day if localStorage has more data
         if (shouldMigrateCurrentDay) {
           console.log('📱 Migrating current day from localStorage (has more data)');
-          await this.saveCurrentDay(currentDay!);
+          if (currentDay) {
+            await this.saveCurrentDay(currentDay);
+          } else {
+            console.warn('⚠️ Tried to migrate current day, but currentDay is null or undefined.');
+          }
         }
 
         // Only migrate archived days if localStorage has more data
@@ -918,7 +922,11 @@ class SupabaseService implements DataService {
         }
 
         if (hasCurrentDay) {
-          await this.saveCurrentDay(currentDay!);
+          if (currentDay != null) {
+            await this.saveCurrentDay(currentDay);
+          } else {
+            console.error('❌ hasCurrentDay is true but currentDay is null or undefined');
+          }
         }
 
         if (hasArchivedDays) {
