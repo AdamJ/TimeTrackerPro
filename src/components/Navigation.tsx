@@ -43,13 +43,13 @@ const SiteNavigationMenu = () => {
 
   return (
     <>
-    <NavigationMenu className="relative bg-gradient-to-br from-gray-50 to-blue-50">
+    <NavigationMenu className="relative bg-gradient-to-br from-gray-50 to-blue-50 print:hidden">
       <List className="flex items-center justify-between px-8 py-4 m-0 list-none rounded-md bg-white p-1 shadow-sm">
         <Item className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900 flex">
             <Link
               to="/"
-              className="flex items-center text-gray-900 hover:text-blue-700 print:hidden"
+              className="flex items-center text-gray-900 hover:text-blue-700"
             >
               <img src="favicon.png" alt="Logo" className="w-8 h-8 sm:mr-2" />
               <span className="hidden sm:block">TimeTracker</span>
@@ -81,17 +81,6 @@ const SiteNavigationMenu = () => {
               <Printer className="w-4 h-4" />
               <span className="hidden sm:block">Print</span>
             </Button>
-          </Item>
-          <Item>
-            <NavLink
-              to="/archive"
-              className={({ isActive }) =>
-                `transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input ... ${isActive ? 'bg-blue-200 hover:bg-accent hover:text-accent-foreground' : 'bg-white'}`
-              }
-            >
-              <Database className="w-4 h-4" />
-              <span className="hidden sm:block">Archives</span>
-            </NavLink>
           </Item>
           <Item>
             <NavLink

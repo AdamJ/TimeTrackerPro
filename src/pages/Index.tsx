@@ -5,7 +5,7 @@ import { NewTaskForm } from '@/components/NewTaskForm';
 import { TaskItem } from '@/components/TaskItem';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Archive as Play } from 'lucide-react';
+import { CirclePlay, CircleStop, Archive as Play } from 'lucide-react';
 import { DashboardIcon } from '@radix-ui/react-icons';
 import SiteNavigationMenu from '@/components/Navigation';
 
@@ -61,6 +61,14 @@ const TimeTrackerContent = () => {
   // Calculate running timer for navigation
   const runningTime = isDayStarted ? getTotalDayDuration() : 0;
 
+  // Debug logging to understand state
+  console.log('🔍 Index component state:', {
+    isDayStarted,
+    dayStartTime,
+    tasksLength: tasks.length,
+    shouldShowSummary: !isDayStarted && dayStartTime && tasks.length > 0
+  });
+
   // Show day summary if day has ended but not yet posted
   if (!isDayStarted && dayStartTime && tasks.length > 0) {
     return (
@@ -82,6 +90,7 @@ const TimeTrackerContent = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <SiteNavigationMenu />
       {/* Main Content */}
+      {!isDayStarted ? (
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -111,6 +120,7 @@ const TimeTrackerContent = () => {
           </div>
         </div>
       </div>
+      ) : null}
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         {!isDayStarted ? (
           <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
@@ -129,7 +139,7 @@ const TimeTrackerContent = () => {
                 onClick={handleStartDay}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center space-x-2 py-3"
               >
-                <Play className="w-4 h-4" />
+                <CirclePlay className="w-4 h-4" />
                 <span>Start Day</span>
               </Button>
             </CardContent>
@@ -139,7 +149,13 @@ const TimeTrackerContent = () => {
             <NewTaskForm onSubmit={handleNewTask} />
             {tasks.length > 0 && (
               <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900">Tasks</h2>
+                <h2 className="flex justify-between text-lg font-semibold text-gray-900">Tasks ({tasks.length})
+                  {dayStartTime && (
+                    <p className="text-sm text-gray-600">
+                      Day started at: {dayStartTime.toLocaleTimeString()}
+                    </p>
+                  )}
+                </h2>
                 {tasks.map((task) => (
                   <TaskItem
                     key={task.id}
@@ -153,16 +169,14 @@ const TimeTrackerContent = () => {
                 ))}
               </div>
             )}
-            <Card className="bg-red-50 border-red-200">
-              <CardContent className="p-4">
-                <Button
-                  onClick={handleEndDay}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white"
-                >
-                  End Day
-                </Button>
-              </CardContent>
-            </Card>
+              <Button
+                variant="outline"
+                onClick={handleEndDay}
+                className="w-full font-bold bg-red-50 border-red-700 text-red-700 hover:bg-red-100 hover:text-red-700"
+              >
+                <CircleStop className="w-4 h-4" />
+                End Day
+              </Button>
           </>
         )}
       </div>

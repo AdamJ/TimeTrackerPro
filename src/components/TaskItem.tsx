@@ -4,7 +4,13 @@ import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { TaskEditDialog } from '@/components/TaskEditDialog';
-import { Edit, Trash2, Clock, ClipboardCheck } from 'lucide-react';
+import {
+  Edit,
+  Trash2,
+  ClockPlus,
+  ClockFading,
+  ClipboardCheck
+} from 'lucide-react';
 import { formatDuration, formatTime } from '@/utils/timeUtil';
 import { Badge } from '@radix-ui/themes';
 
@@ -31,21 +37,24 @@ export const TaskItem: React.FC<TaskItemProps> = ({
     <>
       <Card
         className={`transition-all duration-200 ${
-          isActive ? 'ring-2 ring-blue-500 bg-white' : 'hover:shadow-md'
+          isActive ? 'ring-2 ring-blue-500 hover:shadow-md hover:shadow-blue-300 bg-white' : 'hover:shadow-md'
         }`}
       >
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-2">
-                {category && (
+                {/* Should I remove this section? */}
+                {/* {category && (
                   <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: category.color }}
                     title={category.name}
                   />
-                )}
-                <h3 className="font-medium text-gray-900">{task.title}</h3>
+                )} */}
+                <h3 className="font-bold text-gray-900">
+                  {task.title}
+                </h3>
                 {isActive && (
                   <Badge variant="solid" color="indigo">
                     Active
@@ -61,10 +70,11 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
               <div className="flex items-center flex-wrap gap-2 text-sm text-gray-600">
                 <span className="flex items-center space-x-1">
-                  <Clock className="w-3 h-3" />
+                  <ClockPlus className="w-3 h-3" />
                   <span>Started: {formatTime(task.startTime)}</span>
                 </span>
                 <span className="flex items-center space-x-1">
+                  <ClockFading className="w-3 h-3" />
                   <span>Duration: {formatDuration(duration)}</span>
                 </span>
               </div>
@@ -93,15 +103,6 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
             <div className="flex space-x-2 ml-4">
               <Button
-                onClick={() => setShowEditDialog(true)}
-                size="sm"
-                variant="outline"
-                className="flex items-center space-x-1"
-              >
-                <Edit className="w-3 h-3" />
-                <span className="hidden sm:block">Edit</span>
-              </Button>
-              <Button
                 onClick={() => onDelete(task.id)}
                 size="sm"
                 variant="outline"
@@ -109,6 +110,15 @@ export const TaskItem: React.FC<TaskItemProps> = ({
               >
                 <Trash2 className="w-3 h-3" />
                 <span className="hidden sm:block">Delete</span>
+              </Button>
+              <Button
+                onClick={() => setShowEditDialog(true)}
+                size="sm"
+                variant="outline"
+                className="flex items-center space-x-1"
+              >
+                <Edit className="w-3 h-3" />
+                <span className="hidden sm:block">Edit</span>
               </Button>
             </div>
           </div>
