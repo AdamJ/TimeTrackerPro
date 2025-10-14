@@ -231,11 +231,14 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         // Load current day
         console.log('🔄 Loading current day from database...');
         const currentDay = await dataService.getCurrentDay();
+        console.log('📱 Raw current day data from storage:', currentDay);
         if (currentDay) {
           console.log('📱 Current day loaded from database:', {
             tasksCount: currentDay.tasks.length,
             isDayStarted: currentDay.isDayStarted,
-            hasCurrentTask: !!currentDay.currentTask
+            hasCurrentTask: !!currentDay.currentTask,
+            dayStartTime: currentDay.dayStartTime,
+            fullData: currentDay
           });
           setIsDayStarted(currentDay.isDayStarted);
           setDayStartTime(currentDay.dayStartTime);
@@ -324,7 +327,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       console.log('💾 Syncing current day to database...', {
         tasksCount: state.tasks.length,
         isDayStarted: state.isDayStarted,
-        hasCurrentTask: !!state.currentTask
+        hasCurrentTask: !!state.currentTask,
+        dayStartTime: state.dayStartTime,
+        fullState: state
       });
       await dataService.saveCurrentDay(state);
       setLastSyncTime(new Date());
@@ -468,6 +473,13 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const endDay = () => {
+    console.log('🔚 Ending day - current state before:', {
+      isDayStarted,
+      dayStartTime,
+      tasksLength: tasks.length,
+      currentTask: !!currentTask
+    });
+
     if (currentTask) {
       // End the current task
       const updatedTask = {
@@ -481,9 +493,13 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       setCurrentTask(null);
     }
     setIsDayStarted(false);
-    console.log('Day ended');
+    console.log('🔚 Day ended - saving state...');
     // Save immediately since this is a critical action
-    saveImmediately();
+    saveImmediately().then(() => {
+      console.log('✅ State saved after ending day');
+    }).catch((error) => {
+      console.error('❌ Error saving state after ending day:', error);
+    });
   };
 
   const startNewTask = (
@@ -568,10 +584,20 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     // Save immediately since this is a critical action
     if (dataService) {
       try {
+        // Save the archived days
         await dataService.saveArchivedDays([...archivedDays, dayRecord]);
         console.log('✅ Archive saved immediately');
+
+        // Save the cleared current day state so refresh shows "Start Day" screen
+        await dataService.saveCurrentDay({
+          isDayStarted: false,
+          dayStartTime: null,
+          currentTask: null,
+          tasks: []
+        });
+        console.log('✅ Cleared current day state saved');
       } catch (error) {
-        console.error('❌ Error saving archive immediately:', error);
+        console.error('❌ Error saving after posting day:', error);
       }
     }
   };

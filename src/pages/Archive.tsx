@@ -34,10 +34,6 @@ const ArchiveContent: React.FC = () => {
   const totalRevenue =
     archivedDays.length > 0 ? getRevenueForPeriod(new Date(0), new Date()) : 0;
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   const handleEdit = (day: DayRecord) => {
     setEditingDay(day);
   };

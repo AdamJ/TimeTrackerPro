@@ -9,7 +9,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus } from 'lucide-react';
+import { ClockPlus, Plus } from 'lucide-react';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 
 interface NewTaskFormProps {
@@ -56,11 +56,12 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
   if (!isOpen) {
     return (
       <Button
+        variant="outline"
         onClick={() => setIsOpen(true)}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center space-x-2 py-3"
+        className="w-full font-bold border-green-700 text-green-700 hover:bg-green-50 hover:text-green-700 flex items-center justify-center space-x-2 py-3"
       >
-        <Plus className="w-4 h-4" />
-        <span>New Task</span>
+        <ClockPlus className="w-4 h-4" />
+        New Task
       </Button>
     );
   }
