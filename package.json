@@ -9,7 +9,10 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "test": "vitest",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test-full-import": "cd tests && node test-full-import.js",
+    "test-error-handling": "cd tests && node test-error-handling.js",
+    "test-csv-import": "cd tests && node test-csv-import.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

@@ -15,24 +15,41 @@ async function testFullImportProcess() {
 
   // Simulate the import function logic
   try {
-    const lines = csvContent.split('\n').filter(line => line.trim());
+    const lines = csvContent.split('\n').filter((line) => line.trim());
     if (lines.length === 0) {
       return { success: false, message: 'CSV file is empty', importedCount: 0 };
     }
 
     const headerLine = lines[0];
     const expectedHeaders = [
-      'id', 'user_id', 'title', 'description', 'start_time', 'end_time',
-      'duration', 'project_id', 'project_name', 'client', 'category_id',
-      'category_name', 'day_record_id', 'is_current', 'inserted_at', 'updated_at'
+      'id',
+      'user_id',
+      'title',
+      'description',
+      'start_time',
+      'end_time',
+      'duration',
+      'project_id',
+      'project_name',
+      'client',
+      'category_id',
+      'category_name',
+      'day_record_id',
+      'is_current',
+      'inserted_at',
+      'updated_at'
     ];
 
     // Validate headers
     console.log('🔍 Validating Headers...');
-    const headers = headerLine.split(',').map(h => h.trim().replace(/"/g, ''));
-    const missingHeaders = expectedHeaders.filter(h => !headers.includes(h));
+    const headers = headerLine
+      .split(',')
+      .map((h) => h.trim().replace(/"/g, ''));
+    const missingHeaders = expectedHeaders.filter((h) => !headers.includes(h));
     if (missingHeaders.length > 0) {
-      const error = `CSV missing required headers: ${missingHeaders.join(', ')}`;
+      const error = `CSV missing required headers: ${missingHeaders.join(
+        ', '
+      )}`;
       console.error(`❌ ${error}`);
       return { success: false, message: error, importedCount: 0 };
     }
@@ -69,7 +86,11 @@ async function testFullImportProcess() {
         values.push(current.trim());
 
         if (values.length !== headers.length) {
-          console.warn(`⚠️ Skipping malformed CSV line ${i + 1}: expected ${headers.length} columns, got ${values.length}`);
+          console.warn(
+            `⚠️ Skipping malformed CSV line ${i + 1}: expected ${
+              headers.length
+            } columns, got ${values.length}`
+          );
           continue;
         }
 
@@ -81,7 +102,11 @@ async function testFullImportProcess() {
 
         // Validate required fields
         if (!taskData.id || !taskData.title || !taskData.start_time) {
-          console.warn(`⚠️ Skipping incomplete task on line ${i + 1}: missing required fields`);
+          console.warn(
+            `⚠️ Skipping incomplete task on line ${
+              i + 1
+            }: missing required fields`
+          );
           continue;
         }
 
@@ -94,12 +119,14 @@ async function testFullImportProcess() {
           duration: taskData.duration ? parseInt(taskData.duration) : undefined,
           project: taskData.project_name || undefined,
           client: taskData.client || undefined,
-          category: taskData.category_name || undefined,
+          category: taskData.category_name || undefined
         };
 
         // Validate dates
         if (isNaN(task.startTime.getTime())) {
-          console.warn(`⚠️ Skipping task with invalid start_time on line ${i + 1}`);
+          console.warn(
+            `⚠️ Skipping task with invalid start_time on line ${i + 1}`
+          );
           continue;
         }
 
@@ -109,7 +136,9 @@ async function testFullImportProcess() {
 
         const dayRecordId = taskData.day_record_id;
         if (!dayRecordId) {
-          console.warn(`⚠️ Skipping task without day_record_id on line ${i + 1}`);
+          console.warn(
+            `⚠️ Skipping task without day_record_id on line ${i + 1}`
+          );
           continue;
         }
 
@@ -131,17 +160,32 @@ async function testFullImportProcess() {
         tasksByDay[dayRecordId].tasks.push(task);
 
         // Update day record bounds
-        if (task.startTime < (tasksByDay[dayRecordId].dayRecord.startTime || new Date())) {
+        if (
+          task.startTime <
+          (tasksByDay[dayRecordId].dayRecord.startTime || new Date())
+        ) {
           tasksByDay[dayRecordId].dayRecord.startTime = task.startTime;
         }
-        if (task.endTime && task.endTime > (tasksByDay[dayRecordId].dayRecord.endTime || new Date(0))) {
+        if (
+          task.endTime &&
+          task.endTime >
+            (tasksByDay[dayRecordId].dayRecord.endTime || new Date(0))
+        ) {
           tasksByDay[dayRecordId].dayRecord.endTime = task.endTime;
         }
 
         console.log(`✅ Successfully parsed task: "${task.title}"`);
-        console.log(`   🕐 ${task.startTime.toISOString()} → ${task.endTime?.toISOString() || 'N/A'}`);
-        console.log(`   ⏱️ Duration: ${task.duration ? (task.duration / 60000) + ' minutes' : 'N/A'}`);
-        console.log(`   📁 Project: ${task.project || 'N/A'}`);
+        console.log(
+          `   🕐 ${task.startTime.toISOString()} → ${
+            task.endTime?.toISOString() || 'N/A'
+          }`
+        );
+        console.log(
+          `   ⏱️ Duration: ${
+            task.duration ? task.duration / 60000 + ' minutes' : 'N/A'
+          }`
+        );
+        console.log(`📁 Project: ${task.project || 'N/A'}`);
 
         importedCount++;
       } catch (error) {
@@ -155,7 +199,10 @@ async function testFullImportProcess() {
     const newArchivedDays = [];
 
     for (const [dayId, { tasks, dayRecord }] of Object.entries(tasksByDay)) {
-      const totalDuration = tasks.reduce((sum, task) => sum + (task.duration || 0), 0);
+      const totalDuration = tasks.reduce(
+        (sum, task) => sum + (task.duration || 0),
+        0
+      );
 
       const completeDay = {
         id: dayRecord.id,
@@ -169,7 +216,9 @@ async function testFullImportProcess() {
 
       newArchivedDays.push(completeDay);
       console.log(`✅ Created day record: ${dayId}`);
-      console.log(`   📋 ${tasks.length} tasks, ${totalDuration / 60000} minutes total`);
+      console.log(
+        `   📋 ${tasks.length} tasks, ${totalDuration / 60000} minutes total`
+      );
     }
 
     const result = {
@@ -186,7 +235,6 @@ async function testFullImportProcess() {
     console.log(`📅 Day Records Created: ${newArchivedDays.length}`);
 
     return result;
-
   } catch (error) {
     console.error('💥 Import failed:', error);
     return {
@@ -198,7 +246,7 @@ async function testFullImportProcess() {
 }
 
 // Auto-run the test
-testFullImportProcess().then(result => {
+testFullImportProcess().then((result) => {
   console.log('\n' + '='.repeat(80));
   console.log('🏁 FINAL RESULT:', result.success ? '✅ PASS' : '❌ FAIL');
   console.log('='.repeat(80));
