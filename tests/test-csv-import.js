@@ -9,7 +9,7 @@ const testCSVContent = `id,user_id,title,description,start_time,end_time,duratio
 function testCSVParsing() {
   console.log('🧪 Testing CSV Import Functionality...\n');
 
-  const lines = testCSVContent.split('\n').filter(line => line.trim());
+  const lines = testCSVContent.split('\n').filter((line) => line.trim());
   console.log(`📄 Found ${lines.length} lines (including header)`);
 
   if (lines.length === 0) {
@@ -19,18 +19,33 @@ function testCSVParsing() {
 
   const headerLine = lines[0];
   const expectedHeaders = [
-    'id', 'user_id', 'title', 'description', 'start_time', 'end_time',
-    'duration', 'project_id', 'project_name', 'client', 'category_id',
-    'category_name', 'day_record_id', 'is_current', 'inserted_at', 'updated_at'
+    'id',
+    'user_id',
+    'title',
+    'description',
+    'start_time',
+    'end_time',
+    'duration',
+    'project_id',
+    'project_name',
+    'client',
+    'category_id',
+    'category_name',
+    'day_record_id',
+    'is_current',
+    'inserted_at',
+    'updated_at'
   ];
 
   // Validate headers
-  const headers = headerLine.split(',').map(h => h.trim().replace(/"/g, ''));
+  const headers = headerLine.split(',').map((h) => h.trim().replace(/"/g, ''));
   console.log(`📋 Headers found: ${headers.join(', ')}`);
 
-  const missingHeaders = expectedHeaders.filter(h => !headers.includes(h));
+  const missingHeaders = expectedHeaders.filter((h) => !headers.includes(h));
   if (missingHeaders.length > 0) {
-    console.error(`❌ CSV missing required headers: ${missingHeaders.join(', ')}`);
+    console.error(
+      `❌ CSV missing required headers: ${missingHeaders.join(', ')}`
+    );
     return false;
   }
   console.log('✅ All required headers present');
@@ -65,7 +80,9 @@ function testCSVParsing() {
       values.push(current.trim()); // Add last value
 
       if (values.length !== headers.length) {
-        const error = `Line ${i + 1}: expected ${headers.length} columns, got ${values.length}`;
+        const error = `Line ${i + 1}: expected ${headers.length} columns, got ${
+          values.length
+        }`;
         console.warn(`⚠️ ${error}`);
         errors.push(error);
         continue;
@@ -79,7 +96,9 @@ function testCSVParsing() {
 
       // Validate required fields
       if (!taskData.id || !taskData.title || !taskData.start_time) {
-        const error = `Line ${i + 1}: missing required fields (id, title, or start_time)`;
+        const error = `Line ${
+          i + 1
+        }: missing required fields (id, title, or start_time)`;
         console.warn(`⚠️ ${error}`);
         errors.push(error);
         continue;
@@ -112,12 +131,14 @@ function testCSVParsing() {
       }
 
       console.log(`✅ Line ${i + 1} parsed successfully:`);
-      console.log(`   📝 Task: ${taskData.title}`);
-      console.log(`   🕐 Start: ${taskData.start_time}`);
-      console.log(`   🕑 End: ${taskData.end_time || 'N/A'}`);
-      console.log(`   ⏱️ Duration: ${duration ? (duration / 60000) + ' minutes' : 'N/A'}`);
-      console.log(`   📁 Project: ${taskData.project_name || 'N/A'}`);
-      console.log(`   📋 Day ID: ${taskData.day_record_id}`);
+      console.log(`📝 Task: ${taskData.title}`);
+      console.log(`🕐 Start: ${taskData.start_time}`);
+      console.log(`🕑 End: ${taskData.end_time || 'N/A'}`);
+      console.log(
+        `⏱️ Duration: ${duration ? duration / 60000 + ' minutes' : 'N/A'}`
+      );
+      console.log(`📁 Project: ${taskData.project_name || 'N/A'}`);
+      console.log(`📋 Day ID: ${taskData.day_record_id}`);
 
       importedCount++;
     } catch (error) {
@@ -134,7 +155,7 @@ function testCSVParsing() {
 
   if (errors.length > 0) {
     console.log('\n🚨 Error Details:');
-    errors.forEach(error => console.log(`   - ${error}`));
+    errors.forEach((error) => console.log(`   - ${error}`));
   }
 
   return errors.length === 0;
@@ -143,7 +164,9 @@ function testCSVParsing() {
 // Export for use in browser console or test runner
 if (typeof window !== 'undefined') {
   window.testCSVImport = testCSVParsing;
-  console.log('🔧 CSV import test function available as window.testCSVImport()');
+  console.log(
+    '🔧 CSV import test function available as window.testCSVImport()'
+  );
 } else if (typeof module !== 'undefined') {
   module.exports = { testCSVParsing, testCSVContent };
 }

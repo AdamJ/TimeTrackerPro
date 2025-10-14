@@ -136,17 +136,56 @@ npm run dev
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
+- `npm run test-full-import` - Run test of full CSV import
+- `npm run test-error-handling` - Run test of CSV import error handling
+- `npm run test-csv-import` - Run test of standard CSV import
 
 ### Project Structure
 
 ```json
 src/
-├── components/          # Reusable UI components
+├── components/         # Reusable UI components
+├── config/             # Category and Project configuration files
 ├── contexts/           # React Context providers
+├── hooks/              # Use files
+├── lib/                # Libraries
 ├── pages/              # Main application pages
-├── utils/              # Utility functions
-└── lib/                # Library configurations
+├── services/           # Data service configuration
+└── utils/              # Utility functions
 ```
+
+## Supporting Documents
+
+- [Security](docs/SECURITY.md)
+      - Configuration for project security with Chat Agents
+- [Scheme Compatibility](docs/SCHEMA_COMPATIBILITY.md)
+      - Chat record of updating DB schema for Supabase
+- [Chatbot Notes](docs/chatbot.md)
+      - Chat records from interactions with GitHub CoPilot
+- [Authentication](docs/AUTHENTICATION.md)
+      - Record for how authentication was configured and is handled
+- [Data Persistence](docs/AUTH_DATA_PERSISTENCE_FIX.md)
+      - Record on how data persistence issues were fixed
+- [CSV Templates](docs/CSV_TEMPLATES_README.md)
+      - Available CSV templates for importing, testing, and exporting of time entries
+- [Migration](docs/MIGRATION.md)
+      - Document for migrating data to Supabase database
+- [ChatGPT Features](docs/FEATURES.md)
+      - Notes from ChatGPT related to updates and improvements requests
+
+### Agents
+
+[AGENTS.md](AGENTS.md)
+
+- [Styles](agents/styles.md)
+      - Rules to govern the style choices for Agents
+- [Pull Requests](agents/pull_requests.md)
+      - Rules for Agents to create pull requests
+
+### Local Agents
+
+- [Project Rules](.continue/rules/project-rules.md)
+      - Setting project rules when using the local agent editor extension "Continue"
 
 ## 📄 License
 

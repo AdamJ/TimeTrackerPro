@@ -6,53 +6,54 @@ async function testErrorHandling() {
 
   const testCases = [
     {
-      name: "Missing Headers",
+      name: 'Missing Headers',
       csv: `task_id,name,start,end
 "task-001","Test Task","2025-10-12T09:00:00.000Z","2025-10-12T10:00:00.000Z"`,
       expectedError: true,
-      description: "CSV with wrong headers"
+      description: 'CSV with wrong headers'
     },
     {
-      name: "Empty File",
-      csv: "",
+      name: 'Empty File',
+      csv: '',
       expectedError: true,
-      description: "Empty CSV file"
+      description: 'Empty CSV file'
     },
     {
-      name: "Headers Only",
-      csv: "id,user_id,title,description,start_time,end_time,duration,project_id,project_name,client,category_id,category_name,day_record_id,is_current,inserted_at,updated_at",
+      name: 'Headers Only',
+      csv: 'id,user_id,title,description,start_time,end_time,duration,project_id,project_name,client,category_id,category_name,day_record_id,is_current,inserted_at,updated_at',
       expectedError: false,
-      description: "CSV with headers but no data"
+      description: 'CSV with headers but no data'
     },
     {
-      name: "Invalid Date Format",
+      name: 'Invalid Date Format',
       csv: `id,user_id,title,description,start_time,end_time,duration,project_id,project_name,client,category_id,category_name,day_record_id,is_current,inserted_at,updated_at
 "task-001","","Test Task","Description","invalid-date","2025-10-12T10:00:00.000Z",3600000,"proj-001","Project","Client","cat-001","Category","day-001",false,"2025-10-12T10:00:00.000Z","2025-10-12T10:00:00.000Z"`,
       expectedError: false,
-      description: "Task with invalid start_time should be skipped"
+      description: 'Task with invalid start_time should be skipped'
     },
     {
-      name: "Missing Required Fields",
+      name: 'Missing Required Fields',
       csv: `id,user_id,title,description,start_time,end_time,duration,project_id,project_name,client,category_id,category_name,day_record_id,is_current,inserted_at,updated_at
 "","","","","2025-10-12T09:00:00.000Z","2025-10-12T10:00:00.000Z",3600000,"proj-001","Project","Client","cat-001","Category","day-001",false,"2025-10-12T10:00:00.000Z","2025-10-12T10:00:00.000Z"`,
       expectedError: false,
-      description: "Task with missing required fields should be skipped"
+      description: 'Task with missing required fields should be skipped'
     },
     {
-      name: "Malformed CSV Line",
+      name: 'Malformed CSV Line',
       csv: `id,user_id,title,description,start_time,end_time,duration,project_id,project_name,client,category_id,category_name,day_record_id,is_current,inserted_at,updated_at
 "task-001","","Test Task","Description","2025-10-12T09:00:00.000Z","2025-10-12T10:00:00.000Z",3600000,"proj-001","Project","Client","cat-001","Category","day-001",false,"2025-10-12T10:00:00.000Z"`,
       expectedError: false,
-      description: "Line with wrong number of columns should be skipped"
+      description: 'Line with wrong number of columns should be skipped'
     },
     {
-      name: "Mixed Valid/Invalid Data",
+      name: 'Mixed Valid/Invalid Data',
       csv: `id,user_id,title,description,start_time,end_time,duration,project_id,project_name,client,category_id,category_name,day_record_id,is_current,inserted_at,updated_at
 "task-001","","Valid Task","Description","2025-10-12T09:00:00.000Z","2025-10-12T10:00:00.000Z",3600000,"proj-001","Project","Client","cat-001","Category","day-001",false,"2025-10-12T10:00:00.000Z","2025-10-12T10:00:00.000Z"
 "","","Invalid Task","","invalid-date","2025-10-12T11:00:00.000Z",1800000,"proj-002","Project 2","Client","cat-002","Category 2","day-001",false,"2025-10-12T11:00:00.000Z","2025-10-12T11:00:00.000Z"
 "task-003","","Another Valid Task","Description 3","2025-10-12T12:00:00.000Z","2025-10-12T13:00:00.000Z",3600000,"proj-003","Project 3","Client","cat-003","Category 3","day-001",false,"2025-10-12T13:00:00.000Z","2025-10-12T13:00:00.000Z"`,
       expectedError: false,
-      description: "Mix of valid and invalid tasks - should import only valid ones"
+      description:
+        'Mix of valid and invalid tasks - should import only valid ones'
     }
   ];
 
@@ -76,7 +77,6 @@ async function testErrorHandling() {
       console.log(`📊 Result: ${result.success ? 'SUCCESS' : 'FAILURE'}`);
       console.log(`💬 Message: ${result.message}`);
       console.log(`📈 Imported: ${result.importedCount} tasks`);
-
     } catch (error) {
       console.log(`💥 EXCEPTION: ${error.message}`);
     }
@@ -85,21 +85,36 @@ async function testErrorHandling() {
 
 async function simulateImport(csvContent) {
   try {
-    const lines = csvContent.split('\n').filter(line => line.trim());
+    const lines = csvContent.split('\n').filter((line) => line.trim());
     if (lines.length === 0) {
       return { success: false, message: 'CSV file is empty', importedCount: 0 };
     }
 
     const headerLine = lines[0];
     const expectedHeaders = [
-      'id', 'user_id', 'title', 'description', 'start_time', 'end_time',
-      'duration', 'project_id', 'project_name', 'client', 'category_id',
-      'category_name', 'day_record_id', 'is_current', 'inserted_at', 'updated_at'
+      'id',
+      'user_id',
+      'title',
+      'description',
+      'start_time',
+      'end_time',
+      'duration',
+      'project_id',
+      'project_name',
+      'client',
+      'category_id',
+      'category_name',
+      'day_record_id',
+      'is_current',
+      'inserted_at',
+      'updated_at'
     ];
 
     // Validate headers
-    const headers = headerLine.split(',').map(h => h.trim().replace(/"/g, ''));
-    const missingHeaders = expectedHeaders.filter(h => !headers.includes(h));
+    const headers = headerLine
+      .split(',')
+      .map((h) => h.trim().replace(/"/g, ''));
+    const missingHeaders = expectedHeaders.filter((h) => !headers.includes(h));
     if (missingHeaders.length > 0) {
       return {
         success: false,
@@ -136,7 +151,11 @@ async function simulateImport(csvContent) {
         values.push(current.trim());
 
         if (values.length !== headers.length) {
-          console.warn(`⚠️ Skipping malformed CSV line ${i + 1}: expected ${headers.length} columns, got ${values.length}`);
+          console.warn(
+            `⚠️ Skipping malformed CSV line ${i + 1}: expected ${
+              headers.length
+            } columns, got ${values.length}`
+          );
           continue;
         }
 
@@ -148,7 +167,11 @@ async function simulateImport(csvContent) {
 
         // Validate required fields
         if (!taskData.id || !taskData.title || !taskData.start_time) {
-          console.warn(`⚠️ Skipping incomplete task on line ${i + 1}: missing required fields`);
+          console.warn(
+            `⚠️ Skipping incomplete task on line ${
+              i + 1
+            }: missing required fields`
+          );
           continue;
         }
 
@@ -161,12 +184,14 @@ async function simulateImport(csvContent) {
           duration: taskData.duration ? parseInt(taskData.duration) : undefined,
           project: taskData.project_name || undefined,
           client: taskData.client || undefined,
-          category: taskData.category_name || undefined,
+          category: taskData.category_name || undefined
         };
 
         // Validate dates
         if (isNaN(task.startTime.getTime())) {
-          console.warn(`⚠️ Skipping task with invalid start_time on line ${i + 1}`);
+          console.warn(
+            `⚠️ Skipping task with invalid start_time on line ${i + 1}`
+          );
           continue;
         }
 
@@ -176,7 +201,9 @@ async function simulateImport(csvContent) {
 
         const dayRecordId = taskData.day_record_id;
         if (!dayRecordId) {
-          console.warn(`⚠️ Skipping task without day_record_id on line ${i + 1}`);
+          console.warn(
+            `⚠️ Skipping task without day_record_id on line ${i + 1}`
+          );
           continue;
         }
 
@@ -207,7 +234,10 @@ async function simulateImport(csvContent) {
     // Create day records
     const newArchivedDays = [];
     for (const [dayId, { tasks, dayRecord }] of Object.entries(tasksByDay)) {
-      const totalDuration = tasks.reduce((sum, task) => sum + (task.duration || 0), 0);
+      const totalDuration = tasks.reduce(
+        (sum, task) => sum + (task.duration || 0),
+        0
+      );
       const completeDay = {
         id: dayRecord.id,
         date: dayRecord.date,
@@ -225,7 +255,6 @@ async function simulateImport(csvContent) {
       message: `Successfully imported ${importedCount} tasks in ${newArchivedDays.length} days`,
       importedCount
     };
-
   } catch (error) {
     console.error('CSV import error:', error);
     return {
