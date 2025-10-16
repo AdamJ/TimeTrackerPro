@@ -183,7 +183,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     convertDefaultProjects(DEFAULT_PROJECTS)
   );
   const [categories, setCategories] =
-    useState<TaskCategory[]>(DEFAULT_CATEGORIES);
+    useState<TaskCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
@@ -284,8 +284,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         // Load categories
         const loadedCategories = await dataService.getCategories();
         if (loadedCategories.length > 0) {
+          console.log('📋 Loaded categories from database:', loadedCategories.length);
           setCategories(loadedCategories);
         } else {
+          console.log('📋 No categories found in database, using defaults');
           setCategories(DEFAULT_CATEGORIES);
         }
 
