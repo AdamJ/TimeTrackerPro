@@ -20,7 +20,16 @@ interface ArchiveItemProps {
 }
 
 export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
-  const { restoreArchivedDay, isDayStarted } = useTimeTracking();
+  const {
+    restoreArchivedDay,
+    isDayStarted,
+    getHoursWorkedForDay,
+    getRevenueForDay,
+    getBillableHoursForDay,
+    getNonBillableHoursForDay,
+    projects,
+    categories
+  } = useTimeTracking();
 
   const handleRestore = () => {
     if (isDayStarted) {
@@ -69,20 +78,44 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
       <CardContent className="print:pt-0">
         <div className="space-y-4">
           {/* Day Summary */}
-          <div className="flex items-center justify-between text-sm print:text-base">
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-600 print:text-black">
-                Started: {formatTime(day.startTime)}
-              </span>
-              <span className="text-gray-600 print:text-black">
-                Ended: {formatTime(day.endTime)}
-              </span>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm print:text-base">
+              <div className="flex items-center space-x-4">
+                <span className="text-gray-600 print:text-black">
+                  Started: {formatTime(day.startTime)}
+                </span>
+                <span className="text-gray-600 print:text-black">
+                  Ended: {formatTime(day.endTime)}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-green-600 print:text-black" />
+                <span className="font-semibold text-green-600 print:text-black">
+                  {formatDuration(day.totalDuration)} total
+                </span>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Clock className="w-4 h-4 text-green-600 print:text-black" />
-              <span className="font-semibold text-green-600 print:text-black">
-                {formatDuration(day.totalDuration)} total
-              </span>
+
+            {/* Hours Worked and Revenue */}
+            <div className="space-y-2 border-t pt-2">
+              <div className="flex items-center justify-between text-sm print:text-base">
+                <div className="flex items-center space-x-4">
+                  <span className="text-blue-600 print:text-black font-medium">
+                    Total Hours: {getHoursWorkedForDay(day).toFixed(2)}h
+                  </span>
+                  <span className="text-green-600 print:text-black font-medium">
+                    Billable: {getBillableHoursForDay(day).toFixed(2)}h
+                  </span>
+                  <span className="text-gray-600 print:text-black font-medium">
+                    Non-billable: {getNonBillableHoursForDay(day).toFixed(2)}h
+                  </span>
+                </div>
+                {getRevenueForDay(day) > 0 && (
+                  <span className="text-green-600 print:text-black font-semibold">
+                    Revenue: ${getRevenueForDay(day).toFixed(2)}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -98,6 +131,9 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
                     Task
                   </TableHead>
                   <TableHead className="print:text-black print:font-bold">
+                    Project
+                  </TableHead>
+                  <TableHead className="print:text-black print:font-bold">
                     Start Time
                   </TableHead>
                   <TableHead className="print:text-black print:font-bold">
@@ -106,28 +142,63 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
                   <TableHead className="print:text-black print:font-bold">
                     Duration
                   </TableHead>
+                  <TableHead className="print:text-black print:font-bold">
+                    Value
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {day.tasks.map((task) => (
-                  <TableRow key={task.id} className="print:border-black">
-                    <TableCell className="font-medium print:text-black">
-                      {task.title}
-                      <div className="font-medium text-sm italic text-gray-400 print:text-gray-600">
-                        {task.description}
-                      </div>
-                    </TableCell>
-                    <TableCell className="print:text-black">
-                      {formatTime(task.startTime)}
-                    </TableCell>
-                    <TableCell className="print:text-black">
-                      {task.endTime ? formatTime(task.endTime) : '-'}
-                    </TableCell>
-                    <TableCell className="print:text-black">
-                      {formatDuration(task.duration || 0)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {day.tasks.map((task) => {
+                  const project = projects.find((p) => p.name === task.project);
+                  const category = categories.find((c) => c.name === task.category);
+                  const taskHours = task.duration ? task.duration / (1000 * 60 * 60) : 0;
+
+                  // Check if both the project and category are billable
+                  const projectIsBillable = project?.isBillable !== false;
+                  const categoryIsBillable = category?.isBillable !== false;
+                  const isBillable = projectIsBillable && categoryIsBillable;
+
+                  const taskValue = isBillable && project?.hourlyRate && task.duration ?
+                    taskHours * project.hourlyRate : 0;
+
+                  return (
+                    <TableRow key={task.id} className="print:border-black">
+                      <TableCell className="font-medium print:text-black">
+                        {task.title}
+                        <div className="font-medium text-sm italic text-gray-400 print:text-gray-600">
+                          {task.description}
+                        </div>
+                      </TableCell>
+                      <TableCell className="print:text-black">
+                        {task.project || '-'}
+                        {project?.hourlyRate && (
+                          <div className="text-xs text-gray-500 print:text-gray-600">
+                            ${project.hourlyRate}/hr
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="print:text-black">
+                        {formatTime(task.startTime)}
+                      </TableCell>
+                      <TableCell className="print:text-black">
+                        {task.endTime ? formatTime(task.endTime) : '-'}
+                      </TableCell>
+                      <TableCell className="print:text-black">
+                        {formatDuration(task.duration || 0)}
+                        <div className="text-xs text-gray-500 print:text-gray-600">
+                          {taskHours.toFixed(2)}h
+                        </div>
+                      </TableCell>
+                      <TableCell className="print:text-black">
+                        {taskValue > 0 ? (
+                          <span className="font-medium text-green-600 print:text-black">
+                            ${taskValue.toFixed(2)}
+                          </span>
+                        ) : '-'}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>

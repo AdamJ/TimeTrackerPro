@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Edit, Trash2, Tag, TagIcon } from 'lucide-react';
 import { TimeTrackingProvider } from '@/contexts/TimeTrackingContext';
 import { TaskCategory } from '@/config/categories';
@@ -11,7 +12,7 @@ import { useTimeTracking } from '@/hooks/useTimeTracking';
 import SiteNavigationMenu from '@/components/Navigation';
 
 const CategoryContent: React.FC = () => {
-  const { categories, addCategory, updateCategory, deleteCategory } =
+  const { categories, addCategory, updateCategory, deleteCategory, forceSyncToDatabase } =
     useTimeTracking();
   const [editingCategory, setEditingCategory] = useState<TaskCategory | null>(
     null
@@ -20,26 +21,29 @@ const CategoryContent: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    color: '#3B82F6'
+    color: '#3B82F6',
+    isBillable: true
   });
 
   const resetForm = () => {
     setFormData({
       name: '',
       description: '',
-      color: '#3B82F6'
+      color: '#3B82F6',
+      isBillable: true
     });
     setEditingCategory(null);
     setIsAddingNew(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const categoryData = {
       name: formData.name.trim(),
       description: formData.description.trim() || undefined,
-      color: formData.color
+      color: formData.color,
+      isBillable: formData.isBillable
     };
 
     if (editingCategory) {
@@ -47,6 +51,9 @@ const CategoryContent: React.FC = () => {
     } else {
       addCategory(categoryData);
     }
+
+    // Save changes to database
+    await forceSyncToDatabase();
 
     resetForm();
   };
@@ -56,18 +63,21 @@ const CategoryContent: React.FC = () => {
     setFormData({
       name: category.name,
       description: category.description || '',
-      color: category.color
+      color: category.color,
+      isBillable: category.isBillable !== false // Default to true if not specified
     });
     setIsAddingNew(true);
   };
 
-  const handleDelete = (categoryId: string) => {
+  const handleDelete = async (categoryId: string) => {
     if (
       confirm(
         'Are you sure you want to delete this category? This action cannot be undone.'
       )
     ) {
       deleteCategory(categoryId);
+      // Save changes to database
+      await forceSyncToDatabase();
     }
   };
 
@@ -201,6 +211,25 @@ const CategoryContent: React.FC = () => {
                   </div>
                 </div>
 
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="billable"
+                    checked={formData.isBillable}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        isBillable: checked === true
+                      }))
+                    }
+                  />
+                  <Label htmlFor="billable" className="text-sm font-medium">
+                    Billable category
+                  </Label>
+                  <span className="text-xs text-gray-500">
+                    (Tasks in this category can generate revenue)
+                  </span>
+                </div>
+
                 <div className="flex space-x-2">
                   <Button type="button" variant="ghost" onClick={resetForm}>
                     Cancel
@@ -247,9 +276,18 @@ const CategoryContent: React.FC = () => {
                             style={{ backgroundColor: category.color }}
                           />
                           <div>
-                            <h4 className="font-semibold text-gray-900">
-                              {category.name}
-                            </h4>
+                            <div className="flex items-center space-x-2">
+                              <h4 className="font-semibold text-gray-900">
+                                {category.name}
+                              </h4>
+                              <span className={`px-2 py-1 text-xs rounded-full ${
+                                category.isBillable !== false
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {category.isBillable !== false ? 'Billable' : 'Non-billable'}
+                              </span>
+                            </div>
                             {category.description && (
                               <p className="text-sm text-gray-600 mt-1">
                                 {category.description}
