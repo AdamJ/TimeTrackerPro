@@ -909,9 +909,13 @@ class SupabaseService implements DataService {
           await this.saveProjects(projects);
         }
 
-        if (hasCategories) {
-          console.log('🏷️ Migrating categories from localStorage');
+        // Be cautious with categories - only migrate if Supabase has no categories
+        const existingCategories = await this.getCategories();
+        if (hasCategories && existingCategories.length === 0) {
+          console.log('🏷️ Migrating categories from localStorage (Supabase has no categories)');
           await this.saveCategories(categories);
+        } else if (hasCategories && existingCategories.length > 0) {
+          console.log('⚠️ Skipping categories migration - Supabase already has categories');
         }
       } else {
         // No existing data in Supabase, safe to migrate everything
