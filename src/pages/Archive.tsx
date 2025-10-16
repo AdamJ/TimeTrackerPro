@@ -15,8 +15,14 @@ import { Link } from 'react-router-dom';
 import SiteNavigationMenu from '@/components/Navigation';
 
 const ArchiveContent: React.FC = () => {
-  const { archivedDays, getTotalHoursForPeriod, getRevenueForPeriod } =
-    useTimeTracking();
+  const {
+    archivedDays,
+    getTotalHoursForPeriod,
+    getRevenueForPeriod,
+    getHoursWorkedForDay,
+    getBillableHoursForDay,
+    getNonBillableHoursForDay
+  } = useTimeTracking();
   const [editingDay, setEditingDay] = useState<DayRecord | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showProjectManagement, setShowProjectManagement] = useState(false);
@@ -31,6 +37,9 @@ const ArchiveContent: React.FC = () => {
     archivedDays.length > 0
       ? getTotalHoursForPeriod(new Date(0), new Date())
       : 0;
+  const totalHoursWorked = archivedDays.reduce((sum, day) => sum + getHoursWorkedForDay(day), 0);
+  const totalBillableHours = archivedDays.reduce((sum, day) => sum + getBillableHoursForDay(day), 0);
+  const totalNonBillableHours = archivedDays.reduce((sum, day) => sum + getNonBillableHoursForDay(day), 0);
   const totalRevenue =
     archivedDays.length > 0 ? getRevenueForPeriod(new Date(0), new Date()) : 0;
 
@@ -72,7 +81,7 @@ const ArchiveContent: React.FC = () => {
         ) : (
           <div className="space-y-6">
             {/* Summary Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 print:hidden">
               <Card>
                 <CardContent className="p-4">
                   <div className="text-2xl font-bold text-blue-600">
@@ -86,17 +95,36 @@ const ArchiveContent: React.FC = () => {
               <Card>
                 <CardContent className="p-4">
                   <div className="text-2xl font-bold text-green-600">
-                    {totalHours}h
+                    {totalBillableHours.toFixed(1)}h
                   </div>
-                  <div className="text-sm text-gray-600">Total Hours</div>
+                  <div className="text-sm text-gray-600">Billable Hours</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-gray-600">
+                    {totalNonBillableHours.toFixed(1)}h
+                  </div>
+                  <div className="text-sm text-gray-600">Non-billable Hours</div>
+                  <div className="text-xs text-gray-500">
+                    {totalHoursWorked.toFixed(1)}h total work
+                  </div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4">
                   <div className="text-2xl font-bold text-purple-600">
-                    ${totalRevenue}
+                    ${totalRevenue.toFixed(2)}
                   </div>
                   <div className="text-sm text-gray-600">Total Revenue</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-orange-600">
+                    ${totalBillableHours > 0 ? (totalRevenue / totalBillableHours).toFixed(2) : '0.00'}
+                  </div>
+                  <div className="text-sm text-gray-600">Avg Billable Rate</div>
                 </CardContent>
               </Card>
             </div>

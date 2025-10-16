@@ -692,7 +692,8 @@ class SupabaseService implements DataService {
       name: project.name,
       client: project.client,
       hourly_rate: project.hourlyRate || null,
-      color: project.color || null
+      color: project.color || null,
+      is_billable: project.isBillable !== false // Default to true if not specified
     }));
 
     const { error } = await supabase.from('projects').insert(projectsToInsert);
@@ -735,7 +736,8 @@ class SupabaseService implements DataService {
       name: project.name,
       client: project.client,
       hourlyRate: project.hourly_rate || undefined,
-      color: project.color || undefined
+      color: project.color || undefined,
+      isBillable: project.is_billable !== false // Default to true if not specified
     }));
 
     // Cache the result
@@ -766,7 +768,8 @@ class SupabaseService implements DataService {
       user_id: user.id,
       name: category.name,
       color: category.color || null,
-      icon: null // Icon field exists in DB but not in interface yet
+      icon: null, // Icon field exists in DB but not in interface yet
+      is_billable: category.isBillable !== false // Default to true if not specified
     }));
 
     const { error } = await supabase
@@ -809,7 +812,8 @@ class SupabaseService implements DataService {
     const result = (data || []).map((category) => ({
       id: category.id,
       name: category.name,
-      color: category.color || '#8B5CF6' // Default color if missing
+      color: category.color || '#8B5CF6', // Default color if missing
+      isBillable: category.is_billable !== false // Default to true if not specified
     }));
 
     // Cache the result

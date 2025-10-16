@@ -4,6 +4,7 @@ import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Edit, Briefcase, Trash2, RotateCcw, Plus } from 'lucide-react';
 import SiteNavigationMenu from '@/components/Navigation';
@@ -15,7 +16,8 @@ const ProjectContent: React.FC = () => {
     addProject,
     updateProject,
     deleteProject,
-    resetProjectsToDefaults
+    resetProjectsToDefaults,
+    forceSyncToDatabase
   } = useTimeTracking();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -23,7 +25,8 @@ const ProjectContent: React.FC = () => {
     name: '',
     client: '',
     hourlyRate: '',
-    color: '#3B82F6'
+    color: '#3B82F6',
+    isBillable: true
   });
 
   const resetForm = () => {
@@ -31,13 +34,14 @@ const ProjectContent: React.FC = () => {
       name: '',
       client: '',
       hourlyRate: '',
-      color: '#3B82F6'
+      color: '#3B82F6',
+      isBillable: true
     });
     setEditingProject(null);
     setIsAddingNew(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const projectData = {
@@ -46,7 +50,8 @@ const ProjectContent: React.FC = () => {
       hourlyRate: formData.hourlyRate
         ? parseFloat(formData.hourlyRate)
         : undefined,
-      color: formData.color
+      color: formData.color,
+      isBillable: formData.isBillable
     };
 
     if (editingProject) {
@@ -54,6 +59,9 @@ const ProjectContent: React.FC = () => {
     } else {
       addProject(projectData);
     }
+
+    // Save changes to database
+    await forceSyncToDatabase();
 
     resetForm();
   };
@@ -64,14 +72,17 @@ const ProjectContent: React.FC = () => {
       name: project.name,
       client: project.client,
       hourlyRate: project.hourlyRate?.toString() || '',
-      color: project.color || '#3B82F6'
+      color: project.color || '#3B82F6',
+      isBillable: project.isBillable !== false // Default to true if not specified
     });
     setIsAddingNew(true);
   };
 
-  const handleDelete = (projectId: string) => {
+  const handleDelete = async (projectId: string) => {
     if (confirm('Are you sure you want to delete this project?')) {
       deleteProject(projectId);
+      // Save changes to database
+      await forceSyncToDatabase();
     }
   };
 
@@ -222,6 +233,26 @@ const ProjectContent: React.FC = () => {
                     </div>
                   </div>
                 </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="billable"
+                    checked={formData.isBillable}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        isBillable: checked === true
+                      }))
+                    }
+                  />
+                  <Label htmlFor="billable" className="text-sm font-medium">
+                    Billable project
+                  </Label>
+                  <span className="text-xs text-gray-500">
+                    (Tasks in this project can generate revenue)
+                  </span>
+                </div>
+
                 <div className="flex space-x-2">
                   <Button type="button" variant="ghost" onClick={resetForm}>
                     Cancel
@@ -274,6 +305,15 @@ const ProjectContent: React.FC = () => {
                               {project.id.startsWith('default-') && (
                                 <Badge variant="surface" color="blue">
                                   Default
+                                </Badge>
+                              )}
+                              {project.isBillable !== false ? (
+                                <Badge variant="surface" color="green">
+                                  Billable
+                                </Badge>
+                              ) : (
+                                <Badge variant="surface" color="gray">
+                                  Non-billable
                                 </Badge>
                               )}
                             </div>

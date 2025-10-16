@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS projects (
   client text NOT NULL,
   hourly_rate numeric(10,2),
   color text,
+  is_billable boolean DEFAULT true,
   inserted_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -21,6 +22,7 @@ CREATE TABLE IF NOT EXISTS categories (
   name text NOT NULL,
   color text,
   icon text,
+  is_billable boolean DEFAULT true,
   inserted_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -190,3 +192,23 @@ CREATE POLICY "Users can update their own current day" ON current_day
 
 CREATE POLICY "Users can delete their own current day" ON current_day
   FOR DELETE USING (auth.uid() = user_id);
+
+-- Migration: Add is_billable columns if they don't exist
+DO $$
+BEGIN
+  -- Add is_billable to projects table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'projects' AND column_name = 'is_billable'
+  ) THEN
+    ALTER TABLE projects ADD COLUMN is_billable boolean DEFAULT true;
+  END IF;
+
+  -- Add is_billable to categories table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'categories' AND column_name = 'is_billable'
+  ) THEN
+    ALTER TABLE categories ADD COLUMN is_billable boolean DEFAULT true;
+  END IF;
+END $$;

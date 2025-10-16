@@ -40,6 +40,7 @@ export interface Project {
   client: string;
   hourlyRate?: number;
   color?: string;
+  isBillable?: boolean;
 }
 
 export interface TimeEntry {
@@ -137,6 +138,10 @@ interface TimeTrackingContextType {
   getCurrentTaskDuration: () => number;
   getTotalHoursForPeriod: (startDate: Date, endDate: Date) => number;
   getRevenueForPeriod: (startDate: Date, endDate: Date) => number;
+  getHoursWorkedForDay: (day: DayRecord) => number;
+  getRevenueForDay: (day: DayRecord) => number;
+  getBillableHoursForDay: (day: DayRecord) => number;
+  getNonBillableHoursForDay: (day: DayRecord) => number;
 }
 
 const TimeTrackingContext = createContext<TimeTrackingContextType | undefined>(
@@ -280,6 +285,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         const loadedCategories = await dataService.getCategories();
         if (loadedCategories.length > 0) {
           setCategories(loadedCategories);
+        } else {
+          setCategories(DEFAULT_CATEGORIES);
         }
 
         // If switching from localStorage to Supabase, migrate data
@@ -794,17 +801,109 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     let totalRevenue = 0;
     filteredDays.forEach((day) => {
       day.tasks.forEach((task) => {
-        if (task.project && task.duration) {
-          const project = projects.find((p) => p.name === task.project);
-          if (project?.hourlyRate) {
-            const hours = task.duration / (1000 * 60 * 60);
-            totalRevenue += hours * project.hourlyRate;
+        if (task.project && task.duration && task.category) {
+          // Check if the category is billable
+          const category = categories.find((c) => c.name === task.category);
+          const isBillable = category?.isBillable !== false; // Default to billable if not specified
+
+          if (isBillable) {
+            const project = projects.find((p) => p.name === task.project);
+            if (project?.hourlyRate) {
+              const hours = task.duration / (1000 * 60 * 60);
+              totalRevenue += hours * project.hourlyRate;
+            }
           }
         }
       });
     });
 
     return Math.round(totalRevenue * 100) / 100;
+  };
+
+  const getHoursWorkedForDay = (day: DayRecord): number => {
+    // Calculate total time worked (sum of all task durations, excluding breaks)
+    let totalTaskDuration = 0;
+    day.tasks.forEach((task) => {
+      if (task.duration) {
+        totalTaskDuration += task.duration;
+      }
+    });
+
+    // Convert milliseconds to hours
+    const hours = totalTaskDuration / (1000 * 60 * 60);
+    return Math.round(hours * 100) / 100;
+  };
+
+  const getRevenueForDay = (day: DayRecord): number => {
+    let totalRevenue = 0;
+    day.tasks.forEach((task) => {
+      if (task.project && task.duration && task.category) {
+        // Check if both the project and category are billable
+        const project = projects.find((p) => p.name === task.project);
+        const category = categories.find((c) => c.name === task.category);
+
+        const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
+        const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
+
+        // Task is billable only if BOTH project AND category are billable
+        const isBillable = projectIsBillable && categoryIsBillable;
+
+        if (isBillable && project?.hourlyRate) {
+          const hours = task.duration / (1000 * 60 * 60);
+          totalRevenue += hours * project.hourlyRate;
+        }
+      }
+    });
+
+    return Math.round(totalRevenue * 100) / 100;
+  };
+
+  const getBillableHoursForDay = (day: DayRecord): number => {
+    let billableTime = 0;
+    day.tasks.forEach((task) => {
+      if (task.duration && task.category && task.project) {
+        // Check if both the project and category are billable
+        const project = projects.find((p) => p.name === task.project);
+        const category = categories.find((c) => c.name === task.category);
+
+        const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
+        const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
+
+        // Task is billable only if BOTH project AND category are billable
+        const isBillable = projectIsBillable && categoryIsBillable;
+
+        if (isBillable) {
+          billableTime += task.duration;
+        }
+      }
+    });    // Convert milliseconds to hours
+    const hours = billableTime / (1000 * 60 * 60);
+    return Math.round(hours * 100) / 100;
+  };
+
+  const getNonBillableHoursForDay = (day: DayRecord): number => {
+    let nonBillableTime = 0;
+    day.tasks.forEach((task) => {
+      if (task.duration && task.category && task.project) {
+        // Check if both the project and category are billable
+        const project = projects.find((p) => p.name === task.project);
+        const category = categories.find((c) => c.name === task.category);
+
+        const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
+        const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
+
+        // Task is billable only if BOTH project AND category are billable
+        const isBillable = projectIsBillable && categoryIsBillable;
+
+        if (!isBillable) {
+          nonBillableTime += task.duration;
+        }
+      }
+    });
+
+    // Convert milliseconds to hours
+    const hours = nonBillableTime / (1000 * 60 * 60);
+    return Math.round(hours * 100) / 100;
   };
 
   const exportToCSV = (startDate?: Date, endDate?: Date): string => {
@@ -1178,7 +1277,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         getTotalDayDuration,
         getCurrentTaskDuration,
         getTotalHoursForPeriod,
-        getRevenueForPeriod
+        getRevenueForPeriod,
+        getHoursWorkedForDay,
+        getRevenueForDay,
+        getBillableHoursForDay,
+        getNonBillableHoursForDay
       }}
     >
       {children}
