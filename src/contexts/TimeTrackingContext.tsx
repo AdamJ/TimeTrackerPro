@@ -255,6 +255,19 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Load archived days
         const archived = await dataService.getArchivedDays();
+        console.log('📚 Loaded archived days:', {
+          count: archived.length,
+          sample: archived.slice(0, 2).map(day => ({
+            id: day.id,
+            date: day.date,
+            tasksCount: day.tasks.length,
+            tasks: day.tasks.map(task => ({
+              id: task.id,
+              title: task.title,
+              duration: task.duration
+            }))
+          }))
+        });
         setArchivedDays(archived);
 
         // Load projects
@@ -581,6 +594,19 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       notes
     };
 
+    // Validate we have tasks to archive
+    if (tasks.length === 0) {
+      console.warn('⚠️ Archiving day with no tasks');
+    }
+
+    console.log('📦 Archiving day:', {
+      id: dayRecord.id,
+      date: dayRecord.date,
+      tasksCount: dayRecord.tasks.length,
+      totalDuration: dayRecord.totalDuration
+    });
+
+    // Update state optimistically
     setArchivedDays((prev) => [...prev, dayRecord]);
 
     // Clear current day data
@@ -593,9 +619,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     // Save immediately since this is a critical action
     if (dataService) {
       try {
-        // Save the archived days
+        // Save the archived days with enhanced error handling
+        console.log('💾 Saving archived data to database...');
         await dataService.saveArchivedDays([...archivedDays, dayRecord]);
-        console.log('✅ Archive saved immediately');
+        console.log('✅ Archive saved successfully');
 
         // Save the cleared current day state so refresh shows "Start Day" screen
         await dataService.saveCurrentDay({
@@ -605,8 +632,37 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           tasks: []
         });
         console.log('✅ Cleared current day state saved');
+
+        // TODO: Add user notification of successful archive
+
       } catch (error) {
-        console.error('❌ Error saving after posting day:', error);
+        console.error('❌ CRITICAL ERROR saving archived day:', error);
+        console.error('📋 Failed to archive day data:', {
+          dayId: dayRecord.id,
+          date: dayRecord.date,
+          tasksCount: dayRecord.tasks.length,
+          taskTitles: dayRecord.tasks.map(t => t.title)
+        });
+
+        // Rollback optimistic update since save failed
+        setArchivedDays((prev) => prev.filter(day => day.id !== dayRecord.id));
+
+        // Restore the current day state since archiving failed
+        setDayStartTime(dayRecord.startTime);
+        setTasks(dayRecord.tasks);
+        setIsDayStarted(true);
+
+        // Restore current task if there was one
+        const lastTask = dayRecord.tasks[dayRecord.tasks.length - 1];
+        if (lastTask && !lastTask.endTime) {
+          setCurrentTask(lastTask);
+        }
+
+        console.log('🔄 Restored current day state after failed archive');
+
+        // TODO: Show user error notification
+        // This should display a toast/alert to the user about the archive failure
+        alert(`Failed to archive day data: ${error.message}\n\nYour current day has been restored. Please try archiving again.`);
       }
     }
   };
