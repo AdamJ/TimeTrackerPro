@@ -1101,3 +1101,38 @@ The billable time tracking system is fully implemented and consistent across:
 ✅ Business logic (revenue calculations)
 ✅ Archive display (individual tasks & summaries)
 ✅ Migration scripts (database schema updates)
+
+## Billable logic noted as incorrect
+
+When a task was assigned a non-billable category, it was still being shown as billable due to the project itself being a billable entity.
+
+### ✅ Billable Logic Fixed!
+
+3 bugs were found:
+
+- `getRevenueForPeriod()` **was incomplete** - Only checking category billable status, not project
+- `generateInvoiceData()` **was broken** - Not checking billable status at all for invoices
+- **Inconsistent logic across functions** - Different billable checks in different places
+
+**What was fixed:**
+
+```typescript
+// Now ALL functions use this logic:
+const projectIsBillable = project?.isBillable !== false;
+const categoryIsBillable = category?.isBillable !== false;
+const isBillable = projectIsBillable && categoryIsBillable;
+```
+
+**Updates:**
+
+`getRevenueForPeriod()` - Now checks BOTH project AND category
+`generateInvoiceData()` - Now filters out non-billable tasks from invoices
+All functions now have consistent AND logic
+
+#### How it works
+
+| Project billable | Category billable | Result | Revenue Generated |
+| Yes | Yes | Billable | Yes |
+| No | No | Non-billable | No |
+| No |Yes | Non-billable | No |
+| No | No | Non-billable | No |
