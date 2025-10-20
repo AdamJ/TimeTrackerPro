@@ -860,16 +860,20 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     filteredDays.forEach((day) => {
       day.tasks.forEach((task) => {
         if (task.project && task.duration && task.category) {
-          // Check if the category is billable
-          const category = categories.find((c) => c.name === task.category);
-          const isBillable = category?.isBillable !== false; // Default to billable if not specified
+          // Check if both the project and category are billable
+          const project = projects.find((p) => p.name === task.project);
+          // Fix: Look up category by ID, not name
+          const category = categories.find((c) => c.id === task.category);
 
-          if (isBillable) {
-            const project = projects.find((p) => p.name === task.project);
-            if (project?.hourlyRate) {
-              const hours = task.duration / (1000 * 60 * 60);
-              totalRevenue += hours * project.hourlyRate;
-            }
+          const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
+          const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
+
+          // Task is billable only if BOTH project AND category are billable
+          const isBillable = projectIsBillable && categoryIsBillable;
+
+          if (isBillable && project?.hourlyRate) {
+            const hours = task.duration / (1000 * 60 * 60);
+            totalRevenue += hours * project.hourlyRate;
           }
         }
       });
@@ -894,11 +898,25 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const getRevenueForDay = (day: DayRecord): number => {
     let totalRevenue = 0;
+    console.log('💰 Calculating revenue for day:', day.date, 'with', day.tasks.length, 'tasks');
+
     day.tasks.forEach((task) => {
       if (task.project && task.duration && task.category) {
         // Check if both the project and category are billable
         const project = projects.find((p) => p.name === task.project);
-        const category = categories.find((c) => c.name === task.category);
+        // Fix: Look up category by ID, not name
+        const category = categories.find((c) => c.id === task.category);
+
+        console.log('🔍 Revenue check for task:', {
+          title: task.title,
+          category: task.category,
+          project: task.project,
+          foundCategory: !!category,
+          categoryIsBillable: category?.isBillable,
+          foundProject: !!project,
+          projectIsBillable: project?.isBillable,
+          hourlyRate: project?.hourlyRate
+        });
 
         const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
         const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
@@ -908,27 +926,51 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
         if (isBillable && project?.hourlyRate) {
           const hours = task.duration / (1000 * 60 * 60);
-          totalRevenue += hours * project.hourlyRate;
+          const revenue = hours * project.hourlyRate;
+          totalRevenue += revenue;
+          console.log('💰 Adding revenue:', revenue, 'for task:', task.title);
+        } else {
+          console.log('🚫 No revenue for task:', task.title, 'because:',
+            !isBillable ? 'not billable' : 'no hourly rate');
         }
       }
     });
 
+    console.log('💰 Total revenue for day:', totalRevenue);
     return Math.round(totalRevenue * 100) / 100;
-  };
-
-  const getBillableHoursForDay = (day: DayRecord): number => {
+  };  const getBillableHoursForDay = (day: DayRecord): number => {
     let billableTime = 0;
     day.tasks.forEach((task) => {
       if (task.duration && task.category && task.project) {
         // Check if both the project and category are billable
         const project = projects.find((p) => p.name === task.project);
-        const category = categories.find((c) => c.name === task.category);
+        // Fix: Look up category by ID, not name
+        const category = categories.find((c) => c.id === task.category);
+
+        // Debug logging
+        console.log('🔍 Checking task billability:', {
+          taskTitle: task.title,
+          taskCategory: task.category,
+          projectName: task.project,
+          foundProject: !!project,
+          foundCategory: !!category,
+          projectIsBillable: project?.isBillable,
+          categoryIsBillable: category?.isBillable,
+          availableCategories: categories.map(c => ({ name: c.name, id: c.id, isBillable: c.isBillable }))
+        });
 
         const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
         const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
 
         // Task is billable only if BOTH project AND category are billable
         const isBillable = projectIsBillable && categoryIsBillable;
+
+        console.log('💰 Task billability result:', {
+          taskTitle: task.title,
+          projectIsBillable,
+          categoryIsBillable,
+          finalIsBillable: isBillable
+        });
 
         if (isBillable) {
           billableTime += task.duration;
@@ -945,7 +987,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       if (task.duration && task.category && task.project) {
         // Check if both the project and category are billable
         const project = projects.find((p) => p.name === task.project);
-        const category = categories.find((c) => c.name === task.category);
+        // Fix: Look up category by ID, not name
+        const category = categories.find((c) => c.id === task.category);
 
         const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
         const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
@@ -999,7 +1042,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       day.tasks.forEach((task) => {
         if (task.duration) {
           const project = projects.find((p) => p.name === task.project);
-          const category = categories.find((c) => c.name === task.category);
+          // Fix: Look up category by ID, not name
+          const category = categories.find((c) => c.id === task.category);
 
           // Format timestamps as ISO strings for database compatibility
           const startTimeISO = task.startTime.toISOString();
@@ -1077,7 +1121,26 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     const clientTasks = filteredDays.flatMap((day) =>
-      day.tasks.filter((task) => task.client === clientName && task.duration)
+      day.tasks.filter((task) => {
+        if (!task.client || task.client !== clientName || !task.duration) {
+          return false;
+        }
+
+        // Only include billable tasks in invoices
+        if (task.project && task.category) {
+          const project = projects.find((p) => p.name === task.project);
+          // Fix: Look up category by ID, not name
+          const category = categories.find((c) => c.id === task.category);
+
+          const projectIsBillable = project?.isBillable !== false;
+          const categoryIsBillable = category?.isBillable !== false;
+
+          // Task must be billable to appear on invoice
+          return projectIsBillable && categoryIsBillable;
+        }
+
+        return false;
+      })
     );
 
     const projectSummary: {
