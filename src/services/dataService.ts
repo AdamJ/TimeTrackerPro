@@ -2,6 +2,13 @@ import { supabase, trackDbCall, getCachedUser, getCachedProjects, setCachedProje
 import { Task, DayRecord, Project } from '@/contexts/TimeTrackingContext';
 import { TaskCategory } from '@/config/categories';
 
+/**
+ * Generates a unique ID for archived tasks to avoid conflicts with current tasks
+ */
+function generateArchivedTaskId(originalTaskId: string): string {
+  return `archived_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${originalTaskId}`;
+}
+
 // Storage keys for localStorage
 export const STORAGE_KEYS = {
   CURRENT_DAY: 'timetracker_current_day',
@@ -431,23 +438,20 @@ class SupabaseService implements DataService {
     const user = await getCachedUser();
     console.log('👤 User authenticated:', user.id);
 
-    // Delete existing archived days and their tasks
-    await supabase
-      .from('tasks')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('is_current', false);
-
-    await supabase.from('archived_days').delete().eq('user_id', user.id);
-
-    console.log('🗑️ Cleared existing archived data');
+    // Validate user ID upfront
+    if (!user.id) {
+      throw new Error('User ID is null - cannot save archived data');
+    }
 
     if (days.length === 0) {
-      console.log('📭 No archived days to save');
+      console.log('📭 No archived days to save - clearing existing data');
+      // Still need to clear existing data if no days provided
+      await supabase.from('tasks').delete().eq('user_id', user.id).eq('is_current', false);
+      await supabase.from('archived_days').delete().eq('user_id', user.id);
       return;
     }
 
-    // Insert archived days
+    // Prepare data for insertion BEFORE any destructive operations
     const archivedDaysToInsert = days.map((day) => ({
       id: day.id,
       user_id: user.id,
@@ -458,21 +462,9 @@ class SupabaseService implements DataService {
       notes: day.notes
     }));
 
-    const { error: daysError } = await supabase
-      .from('archived_days')
-      .insert(archivedDaysToInsert);
-
-    if (daysError) {
-      console.error('❌ Error saving archived days:', daysError);
-      throw daysError;
-    }
-
-    console.log('✅ Archived days saved');
-
-    // Insert all archived tasks
     const allTasks = days.flatMap((day) =>
       day.tasks.map((task) => ({
-        id: task.id,
+        id: generateArchivedTaskId(task.id), // Generate unique archived task ID
         user_id: user.id,
         title: task.title,
         description: task.description || null,
@@ -489,19 +481,158 @@ class SupabaseService implements DataService {
       }))
     );
 
-    if (allTasks.length > 0) {
-      console.log('📝 Inserting archived tasks:', allTasks.length);
+    console.log('🔄 Prepared data - Days:', archivedDaysToInsert.length, 'Tasks:', allTasks.length);
 
-      const { error: tasksError } = await supabase
+    // Use a transaction-like approach with error recovery
+    let operationSuccessful = false;
+
+    try {
+      // Step 1: Delete existing archived data
+      console.log('🗑️ Clearing existing archived data...');
+      const { error: deleteTasksError } = await supabase
         .from('tasks')
-        .insert(allTasks);
+        .delete()
+        .eq('user_id', user.id)
+        .eq('is_current', false);
 
-      if (tasksError) {
-        console.error('❌ Error saving archived tasks:', tasksError);
-        throw tasksError;
+      if (deleteTasksError) {
+        console.error('❌ Error deleting existing tasks:', deleteTasksError);
+        throw deleteTasksError;
       }
 
-      console.log('✅ Archived tasks saved');
+      const { error: deleteDaysError } = await supabase
+        .from('archived_days')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (deleteDaysError) {
+        console.error('❌ Error deleting existing days:', deleteDaysError);
+        throw deleteDaysError;
+      }
+
+      console.log('✅ Existing archived data cleared');
+
+      // Step 2: Insert archived days
+      console.log('📅 Inserting archived days...');
+      const { error: daysError } = await supabase
+        .from('archived_days')
+        .insert(archivedDaysToInsert);
+
+      if (daysError) {
+        console.error('❌ Error saving archived days:', daysError);
+        throw daysError;
+      }
+
+      console.log('✅ Archived days saved');
+
+      // Step 3: Insert all archived tasks (CRITICAL - this was failing silently)
+      if (allTasks.length > 0) {
+        console.log('📝 Inserting archived tasks...', allTasks.length);
+
+        // Log first task for debugging
+        console.log('📋 Sample task data:', {
+          id: allTasks[0].id,
+          user_id: allTasks[0].user_id,
+          day_record_id: allTasks[0].day_record_id,
+          title: allTasks[0].title
+        });
+
+        const { error: tasksError, data: insertedTasks } = await supabase
+          .from('tasks')
+          .insert(allTasks)
+          .select('id');
+
+        if (tasksError) {
+          console.error('❌ Error saving archived tasks:', tasksError);
+          console.error('❌ Failed task data sample:', allTasks[0]);
+          throw tasksError;
+        }
+
+        console.log('✅ Archived tasks saved:', insertedTasks?.length || 'unknown count');
+
+        // Verify task count matches
+        if (insertedTasks && insertedTasks.length !== allTasks.length) {
+          throw new Error(`Task save mismatch: expected ${allTasks.length}, got ${insertedTasks.length}`);
+        }
+      }
+
+      operationSuccessful = true;
+      console.log('🎉 All archived data saved successfully');
+
+      // Verification step - check that the data was actually saved
+      console.log('🔍 Verifying archived data was saved correctly...');
+      await this.verifyArchivedDataIntegrity(days);
+
+    } catch (error) {
+      console.error('💥 Archiving failed - attempting to recover state:', error);
+
+      // If we cleared data but failed to save new data, we have a problem
+      // At minimum, log the failure clearly
+      console.error('🚨 CRITICAL: Archived data may be lost due to save failure');
+      console.error('🚨 Data that failed to save:', {
+        daysCount: archivedDaysToInsert.length,
+        tasksCount: allTasks.length,
+        firstDay: archivedDaysToInsert[0]?.date,
+        error: error
+      });
+
+      // Re-throw to let the caller handle the error
+      throw error;
+    }
+  }
+
+  /**
+   * Verifies that archived data was saved correctly by checking the database
+   */
+  private async verifyArchivedDataIntegrity(expectedDays: DayRecord[]): Promise<void> {
+    try {
+      const user = await getCachedUser();
+
+      // Check archived days count
+      const { data: savedDays, error: daysError } = await supabase
+        .from('archived_days')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (daysError) {
+        console.warn('⚠️ Could not verify archived days:', daysError);
+        return;
+      }
+
+      // Check tasks count
+      const { data: savedTasks, error: tasksError } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_current', false);
+
+      if (tasksError) {
+        console.warn('⚠️ Could not verify archived tasks:', tasksError);
+        return;
+      }
+
+      const expectedTasksCount = expectedDays.reduce((sum, day) => sum + day.tasks.length, 0);
+
+      console.log('📊 Archive verification results:', {
+        expectedDays: expectedDays.length,
+        savedDays: savedDays?.length || 0,
+        expectedTasks: expectedTasksCount,
+        savedTasks: savedTasks?.length || 0
+      });
+
+      if (savedDays?.length !== expectedDays.length) {
+        console.error('❌ Archive verification failed: Day count mismatch');
+      }
+
+      if (savedTasks?.length !== expectedTasksCount) {
+        console.error('❌ Archive verification failed: Task count mismatch');
+        throw new Error(`Archive verification failed: Expected ${expectedTasksCount} tasks, found ${savedTasks?.length}`);
+      }
+
+      console.log('✅ Archive verification passed');
+    } catch (error) {
+      console.error('❌ Archive verification failed:', error);
+      throw error;
     }
   }
 
@@ -546,6 +677,12 @@ class SupabaseService implements DataService {
     }
 
     console.log('📝 Found archived tasks:', tasksData?.length || 0);
+    console.log('📝 Task data sample:', tasksData?.slice(0, 3).map(task => ({
+      id: task.id,
+      title: task.title,
+      day_record_id: task.day_record_id,
+      is_current: task.is_current
+    })));
 
     // Group tasks by day record
     const tasksByDay: Record<string, Task[]> = {};
@@ -568,6 +705,11 @@ class SupabaseService implements DataService {
         category: task.category_name || undefined
       });
     });
+
+    console.log('📝 Tasks grouped by day:', Object.keys(tasksByDay).map(dayId => ({
+      dayId,
+      taskCount: tasksByDay[dayId].length
+    })));
 
     // Combine days with their tasks
     const result = daysData.map((day) => ({
@@ -625,7 +767,7 @@ class SupabaseService implements DataService {
       // Insert updated tasks
       if (updates.tasks.length > 0) {
         const tasksToInsert = updates.tasks.map((task) => ({
-          id: task.id,
+          id: generateArchivedTaskId(task.id), // Generate unique archived task ID
           user_id: user.id,
           title: task.title,
           description: task.description || null,
