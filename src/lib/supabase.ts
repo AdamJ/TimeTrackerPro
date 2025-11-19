@@ -1,9 +1,22 @@
 import { createClient, User } from '@supabase/supabase-js';
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+import { isElectron } from '@/utils/platform';
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.warn('Supabase env vars not found. Supabase sync will be disabled.');
+// Desktop app uses local storage only - no Supabase
+const IS_DESKTOP = isElectron();
+
+// For desktop mode, use dummy values to prevent initialization errors
+// The client won't actually be used since desktop uses native file storage
+const SUPABASE_URL = IS_DESKTOP
+  ? 'https://placeholder.supabase.co'
+  : (import.meta.env.VITE_SUPABASE_URL as string);
+const SUPABASE_ANON_KEY = IS_DESKTOP
+  ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTI4MDAsImV4cCI6MTk2MDc2ODgwMH0.placeholder'
+  : (import.meta.env.VITE_SUPABASE_ANON_KEY as string);
+
+if (IS_DESKTOP) {
+  console.log('🖥️  Desktop mode: Using local storage only (Supabase disabled)');
+} else if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.warn('⚠️  Supabase env vars not found. Supabase sync will be disabled.');
 } else {
   console.log('✅ Supabase configured:', {
     url: SUPABASE_URL,
@@ -12,8 +25,8 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 }
 
 export const supabase = createClient(
-  SUPABASE_URL ?? '',
-  SUPABASE_ANON_KEY ?? ''
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
 );
 
 // User caching to reduce authentication calls

@@ -1,6 +1,8 @@
 import { supabase, trackDbCall, getCachedUser, getCachedProjects, setCachedProjects, getCachedCategories, setCachedCategories, clearDataCaches, trackAuthCall } from '@/lib/supabase';
 import { Task, DayRecord, Project } from '@/contexts/TimeTrackingContext';
 import { TaskCategory } from '@/config/categories';
+import { isElectron } from '@/utils/platform';
+import { createNativeFileStorage } from './nativeFileStorage';
 
 /**
  * Generates a unique ID for archived tasks to avoid conflicts with current tasks
@@ -1127,6 +1129,22 @@ class SupabaseService implements DataService {
 
 // Factory function to get the appropriate service
 export const createDataService = (isAuthenticated: boolean): DataService => {
-  console.log('🔧 Creating data service:', { isAuthenticated });
+  const electron = isElectron();
+
+  console.log('🔧 Creating data service:', {
+    isAuthenticated,
+    isElectron: electron,
+    platform: electron ? 'desktop' : 'web'
+  });
+
+  // Desktop (Electron) environment
+  if (electron) {
+    // Desktop apps use native file storage regardless of authentication
+    // Authentication only affects Supabase sync (manual)
+    return createNativeFileStorage();
+  }
+
+  // Web environment
+  // Authenticated users use Supabase, guests use localStorage
   return isAuthenticated ? new SupabaseService() : new LocalStorageService();
 };

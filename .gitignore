@@ -1,7 +1,20 @@
 node_modules
 dist
+dist-electron
+release
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Electron build artifacts
+*.dmg
+*.zip
+*.AppImage
+*.deb
+*.rpm
+*.exe
+
+# macOS
+.DS_Store

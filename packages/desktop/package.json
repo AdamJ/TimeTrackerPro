@@ -1,0 +1,122 @@
+{
+  "name": "time-tracker-pro-desktop",
+  "productName": "TimeTracker Pro",
+  "version": "1.0.0",
+  "description": "Professional time tracking desktop application",
+  "author": "Adam Jolicoeur",
+  "private": true,
+  "main": "dist-electron/main/main.cjs",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "build:package": "electron-vite build && electron-builder",
+    "build:dir": "electron-vite build && electron-builder --dir",
+    "build:mac": "electron-vite build && electron-builder --mac",
+    "build:win": "electron-vite build && electron-builder --win",
+    "build:linux": "electron-vite build && electron-builder --linux",
+    "preview": "electron-vite preview"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.1",
+    "@vitejs/plugin-react-swc": "^3.5.0",
+    "autoprefixer": "^10.4.20",
+    "electron": "^39.2.2",
+    "electron-builder": "^26.0.12",
+    "electron-vite": "^4.0.1",
+    "lovable-tagger": "^1.1.7",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.11",
+    "typescript": "^5.8.3",
+    "vite": "^5.4.1"
+  },
+  "build": {
+    "appId": "com.adamjolicoeur.timetrackerpro",
+    "productName": "TimeTracker Pro",
+    "copyright": "Copyright © 2025 Adam Jolicoeur",
+    "files": [
+      "dist-electron/**/*",
+      "!node_modules"
+    ],
+    "asarUnpack": [],
+    "npmRebuild": false,
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.icns",
+      "identity": null
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 400
+      }
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb",
+        "tar.gz"
+      ],
+      "category": "Office",
+      "icon": "build/icon.png"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "yourusername",
+      "repo": "TimeTrackerPro"
+    }
+  }
+}

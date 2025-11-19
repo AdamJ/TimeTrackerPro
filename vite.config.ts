@@ -4,17 +4,23 @@ import path from 'path';
 import { componentTagger } from 'lovable-tagger';
 
 // https://vitejs.dev/config/
+// This config is for web builds only
+// Electron builds use electron.vite.config.ts
 export default defineConfig(({ mode }) => ({
   server: {
     host: '::',
-    port: 8080
+    port: 8080,
   },
-  plugins: [react(), mode === 'development' && componentTagger()].filter(
-    Boolean
-  ),
+  plugins: [
+    react(),
+    mode === 'development' && componentTagger(),
+  ].filter(Boolean),
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
-  }
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  build: {
+    outDir: 'dist',
+  },
 }));
