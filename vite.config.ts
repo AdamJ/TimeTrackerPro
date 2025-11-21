@@ -15,7 +15,14 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.png", "robots.txt", "print.css"],
+      includeAssets: [
+        "favicon.svg",
+        "favicon-96x96.png",
+        "favicon.ico",
+        "apple-touch-icon.png",
+        "robots.txt",
+        "print.css"
+      ],
       manifest: {
         name: "TimeTracker Pro",
         short_name: "TimeTracker",
