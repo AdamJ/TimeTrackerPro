@@ -91,7 +91,7 @@ interface TimeTrackingContextType {
   categories: TaskCategory[];
 
   // Actions
-  startDay: () => void;
+  startDay: (startDateTime?: Date) => void;
   endDay: () => void;
   startNewTask: (
     title: string,
@@ -487,8 +487,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => clearInterval(timer);
   }, []);
 
-  const startDay = () => {
-    const now = new Date();
+  const startDay = (startDateTime?: Date) => {
+    const now = startDateTime || new Date();
     setIsDayStarted(true);
     setDayStartTime(now);
     console.log('Day started at:', now);
