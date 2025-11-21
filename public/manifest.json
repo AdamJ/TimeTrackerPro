@@ -25,18 +25,60 @@
   "categories": ["productivity", "business", "utilities"],
   "screenshots": [
     {
-      "src": "/screenshots/desktop-1.png",
+      "src": "/screenshots/TimeTrackerPro-1920x1080.png",
       "sizes": "1920x1080",
       "type": "image/png",
       "form_factor": "wide",
       "label": "TimeTracker Pro Dashboard"
     },
     {
-      "src": "/screenshots/mobile-1.png",
+      "src": "/screenshots/TimeTrackerPro-750x1334.png",
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "TimeTracker Pro Mobile View"
+    },
+    {
+      "src": "/screenshots/EnteredTime-1920x1080.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tracking time with TimeTracker Pro"
+    },
+    {
+      "src": "/screenshots/EnteredTime-750x1334.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tracking time with TimeTracker Pro Mobile View"
+    },
+    {
+      "src": "/screenshots/Categories-1920x1080.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Categories available in TimeTracker Pro"
+    },
+    {
+      "src": "/screenshots/Categories-750x1334.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Categories available in TimeTracker Pro Mobile View"
+    },
+    {
+      "src": "/screenshots/Settings-1920x1080.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Settings page in TimeTracker Pro"
+    },
+    {
+      "src": "/screenshots/Settings-750x1334.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Settings page in TimeTracker Pro Mobile View"
     }
   ],
   "shortcuts": [
