@@ -396,9 +396,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select start time">
-                        {timeData.startTime || 'Select start time'}
-                      </SelectValue>
+                      <SelectValue placeholder="Select start time" />
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
                       {timeOptions.map((option) => (
@@ -426,11 +424,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                         placeholder={
                           task.endTime ? 'Select end time' : 'Task is active'
                         }
-                      >
-                        {task.endTime
-                          ? timeData.endTime || 'Select end time'
-                          : 'Task is active'}
-                      </SelectValue>
+                      />
                     </SelectTrigger>
                     <SelectContent className="max-h-60">
                       {timeOptions.map((option) => (
