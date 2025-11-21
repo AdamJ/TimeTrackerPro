@@ -545,12 +545,15 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       );
     }
 
+    // Determine start time: use dayStartTime for first task, otherwise use current time
+    const taskStartTime = tasks.length === 0 && dayStartTime ? dayStartTime : now;
+
     // Create new task
     const newTask: Task = {
       id: Date.now().toString(),
       title,
       description,
-      startTime: now,
+      startTime: taskStartTime,
       project,
       client,
       category
@@ -558,7 +561,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     setTasks((prev) => [...prev, newTask]);
     setCurrentTask(newTask);
-    console.log('New task started:', title);
+    console.log('New task started:', title, 'at', taskStartTime);
     // Save immediately since this is a critical action
     saveImmediately();
   };
