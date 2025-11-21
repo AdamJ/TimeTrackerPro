@@ -55,6 +55,13 @@ function formatTimeForInput(date: Date): string {
   return `${hours}:${minutes}`;
 }
 
+function formatDateForInput(date: Date): string {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function formatTime12Hour(date: Date | undefined): string {
   if (!date) return '-';
   let hours = date.getHours();
@@ -99,6 +106,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const [dayData, setDayData] = useState({
+    date: '',
     startTime: '',
     endTime: '',
     notes: ''
@@ -111,6 +119,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   useEffect(() => {
     if (isOpen && day) {
       setDayData({
+        date: formatDateForInput(day.startTime),
         startTime: formatTimeForInput(day.startTime),
         endTime: formatTimeForInput(day.endTime),
         notes: day.notes || ''
@@ -145,15 +154,48 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   };
 
   const handleSaveDay = () => {
+    // Parse the new date from the input
+    const selectedDate = new Date(dayData.date);
+
+    // Create new start/end times with the selected date but original times
     const newStartTime = parseTimeInput(dayData.startTime, day.startTime);
+    newStartTime.setFullYear(selectedDate.getFullYear());
+    newStartTime.setMonth(selectedDate.getMonth());
+    newStartTime.setDate(selectedDate.getDate());
+
     const newEndTime = parseTimeInput(dayData.endTime, day.endTime);
+    newEndTime.setFullYear(selectedDate.getFullYear());
+    newEndTime.setMonth(selectedDate.getMonth());
+    newEndTime.setDate(selectedDate.getDate());
+
+    // Update all task timestamps to use the new date
+    const updatedTasks = tasks.map(task => {
+      const newTaskStartTime = new Date(task.startTime);
+      newTaskStartTime.setFullYear(selectedDate.getFullYear());
+      newTaskStartTime.setMonth(selectedDate.getMonth());
+      newTaskStartTime.setDate(selectedDate.getDate());
+
+      const newTaskEndTime = task.endTime ? new Date(task.endTime) : undefined;
+      if (newTaskEndTime) {
+        newTaskEndTime.setFullYear(selectedDate.getFullYear());
+        newTaskEndTime.setMonth(selectedDate.getMonth());
+        newTaskEndTime.setDate(selectedDate.getDate());
+      }
+
+      return {
+        ...task,
+        startTime: newTaskStartTime,
+        endTime: newTaskEndTime
+      };
+    });
 
     const updatedDay: Partial<DayRecord> = {
+      date: newStartTime.toDateString(),
       startTime: newStartTime,
       endTime: newEndTime,
       notes: dayData.notes || undefined,
-      tasks: tasks,
-      totalDuration: calculateTotalDuration(tasks)
+      tasks: updatedTasks,
+      totalDuration: calculateTotalDuration(updatedTasks)
     };
 
     updateArchivedDay(day.id, updatedDay);
@@ -199,6 +241,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   const handleCancel = () => {
     // Reset to original values
     setDayData({
+      date: formatDateForInput(day.startTime),
       startTime: formatTimeForInput(day.startTime),
       endTime: formatTimeForInput(day.endTime),
       notes: day.notes || ''
@@ -281,6 +324,17 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
             <CardContent>
               {isEditing ? (
                 <div className="space-y-4">
+                  <div>
+                    <Label>Date</Label>
+                    <Input
+                      type="date"
+                      value={dayData.date}
+                      onChange={(e) =>
+                        setDayData((prev) => ({ ...prev, date: e.target.value }))
+                      }
+                      className="w-full"
+                    />
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>Start Time</Label>
