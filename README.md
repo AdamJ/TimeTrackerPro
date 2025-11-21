@@ -1,20 +1,53 @@
 # TimeTracker Pro
 
-A modern, feature-rich time tracking application built with React, TypeScript, and Tailwind CSS. Perfect for freelancers, consultants, and professionals who need to track time, manage projects, and generate invoices.
+A modern, feature-rich Progressive Web App (PWA) for time tracking built with React, TypeScript, and Tailwind CSS. Installable on desktop and mobile devices with full offline support. Perfect for freelancers, consultants, and professionals who need to track time, manage projects, and generate invoices.
 
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white) ![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
 
 ## 📑 Table of Contents
 
+- [Progressive Web App Features](#-progressive-web-app-features)
 - [Authentication & Data Storage](#-authentication--data-storage)
 - [Features](#-features)
 - [Quick Start](#-quick-start)
+- [Installation as PWA](#-installation-as-pwa)
 - [Usage Guide](#-usage-guide)
 - [Technical Details](#-technical-details)
 - [Perfect For](#-perfect-for)
 - [Development](#-development)
 - [Documentation](#-documentation)
 - [License](#-license)
+
+## 📱 Progressive Web App Features
+
+**TimeTracker Pro is a fully-featured Progressive Web App!**
+
+### Install Like a Native App
+- ✅ **Desktop Installation**: Install from Chrome, Edge, or Firefox on Windows, Mac, and Linux
+- ✅ **Mobile Installation**: Add to home screen on iOS (Safari) and Android (Chrome)
+- ✅ **Standalone Mode**: Launches in its own window without browser UI
+- ✅ **App Icon**: Professional app icon on your device
+- ✅ **Splash Screen**: Native-like launch experience
+
+### Work Offline
+- ✅ **Full Offline Support**: Continue tracking time without internet connection
+- ✅ **Service Worker**: Intelligent caching for instant loading
+- ✅ **Offline Queue**: Actions sync automatically when connection restored
+- ✅ **Smart Caching**: Static assets cached for blazing-fast performance
+- ✅ **Background Sync**: Data syncs even when app is closed
+
+### Mobile-Optimized
+- ✅ **Touch-Friendly**: 44×44px minimum touch targets
+- ✅ **Bottom Navigation**: Easy thumb access on mobile devices
+- ✅ **Safe Areas**: Proper spacing for notched devices (iPhone X+)
+- ✅ **Responsive Design**: Adapts to any screen size
+- ✅ **Landscape Support**: Optimized for both orientations
+
+### Smart Updates
+- ✅ **Auto-Update**: New versions install automatically
+- ✅ **Update Notifications**: Prompts to refresh when updates available
+- ✅ **Install Prompts**: Smart timing for installation suggestions
+- ✅ **Version Management**: Seamless updates without data loss
 
 ## 🔐 Authentication & Data Storage
 
@@ -80,6 +113,32 @@ npm run dev
 
 The application will be available at **http://localhost:8080**
 
+## 📲 Installation as PWA
+
+### Desktop Installation (Chrome/Edge)
+
+1. Open the app in your browser
+2. Look for the install icon (⊕) in the address bar
+3. Click "Install" when prompted
+4. The app will open in its own window
+5. Find it in your applications/start menu
+
+### Mobile Installation (iOS)
+
+1. Open the app in Safari
+2. Tap the Share button (□↑)
+3. Scroll and tap "Add to Home Screen"
+4. Tap "Add" to confirm
+5. Find the app icon on your home screen
+
+### Mobile Installation (Android)
+
+1. Open the app in Chrome
+2. Tap the menu (⋮) in the top-right
+3. Tap "Install app" or "Add to Home screen"
+4. Follow the prompts
+5. Find the app icon in your app drawer
+
 ### First Time Setup
 
 1. **🔒 Environment Setup** (Optional - for cloud sync):
@@ -143,21 +202,27 @@ The application will be available at **http://localhost:8080**
 - **React 18** - Modern UI framework with TypeScript
 - **TypeScript 5.8** - Type safety and enhanced developer experience
 - **Vite 5** - Lightning-fast build tool with SWC
+- **Vite PWA Plugin** - Service worker and PWA manifest generation
+- **Workbox** - Advanced service worker caching strategies
 - **Tailwind CSS 3** - Utility-first CSS framework
 - **shadcn/ui** - Beautiful, accessible component library
 - **Radix UI** - Unstyled, accessible component primitives
 - **React Router 6** - Client-side routing and navigation
 - **Supabase** (optional) - Backend as a Service for cloud sync and authentication
 - **Local Storage** - Browser storage for offline data persistence
+- **Playwright** - Automated screenshot generation and testing
 
 ### Architecture
 
 - **Context API** - Global state management
 - **Custom hooks** - Reusable stateful logic
 - **Service layer pattern** - Data persistence abstraction (localStorage/Supabase)
+- **PWA Components** - Install prompts, update notifications, offline queue
+- **Service Worker** - Workbox-powered caching and offline support
 - **Component-based** architecture for maintainability
 - **Lazy loading** - Code splitting for optimal performance
 - **Responsive design** - Works on all device sizes
+- **Mobile-first** - Touch-optimized with bottom navigation
 
 ### Data Storage
 
@@ -192,6 +257,20 @@ The application will be available at **http://localhost:8080**
 - `npm run lint` - Run ESLint for code quality
 - `npm run test` - Run Vitest unit tests
 
+### PWA Screenshot Scripts
+
+- `npm run screenshots:install` - Install Playwright browsers (first time only)
+- `npm run screenshots` - Capture PWA screenshots (headless mode)
+- `npm run screenshots:headed` - Capture screenshots with visible browser (debugging)
+
+**Usage:**
+1. Run `npm run screenshots:install` once to install browsers
+2. Start dev server: `npm run dev` (keep running)
+3. In new terminal: `npm run screenshots`
+4. Screenshots saved to `public/screenshots/`
+
+See [tests/SCREENSHOTS_README.md](tests/SCREENSHOTS_README.md) for detailed documentation.
+
 ### Testing Scripts
 
 - `npm run test-full-import` - Test full CSV import functionality
@@ -203,15 +282,33 @@ The application will be available at **http://localhost:8080**
 ```
 src/
 ├── components/         # Reusable UI components
-│   ├── ui/            # shadcn/ui base components
-│   └── ...            # Feature components
+│   ├── ui/            # shadcn/ui base components (49 files)
+│   ├── InstallPrompt.tsx      # PWA install prompt
+│   ├── UpdateNotification.tsx # PWA update notification
+│   ├── MobileNav.tsx          # Mobile bottom navigation
+│   └── ...                    # Other feature components
 ├── config/            # Category and Project configuration files
 ├── contexts/          # React Context providers
+│   ├── AuthContext.tsx        # Authentication state
+│   ├── TimeTrackingContext.tsx # Time tracking state
+│   └── OfflineContext.tsx     # Offline queue management
 ├── hooks/             # Custom React hooks
+│   ├── useAuth.tsx            # Authentication hook
+│   ├── useTimeTracking.tsx    # Time tracking hook
+│   └── useOffline.tsx         # Offline state hook
 ├── lib/               # Utility libraries and helpers
 ├── pages/             # Main application pages
 ├── services/          # Data service layer (localStorage/Supabase)
 └── utils/             # Utility functions
+public/
+├── icons/             # PWA app icons (8 sizes)
+├── screenshots/       # PWA screenshots (desktop + mobile)
+├── manifest.json      # PWA manifest
+├── pwa.css           # PWA-specific styles
+└── ...               # Other static assets
+tests/
+├── screenshots.spec.ts        # Playwright screenshot automation
+└── SCREENSHOTS_README.md      # Screenshot documentation
 ```
 
 ### Code Conventions
@@ -246,6 +343,7 @@ See [CLAUDE.md](CLAUDE.md) for comprehensive development guidelines.
 ### Testing & Data
 
 - [**CSV Templates**](docs/CSV_TEMPLATES_README.md) - CSV import/export templates and examples
+- [**Screenshot Generation**](tests/SCREENSHOTS_README.md) - Automated PWA screenshot capture with Playwright
 - [**Features**](docs/FEATURES.md) - Feature requests and improvement notes
 - [**Chatbot Notes**](docs/chatbot.md) - AI interaction development records
 
