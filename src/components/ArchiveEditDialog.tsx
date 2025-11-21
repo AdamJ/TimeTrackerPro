@@ -49,9 +49,20 @@ interface ArchiveEditDialogProps {
 }
 
 // Helper functions
+function roundToNearest15Minutes(date: Date): Date {
+  const rounded = new Date(date);
+  const minutes = rounded.getMinutes();
+  const roundedMinutes = Math.round(minutes / 15) * 15;
+  rounded.setMinutes(roundedMinutes);
+  rounded.setSeconds(0);
+  rounded.setMilliseconds(0);
+  return rounded;
+}
+
 function formatTimeForInput(date: Date): string {
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const rounded = roundToNearest15Minutes(date);
+  const hours = rounded.getHours().toString().padStart(2, '0');
+  const minutes = rounded.getMinutes().toString().padStart(2, '0');
   return `${hours}:${minutes}`;
 }
 

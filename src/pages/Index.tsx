@@ -3,11 +3,13 @@ import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { DaySummary } from '@/components/DaySummary';
 import { NewTaskForm } from '@/components/NewTaskForm';
 import { TaskItem } from '@/components/TaskItem';
+import { StartDayDialog } from '@/components/StartDayDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CirclePlay, CircleStop, Archive as Play } from 'lucide-react';
 import { DashboardIcon } from '@radix-ui/react-icons';
 import SiteNavigationMenu from '@/components/Navigation';
+import { useState } from 'react';
 
 const TimeTrackerContent = () => {
   const {
@@ -24,8 +26,14 @@ const TimeTrackerContent = () => {
     getCurrentTaskDuration
   } = useTimeTracking();
 
+  const [showStartDayDialog, setShowStartDayDialog] = useState(false);
+
   const handleStartDay = () => {
-    startDay();
+    setShowStartDayDialog(true);
+  };
+
+  const handleStartDayWithDateTime = (startDateTime: Date) => {
+    startDay(startDateTime);
   };
 
   const handleEndDay = () => {
@@ -122,6 +130,11 @@ const TimeTrackerContent = () => {
       </div>
       ) : null}
       <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <StartDayDialog
+          isOpen={showStartDayDialog}
+          onClose={() => setShowStartDayDialog(false)}
+          onStartDay={handleStartDayWithDateTime}
+        />
         {!isDayStarted ? (
           <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
             <CardHeader>
