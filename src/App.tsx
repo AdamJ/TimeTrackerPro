@@ -19,36 +19,36 @@ const Categories = lazy(() => import("./pages/Categories"));
 
 // Loading fallback component
 const PageLoader = () => (
-	<div className="min-h-screen flex items-center justify-center">
-		<div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-	</div>
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+  </div>
 );
 
 const App = () => (
-	<OfflineProvider>
-		<AuthProvider>
-			<TooltipProvider>
-				<Toaster />
-				<Sonner />
-				<BrowserRouter>
-					<Suspense fallback={<PageLoader />}>
-						<Routes>
-							<Route path="/" element={<Index />} />
-							<Route path="/projectlist" element={<ProjectList />} />
-							<Route path="/categories" element={<Categories />} />
-							<Route path="/archive" element={<Archive />} />
-							<Route path="/settings" element={<Settings />} />
-							{/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-							<Route path="*" element={<NotFound />} />
-						</Routes>
-						<MobileNav />
-					</Suspense>
-				</BrowserRouter>
-				<InstallPrompt />
-				<UpdateNotification />
-			</TooltipProvider>
-		</AuthProvider>
-	</OfflineProvider>
+  <OfflineProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/projectlist" element={<ProjectList />} />
+              <Route path="/categories" element={<Categories />} />
+              <Route path="/archive" element={<Archive />} />
+              <Route path="/settings" element={<Settings />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <MobileNav />
+          </Suspense>
+        </BrowserRouter>
+        <InstallPrompt />
+        <UpdateNotification />
+      </TooltipProvider>
+    </AuthProvider>
+  </OfflineProvider>
 );
 
 export default App;
