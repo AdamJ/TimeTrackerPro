@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Codebase Guide
 
-**Last Updated:** 2025-11-18
-**Version:** 1.0.0
+**Last Updated:** 2025-11-21
+**Version:** 1.0.1
 
 This document provides comprehensive guidance for AI assistants working with the TimeTracker Pro codebase. It covers architecture, conventions, workflows, and best practices.
 
@@ -187,11 +187,21 @@ await dataService.saveCurrentDay(state); // Sync to backend
 TimeTrackerPro/
 ├── src/
 │   ├── components/          # React components
-│   │   ├── ui/             # shadcn/ui base components
-│   │   ├── TaskItem.tsx    # Task display component
-│   │   ├── NewTaskForm.tsx # Task creation form
-│   │   ├── Navigation.tsx  # App navigation
-│   │   └── ...             # Other feature components
+│   │   ├── ui/             # shadcn/ui base components (49 files)
+│   │   ├── ArchiveEditDialog.tsx    # Archive entry editing
+│   │   ├── ArchiveItem.tsx          # Archive display component
+│   │   ├── AuthDialog.tsx           # Authentication modal
+│   │   ├── CategoryManagement.tsx   # Category management UI
+│   │   ├── DaySummary.tsx           # Day summary display
+│   │   ├── DeleteConfirmationDialog.tsx  # Deletion confirmations
+│   │   ├── ExportDialog.tsx         # Export functionality UI
+│   │   ├── Navigation.tsx           # App navigation
+│   │   ├── NewTaskForm.tsx          # Task creation form
+│   │   ├── ProjectManagement.tsx    # Project management UI
+│   │   ├── SyncStatus.tsx           # Sync status indicator
+│   │   ├── TaskEditDialog.tsx       # Task editing dialog
+│   │   ├── TaskItem.tsx             # Task display component
+│   │   └── UserMenu.tsx             # User menu dropdown
 │   ├── config/             # Configuration files
 │   │   ├── categories.ts   # Default task categories
 │   │   └── projects.ts     # Default projects
@@ -223,10 +233,15 @@ TimeTrackerPro/
 │   └── vite-env.d.ts       # Vite type definitions
 ├── public/                 # Static assets
 ├── docs/                   # Documentation
-│   ├── SECURITY.md
-│   ├── AUTHENTICATION.md
-│   ├── MIGRATION.md
-│   └── ...
+│   ├── ARCHIVING_DAYS.md           # Archive system guide
+│   ├── AUTHENTICATION.md           # Auth setup and flow
+│   ├── AUTH_DATA_PERSISTENCE_FIX.md  # Auth data fix history
+│   ├── CSV_TEMPLATES_README.md     # CSV import/export templates
+│   ├── FEATURES.md                 # Feature documentation
+│   ├── MIGRATION.md                # Data migration guide
+│   ├── SCHEMA_COMPATIBILITY.md     # Database schema history
+│   ├── SECURITY.md                 # Security guidelines
+│   └── chatbot.md                  # Chatbot integration info
 ├── agents/                 # AI agent guidelines
 │   ├── styles.md          # Style rules
 │   └── pull_requests.md   # PR guidelines
@@ -892,10 +907,17 @@ Before making changes, verify:
 ### Documentation
 
 - **Main README**: `README.md` - User-facing documentation
-- **Security**: `docs/SECURITY.md` - Security guidelines
+- **CLAUDE.md**: `CLAUDE.md` - This file - AI assistant guide
+- **Agent Guidelines**: `AGENTS.md` - Quick agent instructions
+- **Archive System**: `docs/ARCHIVING_DAYS.md` - Archive system guide
 - **Authentication**: `docs/AUTHENTICATION.md` - Auth setup and flow
+- **Auth Data Fix**: `docs/AUTH_DATA_PERSISTENCE_FIX.md` - Auth data fix history
+- **CSV Templates**: `docs/CSV_TEMPLATES_README.md` - CSV import/export templates
+- **Features**: `docs/FEATURES.md` - Feature documentation
 - **Migration**: `docs/MIGRATION.md` - Data migration guide
-- **Schema**: `docs/SCHEMA_COMPATIBILITY.md` - Database schema
+- **Schema**: `docs/SCHEMA_COMPATIBILITY.md` - Database schema history
+- **Security**: `docs/SECURITY.md` - Security guidelines
+- **Chatbot**: `docs/chatbot.md` - Chatbot integration info
 - **Agent Styles**: `agents/styles.md` - UI/UX guidelines
 - **Pull Requests**: `agents/pull_requests.md` - PR guidelines
 
@@ -920,6 +942,7 @@ Before making changes, verify:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.0.1 | 2025-11-21 | Updated component list, documentation references, and current state |
 | 1.0.0 | 2025-11-18 | Initial CLAUDE.md creation |
 
 ---
