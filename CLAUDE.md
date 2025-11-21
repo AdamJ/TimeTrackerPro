@@ -94,12 +94,20 @@ Originally created via Lovable.dev prompts, now actively maintained. See `info/R
 - **Zod** - Schema validation
 - **@hookform/resolvers** - Form resolver integration
 
+### Progressive Web App (PWA)
+
+- **Vite PWA Plugin** - Service worker and manifest generation
+- **Workbox** - Service worker caching strategies
+- **Service Worker** - Offline support and caching
+- **Web App Manifest** - App metadata and icons
+
 ### Build & Development
 
 - **Vite + SWC** - Fast builds and hot module replacement
 - **ESLint 9** - Code quality and style checking
 - **Vitest** - Unit testing framework
 - **@testing-library/react** - Component testing utilities
+- **Playwright** - Automated screenshot generation and E2E testing
 
 ---
 
@@ -195,21 +203,26 @@ TimeTrackerPro/
 │   │   ├── DaySummary.tsx           # Day summary display
 │   │   ├── DeleteConfirmationDialog.tsx  # Deletion confirmations
 │   │   ├── ExportDialog.tsx         # Export functionality UI
+│   │   ├── InstallPrompt.tsx        # PWA install prompt
+│   │   ├── MobileNav.tsx            # Mobile bottom navigation (PWA)
 │   │   ├── Navigation.tsx           # App navigation
 │   │   ├── NewTaskForm.tsx          # Task creation form
 │   │   ├── ProjectManagement.tsx    # Project management UI
 │   │   ├── SyncStatus.tsx           # Sync status indicator
 │   │   ├── TaskEditDialog.tsx       # Task editing dialog
 │   │   ├── TaskItem.tsx             # Task display component
+│   │   ├── UpdateNotification.tsx   # PWA update notification
 │   │   └── UserMenu.tsx             # User menu dropdown
 │   ├── config/             # Configuration files
 │   │   ├── categories.ts   # Default task categories
 │   │   └── projects.ts     # Default projects
 │   ├── contexts/           # React Context providers
 │   │   ├── AuthContext.tsx           # Authentication
+│   │   ├── OfflineContext.tsx        # Offline queue (PWA)
 │   │   └── TimeTrackingContext.tsx   # Time tracking
 │   ├── hooks/              # Custom React hooks
 │   │   ├── useAuth.tsx              # Auth hook
+│   │   ├── useOffline.tsx           # Offline state hook (PWA)
 │   │   ├── useTimeTracking.tsx      # Time tracking hook
 │   │   ├── use-toast.tsx            # Toast notifications
 │   │   └── useRealtimeSync.ts       # Database sync
@@ -232,6 +245,11 @@ TimeTrackerPro/
 │   ├── main.tsx            # Application entry point
 │   └── vite-env.d.ts       # Vite type definitions
 ├── public/                 # Static assets
+│   ├── icons/              # PWA app icons (8 sizes: 72-512px)
+│   ├── screenshots/        # PWA screenshots (desktop + mobile)
+│   ├── manifest.json       # PWA web app manifest
+│   ├── pwa.css            # PWA-specific styles
+│   └── ...                # Other static assets
 ├── docs/                   # Documentation
 │   ├── ARCHIVING_DAYS.md           # Archive system guide
 │   ├── AUTHENTICATION.md           # Auth setup and flow
@@ -488,7 +506,20 @@ npm run test             # Run Vitest tests
 npm run test-full-import      # Test full CSV import
 npm run test-error-handling   # Test CSV error handling
 npm run test-csv-import       # Test standard CSV import
+
+# PWA Screenshot Generation
+npm run screenshots:install   # Install Playwright browsers (first time only)
+npm run screenshots           # Capture PWA screenshots (headless)
+npm run screenshots:headed    # Capture screenshots with visible browser
 ```
+
+**PWA Screenshot Usage:**
+1. `npm run screenshots:install` - Install Playwright browsers (~300MB, one-time)
+2. `npm run dev` - Start dev server (keep running)
+3. `npm run screenshots` - Generate screenshots in new terminal
+4. Screenshots saved to `public/screenshots/`
+
+See `tests/SCREENSHOTS_README.md` for detailed documentation.
 
 ### Pre-Commit Checklist
 
@@ -704,6 +735,17 @@ npm run build
 - [ ] Test export/import functionality
 - [ ] Verify no console errors
 - [ ] Check responsive design
+
+**PWA-Specific Testing:**
+
+- [ ] Service worker registers successfully (DevTools → Application → Service Workers)
+- [ ] App works offline (DevTools → Network → Offline)
+- [ ] Install prompt appears (wait 30 seconds or test manually)
+- [ ] App installs correctly on desktop (Chrome/Edge)
+- [ ] Bottom navigation visible on mobile viewports
+- [ ] Touch targets are large enough (44×44px minimum)
+- [ ] Manifest loads without errors (DevTools → Application → Manifest)
+- [ ] Update notification works when service worker updates
 
 ### Code Quality Requirements
 
