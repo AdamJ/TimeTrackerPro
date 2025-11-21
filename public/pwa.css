@@ -1,0 +1,169 @@
+/* PWA-specific styles */
+
+/* Safe area insets for notched devices (iOS) */
+:root {
+	--safe-area-inset-top: env(safe-area-inset-top);
+	--safe-area-inset-right: env(safe-area-inset-right);
+	--safe-area-inset-bottom: env(safe-area-inset-bottom);
+	--safe-area-inset-left: env(safe-area-inset-left);
+}
+
+/* Ensure body accounts for safe areas */
+body {
+	padding-top: var(--safe-area-inset-top);
+	padding-bottom: var(--safe-area-inset-bottom);
+	padding-left: var(--safe-area-inset-left);
+	padding-right: var(--safe-area-inset-right);
+}
+
+/* Add padding bottom for mobile nav on mobile devices */
+@media (max-width: 768px) {
+	body {
+		padding-bottom: calc(4rem + var(--safe-area-inset-bottom));
+	}
+}
+
+/* Touch-friendly minimum sizes */
+.touch-target {
+	min-width: 44px;
+	min-height: 44px;
+}
+
+/* Smooth scrolling for PWA */
+html {
+	scroll-behavior: smooth;
+	-webkit-overflow-scrolling: touch;
+}
+
+/* Prevent text selection on buttons in PWA */
+button,
+.button,
+[role="button"] {
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* Better touch feedback */
+.touch-manipulation {
+	touch-action: manipulation;
+}
+
+/* Landscape mode optimizations */
+@media (orientation: landscape) and (max-height: 500px) {
+	/* Compact header for landscape mobile */
+	header {
+		height: 48px;
+	}
+
+	/* Reduce vertical padding in landscape */
+	.landscape-compact {
+		padding-top: 0.5rem;
+		padding-bottom: 0.5rem;
+	}
+}
+
+/* Standalone mode specific styles (when app is installed) */
+@media (display-mode: standalone) {
+	/* Add subtle indication that app is installed */
+	body::before {
+		content: "";
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 2px;
+		background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+		z-index: 9999;
+	}
+
+	/* Hide browser UI elements */
+	.browser-only {
+		display: none !important;
+	}
+}
+
+/* Pull-to-refresh prevention (optional, can be enabled if needed) */
+body {
+	overscroll-behavior-y: contain;
+}
+
+/* Improve button touch targets on mobile */
+@media (max-width: 768px) {
+	button:not(.icon-only) {
+		min-height: 44px;
+		padding: 0.75rem 1rem;
+	}
+
+	/* Larger tap targets for icon buttons */
+	button.icon-only {
+		min-width: 44px;
+		min-height: 44px;
+	}
+}
+
+/* Loading states for PWA */
+.pwa-loading {
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}
+
+/* Offline indicator */
+.offline-badge {
+	position: fixed;
+	top: 1rem;
+	left: 50%;
+	transform: translateX(-50%);
+	background: #ef4444;
+	color: white;
+	padding: 0.5rem 1rem;
+	border-radius: 9999px;
+	font-size: 0.875rem;
+	font-weight: 500;
+	z-index: 9999;
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+	/* Fix iOS safari bounce */
+	body {
+		position: fixed;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+	}
+
+	#root {
+		overflow-y: auto;
+		height: 100%;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	/* Fix iOS input zoom */
+	input[type="text"],
+	input[type="email"],
+	input[type="password"],
+	input[type="number"],
+	select,
+	textarea {
+		font-size: 16px !important;
+	}
+}
+
+/* Android specific fixes */
+@media (max-width: 768px) {
+	/* Prevent address bar from covering content */
+	.mobile-viewport {
+		min-height: 100vh;
+		min-height: -webkit-fill-available;
+	}
+}
