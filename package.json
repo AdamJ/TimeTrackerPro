@@ -12,7 +12,10 @@
     "preview": "vite preview",
     "test-full-import": "cd tests && node test-full-import.js",
     "test-error-handling": "cd tests && node test-error-handling.js",
-    "test-csv-import": "cd tests && node test-csv-import.js"
+    "test-csv-import": "cd tests && node test-csv-import.js",
+    "screenshots": "playwright test screenshots.spec.ts",
+    "screenshots:install": "playwright install chromium",
+    "screenshots:headed": "playwright test screenshots.spec.ts --headed"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -67,6 +70,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/typography": "^0.5.15",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^14.0.0",
