@@ -34,8 +34,10 @@ export const MobileNav = memo(function MobileNav() {
 
 	return (
 		<nav
-			className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-40 safe-area-inset-bottom"
-			style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+			className="fixed bottom-0 left-0 right-0 bg-background border-t border-border md:hidden z-40 mobile-nav-ios"
+			style={{
+				paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0px)",
+			}}
 		>
 			<div className="grid grid-cols-4 h-16">
 				{navItems.map(({ path, icon: Icon, label }) => (
@@ -45,7 +47,7 @@ export const MobileNav = memo(function MobileNav() {
 						className={`flex flex-col items-center justify-center space-y-1 transition-colors touch-manipulation ${
 							isActive(path)
 								? "text-primary"
-								: "text-gray-500 hover:text-gray-700"
+								: "text-muted-foreground hover:text-foreground"
 						}`}
 						aria-label={label}
 						aria-current={isActive(path) ? "page" : undefined}

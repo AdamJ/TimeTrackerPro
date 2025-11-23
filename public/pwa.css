@@ -11,14 +11,14 @@
 /* Ensure body accounts for safe areas */
 body {
 	padding-top: var(--safe-area-inset-top);
-	padding-bottom: var(--safe-area-inset-bottom);
 	padding-left: var(--safe-area-inset-left);
 	padding-right: var(--safe-area-inset-right);
 }
 
 /* Add padding bottom for mobile nav on mobile devices */
+/* Note: iOS-specific padding is handled in the iOS section below */
 @media (max-width: 768px) {
-	body {
+	body:not(.ios-device) {
 		padding-bottom: calc(4rem + var(--safe-area-inset-bottom));
 	}
 }
@@ -156,6 +156,38 @@ body {
 	select,
 	textarea {
 		font-size: 16px !important;
+	}
+
+	/* iOS PWA bottom navigation fix */
+	.mobile-nav-ios {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		/* Ensure navigation is always visible above content */
+		z-index: 9999;
+		/* Use safe area insets for iOS notch/home indicator */
+		padding-bottom: env(safe-area-inset-bottom);
+		/* Add backdrop for better visibility */
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		background-color: rgba(255, 255, 255, 0.95);
+	}
+
+	/* Dark mode support for iOS navigation */
+	.dark .mobile-nav-ios {
+		background-color: rgba(9, 9, 11, 0.95);
+	}
+
+	/* Ensure body padding accounts for nav + safe area */
+	@media (max-width: 768px) {
+		body {
+			padding-bottom: 0 !important;
+		}
+
+		#root {
+			padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+		}
 	}
 }
 
