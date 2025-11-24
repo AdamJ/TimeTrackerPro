@@ -99,17 +99,18 @@ const CategoryContent: React.FC = () => {
       {/* Navigation Header */}
       <SiteNavigationMenu />
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto p-6 print:p-4">
+      <div className="max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
-            <TagIcon className="w-6 h-6" />
-            <span>Categories</span>
+          <h1 className="md:text-2xl font-bold text-gray-900 flex items-center space-x-1">
+            <TagIcon className="w-6 h-6 mr-1" />
+            Categories
+            <span>({categories.length})</span>
           </h1>
           {/* Add New Category Button */}
           {!isAddingNew && (
             <Button onClick={() => setIsAddingNew(true)} variant="default">
-              <Plus className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:block">Add Category</span>
+              <Plus className="w-4 h-4" />
+              Add Category
             </Button>
           )}
           {isAddingNew && (
@@ -246,10 +247,6 @@ const CategoryContent: React.FC = () => {
       <div className="max-w-6xl mx-auto p-6 print:p-4">
         {/* Categories List */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">
-            Categories ({categories.length})
-          </h3>
-
           {categories.length === 0 ? (
             <Card>
               <CardContent className="text-center py-8">

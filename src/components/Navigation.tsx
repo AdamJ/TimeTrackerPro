@@ -43,7 +43,7 @@ const SiteNavigationMenu = () => {
 
   return (
     <>
-    <NavigationMenu className="relative bg-gradient-to-br from-gray-50 to-blue-50 print:hidden">
+    <NavigationMenu className="relative bg-gradient-to-br from-gray-50 to-blue-50 print:hidden hidden md:block">
       <List className="flex items-center justify-between px-8 py-4 m-0 list-none rounded-md bg-white p-1 shadow-sm">
         <Item className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900 flex">
