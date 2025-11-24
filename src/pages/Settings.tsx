@@ -41,10 +41,10 @@ const SettingsContent: React.FC = () => {
       {/* Navigation Header */}
       <SiteNavigationMenu />
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto p-6 print:p-4">
+      <div className="max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
-            <CogIcon className="w-6 h-6" />
+          <h1 className="md:text-2xl font-bold text-gray-900 flex items-center space-x-1">
+            <CogIcon className="w-6 h-6 mr-1" />
             <span>Settings</span>
           </h1>
         </div>
@@ -52,7 +52,7 @@ const SettingsContent: React.FC = () => {
       <div className="max-w-6xl mx-auto p-6">
         <div className="grid gap-6">
           {/* Overview Stats */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 print:hidden">
             <Card>
               <CardContent className="p-4">
                 <div className="text-2xl font-bold text-blue-600">

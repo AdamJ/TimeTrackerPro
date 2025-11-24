@@ -99,11 +99,11 @@ const TimeTrackerContent = () => {
       <SiteNavigationMenu />
       {/* Main Content */}
       {!isDayStarted ? (
-      <div className="max-w-6xl mx-auto p-6 space-y-6">
+      <div className="max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
-              <DashboardIcon className="w-6 h-6" />
+            <h1 className="md:text-2xl font-bold text-gray-900 flex items-center space-x-1">
+              <DashboardIcon className="w-6 h-6 mr-1" />
               <span>Dashboard</span>
             </h1>
           </div>

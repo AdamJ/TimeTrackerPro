@@ -49,8 +49,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
       <CardHeader className="print:pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
-            <Calendar className="w-5 h-5 text-blue-600 print:text-black" />
-            <span>{formatDate(day.startTime)}</span>
+            {formatDate(day.startTime)}
           </CardTitle>
           <div className="flex space-x-2 print:hidden">
             <Button
@@ -59,8 +58,8 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
               size="sm"
               className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
             >
-              <RotateCcw className="w-4 h-4" />
-              <span>Restore</span>
+              <RotateCcw className="w-4 h-4 hidden md:block" />
+              Restore
             </Button>
             <Button
               onClick={() => onEdit(day)}
@@ -68,8 +67,8 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
               size="sm"
               className="flex items-center space-x-2"
             >
-              <Edit className="w-4 h-4" />
-              <span>Edit</span>
+              <Edit className="w-4 h-4 hidden md:block" />
+              Edit
             </Button>
           </div>
         </div>
@@ -101,7 +100,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
               <div className="flex items-center justify-between text-sm print:text-base">
                 <div className="flex items-center space-x-4">
                   <span className="text-blue-600 print:text-black font-medium">
-                    Total Hours: {getHoursWorkedForDay(day).toFixed(2)}h
+                    Total <span className="hidden md:d-inline-flex">Hours: </span>{getHoursWorkedForDay(day).toFixed(2)}h
                   </span>
                   <span className="text-green-600 print:text-black font-medium">
                     Billable: {getBillableHoursForDay(day).toFixed(2)}h
@@ -134,10 +133,10 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
                     Project
                   </TableHead>
                   <TableHead className="print:text-black print:font-bold">
-                    Start Time
+                    Start<span className="hidden md:d-inline-flex"> Time</span>
                   </TableHead>
                   <TableHead className="print:text-black print:font-bold">
-                    End Time
+                    End<span className="hidden md:d-inline-flex"> Time</span>
                   </TableHead>
                   <TableHead className="print:text-black print:font-bold">
                     Duration
@@ -165,7 +164,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
                     <TableRow key={task.id} className="print:border-black">
                       <TableCell className="font-medium print:text-black">
                         {task.title}
-                        <div className="font-medium text-sm italic text-gray-400 print:text-gray-600">
+                        <div className="font-medium text-sm italic text-gray-400 hidden md:block print:text-gray-600">
                           {task.description}
                         </div>
                       </TableCell>

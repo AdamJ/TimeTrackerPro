@@ -101,11 +101,12 @@ const ProjectContent: React.FC = () => {
       {/* Navigation Header */}
       <SiteNavigationMenu />
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto p-6 print:p-4">
+      <div className="max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
-            <Briefcase className="w-6 h-6" />
-            <span>Project List</span>
+          <h1 className="md:text-2xl font-bold text-gray-900 flex items-center space-x-1">
+            <Briefcase className="w-6 h-6 mr-1" />
+            Project List
+            <span>({projects.length})</span>
           </h1>
           <div className="flex space-x-2 print:hidden">
             {!isAddingNew && (
@@ -116,11 +117,11 @@ const ProjectContent: React.FC = () => {
                   className="w-full"
                 >
                   <RotateCcw className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:block">Reset to Defaults</span>
+                  Reset to Defaults
                 </Button>
                 <Button onClick={() => setIsAddingNew(true)} className="w-full">
                   <Plus className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:block">Add Project</span>
+                  Add Project
                 </Button>
               </>
             )}
@@ -269,9 +270,6 @@ const ProjectContent: React.FC = () => {
       <div className="max-w-6xl mx-auto p-6 print:p-4">
         {/* Projects List */}
         <div className="space-y-6">
-          <h3 className="text-lg font-semibold">
-            Current Projects ({projects.length})
-          </h3>
           {projects.length === 0 ? (
             <Card>
               <CardContent className="text-center py-8">
