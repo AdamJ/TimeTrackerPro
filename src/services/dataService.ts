@@ -852,18 +852,44 @@ class SupabaseService implements DataService {
 
     const user = await getCachedUser();
 
-    // Delete existing projects
-    await supabase.from('projects').delete().eq('user_id', user.id);
-
     if (projects.length === 0) {
-      console.log('📭 No projects to save');
-      // Clear cache since projects changed
+      console.log('📭 No projects to save - clearing existing data');
+      // Still need to clear existing data if no projects provided
+      await supabase.from('projects').delete().eq('user_id', user.id);
+      trackDbCall('delete', 'projects');
       clearDataCaches();
       return;
     }
 
-    // Insert new projects
-    const projectsToInsert = projects.map((project) => ({
+    // Get existing projects to determine what to delete
+    const { data: existingProjects } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('user_id', user.id);
+    trackDbCall('select', 'projects');
+
+    const existingProjectIds = new Set(existingProjects?.map(p => p.id) || []);
+    const newProjectIds = new Set(projects.map(p => p.id));
+
+    // Delete projects that no longer exist in local state
+    const projectsToDelete = Array.from(existingProjectIds).filter(id => !newProjectIds.has(id));
+    if (projectsToDelete.length > 0) {
+      console.log('🗑️ Deleting obsolete projects:', projectsToDelete.length);
+      const { error: deleteError } = await supabase
+        .from('projects')
+        .delete()
+        .eq('user_id', user.id)
+        .in('id', projectsToDelete);
+      trackDbCall('delete', 'projects');
+
+      if (deleteError) {
+        console.error('❌ Error deleting obsolete projects:', deleteError);
+        throw deleteError;
+      }
+    }
+
+    // Upsert projects (insert new, update existing)
+    const projectsToUpsert = projects.map((project) => ({
       id: project.id,
       user_id: user.id,
       name: project.name,
@@ -871,19 +897,26 @@ class SupabaseService implements DataService {
       hourly_rate: project.hourlyRate || null,
       color: project.color || null,
       is_billable: project.isBillable !== false // Default to true if not specified
+      // Note: inserted_at and updated_at are NOT included
     }));
 
-    const { error } = await supabase.from('projects').insert(projectsToInsert);
+    console.log('📝 Upserting projects...');
+    const { error } = await supabase
+      .from('projects')
+      .upsert(projectsToUpsert, {
+        onConflict: 'id'
+      });
+    trackDbCall('upsert', 'projects');
 
     if (error) {
-      console.error('❌ Error saving projects:', error);
+      console.error('❌ Error upserting projects:', error);
       throw error;
     }
 
     // Update cache with new data
     setCachedProjects(projects);
 
-    console.log('✅ Projects saved successfully');
+    console.log('✅ Projects upserted successfully');
   }
 
   async getProjects(): Promise<Project[]> {
@@ -929,39 +962,70 @@ class SupabaseService implements DataService {
 
     const user = await getCachedUser();
 
-    // Delete existing categories
-    await supabase.from('categories').delete().eq('user_id', user.id);
-
     if (categories.length === 0) {
-      console.log('📭 No categories to save');
-      // Clear cache since categories changed
+      console.log('📭 No categories to save - clearing existing data');
+      // Still need to clear existing data if no categories provided
+      await supabase.from('categories').delete().eq('user_id', user.id);
+      trackDbCall('delete', 'categories');
       clearDataCaches();
       return;
     }
 
-    // Insert new categories
-    const categoriesToInsert = categories.map((category) => ({
+    // Get existing categories to determine what to delete
+    const { data: existingCategories } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('user_id', user.id);
+    trackDbCall('select', 'categories');
+
+    const existingCategoryIds = new Set(existingCategories?.map(c => c.id) || []);
+    const newCategoryIds = new Set(categories.map(c => c.id));
+
+    // Delete categories that no longer exist in local state
+    const categoriesToDelete = Array.from(existingCategoryIds).filter(id => !newCategoryIds.has(id));
+    if (categoriesToDelete.length > 0) {
+      console.log('🗑️ Deleting obsolete categories:', categoriesToDelete.length);
+      const { error: deleteError } = await supabase
+        .from('categories')
+        .delete()
+        .eq('user_id', user.id)
+        .in('id', categoriesToDelete);
+      trackDbCall('delete', 'categories');
+
+      if (deleteError) {
+        console.error('❌ Error deleting obsolete categories:', deleteError);
+        throw deleteError;
+      }
+    }
+
+    // Upsert categories (insert new, update existing)
+    const categoriesToUpsert = categories.map((category) => ({
       id: category.id,
       user_id: user.id,
       name: category.name,
       color: category.color || null,
       icon: null, // Icon field exists in DB but not in interface yet
       is_billable: category.isBillable !== false // Default to true if not specified
+      // Note: inserted_at and updated_at are NOT included
     }));
 
+    console.log('📝 Upserting categories...');
     const { error } = await supabase
       .from('categories')
-      .insert(categoriesToInsert);
+      .upsert(categoriesToUpsert, {
+        onConflict: 'id'
+      });
+    trackDbCall('upsert', 'categories');
 
     if (error) {
-      console.error('❌ Error saving categories:', error);
+      console.error('❌ Error upserting categories:', error);
       throw error;
     }
 
     // Update cache with new data
     setCachedCategories(categories);
 
-    console.log('✅ Categories saved successfully');
+    console.log('✅ Categories upserted successfully');
   }
 
   async getCategories(): Promise<TaskCategory[]> {
