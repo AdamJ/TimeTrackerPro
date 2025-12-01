@@ -164,7 +164,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
     return taskList.reduce((total, task) => total + (task.duration || 0), 0);
   };
 
-  const handleSaveDay = () => {
+  const handleSaveDay = async () => {
     // Parse the new date from the input
     const selectedDate = new Date(dayData.date);
 
@@ -209,8 +209,13 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
       totalDuration: calculateTotalDuration(updatedTasks)
     };
 
-    updateArchivedDay(day.id, updatedDay);
-    setIsEditing(false);
+    try {
+      await updateArchivedDay(day.id, updatedDay);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to save archived day:", error);
+      alert("Failed to save changes. Please try again.");
+    }
   };
 
   const handleDeleteDay = () => {
