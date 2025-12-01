@@ -707,12 +707,23 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!dataService) return;
 
     try {
+      console.log('🔄 Updating archived day:', { dayId, updates });
       await dataService.updateArchivedDay(dayId, updates);
+      console.log('✅ Database update complete');
+
+      // Update local state
       setArchivedDays((prev) =>
         prev.map((day) => (day.id === dayId ? { ...day, ...updates } : day))
       );
+
+      // Force refresh from database to ensure consistency
+      console.log('🔄 Refreshing archived days from database...');
+      const refreshedDays = await dataService.getArchivedDays();
+      setArchivedDays(refreshedDays);
+      console.log('✅ Archived days refreshed');
     } catch (error) {
-      console.error('Error updating archived day:', error);
+      console.error('❌ Error updating archived day:', error);
+      throw error; // Re-throw so the UI can handle it
     }
   };
 

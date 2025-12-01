@@ -90,5 +90,20 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src")
     }
+  },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: [],
+    include: ["src/**/*.test.{ts,tsx}"], // Only include test files in src directory
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/cypress/**",
+      "**/.{idea,git,cache,output,temp}/**",
+      "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
+      "**/*.spec.ts" // Exclude Playwright test files (use .test.ts for Vitest)
+    ],
+    passWithNoTests: true // Don't fail when no test files are found
   }
 }));
