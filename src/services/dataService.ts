@@ -451,8 +451,8 @@ class SupabaseService implements DataService {
       return;
     }
 
-    // Prepare data for insertion BEFORE any destructive operations
-    const archivedDaysToInsert = days.map((day) => ({
+    // Prepare data for upsert (not insert)
+    const archivedDaysToUpsert = days.map((day) => ({
       id: day.id,
       user_id: user.id,
       date: day.date,
@@ -460,11 +460,14 @@ class SupabaseService implements DataService {
       start_time: day.startTime.toISOString(),
       end_time: day.endTime.toISOString(),
       notes: day.notes
+      // Note: inserted_at and updated_at are NOT included
+      // inserted_at will be set by DB on first insert, preserved on update
+      // updated_at will be updated by DB trigger only when data actually changes
     }));
 
     const allTasks = days.flatMap((day) =>
       day.tasks.map((task) => ({
-        id: generateArchivedTaskId(task.id), // Generate unique archived task ID
+        id: task.id, // Use original task ID for stable identity
         user_id: user.id,
         title: task.title,
         description: task.description || null,
@@ -478,85 +481,103 @@ class SupabaseService implements DataService {
         category_name: task.category || null,
         day_record_id: day.id,
         is_current: false
+        // Note: inserted_at and updated_at are NOT included
       }))
     );
 
-    console.log('🔄 Prepared data - Days:', archivedDaysToInsert.length, 'Tasks:', allTasks.length);
-
-    // Use a transaction-like approach with error recovery
-    let operationSuccessful = false;
+    console.log('🔄 Prepared data - Days:', archivedDaysToUpsert.length, 'Tasks:', allTasks.length);
 
     try {
-      // Step 1: Delete existing archived data
-      console.log('🗑️ Clearing existing archived data...');
-      const { error: deleteTasksError } = await supabase
+      // Step 1: Get existing data to determine what to delete
+      const { data: existingDays } = await supabase
+        .from('archived_days')
+        .select('id')
+        .eq('user_id', user.id);
+      trackDbCall('select', 'archived_days');
+
+      const { data: existingTasks } = await supabase
         .from('tasks')
-        .delete()
+        .select('id')
         .eq('user_id', user.id)
         .eq('is_current', false);
+      trackDbCall('select', 'tasks');
 
-      if (deleteTasksError) {
-        console.error('❌ Error deleting existing tasks:', deleteTasksError);
-        throw deleteTasksError;
+      const existingDayIds = new Set(existingDays?.map(d => d.id) || []);
+      const newDayIds = new Set(days.map(d => d.id));
+      const existingTaskIds = new Set(existingTasks?.map(t => t.id) || []);
+      const newTaskIds = new Set(allTasks.map(t => t.id));
+
+      // Step 2: Delete archived days that no longer exist in local state
+      const daysToDelete = Array.from(existingDayIds).filter(id => !newDayIds.has(id));
+      if (daysToDelete.length > 0) {
+        console.log('🗑️ Deleting obsolete archived days:', daysToDelete.length);
+        const { error: deleteDaysError } = await supabase
+          .from('archived_days')
+          .delete()
+          .eq('user_id', user.id)
+          .in('id', daysToDelete);
+        trackDbCall('delete', 'archived_days');
+
+        if (deleteDaysError) {
+          console.error('❌ Error deleting obsolete days:', deleteDaysError);
+          throw deleteDaysError;
+        }
       }
 
-      const { error: deleteDaysError } = await supabase
-        .from('archived_days')
-        .delete()
-        .eq('user_id', user.id);
+      // Step 3: Delete archived tasks that no longer exist in local state
+      const tasksToDelete = Array.from(existingTaskIds).filter(id => !newTaskIds.has(id));
+      if (tasksToDelete.length > 0) {
+        console.log('🗑️ Deleting obsolete archived tasks:', tasksToDelete.length);
+        const { error: deleteTasksError } = await supabase
+          .from('tasks')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('is_current', false)
+          .in('id', tasksToDelete);
+        trackDbCall('delete', 'tasks');
 
-      if (deleteDaysError) {
-        console.error('❌ Error deleting existing days:', deleteDaysError);
-        throw deleteDaysError;
+        if (deleteTasksError) {
+          console.error('❌ Error deleting obsolete tasks:', deleteTasksError);
+          throw deleteTasksError;
+        }
       }
 
-      console.log('✅ Existing archived data cleared');
-
-      // Step 2: Insert archived days
-      console.log('📅 Inserting archived days...');
+      // Step 4: Upsert archived days (insert new, update existing)
+      console.log('📅 Upserting archived days...');
       const { error: daysError } = await supabase
         .from('archived_days')
-        .insert(archivedDaysToInsert);
+        .upsert(archivedDaysToUpsert, {
+          onConflict: 'id'
+        });
+      trackDbCall('upsert', 'archived_days');
 
       if (daysError) {
-        console.error('❌ Error saving archived days:', daysError);
+        console.error('❌ Error upserting archived days:', daysError);
         throw daysError;
       }
 
-      console.log('✅ Archived days saved');
+      console.log('✅ Archived days upserted successfully');
 
-      // Step 3: Insert all archived tasks (CRITICAL - this was failing silently)
+      // Step 5: Upsert archived tasks (insert new, update existing)
       if (allTasks.length > 0) {
-        console.log('📝 Inserting archived tasks...', allTasks.length);
+        console.log('📝 Upserting archived tasks...', allTasks.length);
 
-        // Log first task for debugging
-        console.log('📋 Sample task data:', {
-          id: allTasks[0].id,
-          user_id: allTasks[0].user_id,
-          day_record_id: allTasks[0].day_record_id,
-          title: allTasks[0].title
-        });
-
-        const { error: tasksError, data: insertedTasks } = await supabase
+        const { error: tasksError } = await supabase
           .from('tasks')
-          .insert(allTasks)
-          .select('id');
+          .upsert(allTasks, {
+            onConflict: 'id'
+          });
+        trackDbCall('upsert', 'tasks');
 
         if (tasksError) {
-          console.error('❌ Error saving archived tasks:', tasksError);
+          console.error('❌ Error upserting archived tasks:', tasksError);
           console.error('❌ Failed task data sample:', allTasks[0]);
           throw tasksError;
         }
 
-        console.log('✅ Archived tasks saved:', insertedTasks?.length || 'unknown count');
-
-        // Verify task count matches
-        if (insertedTasks && insertedTasks.length !== allTasks.length) {
-          throw new Error(`Task save mismatch: expected ${allTasks.length}, got ${insertedTasks.length}`);
-        }
+        console.log('✅ Archived tasks upserted successfully');
       }
 
-      operationSuccessful = true;
       console.log('🎉 All archived data saved successfully');
 
       // Verification step - check that the data was actually saved
@@ -564,15 +585,11 @@ class SupabaseService implements DataService {
       await this.verifyArchivedDataIntegrity(days);
 
     } catch (error) {
-      console.error('💥 Archiving failed - attempting to recover state:', error);
-
-      // If we cleared data but failed to save new data, we have a problem
-      // At minimum, log the failure clearly
-      console.error('🚨 CRITICAL: Archived data may be lost due to save failure');
+      console.error('💥 Archiving save failed:', error);
       console.error('🚨 Data that failed to save:', {
-        daysCount: archivedDaysToInsert.length,
+        daysCount: archivedDaysToUpsert.length,
         tasksCount: allTasks.length,
-        firstDay: archivedDaysToInsert[0]?.date,
+        firstDay: archivedDaysToUpsert[0]?.date,
         error: error
       });
 
