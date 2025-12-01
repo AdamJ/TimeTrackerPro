@@ -2,13 +2,6 @@ import { supabase, trackDbCall, getCachedUser, getCachedProjects, setCachedProje
 import { Task, DayRecord, Project } from '@/contexts/TimeTrackingContext';
 import { TaskCategory } from '@/config/categories';
 
-/**
- * Generates a unique ID for archived tasks to avoid conflicts with current tasks
- */
-function generateArchivedTaskId(originalTaskId: string): string {
-  return `archived_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${originalTaskId}`;
-}
-
 // Storage keys for localStorage
 export const STORAGE_KEYS = {
   CURRENT_DAY: 'timetracker_current_day',
@@ -769,22 +762,43 @@ class SupabaseService implements DataService {
       .update(updateData)
       .eq('id', dayId)
       .eq('user_id', user.id);
+    trackDbCall('update', 'archived_days');
 
     if (dayError) throw dayError;
 
-    // Update tasks if provided
+    // Update tasks if provided - use upsert strategy like saveArchivedDays
     if (updates.tasks) {
-      // Delete existing tasks for this day
-      await supabase
+      // Get existing tasks for this day
+      const { data: existingTasks } = await supabase
         .from('tasks')
-        .delete()
+        .select('id')
         .eq('day_record_id', dayId)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('is_current', false);
+      trackDbCall('select', 'tasks');
 
-      // Insert updated tasks
+      const existingTaskIds = new Set(existingTasks?.map(t => t.id) || []);
+      const newTaskIds = new Set(updates.tasks.map(t => t.id));
+
+      // Delete tasks that no longer exist in the update
+      const tasksToDelete = Array.from(existingTaskIds).filter(id => !newTaskIds.has(id));
+      if (tasksToDelete.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('tasks')
+          .delete()
+          .eq('day_record_id', dayId)
+          .eq('user_id', user.id)
+          .eq('is_current', false)
+          .in('id', tasksToDelete);
+        trackDbCall('delete', 'tasks');
+
+        if (deleteError) throw deleteError;
+      }
+
+      // Upsert updated tasks (insert new, update existing)
       if (updates.tasks.length > 0) {
-        const tasksToInsert = updates.tasks.map((task) => ({
-          id: generateArchivedTaskId(task.id), // Generate unique archived task ID
+        const tasksToUpsert = updates.tasks.map((task) => ({
+          id: task.id, // Use original task ID for stable identity
           user_id: user.id,
           title: task.title,
           description: task.description || null,
@@ -798,11 +812,15 @@ class SupabaseService implements DataService {
           category_name: task.category || null,
           day_record_id: dayId,
           is_current: false
+          // Note: inserted_at and updated_at are NOT included
         }));
 
         const { error: tasksError } = await supabase
           .from('tasks')
-          .insert(tasksToInsert);
+          .upsert(tasksToUpsert, {
+            onConflict: 'id'
+          });
+        trackDbCall('upsert', 'tasks');
 
         if (tasksError) throw tasksError;
       }
