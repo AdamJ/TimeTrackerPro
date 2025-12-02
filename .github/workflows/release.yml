@@ -47,15 +47,22 @@ jobs:
 			- name: Determine version bump type
 				id: bump_type
 				run: |
-					# Get the latest commit message
-					COMMIT_MSG=$(git log -1 --pretty=%B)
-					echo "Commit message: $COMMIT_MSG"
+					# Determine source of commit/PR title. For merged PRs prefer the PR title.
+					if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+						COMMIT_MSG=$(node -e "const e=require(process.env.GITHUB_EVENT_PATH); console.log((e && e.pull_request && e.pull_request.title) || '');")
+					else
+						COMMIT_MSG=$(git log -1 --pretty=%B)
+					fi
+					echo "Commit message / PR title: $COMMIT_MSG"
 
-					# Determine bump type based on commit message prefix
-					if echo "$COMMIT_MSG" | grep -qiE "^(feat|feature|fix):"; then
+					# Determine bump type based on conventional commit prefix (support optional scope)
+					if echo "$COMMIT_MSG" | grep -qiE "^(feat|feature)(\([^)]*\))?:"; then
 						echo "type=minor" >> $GITHUB_OUTPUT
-						echo "Version bump: MINOR (feat/fix)"
-					elif echo "$COMMIT_MSG" | grep -qiE "^(patch|bump|maint|chore|refactor):"; then
+						echo "Version bump: MINOR (feat/feature)"
+					elif echo "$COMMIT_MSG" | grep -qiE "^fix(\([^)]*\))?:"; then
+						echo "type=patch" >> $GITHUB_OUTPUT
+						echo "Version bump: PATCH (fix)"
+					elif echo "$COMMIT_MSG" | grep -qiE "^(patch|bump|maint|chore|refactor)(\([^)]*\))?:"; then
 						echo "type=patch" >> $GITHUB_OUTPUT
 						echo "Version bump: PATCH"
 					else
@@ -80,9 +87,13 @@ jobs:
 			- name: Commit version bump
 				if: steps.bump_type.outputs.type != 'none'
 				run: |
-					git add package.json package-lock.json
-					git commit -m "chore: bump version to ${{ steps.new_version.outputs.version }}"
-					git push
+					git add package.json package-lock.json || true
+					if git diff --cached --quiet; then
+						echo "No version changes to commit"
+					else
+						git commit -m "chore: bump version to ${{ steps.new_version.outputs.version }}"
+						git push
+					fi
 
 			- name: Create Git tag
 				if: steps.bump_type.outputs.type != 'none'
@@ -94,8 +105,8 @@ jobs:
 				id: changelog
 				if: steps.bump_type.outputs.type != 'none'
 				run: |
-					# Get commits since last tag
-					PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+					# Get the most recent tag (if any)
+					PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 
 					if [ -z "$PREVIOUS_TAG" ]; then
 						COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
@@ -104,11 +115,9 @@ jobs:
 					fi
 
 					# Create changelog content
-					CHANGELOG="## Changes in v${{ steps.new_version.outputs.version }}
+					CHANGELOG="## Changes in v${{ steps.new_version.outputs.version }}\n\n$COMMITS"
 
-$COMMITS"
-
-					# Save to output (escape newlines for GitHub Actions)
+					# Save to output (multiline)
 					echo "content<<EOF" >> $GITHUB_OUTPUT
 					echo "$CHANGELOG" >> $GITHUB_OUTPUT
 					echo "EOF" >> $GITHUB_OUTPUT
@@ -144,7 +153,7 @@ $COMMITS"
 					echo "## ℹ️ No Version Bump" >> $GITHUB_STEP_SUMMARY
 					echo "" >> $GITHUB_STEP_SUMMARY
 					echo "The commit message doesn't match any versioning patterns:" >> $GITHUB_STEP_SUMMARY
-					echo "- \`feat:\` or \`fix:\` for minor version bump" >> $GITHUB_STEP_SUMMARY
-					echo "- \`patch:\`, \`bump:\`, \`maint:\`, or \`refactor:\` for patch version bump" >> $GITHUB_STEP_SUMMARY
+					echo "- \`feat:\` for minor version bump" >> $GITHUB_STEP_SUMMARY
+					echo "- \`fix:\` or \`patch:\`, \`bump:\`, \`maint:\`, or \`refactor:\` for patch version bump" >> $GITHUB_STEP_SUMMARY
 					echo "" >> $GITHUB_STEP_SUMMARY
 					echo "Current version remains: **${{ steps.current_version.outputs.version }}**" >> $GITHUB_STEP_SUMMARY
