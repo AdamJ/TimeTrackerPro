@@ -13,6 +13,9 @@
     color: black !important;
     background: white !important;
   }
+  .bg-gradient-to-br {
+    background-image: none !important;
+  }
 
   /* Hide all elements with print:hidden class */
   .print\:hidden {
@@ -74,7 +77,7 @@
   table {
     width: 100% !important;
     border-collapse: collapse !important;
-    margin-top: 8pt !important;
+    /* margin-top: 8pt !important; */
   }
 
   th {
@@ -84,6 +87,7 @@
     font-weight: bold !important;
     text-align: left !important;
     font-size: 11pt !important;
+    height: 0rem !important;
   }
 
   td {
@@ -176,5 +180,10 @@
   .container {
     width: 100% !important;
     max-width: none !important;
+  }
+
+  .bg-card {
+    background: transparent !important;
+    background-color: transparent !important;
   }
 }
