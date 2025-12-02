@@ -1,159 +1,159 @@
 name: Release
 
 on:
-	push:
-		branches:
-			- main
-	pull_request:
-		types:
-			- closed
-		branches:
-			- main
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
 
 jobs:
-	release:
-		# Only run if PR was merged or direct push to main
-		if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
-		runs-on: ubuntu-latest
-		permissions:
-			contents: write
-			pull-requests: read
+  release:
+    # Only run if PR was merged or direct push to main
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
 
-		steps:
-			- name: Checkout code
-				uses: actions/checkout@v4
-				with:
-					fetch-depth: 0
-					token: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-			- name: Setup Node.js
-				uses: actions/setup-node@v4
-				with:
-					node-version: "20"
-					cache: "npm"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
 
-			- name: Configure Git
-				run: |
-					git config user.name "github-actions[bot]"
-					git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-			- name: Get current version
-				id: current_version
-				run: |
-					CURRENT_VERSION=$(node -p "require('./package.json').version")
-					echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-					echo "Current version: $CURRENT_VERSION"
+      - name: Get current version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
 
-			- name: Determine version bump type
-				id: bump_type
-				run: |
-					# Determine source of commit/PR title. For merged PRs prefer the PR title.
-					if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-						COMMIT_MSG=$(node -e "const e=require(process.env.GITHUB_EVENT_PATH); console.log((e && e.pull_request && e.pull_request.title) || '');")
-					else
-						COMMIT_MSG=$(git log -1 --pretty=%B)
-					fi
-					echo "Commit message / PR title: $COMMIT_MSG"
+      - name: Determine version bump type
+        id: bump_type
+        run: |
+          # Determine source of commit/PR title. For merged PRs prefer the PR title.
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            COMMIT_MSG=$(node -e "const e=require(process.env.GITHUB_EVENT_PATH); console.log((e && e.pull_request && e.pull_request.title) || '');")
+          else
+            COMMIT_MSG=$(git log -1 --pretty=%B)
+          fi
+          echo "Commit message / PR title: $COMMIT_MSG"
 
-					# Determine bump type based on conventional commit prefix (support optional scope)
-					if echo "$COMMIT_MSG" | grep -qiE "^(feat|feature)(\([^)]*\))?:"; then
-						echo "type=minor" >> $GITHUB_OUTPUT
-						echo "Version bump: MINOR (feat/feature)"
-					elif echo "$COMMIT_MSG" | grep -qiE "^fix(\([^)]*\))?:"; then
-						echo "type=patch" >> $GITHUB_OUTPUT
-						echo "Version bump: PATCH (fix)"
-					elif echo "$COMMIT_MSG" | grep -qiE "^(patch|bump|maint|chore|refactor)(\([^)]*\))?:"; then
-						echo "type=patch" >> $GITHUB_OUTPUT
-						echo "Version bump: PATCH"
-					else
-						echo "type=none" >> $GITHUB_OUTPUT
-						echo "No version bump (commit doesn't match versioning patterns)"
-					fi
+          # Determine bump type based on conventional commit prefix (support optional scope)
+          if echo "$COMMIT_MSG" | grep -qiE "^(feat|feature)(\([^)]*\))?:"; then
+            echo "type=minor" >> $GITHUB_OUTPUT
+            echo "Version bump: MINOR (feat/feature)"
+          elif echo "$COMMIT_MSG" | grep -qiE "^fix(\([^)]*\))?:"; then
+            echo "type=patch" >> $GITHUB_OUTPUT
+            echo "Version bump: PATCH (fix)"
+          elif echo "$COMMIT_MSG" | grep -qiE "^(patch|bump|maint|chore|refactor)(\([^)]*\))?:"; then
+            echo "type=patch" >> $GITHUB_OUTPUT
+            echo "Version bump: PATCH"
+          else
+            echo "type=none" >> $GITHUB_OUTPUT
+            echo "No version bump (commit doesn't match versioning patterns)"
+          fi
 
-			- name: Bump version
-				id: new_version
-				if: steps.bump_type.outputs.type != 'none'
-				run: |
-					BUMP_TYPE=${{ steps.bump_type.outputs.type }}
+      - name: Bump version
+        id: new_version
+        if: steps.bump_type.outputs.type != 'none'
+        run: |
+          BUMP_TYPE=${{ steps.bump_type.outputs.type }}
 
-					# Bump the version
-					npm version $BUMP_TYPE --no-git-tag-version
+          # Bump the version
+          npm version $BUMP_TYPE --no-git-tag-version
 
-					# Get the new version
-					NEW_VERSION=$(node -p "require('./package.json').version")
-					echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-					echo "New version: $NEW_VERSION"
+          # Get the new version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
 
-			- name: Commit version bump
-				if: steps.bump_type.outputs.type != 'none'
-				run: |
-					git add package.json package-lock.json || true
-					if git diff --cached --quiet; then
-						echo "No version changes to commit"
-					else
-						git commit -m "chore: bump version to ${{ steps.new_version.outputs.version }}"
-						git push
-					fi
+      - name: Commit version bump
+        if: steps.bump_type.outputs.type != 'none'
+        run: |
+          git add package.json package-lock.json || true
+          if git diff --cached --quiet; then
+            echo "No version changes to commit"
+          else
+            git commit -m "chore: bump version to ${{ steps.new_version.outputs.version }}"
+            git push
+          fi
 
-			- name: Create Git tag
-				if: steps.bump_type.outputs.type != 'none'
-				run: |
-					git tag "v${{ steps.new_version.outputs.version }}"
-					git push --tags
+      - name: Create Git tag
+        if: steps.bump_type.outputs.type != 'none'
+        run: |
+          git tag "v${{ steps.new_version.outputs.version }}"
+          git push --tags
 
-			- name: Generate changelog
-				id: changelog
-				if: steps.bump_type.outputs.type != 'none'
-				run: |
-					# Get the most recent tag (if any)
-					PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+      - name: Generate changelog
+        id: changelog
+        if: steps.bump_type.outputs.type != 'none'
+        run: |
+          # Get the most recent tag (if any)
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 
-					if [ -z "$PREVIOUS_TAG" ]; then
-						COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
-					else
-						COMMITS=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges)
-					fi
+          if [ -z "$PREVIOUS_TAG" ]; then
+            COMMITS=$(git log --pretty=format: "- %s (%h)" --no-merges)
+          else
+            COMMITS=$(git log $PREVIOUS_TAG..HEAD --pretty=format: "- %s (%h)" --no-merges)
+          fi
 
-					# Create changelog content
-					CHANGELOG="## Changes in v${{ steps.new_version.outputs.version }}\n\n$COMMITS"
+          # Create changelog content
+          CHANGELOG="## Changes in v${{ steps.new_version.outputs.version }}\n\n$COMMITS"
 
-					# Save to output (multiline)
-					echo "content<<EOF" >> $GITHUB_OUTPUT
-					echo "$CHANGELOG" >> $GITHUB_OUTPUT
-					echo "EOF" >> $GITHUB_OUTPUT
+          # Save to output (multiline)
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
-			- name: Create GitHub Release
-				if: steps.bump_type.outputs.type != 'none'
-				uses: actions/create-release@v1
-				env:
-					GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-				with:
-					tag_name: v${{ steps.new_version.outputs.version }}
-					release_name: Release v${{ steps.new_version.outputs.version }}
-					body: ${{ steps.changelog.outputs.content }}
-					draft: false
-					prerelease: false
+      - name: Create GitHub Release
+        if: steps.bump_type.outputs.type != 'none'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.new_version.outputs.version }}
+          release_name: Release v${{ steps.new_version.outputs.version }}
+          body: ${{ steps.changelog.outputs.content }}
+          draft: false
+          prerelease: false
 
-			- name: Summary
-				if: steps.bump_type.outputs.type != 'none'
-				run: |
-					echo "## 🚀 Release Summary" >> $GITHUB_STEP_SUMMARY
-					echo "" >> $GITHUB_STEP_SUMMARY
-					echo "- **Previous Version:** ${{ steps.current_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-					echo "- **New Version:** ${{ steps.new_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-					echo "- **Bump Type:** ${{ steps.bump_type.outputs.type }}" >> $GITHUB_STEP_SUMMARY
-					echo "- **Tag:** v${{ steps.new_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-					echo "" >> $GITHUB_STEP_SUMMARY
-					echo "### Changelog" >> $GITHUB_STEP_SUMMARY
-					echo "${{ steps.changelog.outputs.content }}" >> $GITHUB_STEP_SUMMARY
+      - name: Summary
+        if: steps.bump_type.outputs.type != 'none'
+        run: |
+          echo "## 🚀 Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Previous Version:** ${{ steps.current_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **New Version:** ${{ steps.new_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bump Type:** ${{ steps.bump_type.outputs.type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag:** v${{ steps.new_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Changelog" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.changelog.outputs.content }}" >> $GITHUB_STEP_SUMMARY
 
-			- name: No version bump
-				if: steps.bump_type.outputs.type == 'none'
-				run: |
-					echo "## ℹ️ No Version Bump" >> $GITHUB_STEP_SUMMARY
-					echo "" >> $GITHUB_STEP_SUMMARY
-					echo "The commit message doesn't match any versioning patterns:" >> $GITHUB_STEP_SUMMARY
-					echo "- \`feat:\` for minor version bump" >> $GITHUB_STEP_SUMMARY
-					echo "- \`fix:\` or \`patch:\`, \`bump:\`, \`maint:\`, or \`refactor:\` for patch version bump" >> $GITHUB_STEP_SUMMARY
-					echo "" >> $GITHUB_STEP_SUMMARY
-					echo "Current version remains: **${{ steps.current_version.outputs.version }}**" >> $GITHUB_STEP_SUMMARY
+      - name: No version bump
+        if: steps.bump_type.outputs.type == 'none'
+        run: |
+          echo "## ℹ️ No Version Bump" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The commit message doesn't match any versioning patterns:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`feat:\` for minor version bump" >> $GITHUB_STEP_SUMMARY
+          echo "- \`fix:\` or \`patch:\`, \`bump:\`, \`maint:\`, or \`refactor:\` for patch version bump" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Current version remains: **${{ steps.current_version.outputs.version }}**" >> $GITHUB_STEP_SUMMARY
