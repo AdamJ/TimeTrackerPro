@@ -10,7 +10,7 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { Calendar, Clock, Edit, RotateCcw } from 'lucide-react';
-import { formatDuration, formatTime, formatDate } from '@/utils/timeUtil';
+import { formatDuration, formatDurationLong, formatTime, formatDate } from '@/utils/timeUtil';
 import { DayRecord } from '@/contexts/TimeTrackingContext';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 
@@ -90,7 +90,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
               <div className="flex items-center space-x-2">
                 <Clock className="w-4 h-4 text-green-600 print:text-black" />
                 <span className="font-semibold text-green-600 print:text-black">
-                  {formatDuration(day.totalDuration)} total
+                  {formatDurationLong(day.totalDuration)}
                 </span>
               </div>
             </div>
@@ -120,7 +120,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 
           {/* Tasks Table */}
           <div className="print:mt-2">
-            <h4 className="font-medium text-gray-900 print:text-black mb-2">
+            <h4 className="font-medium text-gray-900 print:hidden mb-2">
               Tasks ({day.tasks.length})
             </h4>
             <Table>

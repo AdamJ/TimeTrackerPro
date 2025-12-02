@@ -34,7 +34,7 @@ export const MobileNav = memo(function MobileNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-background border-t border-border md:hidden z-40 mobile-nav-ios"
+      className="fixed bottom-0 left-0 right-0 bg-background border-t border-border md:hidden z-40 mobile-nav-ios print:hidden"
       style={{
         paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 0px)'
       }}

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Archive as ArchiveIcon, Database } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import SiteNavigationMenu from '@/components/Navigation';
 
 const ArchiveContent: React.FC = () => {
@@ -51,20 +52,27 @@ const ArchiveContent: React.FC = () => {
     setEditingDay(null);
   };
 
+  const { user, isAuthenticated } = useAuth();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Navigation Header */}
       <SiteNavigationMenu />
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
+      <div className="max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-2">
         <div className="flex items-center justify-between">
           <h1 className="md:text-2xl font-bold text-gray-900 flex items-center space-x-1">
             <Database className="w-6 h-6" />
             <span>Archive</span>
+            {isAuthenticated && user?.email && (
+              <>
+                &nbsp;<span className="hidden md:block">for {user.email}</span>
+              </>
+            )}
           </h1>
         </div>
       </div>
-      <div className="max-w-6xl mx-auto p-6 print:p-4">
+      <div className="max-w-6xl mx-auto p-6 print:p-2">
         {sortedDays.length === 0 ? (
           <Card className="text-center py-12 print:hidden">
             <CardContent>
@@ -79,7 +87,7 @@ const ArchiveContent: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-6 print:space-y-0">
             {/* Summary Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 print:hidden">
               <Card>
