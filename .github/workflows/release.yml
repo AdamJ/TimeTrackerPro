@@ -53,13 +53,13 @@ jobs:
           echo "Commit message / PR title: $COMMIT_MSG"
 
           # Determine bump type based on conventional commit prefix (support optional scope)
-          if echo "$COMMIT_MSG" | grep -qiE "^(feat|feature)(\([^)]*\))?:"; then
+          if echo "$COMMIT_MSG" | grep -qiE "^(feat|feature|fix)(\([^)]*\))?:"; then
             echo "type=minor" >> $GITHUB_OUTPUT
             echo "Version bump: MINOR (feat/feature)"
-          elif echo "$COMMIT_MSG" | grep -qiE "^fix(\([^)]*\))?:"; then
+          elif echo "$COMMIT_MSG" | grep -qiE "^patch(\([^)]*\))?:"; then
             echo "type=patch" >> $GITHUB_OUTPUT
             echo "Version bump: PATCH (fix)"
-          elif echo "$COMMIT_MSG" | grep -qiE "^(patch|bump|maint|chore|refactor)(\([^)]*\))?:"; then
+          elif echo "$COMMIT_MSG" | grep -qiE "^(bump|maint|chore|refactor)(\([^)]*\))?:"; then
             echo "type=patch" >> $GITHUB_OUTPUT
             echo "Version bump: PATCH"
           else
@@ -149,7 +149,7 @@ jobs:
           echo "## ℹ️ No Version Bump" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "The commit message doesn't match any versioning patterns:" >> $GITHUB_STEP_SUMMARY
-          echo "- \`feat:\` for minor version bump" >> $GITHUB_STEP_SUMMARY
-          echo "- \`fix:\` or \`patch:\`, \`bump:\`, \`maint:\`, or \`refactor:\` for patch version bump" >> $GITHUB_STEP_SUMMARY
+          echo "- \`feat:\` or \`fix:\` for minor version bump" >> $GITHUB_STEP_SUMMARY
+          echo "- \`patch:\`, \`bump:\`, \`maint:\`, or \`refactor:\` for patch version bump" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Current version remains: **${{ steps.current_version.outputs.version }}**" >> $GITHUB_STEP_SUMMARY
