@@ -1,6 +1,39 @@
-import { expect, afterEach, vi } from "vitest";
+import { expect, afterEach, vi, beforeAll } from "vitest";
 import { cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
+
+// Mock Supabase before any imports
+vi.mock("@/lib/supabase", () => ({
+	supabase: {
+		auth: {
+			getSession: vi.fn(() => Promise.resolve({ data: { session: null }, error: null })),
+			getUser: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
+			onAuthStateChange: vi.fn(() => ({
+				data: { subscription: { unsubscribe: vi.fn() } }
+			}))
+		},
+		from: vi.fn(() => ({
+			select: vi.fn(() => ({
+				eq: vi.fn(() => Promise.resolve({ data: [], error: null }))
+			})),
+			insert: vi.fn(() => Promise.resolve({ data: null, error: null })),
+			update: vi.fn(() => ({
+				eq: vi.fn(() => Promise.resolve({ data: null, error: null }))
+			})),
+			delete: vi.fn(() => ({
+				eq: vi.fn(() => Promise.resolve({ data: null, error: null }))
+			}))
+		}))
+	},
+	getCachedUser: vi.fn(() => Promise.resolve(null)),
+	clearUserCache: vi.fn()
+}));
+
+// Set required environment variables for tests
+beforeAll(() => {
+	process.env.VITE_SUPABASE_URL = "https://test.supabase.co";
+	process.env.VITE_SUPABASE_ANON_KEY = "test-anon-key";
+});
 
 // Cleanup after each test case (e.g., clearing jsdom)
 afterEach(() => {
