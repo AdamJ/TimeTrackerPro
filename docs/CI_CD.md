@@ -17,9 +17,16 @@ TimeTracker Pro uses GitHub Actions for continuous integration and continuous de
 2. **Setup Node.js** - Configures Node.js 20.x environment
 3. **Install dependencies** - Runs `npm ci` for clean install
 4. **Run linter** - Executes ESLint to check code quality
-5. **Run tests** - Runs the Vitest test suite (41 tests)
-6. **Build project** - Verifies the production build succeeds
+5. **Run tests** - Runs the Vitest test suite (41 tests) with mock Supabase environment
+6. **Build project** - Verifies the production build succeeds with mock Supabase environment
 7. **Upload test results** - Archives test results and coverage (if generated)
+
+**Environment Variables:**
+The workflow sets mock Supabase credentials for testing:
+- `VITE_SUPABASE_URL`: Test URL (not a real Supabase instance)
+- `VITE_SUPABASE_ANON_KEY`: Test key (not a real key)
+
+These are only used for CI/CD and are completely mocked in tests.
 
 **Status Badge:**
 The test workflow status is displayed at the top of the README.md file.

@@ -32,9 +32,15 @@ jobs:
 
       - name: Run tests
         run: npm run test -- --run
+        env:
+          VITE_SUPABASE_URL: https://test.supabase.co
+          VITE_SUPABASE_ANON_KEY: test-key
 
       - name: Build project
         run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://test.supabase.co
+          VITE_SUPABASE_ANON_KEY: test-key
 
       - name: Upload test results
         if: always()
