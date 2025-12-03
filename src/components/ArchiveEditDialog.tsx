@@ -165,8 +165,9 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   };
 
   const handleSaveDay = async () => {
-    // Parse the new date from the input
-    const selectedDate = new Date(dayData.date);
+    // Parse the new date from the input (same as StartDayDialog)
+    const [year, month, dayOfMonth] = dayData.date.split("-").map(Number);
+    const selectedDate = new Date(year, month - 1, dayOfMonth);
 
     // Create new start/end times with the selected date but original times
     const newStartTime = parseTimeInput(dayData.startTime, day.startTime);
