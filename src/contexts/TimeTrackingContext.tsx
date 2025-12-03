@@ -925,24 +925,12 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     const categoryMap = new Map(categories.map(c => [c.id, c]));
 
     let totalRevenue = 0;
-    console.log('💰 Calculating revenue for day:', day.date, 'with', day.tasks.length, 'tasks');
 
     day.tasks.forEach((task) => {
       if (task.project && task.duration && task.category) {
         // Check if both the project and category are billable
         const project = projectMap.get(task.project);
         const category = categoryMap.get(task.category);
-
-        console.log('🔍 Revenue check for task:', {
-          title: task.title,
-          category: task.category,
-          project: task.project,
-          foundCategory: !!category,
-          categoryIsBillable: category?.isBillable,
-          foundProject: !!project,
-          projectIsBillable: project?.isBillable,
-          hourlyRate: project?.hourlyRate
-        });
 
         const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
         const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
@@ -954,15 +942,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           const hours = task.duration / (1000 * 60 * 60);
           const revenue = hours * project.hourlyRate;
           totalRevenue += revenue;
-          console.log('💰 Adding revenue:', revenue, 'for task:', task.title);
-        } else {
-          console.log('🚫 No revenue for task:', task.title, 'because:',
-            !isBillable ? 'not billable' : 'no hourly rate');
         }
       }
     });
 
-    console.log('💰 Total revenue for day:', totalRevenue);
     return Math.round(totalRevenue * 100) / 100;
   };  const getBillableHoursForDay = (day: DayRecord): number => {
     // Create lookup maps for O(1) access (performance optimization)
@@ -976,30 +959,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         const project = projectMap.get(task.project);
         const category = categoryMap.get(task.category);
 
-        // Debug logging
-        console.log('🔍 Checking task billability:', {
-          taskTitle: task.title,
-          taskCategory: task.category,
-          projectName: task.project,
-          foundProject: !!project,
-          foundCategory: !!category,
-          projectIsBillable: project?.isBillable,
-          categoryIsBillable: category?.isBillable,
-          availableCategories: categories.map(c => ({ name: c.name, id: c.id, isBillable: c.isBillable }))
-        });
-
         const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
         const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
 
         // Task is billable only if BOTH project AND category are billable
         const isBillable = projectIsBillable && categoryIsBillable;
-
-        console.log('💰 Task billability result:', {
-          taskTitle: task.title,
-          projectIsBillable,
-          categoryIsBillable,
-          finalIsBillable: isBillable
-        });
 
         if (isBillable) {
           billableTime += task.duration;

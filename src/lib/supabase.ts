@@ -26,12 +26,10 @@ export const getCachedUser = async (): Promise<User> => {
 
   // Check if we have a cached user that's still valid
   if (cachedUser && lastUserCheck && (now.getTime() - lastUserCheck.getTime()) < USER_CACHE_DURATION) {
-    console.log('👤 Using cached user:', cachedUser.id);
     return cachedUser;
   }
 
   // Fetch fresh user data
-  console.log('🔄 Fetching fresh user data...');
   const { data: { user }, error } = await supabase.auth.getUser();
   trackAuthCall('getUser', 'getCachedUser');
 
@@ -44,14 +42,12 @@ export const getCachedUser = async (): Promise<User> => {
   // Cache the user
   cachedUser = user;
   lastUserCheck = now;
-  console.log('✅ User cached:', user.id);
 
   return user;
 };
 
 // Clear user cache (call when user logs out or auth state changes)
 export const clearUserCache = () => {
-  console.log('🗑️ Clearing user cache');
   cachedUser = null;
   lastUserCheck = null;
   // Also clear data caches
@@ -60,7 +56,6 @@ export const clearUserCache = () => {
 
 // Force refresh user cache (call when needed)
 export const refreshUserCache = async (): Promise<User> => {
-  console.log('🔄 Force refreshing user cache...');
   clearUserCache();
   return await getCachedUser();
 };
@@ -88,7 +83,6 @@ export const getCachedProjects = async (): Promise<Project[] | null> => {
   // Check if cache is still valid
   if (cachedProjects && lastProjectsCheck &&
       (now.getTime() - lastProjectsCheck.getTime()) < DATA_CACHE_DURATION) {
-    console.log('📋 Using cached projects:', cachedProjects.length);
     return cachedProjects;
   }
 
@@ -98,7 +92,6 @@ export const getCachedProjects = async (): Promise<Project[] | null> => {
 export const setCachedProjects = (projects: Project[]) => {
   cachedProjects = projects;
   lastProjectsCheck = new Date();
-  console.log('📋 Projects cached:', projects.length);
 };
 
 export const getCachedCategories = async (): Promise<TaskCategory[] | null> => {
@@ -107,7 +100,6 @@ export const getCachedCategories = async (): Promise<TaskCategory[] | null> => {
   // Check if cache is still valid
   if (cachedCategories && lastCategoriesCheck &&
       (now.getTime() - lastCategoriesCheck.getTime()) < DATA_CACHE_DURATION) {
-    console.log('🏷️ Using cached categories:', cachedCategories.length);
     return cachedCategories;
   }
 
@@ -117,11 +109,9 @@ export const getCachedCategories = async (): Promise<TaskCategory[] | null> => {
 export const setCachedCategories = (categories: TaskCategory[]) => {
   cachedCategories = categories;
   lastCategoriesCheck = new Date();
-  console.log('🏷️ Categories cached:', categories.length);
 };
 
 export const clearDataCaches = () => {
-  console.log('🗑️ Clearing data caches');
   cachedProjects = null;
   cachedCategories = null;
   lastProjectsCheck = null;
@@ -132,6 +122,9 @@ export const clearDataCaches = () => {
 let dbCallCount = 0;
 let authCallCount = 0;
 let dbCallLog: Array<{timestamp: Date, operation: string, table?: string, source?: string}> = [];
+
+// Enable verbose database logging only in development mode when explicitly enabled
+const ENABLE_DB_LOGGING = import.meta.env.DEV && import.meta.env.VITE_ENABLE_DB_LOGS === 'true';
 
 export const trackDbCall = (operation: string, table?: string, source?: string) => {
   dbCallCount++;
@@ -150,13 +143,20 @@ export const trackDbCall = (operation: string, table?: string, source?: string) 
     dbCallLog = dbCallLog.slice(-100);
   }
 
-  console.log(`📊 DB Call #${dbCallCount}: ${operation}${table ? ` on ${table}` : ''}${source ? ` from ${source}` : ''} at ${timestamp.toLocaleTimeString()}`);
+  // Only log to console if explicitly enabled
+  if (ENABLE_DB_LOGGING) {
+    console.log(`📊 DB Call #${dbCallCount}: ${operation}${table ? ` on ${table}` : ''}${source ? ` from ${source}` : ''} at ${timestamp.toLocaleTimeString()}`);
+  }
 };
 
 export const trackAuthCall = (operation: string, source?: string) => {
   authCallCount++;
   const timestamp = new Date();
-  console.log(`🔐 Auth Call #${authCallCount}: ${operation}${source ? ` from ${source}` : ''} at ${timestamp.toLocaleTimeString()}`);
+
+  // Only log to console if explicitly enabled
+  if (ENABLE_DB_LOGGING) {
+    console.log(`🔐 Auth Call #${authCallCount}: ${operation}${source ? ` from ${source}` : ''} at ${timestamp.toLocaleTimeString()}`);
+  }
 };
 
 export const getDbCallStats = () => {
