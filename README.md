@@ -1,5 +1,7 @@
 # TimeTracker Pro
 
+[![Run Tests](https://github.com/adamjolicoeur/TimeTrackerPro/actions/workflows/test.yml/badge.svg)](https://github.com/adamjolicoeur/TimeTrackerPro/actions/workflows/test.yml)
+
 A modern, feature-rich Progressive Web App (PWA) for time tracking built with React, TypeScript, and Tailwind CSS. Installable on desktop and mobile devices with full offline support. Perfect for freelancers, consultants, and professionals who need to track time, manage projects, and generate invoices.
 
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white) ![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
