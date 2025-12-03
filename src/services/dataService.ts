@@ -398,7 +398,9 @@ class SupabaseService implements DataService {
       duration: task.duration || undefined,
       project: task.project_name || undefined,
       client: task.client || undefined,
-      category: task.category_name || undefined
+      category: task.category_name || undefined,
+      insertedAt: task.inserted_at ? new Date(task.inserted_at) : undefined,
+      updatedAt: task.updated_at ? new Date(task.updated_at) : undefined
     }));
 
     // Find current task
@@ -712,7 +714,9 @@ class SupabaseService implements DataService {
         duration: task.duration || undefined,
         project: task.project_name || undefined,
         client: task.client || undefined,
-        category: task.category_name || undefined
+        category: task.category_name || undefined,
+        insertedAt: task.inserted_at ? new Date(task.inserted_at) : undefined,
+        updatedAt: task.updated_at ? new Date(task.updated_at) : undefined
       });
     });
 
@@ -729,7 +733,9 @@ class SupabaseService implements DataService {
       totalDuration: day.total_duration,
       startTime: new Date(day.start_time),
       endTime: new Date(day.end_time),
-      notes: day.notes
+      notes: day.notes,
+      insertedAt: day.inserted_at ? new Date(day.inserted_at) : undefined,
+      updatedAt: day.updated_at ? new Date(day.updated_at) : undefined
     }));
 
     console.log('✅ Archived days loaded:', {

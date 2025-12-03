@@ -22,6 +22,8 @@ export interface Task {
   project?: string;
   client?: string;
   category?: string;
+  insertedAt?: Date; // When task was first created in database
+  updatedAt?: Date; // When task was last modified in database
 }
 
 export interface DayRecord {
@@ -32,6 +34,8 @@ export interface DayRecord {
   startTime: Date;
   endTime: Date;
   notes?: string;
+  insertedAt?: Date; // When day was first archived in database
+  updatedAt?: Date; // When day was last modified in database
 }
 
 export interface Project {
@@ -1062,7 +1066,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           // Format timestamps as ISO strings for database compatibility
           const startTimeISO = task.startTime.toISOString();
           const endTimeISO = task.endTime?.toISOString() || '';
-          const currentTimeISO = new Date().toISOString();
+          // Use actual timestamps from database, or current time as fallback
+          const insertedAtISO = task.insertedAt?.toISOString() || new Date().toISOString();
+          const updatedAtISO = task.updatedAt?.toISOString() || new Date().toISOString();
 
           const row = [
             `"${task.id}"`,
@@ -1079,8 +1085,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
             `"${task.category || ''}"`, // category_name (denormalized)
             `"${day.id}"`, // day_record_id
             'false', // is_current - archived tasks are not current
-            `"${currentTimeISO}"`, // inserted_at
-            `"${currentTimeISO}"` // updated_at
+            `"${insertedAtISO}"`, // inserted_at - actual database timestamp
+            `"${updatedAtISO}"` // updated_at - actual database timestamp
           ];
           rows.push(row.join(','));
         }
