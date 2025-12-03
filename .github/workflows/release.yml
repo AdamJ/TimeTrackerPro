@@ -1,9 +1,6 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     types:
       - closed
@@ -12,8 +9,8 @@ on:
 
 jobs:
   release:
-    # Only run if PR was merged or direct push to main
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    # Only run if PR was merged
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -124,15 +121,14 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.bump_type.outputs.type != 'none'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.new_version.outputs.version }}
-          release_name: Release v${{ steps.new_version.outputs.version }}
+          name: Release v${{ steps.new_version.outputs.version }}
           body: ${{ steps.changelog.outputs.content }}
           draft: false
           prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Summary
         if: steps.bump_type.outputs.type != 'none'
