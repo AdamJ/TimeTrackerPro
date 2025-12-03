@@ -242,6 +242,10 @@ class SupabaseService implements DataService {
     const user = await getCachedUser();
     console.log('👤 User authenticated:', user.id);
 
+    // Get categories and projects for proper name resolution
+    const categories = await getCachedCategories();
+    const projects = await getCachedProjects();
+
     try {
       // Start a transaction-like approach with batch operations
 
@@ -307,22 +311,28 @@ class SupabaseService implements DataService {
         }
 
         // 4. Upsert current tasks (single batch operation)
-        const tasksToUpsert = data.tasks.map((task) => ({
-          id: task.id,
-          user_id: user.id,
-          title: task.title,
-          description: task.description || null,
-          start_time: task.startTime.toISOString(),
-          end_time: task.endTime?.toISOString() || null,
-          duration: task.duration || null,
-          project_id: task.project || null,
-          project_name: task.project || null,
-          client: task.client || null,
-          category_id: task.category || null,
-          category_name: task.category || null,
-          day_record_id: null,
-          is_current: true
-        }));
+        const tasksToUpsert = data.tasks.map((task) => {
+          // Look up actual category and project objects to get proper IDs and names
+          const category = categories.find(c => c.id === task.category);
+          const project = projects.find(p => p.name === task.project);
+
+          return {
+            id: task.id,
+            user_id: user.id,
+            title: task.title,
+            description: task.description || null,
+            start_time: task.startTime.toISOString(),
+            end_time: task.endTime?.toISOString() || null,
+            duration: task.duration || null,
+            project_id: project?.id || task.project || null,
+            project_name: task.project || null,
+            client: task.client || null,
+            category_id: task.category || null,
+            category_name: category?.name || null,
+            day_record_id: null,
+            is_current: true
+          };
+        });
 
         console.log('📝 Upserting tasks:', tasksToUpsert.length);
 
@@ -398,7 +408,7 @@ class SupabaseService implements DataService {
       duration: task.duration || undefined,
       project: task.project_name || undefined,
       client: task.client || undefined,
-      category: task.category_name || undefined,
+      category: task.category_id || undefined, // Use category_id, not category_name
       insertedAt: task.inserted_at ? new Date(task.inserted_at) : undefined,
       updatedAt: task.updated_at ? new Date(task.updated_at) : undefined
     }));
@@ -433,6 +443,10 @@ class SupabaseService implements DataService {
     const user = await getCachedUser();
     console.log('👤 User authenticated:', user.id);
 
+    // Get categories and projects for proper name resolution
+    const categories = await getCachedCategories();
+    const projects = await getCachedProjects();
+
     // Validate user ID upfront
     if (!user.id) {
       throw new Error('User ID is null - cannot save archived data');
@@ -461,23 +475,29 @@ class SupabaseService implements DataService {
     }));
 
     const allTasks = days.flatMap((day) =>
-      day.tasks.map((task) => ({
-        id: task.id, // Use original task ID for stable identity
-        user_id: user.id,
-        title: task.title,
-        description: task.description || null,
-        start_time: task.startTime.toISOString(),
-        end_time: task.endTime?.toISOString() || null,
-        duration: task.duration || null,
-        project_id: task.project || null,
-        project_name: task.project || null,
-        client: task.client || null,
-        category_id: task.category || null,
-        category_name: task.category || null,
-        day_record_id: day.id,
-        is_current: false
-        // Note: inserted_at and updated_at are NOT included
-      }))
+      day.tasks.map((task) => {
+        // Look up actual category and project objects to get proper IDs and names
+        const category = categories.find(c => c.id === task.category);
+        const project = projects.find(p => p.name === task.project);
+
+        return {
+          id: task.id, // Use original task ID for stable identity
+          user_id: user.id,
+          title: task.title,
+          description: task.description || null,
+          start_time: task.startTime.toISOString(),
+          end_time: task.endTime?.toISOString() || null,
+          duration: task.duration || null,
+          project_id: project?.id || task.project || null,
+          project_name: task.project || null,
+          client: task.client || null,
+          category_id: task.category || null,
+          category_name: category?.name || null,
+          day_record_id: day.id,
+          is_current: false
+          // Note: inserted_at and updated_at are NOT included
+        };
+      })
     );
 
     console.log('🔄 Prepared data - Days:', archivedDaysToUpsert.length, 'Tasks:', allTasks.length);
@@ -714,7 +734,7 @@ class SupabaseService implements DataService {
         duration: task.duration || undefined,
         project: task.project_name || undefined,
         client: task.client || undefined,
-        category: task.category_name || undefined,
+        category: task.category_id || undefined, // Use category_id, not category_name
         insertedAt: task.inserted_at ? new Date(task.inserted_at) : undefined,
         updatedAt: task.updated_at ? new Date(task.updated_at) : undefined
       });
@@ -751,6 +771,10 @@ class SupabaseService implements DataService {
     updates: Partial<DayRecord>
   ): Promise<void> {
     const user = await getCachedUser();
+
+    // Get categories and projects for proper name resolution
+    const categories = await getCachedCategories();
+    const projects = await getCachedProjects();
 
     const updateData: Record<string, unknown> = {};
 
@@ -803,23 +827,29 @@ class SupabaseService implements DataService {
 
       // Upsert updated tasks (insert new, update existing)
       if (updates.tasks.length > 0) {
-        const tasksToUpsert = updates.tasks.map((task) => ({
-          id: task.id, // Use original task ID for stable identity
-          user_id: user.id,
-          title: task.title,
-          description: task.description || null,
-          start_time: task.startTime.toISOString(),
-          end_time: task.endTime?.toISOString() || null,
-          duration: task.duration || null,
-          project_id: task.project || null,
-          project_name: task.project || null,
-          client: task.client || null,
-          category_id: task.category || null,
-          category_name: task.category || null,
-          day_record_id: dayId,
-          is_current: false
-          // Note: inserted_at and updated_at are NOT included
-        }));
+        const tasksToUpsert = updates.tasks.map((task) => {
+          // Look up actual category and project objects to get proper IDs and names
+          const category = categories.find(c => c.id === task.category);
+          const project = projects.find(p => p.name === task.project);
+
+          return {
+            id: task.id, // Use original task ID for stable identity
+            user_id: user.id,
+            title: task.title,
+            description: task.description || null,
+            start_time: task.startTime.toISOString(),
+            end_time: task.endTime?.toISOString() || null,
+            duration: task.duration || null,
+            project_id: project?.id || task.project || null,
+            project_name: task.project || null,
+            client: task.client || null,
+            category_id: task.category || null,
+            category_name: category?.name || null,
+            day_record_id: dayId,
+            is_current: false
+            // Note: inserted_at and updated_at are NOT included
+          };
+        });
 
         const { error: tasksError } = await supabase
           .from('tasks')

@@ -712,21 +712,23 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       console.log('🔄 Updating archived day:', { dayId, updates });
-      await dataService.updateArchivedDay(dayId, updates);
-      console.log('✅ Database update complete');
 
-      // Update local state
+      // Optimistic update - update local state immediately for responsive UI
       setArchivedDays((prev) =>
         prev.map((day) => (day.id === dayId ? { ...day, ...updates } : day))
       );
 
-      // Force refresh from database to ensure consistency
-      console.log('🔄 Refreshing archived days from database...');
-      const refreshedDays = await dataService.getArchivedDays();
-      setArchivedDays(refreshedDays);
-      console.log('✅ Archived days refreshed');
+      // Then persist to database
+      await dataService.updateArchivedDay(dayId, updates);
+      console.log('✅ Database update complete');
     } catch (error) {
       console.error('❌ Error updating archived day:', error);
+
+      // On error, refresh from database to restore consistent state
+      console.log('⚠️ Rolling back optimistic update...');
+      const refreshedDays = await dataService.getArchivedDays();
+      setArchivedDays(refreshedDays);
+
       throw error; // Re-throw so the UI can handle it
     }
   };
@@ -874,14 +876,17 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       return dayDate >= startDate && dayDate <= endDate;
     });
 
+    // Create lookup maps for O(1) access (performance optimization)
+    const projectMap = new Map(projects.map(p => [p.name, p]));
+    const categoryMap = new Map(categories.map(c => [c.id, c]));
+
     let totalRevenue = 0;
     filteredDays.forEach((day) => {
       day.tasks.forEach((task) => {
         if (task.project && task.duration && task.category) {
           // Check if both the project and category are billable
-          const project = projects.find((p) => p.name === task.project);
-          // Fix: Look up category by ID, not name
-          const category = categories.find((c) => c.id === task.category);
+          const project = projectMap.get(task.project);
+          const category = categoryMap.get(task.category);
 
           const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
           const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
@@ -915,15 +920,18 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const getRevenueForDay = (day: DayRecord): number => {
+    // Create lookup maps for O(1) access (performance optimization)
+    const projectMap = new Map(projects.map(p => [p.name, p]));
+    const categoryMap = new Map(categories.map(c => [c.id, c]));
+
     let totalRevenue = 0;
     console.log('💰 Calculating revenue for day:', day.date, 'with', day.tasks.length, 'tasks');
 
     day.tasks.forEach((task) => {
       if (task.project && task.duration && task.category) {
         // Check if both the project and category are billable
-        const project = projects.find((p) => p.name === task.project);
-        // Fix: Look up category by ID, not name
-        const category = categories.find((c) => c.id === task.category);
+        const project = projectMap.get(task.project);
+        const category = categoryMap.get(task.category);
 
         console.log('🔍 Revenue check for task:', {
           title: task.title,
@@ -957,13 +965,16 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     console.log('💰 Total revenue for day:', totalRevenue);
     return Math.round(totalRevenue * 100) / 100;
   };  const getBillableHoursForDay = (day: DayRecord): number => {
+    // Create lookup maps for O(1) access (performance optimization)
+    const projectMap = new Map(projects.map(p => [p.name, p]));
+    const categoryMap = new Map(categories.map(c => [c.id, c]));
+
     let billableTime = 0;
     day.tasks.forEach((task) => {
       if (task.duration && task.category && task.project) {
         // Check if both the project and category are billable
-        const project = projects.find((p) => p.name === task.project);
-        // Fix: Look up category by ID, not name
-        const category = categories.find((c) => c.id === task.category);
+        const project = projectMap.get(task.project);
+        const category = categoryMap.get(task.category);
 
         // Debug logging
         console.log('🔍 Checking task billability:', {
@@ -994,19 +1005,24 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           billableTime += task.duration;
         }
       }
-    });    // Convert milliseconds to hours
+    });
+
+    // Convert milliseconds to hours
     const hours = billableTime / (1000 * 60 * 60);
     return Math.round(hours * 100) / 100;
   };
 
   const getNonBillableHoursForDay = (day: DayRecord): number => {
+    // Create lookup maps for O(1) access (performance optimization)
+    const projectMap = new Map(projects.map(p => [p.name, p]));
+    const categoryMap = new Map(categories.map(c => [c.id, c]));
+
     let nonBillableTime = 0;
     day.tasks.forEach((task) => {
       if (task.duration && task.category && task.project) {
         // Check if both the project and category are billable
-        const project = projects.find((p) => p.name === task.project);
-        // Fix: Look up category by ID, not name
-        const category = categories.find((c) => c.id === task.category);
+        const project = projectMap.get(task.project);
+        const category = categoryMap.get(task.category);
 
         const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
         const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
@@ -1135,6 +1151,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     startDate: Date,
     endDate: Date
   ) => {
+    // Create lookup maps for O(1) access (performance optimization)
+    const projectMap = new Map(projects.map(p => [p.name, p]));
+    const categoryMap = new Map(categories.map(c => [c.id, c]));
+
     const filteredDays = archivedDays.filter((day) => {
       const dayDate = new Date(day.startTime);
       return dayDate >= startDate && dayDate <= endDate;
@@ -1148,9 +1168,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Only include billable tasks in invoices
         if (task.project && task.category) {
-          const project = projects.find((p) => p.name === task.project);
-          // Fix: Look up category by ID, not name
-          const category = categories.find((c) => c.id === task.category);
+          const project = projectMap.get(task.project);
+          const category = categoryMap.get(task.category);
 
           const projectIsBillable = project?.isBillable !== false;
           const categoryIsBillable = category?.isBillable !== false;
@@ -1169,7 +1188,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     clientTasks.forEach((task) => {
       const projectName = task.project || 'General';
-      const project = projects.find((p) => p.name === task.project);
+      const project = projectMap.get(task.project);
       const hours = (task.duration || 0) / (1000 * 60 * 60);
       const rate = project?.hourlyRate || 0;
 
@@ -1271,6 +1290,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
             continue;
           }
 
+          // Map category name back to category ID for proper storage
+          const categoryByName = categories.find(c => c.name === taskData.category_name);
+          const categoryId = categoryByName?.id || taskData.category_id || undefined;
+
           const task: Task = {
             id: taskData.id,
             title: taskData.title,
@@ -1280,7 +1303,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
             duration: taskData.duration ? parseInt(taskData.duration) : undefined,
             project: taskData.project_name || undefined,
             client: taskData.client || undefined,
-            category: taskData.category_name || undefined,
+            category: categoryId, // Use category ID, not name
           };
 
           // Validate dates
