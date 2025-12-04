@@ -1,16 +1,17 @@
 import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  useRef
-} from 'react';
-import { DEFAULT_CATEGORIES, TaskCategory } from '@/config/categories';
-import { DEFAULT_PROJECTS, ProjectCategory } from '@/config/projects';
-import { useAuth } from '@/hooks/useAuth';
-import { createDataService, DataService } from '@/services/dataService';
-import { useRealtimeSync } from '@/hooks/useRealtimeSync';
+	createContext,
+	useContext,
+	useState,
+	useEffect,
+	useCallback,
+	useRef
+} from "react";
+import { DEFAULT_CATEGORIES, TaskCategory } from "@/config/categories";
+import { DEFAULT_PROJECTS, ProjectCategory } from "@/config/projects";
+import { useAuth } from "@/hooks/useAuth";
+import { createDataService, DataService } from "@/services/dataService";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
+import { generateDailySummary } from "@/utils/timeUtil";
 
 export interface Task {
   id: string;
@@ -58,14 +59,15 @@ export interface TimeEntry {
 }
 
 export interface InvoiceData {
-  client: string;
-  period: { startDate: Date; endDate: Date };
-  projects: { [key: string]: { hours: number; rate: number; amount: number } };
-  summary: {
-    totalHours: number;
-    totalAmount: number;
-  };
-  tasks: Task[];
+	client: string;
+	period: { startDate: Date; endDate: Date };
+	projects: { [key: string]: { hours: number; rate: number; amount: number } };
+	summary: {
+		totalHours: number;
+		totalAmount: number;
+	};
+	tasks: (Task & { dayId: string; dayDate: string; dailySummary: string })[];
+	dailySummaries: { [dayId: string]: { date: string; summary: string } };
 }
 
 interface TimeTrackingContextType {
@@ -1032,11 +1034,18 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       'day_record_id',
       'is_current',
       'inserted_at',
-      'updated_at'
+      'updated_at',
+      'daily_summary'
     ];
     const rows = [headers.join(',')];
 
     filteredDays.forEach((day) => {
+      // Generate daily summary once per day
+      const dayDescriptions = day.tasks
+        .filter((t) => t.description)
+        .map((t) => t.description!);
+      const dailySummary = generateDailySummary(dayDescriptions);
+
       day.tasks.forEach((task) => {
         if (task.duration) {
           const project = projects.find((p) => p.name === task.project);
@@ -1066,7 +1075,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
             `"${day.id}"`, // day_record_id
             'false', // is_current - archived tasks are not current
             `"${insertedAtISO}"`, // inserted_at - actual database timestamp
-            `"${updatedAtISO}"` // updated_at - actual database timestamp
+            `"${updatedAtISO}"`, // updated_at - actual database timestamp
+            `"${dailySummary.replace(/"/g, '""')}"` // daily_summary - escape quotes for CSV
           ];
           rows.push(row.join(','));
         }
@@ -1086,6 +1096,19 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     }
 
+    // Add daily summary to each day
+    const daysWithSummary = filteredDays.map((day) => {
+      const dayDescriptions = day.tasks
+        .filter((t) => t.description)
+        .map((t) => t.description!);
+      const dailySummary = generateDailySummary(dayDescriptions);
+
+      return {
+        ...day,
+        dailySummary
+      };
+    });
+
     const exportData = {
       exportDate: new Date().toISOString(),
       period: {
@@ -1103,7 +1126,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           endDate || new Date()
         )
       },
-      days: filteredDays,
+      days: daysWithSummary,
       projects: projects
     };
 
@@ -1124,26 +1147,49 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       return dayDate >= startDate && dayDate <= endDate;
     });
 
+    // Generate daily summaries for all days in the period
+    const dailySummaries: { [dayId: string]: { date: string; summary: string } } = {};
+    filteredDays.forEach((day) => {
+      const dayDescriptions = day.tasks
+        .filter((t) => t.description)
+        .map((t) => t.description!);
+      const summary = generateDailySummary(dayDescriptions);
+
+      if (summary) {
+        dailySummaries[day.id] = {
+          date: day.date,
+          summary
+        };
+      }
+    });
+
     const clientTasks = filteredDays.flatMap((day) =>
-      day.tasks.filter((task) => {
-        if (!task.client || task.client !== clientName || !task.duration) {
+      day.tasks
+        .filter((task) => {
+          if (!task.client || task.client !== clientName || !task.duration) {
+            return false;
+          }
+
+          // Only include billable tasks in invoices
+          if (task.project && task.category) {
+            const project = projectMap.get(task.project);
+            const category = categoryMap.get(task.category);
+
+            const projectIsBillable = project?.isBillable !== false;
+            const categoryIsBillable = category?.isBillable !== false;
+
+            // Task must be billable to appear on invoice
+            return projectIsBillable && categoryIsBillable;
+          }
+
           return false;
-        }
-
-        // Only include billable tasks in invoices
-        if (task.project && task.category) {
-          const project = projectMap.get(task.project);
-          const category = categoryMap.get(task.category);
-
-          const projectIsBillable = project?.isBillable !== false;
-          const categoryIsBillable = category?.isBillable !== false;
-
-          // Task must be billable to appear on invoice
-          return projectIsBillable && categoryIsBillable;
-        }
-
-        return false;
-      })
+        })
+        .map((task) => ({
+          ...task,
+          dayId: day.id,
+          dayDate: day.date,
+          dailySummary: dailySummaries[day.id]?.summary || ""
+        }))
     );
 
     const projectSummary: {
@@ -1181,7 +1227,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         totalHours: Math.round(totalHours * 100) / 100,
         totalAmount: Math.round(totalAmount * 100) / 100
       },
-      tasks: clientTasks
+      tasks: clientTasks,
+      dailySummaries
     };
   };
 

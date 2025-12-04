@@ -1,18 +1,18 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
-import { Calendar, Clock, Edit, RotateCcw } from 'lucide-react';
-import { formatDuration, formatDurationLong, formatTime, formatDate } from '@/utils/timeUtil';
-import { DayRecord } from '@/contexts/TimeTrackingContext';
-import { useTimeTracking } from '@/hooks/useTimeTracking';
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow
+} from "@/components/ui/table";
+import { Calendar, Clock, Edit, RotateCcw, FileText } from "lucide-react";
+import { formatDuration, formatDurationLong, formatTime, formatDate, generateDailySummary } from "@/utils/timeUtil";
+import { DayRecord } from "@/contexts/TimeTrackingContext";
+import { useTimeTracking } from "@/hooks/useTimeTracking";
 
 interface ArchiveItemProps {
   day: DayRecord;
@@ -117,6 +117,30 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
               </div>
             </div>
           </div>
+
+          {/* Daily Summary */}
+          {(() => {
+            const descriptions = day.tasks
+              .filter((task) => task.description)
+              .map((task) => task.description!);
+            const summary = generateDailySummary(descriptions);
+
+            if (!summary) return null;
+
+            return (
+              <div className="space-y-2 border-t pt-4">
+                <h4 className="font-medium text-gray-900 flex items-center mb-2">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Daily Summary
+                </h4>
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md print:bg-white print:border print:border-gray-300">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 print:text-gray-800 leading-relaxed">
+                    {summary}
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Tasks Table */}
           <div className="print:mt-2">
