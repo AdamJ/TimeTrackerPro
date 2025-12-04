@@ -243,8 +243,8 @@ class SupabaseService implements DataService {
     console.log('👤 User authenticated:', user.id);
 
     // Get categories and projects for proper name resolution
-    const categories = await getCachedCategories();
-    const projects = await getCachedProjects();
+    const categories = await getCachedCategories() || [];
+    const projects = await getCachedProjects() || [];
 
     try {
       // Start a transaction-like approach with batch operations
@@ -444,8 +444,8 @@ class SupabaseService implements DataService {
     console.log('👤 User authenticated:', user.id);
 
     // Get categories and projects for proper name resolution
-    const categories = await getCachedCategories();
-    const projects = await getCachedProjects();
+    const categories = await getCachedCategories() || [];
+    const projects = await getCachedProjects() || [];
 
     // Validate user ID upfront
     if (!user.id) {
