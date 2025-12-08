@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   TimeTrackingProvider,
   DayRecord
@@ -8,6 +8,7 @@ import { ArchiveItem } from '@/components/ArchiveItem';
 import { ArchiveEditDialog } from '@/components/ArchiveEditDialog';
 import { ExportDialog } from '@/components/ExportDialog';
 import { ProjectManagement } from '@/components/ProjectManagement';
+import { ArchiveFilter, ArchiveFilterState } from '@/components/ArchiveFilter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Archive as ArchiveIcon, Database } from 'lucide-react';
@@ -18,31 +19,72 @@ import SiteNavigationMenu from '@/components/Navigation';
 const ArchiveContent: React.FC = () => {
   const {
     archivedDays,
-    getTotalHoursForPeriod,
-    getRevenueForPeriod,
     getHoursWorkedForDay,
     getBillableHoursForDay,
-    getNonBillableHoursForDay
+    getNonBillableHoursForDay,
+    getRevenueForDay,
+    projects,
+    categories
   } = useTimeTracking();
   const [editingDay, setEditingDay] = useState<DayRecord | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showProjectManagement, setShowProjectManagement] = useState(false);
+  const [filters, setFilters] = useState<ArchiveFilterState>({
+    startDate: "",
+    endDate: "",
+    project: "",
+    category: ""
+  });
 
-  // Sort archived days from newest to oldest
-  const sortedDays = [...archivedDays].sort(
-    (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-  );
+  // Filter and sort archived days
+  const filteredDays = useMemo(() => {
+    let filtered = [...archivedDays];
 
-  // Calculate summary stats
-  const totalHours =
-    archivedDays.length > 0
-      ? getTotalHoursForPeriod(new Date(0), new Date())
-      : 0;
-  const totalHoursWorked = archivedDays.reduce((sum, day) => sum + getHoursWorkedForDay(day), 0);
-  const totalBillableHours = archivedDays.reduce((sum, day) => sum + getBillableHoursForDay(day), 0);
-  const totalNonBillableHours = archivedDays.reduce((sum, day) => sum + getNonBillableHoursForDay(day), 0);
-  const totalRevenue =
-    archivedDays.length > 0 ? getRevenueForPeriod(new Date(0), new Date()) : 0;
+    // Apply date range filter
+    if (filters.startDate) {
+      const startDate = new Date(filters.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      filtered = filtered.filter(day => {
+        const dayDate = new Date(day.startTime);
+        dayDate.setHours(0, 0, 0, 0);
+        return dayDate >= startDate;
+      });
+    }
+
+    if (filters.endDate) {
+      const endDate = new Date(filters.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(day => {
+        const dayDate = new Date(day.startTime);
+        return dayDate <= endDate;
+      });
+    }
+
+    // Apply project filter
+    if (filters.project) {
+      filtered = filtered.filter(day =>
+        day.tasks.some(task => task.project === filters.project)
+      );
+    }
+
+    // Apply category filter
+    if (filters.category) {
+      filtered = filtered.filter(day =>
+        day.tasks.some(task => task.category === filters.category)
+      );
+    }
+
+    // Sort from newest to oldest
+    return filtered.sort(
+      (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+    );
+  }, [archivedDays, filters]);
+
+  // Calculate summary stats based on filtered days
+  const totalHoursWorked = filteredDays.reduce((sum, day) => sum + getHoursWorkedForDay(day), 0);
+  const totalBillableHours = filteredDays.reduce((sum, day) => sum + getBillableHoursForDay(day), 0);
+  const totalNonBillableHours = filteredDays.reduce((sum, day) => sum + getNonBillableHoursForDay(day), 0);
+  const totalRevenue = filteredDays.reduce((sum, day) => sum + getRevenueForDay(day), 0);
 
   const handleEdit = (day: DayRecord) => {
     setEditingDay(day);
@@ -73,7 +115,7 @@ const ArchiveContent: React.FC = () => {
         </div>
       </div>
       <div className="max-w-6xl mx-auto p-6 print:p-2">
-        {sortedDays.length === 0 ? (
+        {filteredDays.length === 0 && archivedDays.length === 0 ? (
           <Card className="text-center py-12 print:hidden">
             <CardContent>
               <ArchiveIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -88,18 +130,41 @@ const ArchiveContent: React.FC = () => {
           </Card>
         ) : (
           <div className="space-y-6 print:space-y-0">
-            {/* Summary Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 print:hidden">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {sortedDays.length}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    Total Days Tracked
-                  </div>
+            {/* Filter Component */}
+            <ArchiveFilter
+              filters={filters}
+              onFilterChange={setFilters}
+              projects={projects}
+              categories={categories}
+            />
+
+            {filteredDays.length === 0 ? (
+              <Card className="text-center py-12">
+                <CardContent>
+                  <ArchiveIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <CardTitle className="mb-2">No Results Found</CardTitle>
+                  <p className="text-gray-600 mb-4">
+                    No archived days match your filter criteria.
+                  </p>
+                  <Button onClick={() => setFilters({ startDate: "", endDate: "", project: "", category: "" })}>
+                    Reset Filters
+                  </Button>
                 </CardContent>
               </Card>
+            ) : (
+              <>
+                {/* Summary Stats */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 print:hidden">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {filteredDays.length}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Days Shown
+                      </div>
+                    </CardContent>
+                  </Card>
               <Card>
                 <CardContent className="p-4">
                   <div className="text-2xl font-bold text-green-600">
@@ -137,12 +202,14 @@ const ArchiveContent: React.FC = () => {
               </Card>
             </div>
 
-            {/* Archived Days */}
-            <div className="space-y-4">
-              {sortedDays.map((day) => (
-                <ArchiveItem key={day.id} day={day} onEdit={handleEdit} />
-              ))}
-            </div>
+                {/* Archived Days */}
+                <div className="space-y-4">
+                  {filteredDays.map((day) => (
+                    <ArchiveItem key={day.id} day={day} onEdit={handleEdit} />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
