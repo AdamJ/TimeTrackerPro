@@ -646,8 +646,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         // Show success notification to user
         toast({
           title: "Day Archived Successfully",
-          description: `${dayRecord.tasks.length} task(s) archived for ${dayRecord.date}`,
-          duration: 5000
+          description: `${dayRecord.tasks.length} task(s) archived for ${dayRecord.date}`
         });
 
       } catch (error) {
@@ -679,8 +678,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         toast({
           title: "Archive Failed",
           description: `Failed to archive day data: ${error instanceof Error ? error.message : 'Unknown error'}. Your current day has been restored. Please try archiving again.`,
-          variant: "destructive",
-          duration: 7000
+          variant: "destructive"
         });
       }
     }
