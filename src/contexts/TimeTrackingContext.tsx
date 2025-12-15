@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { createDataService, DataService } from "@/services/dataService";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { generateDailySummary } from "@/utils/timeUtil";
+import { toast } from "@/hooks/use-toast";
 
 export interface Task {
   id: string;
@@ -642,7 +643,12 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         });
         console.log('✅ Cleared current day state saved');
 
-        // TODO: Add user notification of successful archive
+        // Show success notification to user
+        toast({
+          title: "Day Archived Successfully",
+          description: `${dayRecord.tasks.length} task(s) archived for ${dayRecord.date}`,
+          duration: 5000
+        });
 
       } catch (error) {
         console.error('❌ CRITICAL ERROR saving archived day:', error);
@@ -669,9 +675,13 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
         console.log('🔄 Restored current day state after failed archive');
 
-        // TODO: Show user error notification
-        // This should display a toast/alert to the user about the archive failure
-        alert(`Failed to archive day data: ${error.message}\n\nYour current day has been restored. Please try archiving again.`);
+        // Show error notification to user
+        toast({
+          title: "Archive Failed",
+          description: `Failed to archive day data: ${error instanceof Error ? error.message : 'Unknown error'}. Your current day has been restored. Please try archiving again.`,
+          variant: "destructive",
+          duration: 7000
+        });
       }
     }
   };
