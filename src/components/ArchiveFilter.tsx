@@ -13,6 +13,7 @@ import {
 import { X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Project } from '@/contexts/TimeTrackingContext';
 import { TaskCategory } from '@/config/categories';
+import { ResetIcon } from '@radix-ui/react-icons';
 
 export interface ArchiveFilterState {
   startDate: string;
@@ -53,7 +54,7 @@ export const ArchiveFilter: React.FC<ArchiveFilterProps> = ({
 
   return (
     <Card className="print:hidden">
-      <CardContent className="pt-6">
+      <CardContent className="p-4 md:p-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <button
@@ -74,7 +75,7 @@ export const ArchiveFilter: React.FC<ArchiveFilterProps> = ({
               disabled={!isFilterActive}
               className="flex items-center space-x-2"
             >
-              <X className="w-4 h-4" />
+              <ResetIcon className="w-4 h-4" />
               <span>Reset</span>
             </Button>
           </div>
