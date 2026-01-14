@@ -37,7 +37,7 @@ export const ArchiveFilter: React.FC<ArchiveFilterProps> = ({
   projects,
   categories
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleReset = () => {
     onFilterChange({

@@ -465,7 +465,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                     <TableRow>
                       <TableHead>Task</TableHead>
                       <TableHead>Category</TableHead>
-                      <TableHead>Project</TableHead>
+                      <TableHead>Project/Client</TableHead>
                       <TableHead>Start Time</TableHead>
                       <TableHead>End Time</TableHead>
                       <TableHead>Duration</TableHead>
@@ -482,11 +482,13 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                           <TableCell className="font-medium">
                             <div className="min-w-[150px]">
                               <div>{task.title}</div>
-                              {task.description && (
-                                <div className="text-sm text-gray-500 mt-1">
-                                  {task.description}
-                                </div>
-                              )}
+                              <span className="hidden lg:block">
+                                {task.description && (
+                                  <div className="text-sm text-gray-500 mt-1">
+                                    {task.description}
+                                  </div>
+                                )}
+                              </span>
                             </div>
                           </TableCell>
                           <TableCell>
