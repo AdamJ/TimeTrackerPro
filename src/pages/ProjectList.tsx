@@ -357,9 +357,7 @@ const ProjectContent: React.FC = () => {
 
 const ProjectList: React.FC = () => {
   return (
-    <TimeTrackingProvider>
-      <ProjectContent />
-    </TimeTrackingProvider>
+    <ProjectContent />
   );
 };
 

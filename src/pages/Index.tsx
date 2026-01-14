@@ -99,35 +99,35 @@ const TimeTrackerContent = () => {
       <SiteNavigationMenu />
       {/* Main Content */}
       {!isDayStarted ? (
-      <div className="max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="md:text-2xl font-bold text-gray-900 flex items-center space-x-1">
-              <DashboardIcon className="w-6 h-6 mr-1" />
-              <span>Dashboard</span>
-            </h1>
-          </div>
-          {/* Summary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-blue-600">
-                  {sortedDays.length}
-                </div>
-                <div className="text-sm text-gray-600">Days Tracked</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-green-600">
-                  {totalHours}h
-                </div>
-                <div className="text-sm text-gray-600">Total Hours</div>
-              </CardContent>
-            </Card>
+        <div className="max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h1 className="md:text-2xl font-bold text-gray-900 flex items-center space-x-1">
+                <DashboardIcon className="w-6 h-6 mr-1" />
+                <span>Dashboard</span>
+              </h1>
+            </div>
+            {/* Summary Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {sortedDays.length}
+                  </div>
+                  <div className="text-sm text-gray-600">Days Tracked</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-green-600">
+                    {totalHours}h
+                  </div>
+                  <div className="text-sm text-gray-600">Total Hours</div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
-      </div>
       ) : null}
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         <StartDayDialog
@@ -182,14 +182,14 @@ const TimeTrackerContent = () => {
                 ))}
               </div>
             )}
-              <Button
-                variant="outline"
-                onClick={handleEndDay}
-                className="w-full font-bold bg-red-50 border-red-700 text-red-700 hover:bg-red-100 hover:text-red-700"
-              >
-                <CircleStop className="w-4 h-4" />
-                End Day
-              </Button>
+            <Button
+              variant="outline"
+              onClick={handleEndDay}
+              className="w-full font-bold bg-red-50 border-red-700 text-red-700 hover:bg-red-100 hover:text-red-700"
+            >
+              <CircleStop className="w-4 h-4" />
+              End Day
+            </Button>
           </>
         )}
       </div>
@@ -199,9 +199,7 @@ const TimeTrackerContent = () => {
 
 const Index = () => {
   return (
-    <TimeTrackingProvider>
-      <TimeTrackerContent />
-    </TimeTrackingProvider>
+    <TimeTrackerContent />
   );
 };
 

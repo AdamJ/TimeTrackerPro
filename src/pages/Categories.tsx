@@ -200,11 +200,10 @@ const CategoryContent: React.FC = () => {
                           onClick={() =>
                             setFormData((prev) => ({ ...prev, color }))
                           }
-                          className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${
-                            formData.color === color
+                          className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${formData.color === color
                               ? 'border-gray-800'
                               : 'border-gray-300'
-                          }`}
+                            }`}
                           style={{ backgroundColor: color }}
                         />
                       ))}
@@ -277,11 +276,10 @@ const CategoryContent: React.FC = () => {
                               <h4 className="font-semibold text-gray-900">
                                 {category.name}
                               </h4>
-                              <span className={`px-2 py-1 text-xs rounded-full ${
-                                category.isBillable !== false
+                              <span className={`px-2 py-1 text-xs rounded-full ${category.isBillable !== false
                                   ? 'bg-green-100 text-green-800'
                                   : 'bg-gray-100 text-gray-800'
-                              }`}>
+                                }`}>
                                 {category.isBillable !== false ? 'Billable' : 'Non-billable'}
                               </span>
                             </div>
@@ -325,9 +323,7 @@ const CategoryContent: React.FC = () => {
 
 const Categories: React.FC = () => {
   return (
-    <TimeTrackingProvider>
-      <CategoryContent />
-    </TimeTrackingProvider>
+    <CategoryContent />
   );
 };
 
