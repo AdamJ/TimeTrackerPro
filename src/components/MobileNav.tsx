@@ -16,14 +16,14 @@ export const MobileNav = memo(function MobileNav() {
       label: 'Home'
     },
     {
-      path: '/archive',
-      icon: Archive,
-      label: 'Archive'
-    },
-    {
       path: '/projectlist',
       icon: FolderKanban,
       label: 'Projects'
+    },
+    {
+      path: '/archive',
+      icon: Archive,
+      label: 'Archive'
     },
     {
       path: '/settings',
@@ -44,11 +44,10 @@ export const MobileNav = memo(function MobileNav() {
           <Link
             key={path}
             to={path}
-            className={`flex flex-col items-center justify-center space-y-1 transition-colors touch-manipulation ${
-              isActive(path)
+            className={`flex flex-col items-center justify-center space-y-1 transition-colors touch-manipulation ${isActive(path)
                 ? 'text-primary'
                 : 'text-muted-foreground hover:text-foreground'
-            }`}
+              }`}
             aria-label={label}
             aria-current={isActive(path) ? 'page' : undefined}
           >

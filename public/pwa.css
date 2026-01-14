@@ -51,6 +51,7 @@ button,
 
 /* Landscape mode optimizations */
 @media (orientation: landscape) and (max-height: 500px) {
+
   /* Compact header for landscape mobile */
   header {
     height: 48px;
@@ -65,6 +66,7 @@ button,
 
 /* Standalone mode specific styles (when app is installed) */
 @media (display-mode: standalone) {
+
   /* Add subtle indication that app is installed */
   body::before {
     content: "";
@@ -92,7 +94,8 @@ body {
 @media (max-width: 768px) {
   button:not(.icon-only) {
     min-height: 44px;
-    padding: 0.75rem 1rem;
+    min-width: 44px;
+    /* padding: 0.75rem 1rem; */
   }
 
   /* Larger tap targets for icon buttons */
@@ -108,9 +111,12 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -134,6 +140,7 @@ body {
 
 /* iOS specific fixes */
 @supports (-webkit-touch-callout: none) {
+
   /* Fix iOS safari bounce */
   body {
     position: fixed;
@@ -193,6 +200,7 @@ body {
 
 /* Android specific fixes */
 @media (max-width: 768px) {
+
   /* Prevent address bar from covering content */
   .mobile-viewport {
     min-height: 100vh;

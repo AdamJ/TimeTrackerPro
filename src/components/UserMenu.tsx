@@ -40,7 +40,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onSignInClick }) => {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
           <UserCheck className="h-4 w-4" />
-          <span className="hidden md:block">{user?.email}</span>
+          <span className="hidden lg:block">{user?.email}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

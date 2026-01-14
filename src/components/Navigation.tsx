@@ -43,85 +43,85 @@ const SiteNavigationMenu = () => {
 
   return (
     <>
-    <NavigationMenu className="relative bg-gradient-to-br from-gray-50 to-blue-50 print:hidden hidden md:block">
-      <List className="flex items-center justify-between px-8 py-4 m-0 list-none rounded-md bg-white p-1 shadow-sm">
-        <Item className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 flex">
-            <Link
-              to="/"
-              className="flex items-center text-gray-900 hover:text-blue-700"
-            >
-              <img src="favicon-96x96.png" alt="Logo" className="w-8 h-8 sm:mr-2" />
-              <span className="hidden sm:block">TimeTracker</span>
-            </Link>
-          </h1>
-          {isDayStarted && tasks.length > 0 && (
-            <span className="ml-4 text-lg text-gray-900 font-bold inline-flex">
-              <CalendarClock className="mr-1 text-gray-900" />
-              {formatDuration(runningTime)}
-            </span>
-          )}
-        </Item>
-        <div className="flex space-x-4">
-          <Item>
-            <SyncStatus
-              isAuthenticated={isAuthenticated}
-              lastSyncTime={lastSyncTime}
-              isSyncing={isSyncing}
-              hasUnsavedChanges={hasUnsavedChanges}
-              onRefresh={forceSyncToDatabase}
-            />
+      <NavigationMenu className="relative bg-gradient-to-br from-gray-50 to-blue-50 print:hidden block">
+        <List className="flex items-center justify-between px-4 py-2 md:px-8 md:py-4 m-0 list-none rounded-md bg-white p-1 shadow-sm">
+          <Item className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900 flex">
+              <Link
+                to="/"
+                className="flex items-center text-gray-900 hover:text-blue-700"
+              >
+                <img src="favicon-96x96.png" alt="Logo" className="w-8 h-8 sm:mr-2" />
+                <span className="hidden lg:block">TimeTracker</span>
+              </Link>
+            </h1>
+            {isDayStarted && tasks.length > 0 && (
+              <span className="ml-4 text-lg text-gray-900 font-bold inline-flex">
+                <CalendarClock className="mr-1 text-gray-900" />
+                {formatDuration(runningTime)}
+              </span>
+            )}
           </Item>
-          <Item>
-            <Button
-              onClick={handlePrint}
-              variant="outline"
-              className="flex items-center space-x-2"
-            >
-              <Printer className="w-4 h-4" />
-              <span className="hidden sm:block">Print</span>
-            </Button>
-          </Item>
-          <Item>
-            <NavLink
-              to="/settings"
-              className={({ isActive }) =>
-                `transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input ... ${isActive ? 'bg-blue-200 hover:bg-accent hover:text-accent-foreground' : 'bg-white'}`
-              }
-            >
-              <CogIcon className="w-4 h-4" />
-              <span className="hidden sm:block">Settings</span>
-            </NavLink>
-          </Item>
-          <Item>
-            <div className="flex space-x-4">
-              <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
-            </div>
-          </Item>
+          <div className="flex space-x-4">
+            <Item>
+              <SyncStatus
+                isAuthenticated={isAuthenticated}
+                lastSyncTime={lastSyncTime}
+                isSyncing={isSyncing}
+                hasUnsavedChanges={hasUnsavedChanges}
+                onRefresh={forceSyncToDatabase}
+              />
+            </Item>
+            <Item className="hidden md:flex">
+              <Button
+                onClick={handlePrint}
+                variant="outline"
+                className="flex items-center space-x-2"
+              >
+                <Printer className="w-4 h-4" />
+                <span className="hidden lg:block">Print</span>
+              </Button>
+            </Item>
+            <Item className="hidden md:flex">
+              <NavLink
+                to="/settings"
+                className={({ isActive }) =>
+                  `transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input ... ${isActive ? 'bg-blue-200 hover:bg-accent hover:text-accent-foreground' : 'bg-white'}`
+                }
+              >
+                <CogIcon className="w-4 h-4" />
+                <span className="hidden lg:block">Settings</span>
+              </NavLink>
+            </Item>
+            <Item>
+              <div className="flex">
+                <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
+              </div>
+            </Item>
+          </div>
+        </List>
+
+        <div className="perspective-[2000px] absolute left-0 top-full flex w-full justify-center">
+          <Viewport
+            className="relative mt-2.5 h-[var(--radix-navigation-menu-viewport-height)] w-full origin-[top_center] overflow-hidden rounded-md bg-white transition-[width,_height] duration-300 data-[state=closed]:animate-scaleOut data-[state=open]:animate-scaleIn sm:w-[var(--radix-navigation-menu-viewport-width)]"
+          />
         </div>
-      </List>
+      </NavigationMenu>
 
-      <div className="perspective-[2000px] absolute left-0 top-full flex w-full justify-center">
-        <Viewport
-          className="relative mt-2.5 h-[var(--radix-navigation-menu-viewport-height)] w-full origin-[top_center] overflow-hidden rounded-md bg-white transition-[width,_height] duration-300 data-[state=closed]:animate-scaleOut data-[state=open]:animate-scaleIn sm:w-[var(--radix-navigation-menu-viewport-width)]"
-        />
-      </div>
-    </NavigationMenu>
+      <AuthDialog
+        isOpen={showAuthDialog}
+        onClose={() => setShowAuthDialog(false)}
+      />
 
-    <AuthDialog
-      isOpen={showAuthDialog}
-      onClose={() => setShowAuthDialog(false)}
-    />
+      <ExportDialog
+        isOpen={showExportDialog}
+        onClose={() => setShowExportDialog(false)}
+      />
 
-    <ExportDialog
-      isOpen={showExportDialog}
-      onClose={() => setShowExportDialog(false)}
-    />
-
-    <ProjectManagement
-      isOpen={showProjectManagement}
-      onClose={() => setShowProjectManagement(false)}
-    />
+      <ProjectManagement
+        isOpen={showProjectManagement}
+        onClose={() => setShowProjectManagement(false)}
+      />
     </>
   );
 };
