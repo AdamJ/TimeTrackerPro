@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, Save } from 'lucide-react';
 import { Task } from '@/contexts/TimeTrackingContext';
@@ -235,223 +236,233 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Task Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Task Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="title">
-                  Task Title <span className="text-red-700">*</span>
-                </Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  placeholder="Enter task title"
-                />
-              </div>
+          <Tabs defaultValue="details" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="time">Time</TabsTrigger>
+            </TabsList>
 
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      description: e.target.value
-                    }))
-                  }
-                  placeholder="Enter task description (optional)"
-                  className="min-h-[80px] resize-none"
-                />
-              </div>
+            {/* Task Details */}
+            <TabsContent value="details">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Task Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="title">
+                      Task Title <span className="text-red-700">*</span>
+                    </Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, title: e.target.value }))
+                      }
+                      placeholder="Enter task title"
+                    />
+                  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Category</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({ ...prev, category: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category">
-                        {formData.category && formData.category !== 'none' ? (
-                          <div className="flex items-center space-x-2">
-                            <div
-                              className="w-3 h-3 rounded-full border"
-                              style={{
-                                backgroundColor:
-                                  categories.find(
-                                    (c) => c.id === formData.category
-                                  )?.color || '#gray'
-                              }}
-                            />
-                            <span>
-                              {
-                                categories.find(
-                                  (c) => c.id === formData.category
-                                )?.name
-                              }
-                            </span>
-                          </div>
-                        ) : (
-                          'Select category'
-                        )}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No category</SelectItem>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          <div className="flex items-center space-x-2">
-                            <div
-                              className="w-3 h-3 rounded-full border"
-                              style={{ backgroundColor: category.color }}
-                            />
-                            <span>{category.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          description: e.target.value
+                        }))
+                      }
+                      placeholder="Enter task description (optional)"
+                      className="min-h-[80px] resize-none"
+                    />
+                  </div>
 
-                <div>
-                  <Label>Project</Label>
-                  <Select
-                    value={formData.project}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({ ...prev, project: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select project">
-                        {formData.project && formData.project !== 'none' ? (
-                          <div className="flex flex-col">
-                            <span>
-                              {
-                                projects.find((p) => p.id === formData.project)
-                                  ?.name
-                              }
-                            </span>
-                            <span className="text-sm text-gray-500">
-                              {
-                                projects.find((p) => p.id === formData.project)
-                                  ?.client
-                              }
-                            </span>
-                          </div>
-                        ) : (
-                          'Select project'
-                        )}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No project</SelectItem>
-                      {projects.map((project) => (
-                        <SelectItem key={project.id} value={project.id}>
-                          <div className="flex flex-col">
-                            <span>{project.name}</span>
-                            <span className="text-sm text-gray-500">
-                              {project.client}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Time Adjustment */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Time Adjustment</CardTitle>
-              <p className="text-sm text-gray-600">
-                Times are automatically rounded to the nearest 15-minute
-                interval
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-sm text-gray-600 mb-4">
-                <p>Date: {formatDate(task.startTime)}</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Start Time</Label>
-                  <Select
-                    value={timeData.startTime}
-                    onValueChange={(value) =>
-                      setTimeData((prev) => ({ ...prev, startTime: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select start time" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-60">
-                      {timeOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>
-                    End Time {!task.endTime && '(Currently Active)'}
-                  </Label>
-                  <Select
-                    value={timeData.endTime}
-                    onValueChange={(value) =>
-                      setTimeData((prev) => ({ ...prev, endTime: value }))
-                    }
-                    disabled={!task.endTime}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          task.endTime ? 'Select end time' : 'Task is active'
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Category</Label>
+                      <Select
+                        value={formData.category}
+                        onValueChange={(value) =>
+                          setFormData((prev) => ({ ...prev, category: value }))
                         }
-                      />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-60">
-                      {timeOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category">
+                            {formData.category && formData.category !== 'none' ? (
+                              <div className="flex items-center space-x-2">
+                                <div
+                                  className="w-3 h-3 rounded-full border"
+                                  style={{
+                                    backgroundColor:
+                                      categories.find(
+                                        (c) => c.id === formData.category
+                                      )?.color || '#gray'
+                                  }}
+                                />
+                                <span>
+                                  {
+                                    categories.find(
+                                      (c) => c.id === formData.category
+                                    )?.name
+                                  }
+                                </span>
+                              </div>
+                            ) : (
+                              'Select category'
+                            )}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No category</SelectItem>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              <div className="flex items-center space-x-2">
+                                <div
+                                  className="w-3 h-3 rounded-full border"
+                                  style={{ backgroundColor: category.color }}
+                                />
+                                <span>{category.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-              {/* Current Values Display */}
-              <div className="bg-gray-50 p-3 rounded-md text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="font-medium">Current Start:</span>{' '}
-                    {formatTime(task.startTime)}
+                    <div>
+                      <Label>Project</Label>
+                      <Select
+                        value={formData.project}
+                        onValueChange={(value) =>
+                          setFormData((prev) => ({ ...prev, project: value }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select project">
+                            {formData.project && formData.project !== 'none' ? (
+                              <div className="flex flex-col">
+                                <span>
+                                  {
+                                    projects.find((p) => p.id === formData.project)
+                                      ?.name
+                                  }
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                  {
+                                    projects.find((p) => p.id === formData.project)
+                                      ?.client
+                                  }
+                                </span>
+                              </div>
+                            ) : (
+                              'Select project'
+                            )}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No project</SelectItem>
+                          {projects.map((project) => (
+                            <SelectItem key={project.id} value={project.id}>
+                              <div className="flex flex-col">
+                                <span>{project.name}</span>
+                                <span className="text-sm text-gray-500">
+                                  {project.client}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div>
-                    <span className="font-medium">Current End:</span>{' '}
-                    {task.endTime ? formatTime(task.endTime) : 'Active'}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="time">
+              {/* Time Adjustment */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Time Adjustment</CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Times are automatically rounded to the nearest 15-minute
+                    interval
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-sm text-gray-600 mb-4">
+                    <p>Date: {formatDate(task.startTime)}</p>
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Start Time</Label>
+                      <Select
+                        value={timeData.startTime}
+                        onValueChange={(value) =>
+                          setTimeData((prev) => ({ ...prev, startTime: value }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select start time" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label>
+                        End Time {!task.endTime && '(Currently Active)'}
+                      </Label>
+                      <Select
+                        value={timeData.endTime}
+                        onValueChange={(value) =>
+                          setTimeData((prev) => ({ ...prev, endTime: value }))
+                        }
+                        disabled={!task.endTime}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              task.endTime ? 'Select end time' : 'Task is active'
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Current Values Display */}
+                  <div className="bg-gray-50 p-3 rounded-md text-sm">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="font-medium">Current Start:</span>{' '}
+                        {formatTime(task.startTime)}
+                      </div>
+                      <div>
+                        <span className="font-medium">Current End:</span>{' '}
+                        {task.endTime ? formatTime(task.endTime) : 'Active'}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-2">

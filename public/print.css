@@ -1,5 +1,5 @@
-
 @media print {
+
   /* Reset margins and hide unnecessary elements */
   * {
     -webkit-print-color-adjust: exact !important;
@@ -13,6 +13,7 @@
     color: black !important;
     background: white !important;
   }
+
   .bg-gradient-to-br {
     background-image: none !important;
   }
@@ -164,11 +165,15 @@
   }
 
   /* Ensure proper spacing */
-  .space-y-4 > * + * {
+  .space-y-6>*+* {
+    margin-top: 18pt !important;
+  }
+
+  .space-y-4>*+* {
     margin-top: 12pt !important;
   }
 
-  .space-y-2 > * + * {
+  .space-y-2>*+* {
     margin-top: 6pt !important;
   }
 
