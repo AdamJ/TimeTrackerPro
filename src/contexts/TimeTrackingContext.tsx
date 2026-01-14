@@ -1,10 +1,10 @@
 import React, {
-	createContext,
-	useContext,
-	useState,
-	useEffect,
-	useCallback,
-	useRef
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef
 } from "react";
 import { DEFAULT_CATEGORIES, TaskCategory } from "@/config/categories";
 import { DEFAULT_PROJECTS, ProjectCategory } from "@/config/projects";
@@ -60,15 +60,15 @@ export interface TimeEntry {
 }
 
 export interface InvoiceData {
-	client: string;
-	period: { startDate: Date; endDate: Date };
-	projects: { [key: string]: { hours: number; rate: number; amount: number } };
-	summary: {
-		totalHours: number;
-		totalAmount: number;
-	};
-	tasks: (Task & { dayId: string; dayDate: string; dailySummary: string })[];
-	dailySummaries: { [dayId: string]: { date: string; summary: string } };
+  client: string;
+  period: { startDate: Date; endDate: Date };
+  projects: { [key: string]: { hours: number; rate: number; amount: number } };
+  summary: {
+    totalHours: number;
+    totalAmount: number;
+  };
+  tasks: (Task & { dayId: string; dayDate: string; dailySummary: string })[];
+  dailySummaries: { [dayId: string]: { date: string; summary: string } };
 }
 
 interface TimeTrackingContextType {
@@ -462,15 +462,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   // 2. Window close (beforeunload)
   // 3. Manual sync button
 
-  // Track changes to mark as unsaved
-  useEffect(() => {
-    // Mark as having unsaved changes whenever state changes
-    // (but not during initial loading)
-    if (!loading && dataService) {
-      setHasUnsavedChanges(true);
-    }
-  }, [isDayStarted, dayStartTime, tasks, currentTask, archivedDays, projects, categories, loading, dataService]);
-
   // Save on window close to prevent data loss
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -498,6 +489,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     const now = startDateTime || new Date();
     setIsDayStarted(true);
     setDayStartTime(now);
+    setHasUnsavedChanges(true);
     console.log('Day started at:', now);
   };
 
@@ -522,6 +514,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       setCurrentTask(null);
     }
     setIsDayStarted(false);
+    setHasUnsavedChanges(true);
     console.log('🔚 Day ended - saving state...');
     // Save immediately since this is a critical action
     saveImmediately().then(() => {
@@ -568,6 +561,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     setTasks((prev) => [...prev, newTask]);
     setCurrentTask(newTask);
+    setHasUnsavedChanges(true);
     console.log('New task started:', title, 'at', taskStartTime);
     // Save immediately since this is a critical action
     saveImmediately();
@@ -580,6 +574,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     if (currentTask?.id === taskId) {
       setCurrentTask((prev) => (prev ? { ...prev, ...updates } : null));
     }
+    setHasUnsavedChanges(true);
     console.log('Task updated:', taskId, updates);
   };
 
@@ -588,6 +583,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     if (currentTask?.id === taskId) {
       setCurrentTask(null);
     }
+    setHasUnsavedChanges(true);
     console.log('Task deleted:', taskId);
   };
 
@@ -643,6 +639,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         });
         console.log('✅ Cleared current day state saved');
 
+        setHasUnsavedChanges(false);
+
         // Show success notification to user
         toast({
           title: "Day Archived Successfully",
@@ -693,6 +691,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       id: Date.now().toString()
     };
     setProjects((prev) => [...prev, newProject]);
+    setHasUnsavedChanges(true);
     console.log('📋 Project added (not saved automatically)');
   };
 
@@ -702,17 +701,20 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         project.id === projectId ? { ...project, ...updates } : project
       )
     );
+    setHasUnsavedChanges(true);
     console.log('📋 Project updated (not saved automatically)');
   };
 
   const deleteProject = (projectId: string) => {
     setProjects((prev) => prev.filter((project) => project.id !== projectId));
+    setHasUnsavedChanges(true);
     console.log('📋 Project deleted (not saved automatically)');
   };
 
   const resetProjectsToDefaults = () => {
     const defaultProjects = convertDefaultProjects(DEFAULT_PROJECTS);
     setProjects(defaultProjects);
+    setHasUnsavedChanges(true);
   };
 
   // Archive management functions
@@ -732,6 +734,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Then persist to database
       await dataService.updateArchivedDay(dayId, updates);
+      setHasUnsavedChanges(false);
       console.log('✅ Database update complete');
     } catch (error) {
       console.error('❌ Error updating archived day:', error);
@@ -778,6 +781,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     // Remove from archive
     setArchivedDays((prev) => prev.filter((day) => day.id !== dayId));
 
+    setHasUnsavedChanges(true);
     console.log('Day restored from archive');
   };
 
@@ -788,6 +792,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       id: Date.now().toString()
     };
     setCategories((prev) => [...prev, newCategory]);
+    setHasUnsavedChanges(true);
     console.log('🏷️ Category added (not saved automatically)');
   };
 
@@ -800,6 +805,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         category.id === categoryId ? { ...category, ...updates } : category
       )
     );
+    setHasUnsavedChanges(true);
     console.log('🏷️ Category updated (not saved automatically)');
   };
 
@@ -807,6 +813,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setCategories((prev) =>
       prev.filter((category) => category.id !== categoryId)
     );
+    setHasUnsavedChanges(true);
     console.log('🏷️ Category deleted (not saved automatically)');
   };
 
@@ -845,13 +852,14 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       setCurrentTask((prev) =>
         prev
           ? {
-              ...prev,
-              startTime: roundedStartTime,
-              endTime: roundedEndTime
-            }
+            ...prev,
+            startTime: roundedStartTime,
+            endTime: roundedEndTime
+          }
           : null
       );
     }
+    setHasUnsavedChanges(true);
   };
 
   const getTotalDayDuration = () => {
@@ -959,7 +967,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     return Math.round(totalRevenue * 100) / 100;
-  };  const getBillableHoursForDay = (day: DayRecord): number => {
+  }; const getBillableHoursForDay = (day: DayRecord): number => {
     // Create lookup maps for O(1) access (performance optimization)
     const projectMap = new Map(projects.map(p => [p.name, p]));
     const categoryMap = new Map(categories.map(c => [c.id, c]));

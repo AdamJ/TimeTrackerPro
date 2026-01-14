@@ -226,9 +226,7 @@ const SettingsContent: React.FC = () => {
 
 const Settings: React.FC = () => {
   return (
-    <TimeTrackingProvider>
-      <SettingsContent />
-    </TimeTrackingProvider>
+    <SettingsContent />
   );
 };
 

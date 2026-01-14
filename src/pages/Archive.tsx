@@ -165,42 +165,42 @@ const ArchiveContent: React.FC = () => {
                       </div>
                     </CardContent>
                   </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-green-600">
-                    {totalBillableHours.toFixed(1)}h
-                  </div>
-                  <div className="text-sm text-gray-600">Billable Hours</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-gray-600">
-                    {totalNonBillableHours.toFixed(1)}h
-                  </div>
-                  <div className="text-sm text-gray-600">Non-billable Hours</div>
-                  <div className="text-xs text-gray-500">
-                    {totalHoursWorked.toFixed(1)}h total work
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-purple-600">
-                    ${totalRevenue.toFixed(2)}
-                  </div>
-                  <div className="text-sm text-gray-600">Total Revenue</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-orange-600">
-                    ${totalBillableHours > 0 ? (totalRevenue / totalBillableHours).toFixed(2) : '0.00'}
-                  </div>
-                  <div className="text-sm text-gray-600">Avg Billable Rate</div>
-                </CardContent>
-              </Card>
-            </div>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold text-green-600">
+                        {totalBillableHours.toFixed(1)}h
+                      </div>
+                      <div className="text-sm text-gray-600">Billable Hours</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold text-gray-600">
+                        {totalNonBillableHours.toFixed(1)}h
+                      </div>
+                      <div className="text-sm text-gray-600">Non-billable Hours</div>
+                      <div className="text-xs text-gray-500">
+                        {totalHoursWorked.toFixed(1)}h total work
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold text-purple-600">
+                        ${totalRevenue.toFixed(2)}
+                      </div>
+                      <div className="text-sm text-gray-600">Total Revenue</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold text-orange-600">
+                        ${totalBillableHours > 0 ? (totalRevenue / totalBillableHours).toFixed(2) : '0.00'}
+                      </div>
+                      <div className="text-sm text-gray-600">Avg Billable Rate</div>
+                    </CardContent>
+                  </Card>
+                </div>
 
                 {/* Archived Days */}
                 <div className="space-y-4">
@@ -238,9 +238,7 @@ const ArchiveContent: React.FC = () => {
 
 const Archive: React.FC = () => {
   return (
-    <TimeTrackingProvider>
-      <ArchiveContent />
-    </TimeTrackingProvider>
+    <ArchiveContent />
   );
 };
 

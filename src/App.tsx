@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OfflineProvider } from "@/contexts/OfflineContext";
+import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
 import { Suspense, lazy } from "react";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { UpdateNotification } from "@/components/UpdateNotification";
@@ -27,26 +28,28 @@ const PageLoader = () => (
 const App = () => (
   <OfflineProvider>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/projectlist" element={<ProjectList />} />
-              <Route path="/categories" element={<Categories />} />
-              <Route path="/archive" element={<Archive />} />
-              <Route path="/settings" element={<Settings />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <MobileNav />
-          </Suspense>
-        </BrowserRouter>
-        <InstallPrompt />
-        <UpdateNotification />
-      </TooltipProvider>
+      <TimeTrackingProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/projectlist" element={<ProjectList />} />
+                <Route path="/categories" element={<Categories />} />
+                <Route path="/archive" element={<Archive />} />
+                <Route path="/settings" element={<Settings />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <MobileNav />
+            </Suspense>
+          </BrowserRouter>
+          <InstallPrompt />
+          <UpdateNotification />
+        </TooltipProvider>
+      </TimeTrackingProvider>
     </AuthProvider>
   </OfflineProvider>
 );
