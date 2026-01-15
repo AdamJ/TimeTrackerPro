@@ -23,7 +23,7 @@ interface NewTaskFormProps {
 }
 
 export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
-  const { projects, categories, tasks } = useTimeTracking();
+  const { projects, categories, tasks, endDay } = useTimeTracking();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedProject, setSelectedProject] = useState<string>('');
@@ -143,6 +143,9 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
             <Button
               type="button"
               onClick={() => {
+                if (tasks.length === 0) {
+                  endDay();
+                }
                 setIsOpen(false);
                 setTitle('');
                 setDescription('');
