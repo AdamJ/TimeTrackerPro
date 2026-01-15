@@ -23,12 +23,12 @@ interface NewTaskFormProps {
 }
 
 export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
-  const { projects, categories } = useTimeTracking();
+  const { projects, categories, tasks } = useTimeTracking();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(tasks.length === 0);
 
   const selectedProjectData = projects.find((p) => p.id === selectedProject);
   const selectedCategoryData = categories.find(
