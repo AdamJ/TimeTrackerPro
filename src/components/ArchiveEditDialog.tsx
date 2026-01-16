@@ -1,23 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { Callout } from '@/components/ui/callout';
-import { InfoCircledIcon } from '@radix-ui/react-icons';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle
+} from "@/components/ui/dialog";
+import { Callout } from "@/components/ui/callout";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -395,20 +397,37 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                       </Select>
                     </div>
                   </div>
-                  <div>
-                    <Label>Notes</Label>
-                    <Textarea
-                      value={dayData.notes}
-                      onChange={(e) =>
-                        setDayData((prev) => ({
-                          ...prev,
-                          notes: e.target.value
-                        }))
-                      }
-                      placeholder="Add notes about this day (optional)"
-                      className="min-h-[80px] resize-none"
-                    />
-                  </div>
+									<div>
+										<Label>Notes</Label>
+										<Tabs defaultValue="edit" className="w-full">
+											<TabsList className="grid w-full grid-cols-2">
+												<TabsTrigger value="edit">Edit</TabsTrigger>
+												<TabsTrigger value="preview">Preview</TabsTrigger>
+											</TabsList>
+											<TabsContent value="edit">
+												<Textarea
+													value={dayData.notes}
+													onChange={(e) =>
+														setDayData((prev) => ({
+															...prev,
+															notes: e.target.value
+														}))
+													}
+													placeholder="Add notes about this day (optional, supports Markdown)"
+													className="min-h-[80px] resize-none"
+												/>
+											</TabsContent>
+											<TabsContent value="preview">
+												<div className="w-full min-h-[80px] p-3 border rounded-md bg-background">
+													{dayData.notes ? (
+														<MarkdownDisplay content={dayData.notes} />
+													) : (
+														<p className="text-sm text-muted-foreground">No notes to preview</p>
+													)}
+												</div>
+											</TabsContent>
+										</Tabs>
+									</div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm">
@@ -443,12 +462,14 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                       {tasks.length} total
                     </span>
                   </div>
-                  {day.notes && (
-                    <div className="col-span-2">
-                      <span className="font-medium text-gray-900">Notes:</span>
-                      <p className="mt-1 text-gray-600">{day.notes}</p>
-                    </div>
-                  )}
+									{day.notes && (
+										<div className="col-span-2">
+											<span className="font-medium text-gray-900">Notes:</span>
+											<div className="mt-1 text-gray-600">
+												<MarkdownDisplay content={day.notes} />
+											</div>
+										</div>
+									)}
                 </div>
               )}
             </CardContent>
@@ -480,16 +501,16 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                       return (
                         <TableRow key={task.id}>
                           <TableCell className="font-medium">
-                            <div className="min-w-[150px]">
-                              <div>{task.title}</div>
-                              <span className="hidden lg:block">
-                                {task.description && (
-                                  <div className="text-sm text-gray-500 mt-1">
-                                    {task.description}
-                                  </div>
-                                )}
-                              </span>
-                            </div>
+														<div className="min-w-[150px]">
+															<div>{task.title}</div>
+															<span className="hidden lg:block">
+																{task.description && (
+																	<div className="text-sm text-gray-500 mt-1">
+																		<MarkdownDisplay content={task.description} />
+																	</div>
+																)}
+															</span>
+														</div>
                           </TableCell>
                           <TableCell>
                             {category && (
@@ -725,20 +746,37 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
             />
           </div>
 
-          <div>
-            <Label>Description</Label>
-            <Textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  description: e.target.value
-                }))
-              }
-              placeholder="Enter task description (optional)"
-              className="min-h-[80px] resize-none"
-            />
-          </div>
+					<div>
+						<Label>Description</Label>
+						<Tabs defaultValue="edit" className="w-full">
+							<TabsList className="grid w-full grid-cols-2">
+								<TabsTrigger value="edit">Edit</TabsTrigger>
+								<TabsTrigger value="preview">Preview</TabsTrigger>
+							</TabsList>
+							<TabsContent value="edit">
+								<Textarea
+									value={formData.description}
+									onChange={(e) =>
+										setFormData((prev) => ({
+											...prev,
+											description: e.target.value
+										}))
+									}
+									placeholder="Enter task description (optional, supports Markdown)"
+									className="min-h-[80px] resize-none"
+								/>
+							</TabsContent>
+							<TabsContent value="preview">
+								<div className="w-full min-h-[80px] p-3 border rounded-md bg-background">
+									{formData.description ? (
+										<MarkdownDisplay content={formData.description} />
+									) : (
+										<p className="text-sm text-muted-foreground">No description to preview</p>
+									)}
+								</div>
+							</TabsContent>
+						</Tabs>
+					</div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>

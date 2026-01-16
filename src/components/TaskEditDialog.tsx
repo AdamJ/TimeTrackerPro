@@ -1,27 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Save } from 'lucide-react';
-import { Task } from '@/contexts/TimeTrackingContext';
-import { useTimeTracking } from '@/hooks/useTimeTracking';
-import { formatTime, formatDate } from '@/utils/timeUtil';
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MarkdownDisplay } from "@/components/MarkdownDisplay";
+import { Clock, Save } from "lucide-react";
+import { Task } from "@/contexts/TimeTrackingContext";
+import { useTimeTracking } from "@/hooks/useTimeTracking";
+import { formatTime, formatDate } from "@/utils/timeUtil";
 
 interface TaskEditDialogProps {
   task: Task;
@@ -263,21 +264,38 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          description: e.target.value
-                        }))
-                      }
-                      placeholder="Enter task description (optional)"
-                      className="min-h-[80px] resize-none"
-                    />
-                  </div>
+									<div>
+										<Label htmlFor="description">Description</Label>
+										<Tabs defaultValue="edit" className="w-full">
+											<TabsList className="grid w-full grid-cols-2">
+												<TabsTrigger value="edit">Edit</TabsTrigger>
+												<TabsTrigger value="preview">Preview</TabsTrigger>
+											</TabsList>
+											<TabsContent value="edit">
+												<Textarea
+													id="description"
+													value={formData.description}
+													onChange={(e) =>
+														setFormData((prev) => ({
+															...prev,
+															description: e.target.value
+														}))
+													}
+													placeholder="Enter task description (optional, supports Markdown)"
+													className="min-h-[80px] resize-none"
+												/>
+											</TabsContent>
+											<TabsContent value="preview">
+												<div className="w-full min-h-[80px] p-3 border rounded-md bg-background">
+													{formData.description ? (
+														<MarkdownDisplay content={formData.description} />
+													) : (
+														<p className="text-sm text-muted-foreground">No description to preview</p>
+													)}
+												</div>
+											</TabsContent>
+										</Tabs>
+									</div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
