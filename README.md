@@ -1,102 +1,346 @@
 # TimeTracker Pro
 
-[![Run Tests](https://github.com/adamjolicoeur/TimeTrackerPro/actions/workflows/test.yml/badge.svg)](https://github.com/adamjolicoeur/TimeTrackerPro/actions/workflows/test.yml)
-
 A modern, feature-rich Progressive Web App (PWA) for time tracking built with React, TypeScript, and Tailwind CSS. Installable on desktop and mobile devices with full offline support. Perfect for freelancers, consultants, and professionals who need to track time, manage projects, and generate invoices.
 
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white) ![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
 
 ## 📑 Table of Contents
 
-- [Progressive Web App Features](#-progressive-web-app-features)
-- [Authentication & Data Storage](#-authentication--data-storage)
-- [Features](#-features)
-- [Quick Start](#-quick-start)
-- [Installation as PWA](#-installation-as-pwa)
-- [Usage Guide](#-usage-guide)
-- [Technical Details](#-technical-details)
-- [Styling Markdown](#-styling-markdown)
+**For Users:**
+
+- [What is TimeTracker Pro?](#-what-is-timetracker-pro)
+- [Key Features](#-key-features)
 - [Perfect For](#-perfect-for)
-- [Development](#-development)
+- [Quick Start](#-quick-start)
+- [How to Use](#-how-to-use)
+- [Progressive Web App](#-progressive-web-app)
+
+**For Developers:**
+
+- [Development Setup](#-development-setup)
+- [Technical Architecture](#-technical-architecture)
+- [Authentication & Storage](#-authentication--storage)
+- [Development Workflow](#-development-workflow)
 - [Documentation](#-documentation)
+
+**Screenshots:**
+
+- [iOS](#-ios-screenshots)- [Dashboard](screenshots/iOS/01TimeTrackerPro-iOS.png)
+
+**Additional:**
+
 - [License](#-license)
+- [Credits](#-credits)
 
-## 📱 Progressive Web App Features
+---
 
-**TimeTracker Pro is a fully-featured Progressive Web App!**
+## 🎯 What is TimeTracker Pro?
 
-### Install Like a Native App
+TimeTracker Pro is a professional time tracking application that helps you monitor where your time goes throughout the workday. Unlike complex enterprise tools, TimeTracker Pro focuses on simplicity while providing powerful features for freelancers, consultants, and professionals.
 
-- ✅ **Desktop Installation**: Install from Chrome, Edge, or Firefox on Windows, Mac, and Linux
-- ✅ **Mobile Installation**: Add to home screen on iOS (Safari) and Android (Chrome)
-- ✅ **Standalone Mode**: Launches in its own window without browser UI
-- ✅ **App Icon**: Professional app icon on your device
-- ✅ **Splash Screen**: Native-like launch experience
+**Core Concept:**
 
-### Work Offline
+1. **Start your day** - Click one button to begin tracking
+2. **Create tasks** - Add tasks as you work on different projects
+3. **End your day** - Review your summary and archive the day
+4. **Export data** - Generate invoices, CSV reports, or JSON exports
 
-- ✅ **Full Offline Support**: Continue tracking time without internet connection
-- ✅ **Service Worker**: Intelligent caching for instant loading
-- ✅ **Offline Queue**: Actions sync automatically when connection restored
-- ✅ **Smart Caching**: Static assets cached for blazing-fast performance
-- ✅ **Background Sync**: Data syncs even when app is closed
+**Works Your Way:**
 
-### Mobile-Optimized
+- **No Account Required** - Start tracking immediately with local storage
+- **Optional Cloud Sync** - Sign in to sync across devices
+- **Offline First** - Full functionality without internet connection
+- **Install as App** - Works like a native app on desktop and mobile
 
-- ✅ **Touch-Friendly**: 44×44px minimum touch targets
-- ✅ **Bottom Navigation**: Easy thumb access on mobile devices
-- ✅ **Safe Areas**: Proper spacing for notched devices (iPhone X+)
-- ✅ **Responsive Design**: Adapts to any screen size
-- ✅ **Landscape Support**: Optimized for both orientations
+---
 
-### Smart Updates
+## ✨ Key Features
 
-- ✅ **Auto-Update**: New versions install automatically
-- ✅ **Update Notifications**: Prompts to refresh when updates available
-- ✅ **Install Prompts**: Smart timing for installation suggestions
-- ✅ **Version Management**: Seamless updates without data loss
+### Time Tracking Essentials
 
-## 🔐 Authentication & Data Storage
+- **Daily Time Tracking** - Start/stop your workday with clear boundaries
+- **Task Management** - Create, edit, and delete tasks with real-time duration tracking
+- **Rich Text Support** - Add detailed notes with GitHub Flavored Markdown (tables, lists, formatting)
+- **Automatic Calculations** - Duration and revenue calculated automatically
+- **Archive System** - Permanent record of all completed work days
 
-**NEW**: TimeTracker Pro now supports both authenticated and guest usage!
+### Organization Tools
 
-- **🔄 Cloud Sync**: Sign in with Supabase to sync data across devices
-- **💾 Local Storage**: Use without an account - data stays on your device
-- **🔄 Data Migration**: Existing data automatically migrates when you sign in
-- **⚡ Offline-First**: Full functionality available with or without internet
-- **🎯 Manual Sync**: Optimized for single-device usage with on-demand syncing
+- **Projects & Clients** - Organize work by project with hourly rates
+- **Custom Categories** - Flexible categorization with custom colors
+- **Billable vs Non-Billable** - Track which time can be invoiced
+- **Visual Organization** - Color-coded categories for quick identification
 
-See [AUTHENTICATION.md](docs/AUTHENTICATION.md) for detailed setup instructions.
+### Professional Features
 
-## ✨ Features
+- **Revenue Tracking** - Automatic earnings calculation based on hourly rates
+- **Invoice Generation** - Export invoice-ready data filtered by client and date range
+- **Multiple Export Formats** - CSV, JSON, and invoice formats
+- **CSV Import** - Import existing time data from other tools
+- **Print Support** - Print-friendly archive views for physical records
 
-### Core Time Tracking
+### Progressive Web App
 
-- **Start/Stop Day Tracking**: Begin and end your work day with clear boundaries
-- **Task Management**: Create, edit, and delete tasks with real-time duration tracking
-- **Project & Client Organization**: Assign tasks to specific projects and clients
-- **Category Management**: Organize tasks with billable/non-billable categories
-- **Persistent Data**: Data saved to localStorage (guest) or Supabase (authenticated)
+- **Install Like Native** - Add to home screen or applications folder
+- **Full Offline Support** - Continue working without internet
+- **Mobile Optimized** - Touch-friendly with bottom navigation
+- **Auto-Updates** - New versions install seamlessly
+- **Cross-Platform** - Works on Windows, Mac, Linux, iOS, and Android
 
-### Advanced Features
+---
 
-- **Archive System**: Complete days are archived with full task details and history
-- **Category System**: Flexible categorization with billable/non-billable flags
-- **Export Capabilities**: Export data as CSV or JSON for external use
-- **Invoice Generation**: Generate invoice data for specific clients and date ranges
-- **Project Management**: Create projects with hourly rates and client assignments
-- **Print Support**: Print-friendly archive views for physical records
+## 🎯 Perfect For
 
-### Professional Tools
+- **Freelancers** - Track billable hours and generate client invoices
+- **Consultants** - Organize time by project and client with revenue tracking
+- **Remote Workers** - Submit detailed timesheets to employers
+- **Students** - Track study time and project work efficiently
+- **Small Businesses** - Monitor project time and profitability
+- **Anyone** - Who needs professional time tracking without the complexity
 
-- **Revenue Tracking**: Automatic calculation of earnings based on hourly rates
-- **Billable Hours Tracking**: Separate billable and non-billable time
-- **Time Analytics**: View total hours and revenue across all projects
-- **Data Export**: Multiple export formats for integration with accounting software
-- **CSV Import**: Import existing time data from compatible CSV files
-- **Mobile Responsive**: Works seamlessly on desktop and mobile devices
+---
 
 ## 🚀 Quick Start
+
+**Option 1: Use Online** (No installation required)
+
+1. Visit the hosted version (if available) or run locally
+2. Click "Start Day" to begin tracking
+3. Add tasks throughout your day
+4. Click "End Day" and archive when finished
+
+**Option 2: Install Locally**
+
+```bash
+# Clone the repository
+git clone https://github.com/AdamJ/TimeTrackerPro.git
+
+# Navigate to project directory
+cd TimeTrackerPro
+
+# Install dependencies
+npm install
+
+# Start the application
+npm run dev
+```
+
+The application will be available at **<http://localhost:8080>**
+
+**First Time Setup:**
+
+1. Open the app in your browser
+2. Click "Start Day" to begin tracking time
+3. (Optional) Click "Sign In" to enable cloud sync across devices
+4. (Optional) Set up projects and categories for better organization
+
+That's it! No complex configuration required.
+
+---
+
+## 📱 How to Use
+
+### Daily Workflow
+
+**Morning:**
+
+1. Click "Start Day" button to begin tracking
+2. The timer starts automatically
+
+**Throughout the Day:**
+3. Click "New Task" to create a task
+4. Fill in task details:
+
+- **Title** (required) - Brief description of the work
+- **Description** (optional) - Detailed notes with markdown support
+- **Project** (optional) - Assign to a client/project
+- **Category** (optional) - Categorize the work type
+
+1. Task duration calculates automatically
+2. Create new tasks as you switch between different work items
+
+**Evening:**
+7. Click "End Day" when you're finished working
+8. Review your day summary (total time, revenue, task breakdown)
+9. Click "Post Time to Archive" to save permanently
+
+**Ongoing:**
+
+- View archived days in the **Archive** page
+- Manage projects and rates in **Archive → Projects**
+- Customize categories in the **Categories** page
+- Export data via **Archive → Export**
+
+### Project Management
+
+**Setting Up Projects:**
+
+1. Navigate to **Archive** page
+2. Click **Projects** button
+3. Click **Add Project**
+4. Enter project details:
+   - Project name
+   - Client name
+   - Hourly rate
+   - Mark as billable/non-billable
+5. Assign projects to tasks when creating them
+
+**Benefits:**
+
+- Automatic revenue calculation based on hourly rates
+- Filter archives by project
+- Generate client-specific invoices
+- Track time and earnings per project
+
+### Category Management
+
+**Customizing Categories:**
+
+1. Navigate to **Categories** page from the main menu
+2. View default categories or create new ones
+3. Click **Add Category** to create custom categories
+4. Customize each category:
+   - Category name
+   - Color (for visual identification)
+   - Billable flag (for invoice generation)
+
+**Default Categories:**
+
+- Meeting, Development, Design, Research
+- Administration, Testing, Documentation
+- Client Communication
+
+### Data Export & Import
+
+**Exporting Data:**
+
+1. Navigate to **Archive** page
+2. Click **Export** button
+3. Choose export format:
+   - **CSV** - For Excel, Google Sheets, or accounting software
+   - **JSON** - For programmatic access or backup
+   - **Invoice** - Client-ready invoice format
+4. Filter by date range, project, or client
+5. Download the file
+
+**Importing Data:**
+
+1. Prepare a CSV file using the template format (see [CSV Templates](docs/CSV_TEMPLATES_README.md))
+2. Use the import functionality (coming soon) or test scripts:
+
+   ```bash
+   npm run test-csv-import
+   ```
+
+### Markdown in Task Descriptions
+
+Task descriptions support **GitHub Flavored Markdown (GFM)** for rich formatting:
+
+**Supported Features:**
+
+- **Bold** and *italic* text
+- Lists (bulleted and numbered)
+- Task lists with checkboxes
+- Tables
+- ~~Strikethrough~~
+- Links
+- Code blocks
+- Headings
+- Automatic line breaks
+
+**Example:**
+
+```markdown
+## Client Meeting Notes
+
+**Attendees:** John, Sarah, Mike
+
+**Topics Discussed:**
+1. Q1 project timeline
+2. Budget approval
+3. Design mockups
+
+**Action Items:**
+- [ ] Send meeting minutes
+- [ ] Update project roadmap
+- [ ] Schedule follow-up
+
+**Next Meeting:** 2024-02-15
+```
+
+This renders beautifully in the task view with proper formatting and styling.
+
+---
+
+## 📲 Progressive Web App
+
+### Installing as an App
+
+**Desktop (Chrome/Edge/Firefox):**
+
+1. Open TimeTracker Pro in your browser
+2. Look for the install icon (⊕) in the address bar
+3. Click "Install" when prompted
+4. The app opens in its own window
+5. Find it in your Applications folder or Start menu
+
+**iOS (Safari):**
+
+1. Open TimeTracker Pro in Safari
+2. Tap the Share button (□↑)
+3. Scroll and tap "Add to Home Screen"
+4. Tap "Add" to confirm
+    - Toggle "Open as Web App" to "On"
+5. Find the app icon on your home screen
+
+**Android (Chrome):**
+
+1. Open TimeTracker Pro in Chrome
+2. Tap the menu (⋮) in the top-right
+3. Tap "Install app" or "Add to Home screen"
+4. Follow the prompts
+5. Find the app in your app drawer
+
+### PWA Features
+
+**Offline Capability:**
+
+- Continue tracking time without internet
+- All features work offline
+- Data syncs automatically when connection restored
+- Service worker caches app for instant loading
+
+**Mobile Optimized:**
+
+- Bottom navigation for easy thumb access
+- 44×44px minimum touch targets (accessibility compliant)
+- Safe area support for notched devices (iPhone X+)
+- Responsive design adapts to any screen size
+- Landscape and portrait orientations supported
+
+**Seamless Updates:**
+
+- New versions install automatically
+- Update notification prompts you to refresh
+- No data loss during updates
+- Version management handled transparently
+
+**Native-Like Experience:**
+
+- Standalone window without browser UI
+- Professional app icon
+- Splash screen on launch
+- Fast, responsive interactions
+
+---
+
+## 🔧 Development Setup
+
+### Prerequisites
+
+- **Node.js** 18+ and npm
+- **Git** for version control
+- (Optional) **Supabase account** for cloud sync features
 
 ### Installation
 
@@ -109,149 +353,585 @@ cd TimeTrackerPro
 
 # Install dependencies
 npm install
+```
 
-# 🔒 OPTIONAL: Setup environment variables for cloud sync
+### Environment Setup (Optional)
+
+Cloud sync and authentication require Supabase credentials:
+
+```bash
+# Copy environment template
 cp .env.example .env
-# Edit .env with your Supabase credentials (see .env.example for instructions)
+
+# Edit .env and add your credentials
+# VITE_SUPABASE_URL=https://your-project.supabase.co
+# VITE_SUPABASE_ANON_KEY=your_anon_key_here
+```
+
+**Getting Supabase Credentials:**
+
+1. Create a free account at [supabase.com](https://supabase.com)
+2. Create a new project
+3. Go to Settings → API
+4. Copy the Project URL and anon/public key
+5. Paste into your `.env` file
+
+**⚠️ Security Note:** Never commit `.env` to version control!
+
+### Development Server
+
+```bash
+# Start development server
+npm run dev
+
+# Open in browser
+# http://localhost:8080
+```
+
+### Available Commands
+
+```bash
+# Development
+npm run dev              # Start dev server (localhost:8080)
+npm run build            # Build for production
+npm run build:dev        # Build with development mode
+npm run preview          # Preview production build
+
+# Code Quality
+npm run lint             # Run ESLint for code quality
+npm run test             # Run Vitest unit tests
+
+# PWA Screenshots
+npm run screenshots:install   # Install Playwright browsers (first time)
+npm run screenshots           # Capture PWA screenshots (headless)
+npm run screenshots:headed    # Capture screenshots with visible browser
+
+# CSV Import Testing
+npm run test-csv-import       # Test standard CSV import
+npm run test-full-import      # Test full CSV import functionality
+npm run test-error-handling   # Test CSV error handling
+```
+
+---
+
+## 🏗 Technical Architecture
+
+### Technology Stack
+
+**Core Framework:**
+
+- **React 18** - Modern UI framework with hooks and concurrent features
+- **TypeScript 5.8** - Type safety and enhanced developer experience
+- **Vite 5** - Lightning-fast build tool with SWC for optimal performance
+
+**UI & Styling:**
+
+- **Tailwind CSS 3** - Utility-first CSS framework
+- **@tailwindcss/typography** - Beautiful markdown rendering
+- **shadcn/ui** - Accessible component library built on Radix UI
+- **Radix UI** - Unstyled, accessible component primitives
+- **Radix Icons** - Icon library (primary)
+- **Lucide React** - Icon library (fallback)
+
+**State & Data:**
+
+- **React Context API** - Global state management
+- **React Hook Form** - Form state management with validation
+- **Zod** - Schema validation for forms and data
+- **Local Storage** - Browser storage for offline data persistence
+- **Supabase** (optional) - PostgreSQL database and authentication
+
+**PWA & Performance:**
+
+- **Vite PWA Plugin** - Service worker and manifest generation
+- **Workbox** - Advanced service worker caching strategies
+- **React Router 6** - Client-side routing with lazy loading
+- **Code Splitting** - All pages lazy loaded for optimal performance
+
+**Development & Testing:**
+
+- **Playwright** - Automated screenshot generation and E2E testing
+- **Vitest** - Unit testing framework
+- **@testing-library/react** - Component testing utilities
+- **ESLint 9** - Code quality and style enforcement
+
+### Architecture Patterns
+
+**1. Context-Driven Architecture**
+
+```
+App.tsx
+└── AuthProvider (authentication state)
+    └── TimeTrackingProvider (time tracking state)
+        └── OfflineProvider (offline queue)
+            └── Pages & Components
+```
+
+**2. Service Layer Pattern**
+
+Data persistence is abstracted through a service interface with two implementations:
+
+```typescript
+interface DataService {
+  loadCurrentDay(): Promise<DayData>
+  saveCurrentDay(data: DayData): Promise<void>
+  loadArchivedDays(): Promise<ArchivedDay[]>
+  saveArchivedDays(days: ArchivedDay[]): Promise<void>
+  // ... other methods
+}
+
+// Factory pattern selects implementation
+const service = createDataService(isAuthenticated)
+// Returns: LocalStorageService OR SupabaseService
+```
+
+**Benefits:**
+
+- Seamless switching between localStorage and Supabase
+- No code changes when user signs in/out
+- Easy to test with mock implementations
+- Clean separation of concerns
+
+**3. Custom Hooks Pattern**
+
+Complex logic extracted into reusable hooks:
+
+- `useAuth()` - Authentication state and methods
+- `useTimeTracking()` - Time tracking operations
+- `useOffline()` - Offline queue management
+
+**4. Component Architecture**
+
+```
+src/
+├── components/
+│   ├── ui/                    # Base components (49 files)
+│   ├── Feature components     # Domain-specific components
+│   └── Layout components      # Navigation, menus
+├── pages/                     # Route-level components (lazy loaded)
+├── contexts/                  # Global state providers
+├── hooks/                     # Custom React hooks
+├── services/                  # Data persistence layer
+└── lib/                       # Shared utilities
+```
+
+### Data Flow
+
+**Standard Operation Flow:**
+
+```
+User Action
+  ↓
+Component Event Handler
+  ↓
+Context Method (useTimeTracking)
+  ↓
+State Update (React setState)
+  ↓
+UI Re-render
+  ↓
+(On critical events only)
+  ↓
+DataService.save()
+  ↓
+localStorage OR Supabase
+```
+
+**Critical Save Events:**
+
+- Day end (`postDay()`)
+- Window close (`beforeunload`)
+- Manual sync button (`forceSyncToDatabase()`)
+
+**Why Manual Sync?**
+
+- Optimized for single-device usage
+- Reduces unnecessary database calls
+- Prevents rate limiting issues
+- User controls when data is saved
+
+### Progressive Web App Implementation
+
+**Service Worker Strategy:**
+
+```javascript
+// Caching Strategies
+NetworkFirst: Supabase API calls (fresh data preferred)
+CacheFirst: Google Fonts (static assets)
+Precache: App shell (HTML, CSS, JS, icons)
+```
+
+**Manifest Configuration:**
+
+- App name, icons, theme colors
+- Display mode: standalone
+- Orientation: any
+- Icons: 8 sizes (72px to 512px)
+- Screenshots: Desktop (1920×1080) and Mobile (750×1334)
+
+**Offline Queue:**
+
+- Actions queued when offline
+- Automatic sync when connection restored
+- Conflict resolution for data updates
+- User notification of sync status
+
+### Project Structure
+
+```
+TimeTrackerPro/
+├── src/
+│   ├── components/              # UI Components
+│   │   ├── ui/                 # Base components (49 files)
+│   │   ├── ArchiveEditDialog.tsx
+│   │   ├── ArchiveFilter.tsx
+│   │   ├── ArchiveItem.tsx
+│   │   ├── AuthDialog.tsx
+│   │   ├── CategoryManagement.tsx
+│   │   ├── DaySummary.tsx
+│   │   ├── DeleteConfirmationDialog.tsx
+│   │   ├── ExportDialog.tsx
+│   │   ├── InstallPrompt.tsx
+│   │   ├── MarkdownDisplay.tsx
+│   │   ├── MobileNav.tsx
+│   │   ├── Navigation.tsx
+│   │   ├── NewTaskForm.tsx
+│   │   ├── ProjectManagement.tsx
+│   │   ├── StartDayDialog.tsx
+│   │   ├── SyncStatus.tsx
+│   │   ├── TaskEditDialog.tsx
+│   │   ├── TaskItem.tsx
+│   │   ├── UpdateNotification.tsx
+│   │   └── UserMenu.tsx
+│   ├── config/                 # Configuration
+│   │   ├── categories.ts       # Default categories
+│   │   └── projects.ts         # Default projects
+│   ├── contexts/               # React Context Providers
+│   │   ├── AuthContext.tsx
+│   │   ├── TimeTrackingContext.tsx
+│   │   └── OfflineContext.tsx
+│   ├── hooks/                  # Custom Hooks
+│   │   ├── useAuth.tsx
+│   │   ├── useTimeTracking.tsx
+│   │   ├── useOffline.tsx
+│   │   └── use-toast.tsx
+│   ├── lib/                    # Utilities
+│   │   ├── supabase.ts         # Supabase client
+│   │   └── utils.ts            # Helper functions
+│   ├── pages/                  # Route Components
+│   │   ├── Index.tsx           # Home / Time tracker
+│   │   ├── Archive.tsx         # Archived days
+│   │   ├── ProjectList.tsx     # Project management
+│   │   ├── Categories.tsx      # Category management
+│   │   ├── Settings.tsx        # App settings
+│   │   └── NotFound.tsx        # 404 page
+│   ├── services/               # Data Layer
+│   │   └── dataService.ts      # Persistence abstraction
+│   ├── utils/                  # Utilities
+│   │   └── timeUtil.ts         # Time formatting
+│   ├── App.tsx                 # Root component
+│   └── main.tsx                # Entry point
+├── public/
+│   ├── icons/                  # PWA icons (8 sizes)
+│   ├── screenshots/            # PWA screenshots
+│   ├── pwa.css                # PWA styles
+│   └── print.css              # Print styles
+├── docs/                       # Documentation
+├── tests/                      # Test files
+├── supabase/                   # Database schema
+├── package.json
+├── vite.config.ts             # Vite + PWA config
+├── tailwind.config.ts         # Tailwind config
+└── tsconfig.json              # TypeScript config
+```
+
+### Code Conventions
+
+**Critical Requirements:**
+
+- **Indentation**: Tabs only (never spaces), 2-space width display
+- **Quotes**: Double quotes (`""`) always, never single quotes
+- **Imports**: Use `@/` alias for src imports (never relative paths like `../../`)
+
+**Naming Conventions:**
+
+- **Components**: PascalCase (e.g., `TaskItem.tsx`)
+- **Hooks**: camelCase with `use` prefix (e.g., `useAuth.tsx`)
+- **Utilities**: camelCase (e.g., `timeUtil.ts`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `STORAGE_KEYS`)
+
+**TypeScript Usage:**
+
+- Loose type checking enabled (`noImplicitAny: false`)
+- Use types where helpful, not strictly enforced
+- Interface definitions in context files
+
+**Styling:**
+
+- Follow Radix UI design system
+- Use shadcn/ui components (don't create custom equivalents)
+- Use Tailwind utility classes
+- Avoid custom colors (use theme variables)
+
+**See [CLAUDE.md](CLAUDE.md) for comprehensive development guidelines.**
+
+---
+
+## 🔐 Authentication & Storage
+
+### Storage Modes
+
+**Guest Mode (Default):**
+
+- No account required
+- All data stored in browser localStorage
+- Full functionality available
+- Data persists between sessions
+- Limited to single device
+
+**Authenticated Mode (Optional):**
+
+- Sign in with email/password via Supabase
+- Data synced to PostgreSQL database
+- Access from multiple devices
+- Automatic data migration from localStorage
+- Cloud backup of all data
+
+### How Data Storage Works
+
+**Data Persistence Strategy:**
+
+TimeTracker Pro uses a **manual sync** approach optimized for single-device usage:
+
+1. **In-Memory First** - All changes update React state immediately
+2. **Critical Event Saves** - Data persists only on:
+   - Day end (when you archive the day)
+   - Window close (before you navigate away)
+   - Manual sync (clicking the sync button)
+3. **No Auto-Save** - Prevents unnecessary database calls and rate limiting
+
+**Why Manual Sync?**
+
+- Reduces API calls (cost-effective)
+- Prevents rate limiting issues
+- Optimized for single-device usage
+- User controls when data is saved
+- Faster UI interactions
+
+**Data Migration:**
+
+When you sign in, your localStorage data automatically migrates to Supabase:
+
+- Compares timestamps to prevent overwriting newer data
+- Merges local and cloud data intelligently
+- Preserves all archived days and tasks
+- No data loss during migration
+
+When you sign out, Supabase data syncs back to localStorage for offline access.
+
+### Setting Up Cloud Sync
+
+**1. Create Supabase Project:**
+
+```bash
+1. Visit https://supabase.com
+2. Create free account
+3. Create new project
+4. Wait for project to initialize (~2 minutes)
+```
+
+**2. Get API Credentials:**
+
+```bash
+1. Go to Project Settings → API
+2. Copy Project URL
+3. Copy anon/public key
+```
+
+**3. Configure Environment:**
+
+```bash
+# Copy template
+cp .env.example .env
+
+# Edit .env file
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key_here
+```
+
+**4. Set Up Database:**
+
+```bash
+# Database schema is in supabase/migrations/
+# See docs/SCHEMA_COMPATIBILITY.md for details
+```
+
+**5. Restart Development Server:**
+
+```bash
+npm run dev
+```
+
+### Authentication Flow
+
+**Sign Up:**
+
+1. Click "Sign In" in user menu (top-right)
+2. Click "Sign Up" tab
+3. Enter email and password
+4. Verify email (check inbox)
+5. Sign in with credentials
+
+**Sign In:**
+
+1. Click "Sign In" in user menu
+2. Enter email and password
+3. Data automatically migrates from localStorage
+
+**Sign Out:**
+
+1. Click user menu (top-right)
+2. Click "Sign Out"
+3. Data syncs back to localStorage
+4. Continue using in guest mode
+
+### Security
+
+**Password Requirements:**
+
+- Minimum 8 characters
+- Handled securely by Supabase Auth
+
+**Data Security:**
+
+- All API calls over HTTPS
+- Row-level security (RLS) enabled on Supabase
+- Users can only access their own data
+- Passwords hashed and salted by Supabase
+- No sensitive data stored in localStorage
+
+**Best Practices:**
+
+- Never commit `.env` file to version control
+- Keep Supabase keys secure
+- Use strong passwords
+- Enable MFA on Supabase account (recommended)
+
+**See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) for detailed setup.**
+**See [docs/SECURITY.md](docs/SECURITY.md) for security guidelines.**
+
+---
+
+## 🔧 Development Workflow
+
+### Getting Started
+
+```bash
+# Install dependencies
+npm install
 
 # Start development server
 npm run dev
 ```
 
-The application will be available at **<http://localhost:8080>**
+### Development Process
 
-## 📲 Installation as PWA
+**Before Making Changes:**
 
-### Desktop Installation (Chrome/Edge)
+1. Read relevant context file (`TimeTrackingContext.tsx` or `AuthContext.tsx`)
+2. Check existing patterns in similar components
+3. Review [CLAUDE.md](CLAUDE.md) for conventions
 
-1. Open the app in your browser
-2. Look for the install icon (⊕) in the address bar
-3. Click "Install" when prompted
-4. The app will open in its own window
-5. Find it in your applications/start menu
+**Making Changes:**
 
-### Mobile Installation (iOS)
+1. Follow existing patterns (don't reinvent)
+2. Use tabs and double quotes (enforced)
+3. Use `@/` import alias
+4. Test in both guest and authenticated modes
 
-1. Open the app in Safari
-2. Tap the Share button (□↑)
-3. Scroll and tap "Add to Home Screen"
-4. Tap "Add" to confirm
-5. Find the app icon on your home screen
+**Before Committing:**
 
-### Mobile Installation (Android)
+```bash
+# Run linter (must pass)
+npm run lint
 
-1. Open the app in Chrome
-2. Tap the menu (⋮) in the top-right
-3. Tap "Install app" or "Add to Home screen"
-4. Follow the prompts
-5. Find the app icon in your app drawer
+# Run build (must succeed)
+npm run build
 
-### First Time Setup
+# Manual testing required
+# Test your changes in browser
+```
 
-1. **🔒 Environment Setup** (Optional - for cloud sync):
-   - Copy `.env.example` to `.env`
-   - Add your Supabase URL and anon key (see `.env.example` for detailed instructions)
-   - **⚠️ Never commit .env to version control!**
+### Git Workflow
 
-2. **Start Your First Day**: Click "Start Day" to begin time tracking
+**Branch Naming:**
 
-3. **Authentication** (Optional): Click "Sign In" in the top-right corner to enable cloud sync
+```bash
+feature/your-feature-name
+fix/bug-description
+refactor/area-name
+```
 
-4. **Add Projects** (Optional): Navigate to Archive → Projects to set up your clients and hourly rates
+**Commit Messages:**
 
-5. **Configure Categories** (Optional): Navigate to Categories page to customize task categories
+```bash
+# Format: <type>: <description>
+git commit -m "feat: add billable category option"
+git commit -m "fix: resolve data recovery issue"
+git commit -m "refactor: improve data service caching"
 
-6. **Create Tasks**: Use "New Task" to start tracking specific work items
+# Types: feat, fix, refactor, docs, style, test, chore
+```
 
-7. **End Your Day**: Click "End Day" when finished, then "Post Time to Archive"
+**Pull Requests:**
 
-## 📱 Usage Guide
+1. Title: `[TimeTrackerPro] Descriptive Title`
+2. Clear description of changes
+3. Wait for CI checks to pass
+4. See [agents/pull_requests.md](agents/pull_requests.md) for full guidelines
 
-### Daily Workflow
+### Testing
 
-1. **Morning**: Click "Start Day" to begin tracking
-2. **Throughout the day**: Create new tasks as you switch between different work items
-3. **Evening**: Click "End Day" to stop tracking and review your summary
-4. **Archive**: Click "Post Time to Archive" to save the day permanently
+**Manual Testing Checklist:**
 
-### Project Management
+- [ ] Test in guest mode (no authentication)
+- [ ] Test in authenticated mode
+- [ ] Test on mobile viewport (DevTools)
+- [ ] Test data persistence (refresh page)
+- [ ] Test export/import functionality
+- [ ] Verify no console errors
+- [ ] Check responsive design
 
-- Access via Archive → Projects button
-- Set up clients with hourly rates for automatic revenue calculation
-- Assign projects to tasks for better organization
-- Mark projects as billable or non-billable
+**PWA Testing:**
 
-### Category Management
+- [ ] Service worker registers (DevTools → Application → Service Workers)
+- [ ] App works offline (DevTools → Network → Offline)
+- [ ] Install prompt appears (wait 30 seconds)
+- [ ] App installs correctly
+- [ ] Bottom navigation on mobile viewports
+- [ ] Update notification works
 
-- Access via the Categories navigation menu
-- Create custom categories for organizing tasks
-- Set categories as billable or non-billable
-- Customize category colors for visual organization
+**Automated Testing:**
 
-### Data Export
+```bash
+# Unit tests
+npm run test
 
-- Access via Archive → Export button
-- Choose from CSV, JSON, or Invoice formats
-- Filter by date range for specific periods
-- Perfect for submitting timesheets to employers or generating client invoices
+# CSV import tests
+npm run test-csv-import
+npm run test-full-import
+npm run test-error-handling
 
-### Data Import
+# PWA screenshots
+npm run screenshots:install  # First time only
+npm run screenshots          # Capture screenshots
+```
 
-- Import existing time data from CSV files
-- Use the CSV templates in `tests/` directory as examples
-- Validate data before import to ensure compatibility
-- Available test scripts: `npm run test-csv-import`
+### Customizing Markdown Styles
 
-## 🛠 Technical Details
+TimeTracker Pro uses `@tailwindcss/typography` for markdown rendering. Three ways to customize:
 
-### Built With
-
-- **React 18** - Modern UI framework with TypeScript
-- **TypeScript 5.8** - Type safety and enhanced developer experience
-- **Vite 5** - Lightning-fast build tool with SWC
-- **Vite PWA Plugin** - Service worker and PWA manifest generation
-- **Workbox** - Advanced service worker caching strategies
-- **Tailwind CSS 3** - Utility-first CSS framework
-- **shadcn/ui** - Beautiful, accessible component library
-- **Radix UI** - Unstyled, accessible component primitives
-- **React Router 6** - Client-side routing and navigation
-- **Supabase** (optional) - Backend as a Service for cloud sync and authentication
-- **Local Storage** - Browser storage for offline data persistence
-- **Playwright** - Automated screenshot generation and testing
-
-### Architecture
-
-- **Context API** - Global state management
-- **Custom hooks** - Reusable stateful logic
-- **Service layer pattern** - Data persistence abstraction (localStorage/Supabase)
-- **PWA Components** - Install prompts, update notifications, offline queue
-- **Service Worker** - Workbox-powered caching and offline support
-- **Component-based** architecture for maintainability
-- **Lazy loading** - Code splitting for optimal performance
-- **Responsive design** - Works on all device sizes
-- **Mobile-first** - Touch-optimized with bottom navigation
-
-### Data Storage
-
-- **Default**: All data stored locally in your browser (localStorage)
-- **Optional**: Cloud storage via [Supabase](https://www.supabase.com) project
-- **Manual sync**: Optimized for single-device usage
-  - Data saves on critical events (day end, window close)
-  - Manual sync button available for on-demand saves
-  - Prevents unnecessary database calls
-- **No external servers required** - Works completely offline
-- **Data persistence** - All data persists between sessions
-- **Export capabilities** - Full backup and integration support
-- **Smart migration** - Automatic data migration between localStorage and Supabase
-- **Markdown Support** - Rich text rendering for task descriptions with GFM support
-
-## 🎨 Styling Markdown
-
-TimeTracker Pro uses `@tailwindcss/typography` for beautiful markdown rendering. You can customize the look of rendered markdown in three ways:
-
-### 1. Utility Classes (Recommended)
-
-You can apply Tailwind's `prose` utility classes directly to the `MarkdownDisplay` component.
+**1. Utility Classes (Recommended):**
 
 ```tsx
 <MarkdownDisplay
@@ -260,9 +940,7 @@ You can apply Tailwind's `prose` utility classes directly to the `MarkdownDispla
 />
 ```
 
-### 2. Global Theme Overrides
-
-Modify `tailwind.config.ts` to change styles across the entire application:
+**2. Global Theme Overrides:**
 
 ```typescript
 // tailwind.config.ts
@@ -275,9 +953,7 @@ export default {
             color: '#333',
             a: {
               color: '#3182ce',
-              '&:hover': {
-                color: '#2c5282',
-              },
+              '&:hover': { color: '#2c5282' },
             },
           },
         },
@@ -287,15 +963,12 @@ export default {
 }
 ```
 
-### 3. Component-Specific Overrides
-
-For deep customization of specific HTML tags, edit `src/components/MarkdownDisplay.tsx`. This uses `react-markdown` components to swap out standard tags for custom React components.
+**3. Component-Specific Overrides:**
 
 ```tsx
 // src/components/MarkdownDisplay.tsx
 <ReactMarkdown
   components={{
-    // Swap standard links for custom ones
     a: ({ href, children }) => (
       <a href={href} className="custom-link-style">
         {children}
@@ -307,120 +980,97 @@ For deep customization of specific HTML tags, edit `src/components/MarkdownDispl
 </ReactMarkdown>
 ```
 
-## 🎯 Perfect For
+### Adding Features
 
-- **Freelancers**: Track billable hours and generate client invoices
-- **Consultants**: Organize time by project and client with revenue tracking
-- **Remote Workers**: Submit detailed timesheets to employers
-- **Students**: Track study time and project work efficiently
-- **Small Businesses**: Monitor team time and project profitability
-- **Anyone**: Who needs professional time tracking without the complexity
+**Adding a New Component:**
 
-## 🔧 Development
+```typescript
+// 1. Create component in src/components/
+// 2. Follow existing patterns
+// 3. Use shadcn/ui components
+// 4. Import in parent component
 
-### Available Scripts
-
-- `npm run dev` - Start development server (<http://localhost:8080>)
-- `npm run build` - Build for production
-- `npm run build:dev` - Build with development mode
-- `npm run preview` - Preview production build locally
-- `npm run lint` - Run ESLint for code quality
-- `npm run test` - Run Vitest unit tests
-
-### PWA Screenshot Scripts
-
-- `npm run screenshots:install` - Install Playwright browsers (first time only)
-- `npm run screenshots` - Capture PWA screenshots (headless mode)
-- `npm run screenshots:headed` - Capture screenshots with visible browser (debugging)
-
-**Usage:**
-
-1. Run `npm run screenshots:install` once to install browsers
-2. Start dev server: `npm run dev` (keep running)
-3. In new terminal: `npm run screenshots`
-4. Screenshots saved to `public/screenshots/`
-
-See [tests/SCREENSHOTS_README.md](tests/SCREENSHOTS_README.md) for detailed documentation.
-
-### Testing Scripts
-
-- `npm run test-full-import` - Test full CSV import functionality
-- `npm run test-error-handling` - Test CSV import error handling
-- `npm run test-csv-import` - Test standard CSV import process
-
-### Project Structure
-
-```
-src/
-├── components/         # Reusable UI components
-│   ├── ui/            # shadcn/ui base components (49 files)
-│   ├── InstallPrompt.tsx      # PWA install prompt
-│   ├── UpdateNotification.tsx # PWA update notification
-│   ├── MobileNav.tsx          # Mobile bottom navigation
-│   └── ...                    # Other feature components
-├── config/            # Category and Project configuration files
-├── contexts/          # React Context providers
-│   ├── AuthContext.tsx        # Authentication state
-│   ├── TimeTrackingContext.tsx # Time tracking state
-│   └── OfflineContext.tsx     # Offline queue management
-├── hooks/             # Custom React hooks
-│   ├── useAuth.tsx            # Authentication hook
-│   ├── useTimeTracking.tsx    # Time tracking hook
-│   └── useOffline.tsx         # Offline state hook
-├── lib/               # Utility libraries and helpers
-├── pages/             # Main application pages
-├── services/          # Data service layer (localStorage/Supabase)
-└── utils/             # Utility functions
-public/
-├── icons/             # PWA app icons (8 sizes)
-├── screenshots/       # PWA screenshots (desktop + mobile)
-├── manifest.json      # PWA manifest
-├── pwa.css           # PWA-specific styles
-└── ...               # Other static assets
-tests/
-├── screenshots.spec.ts        # Playwright screenshot automation
-└── SCREENSHOTS_README.md      # Screenshot documentation
+import { MyFeature } from "@/components/MyFeature";
 ```
 
-### Code Conventions
+**Adding a New Page:**
 
-- **Indentation**: Tabs (2 space width)
-- **Quotes**: Double quotes (`""`) always
-- **Imports**: Use `@/` alias for src imports
-- **Components**: PascalCase naming
-- **Hooks**: camelCase with `use` prefix
-- **Styling**: Follow Radix UI design system
+```typescript
+// 1. Create page in src/pages/
+// 2. Add lazy load in App.tsx
+const MyPage = lazy(() => import("./pages/MyPage"));
 
-See [CLAUDE.md](CLAUDE.md) for comprehensive development guidelines.
+// 3. Add route
+<Route path="/mypage" element={<MyPage />} />
+
+// 4. Add navigation link in Navigation.tsx
+```
+
+**Adding Context Method:**
+
+```typescript
+// 1. Define in context interface
+// 2. Implement in provider
+// 3. Export in context value
+// 4. Use in components via hook
+```
+
+---
 
 ## 📚 Documentation
 
+### For Users
+
+- **This README** - Complete user and developer guide
+- [CSV Templates](docs/CSV_TEMPLATES_README.md) - Import/export format documentation
+- [Screenshots](tests/SCREENSHOTS_README.md) - PWA screenshot documentation
+
 ### For Developers
 
-- [**CLAUDE.md**](CLAUDE.md) - Comprehensive AI assistant codebase guide
-- [**AGENTS.md**](AGENTS.md) - General agent instructions and workflows
-  - [Styles](agents/styles.md) - UI/UX style guidelines and rules
-  - [Pull Requests](agents/pull_requests.md) - PR creation and review rules
-- [Project Rules](.continue/rules/project-rules.md) - Continue extension configuration
+**Essential Reading:**
 
-### Technical Documentation
+- [**CLAUDE.md**](CLAUDE.md) - **START HERE** - Comprehensive codebase guide
+- [**AGENTS.md**](AGENTS.md) - Quick agent instructions and workflows
+- [Styles](agents/styles.md) - UI/UX style guidelines
+- [Pull Requests](agents/pull_requests.md) - PR creation and review rules
 
-- [**Authentication**](docs/AUTHENTICATION.md) - Authentication setup and configuration guide
-- [**Data Persistence**](docs/AUTH_DATA_PERSISTENCE_FIX.md) - Data persistence implementation details
-- [**Schema Compatibility**](docs/SCHEMA_COMPATIBILITY.md) - Database schema updates and history
-- [**Migration**](docs/MIGRATION.md) - Supabase data migration guide
-- [**Security**](docs/SECURITY.md) - Security configuration and best practices
+**Technical Documentation:**
 
-### Testing & Data
+- [Authentication](docs/AUTHENTICATION.md) - Auth setup and configuration
+- [Data Persistence](docs/AUTH_DATA_PERSISTENCE_FIX.md) - Persistence implementation
+- [Schema Compatibility](docs/SCHEMA_COMPATIBILITY.md) - Database schema history
+- [Migration Guide](docs/MIGRATION.md) - Supabase data migration
+- [Security](docs/SECURITY.md) - Security configuration and practices
 
-- [**CSV Templates**](docs/CSV_TEMPLATES_README.md) - CSV import/export templates and examples
-- [**Screenshot Generation**](tests/SCREENSHOTS_README.md) - Automated PWA screenshot capture with Playwright
-- [**Features**](docs/FEATURES.md) - Feature requests and improvement notes
-- [**Chatbot Notes**](docs/chatbot.md) - AI interaction development records
+**Additional Resources:**
 
-### Additional Resources
+- [Features](docs/FEATURES.md) - Feature requests and improvement notes
+- [Chatbot Notes](docs/chatbot.md) - AI interaction development records
+- [Lovable README](info/README-LOVABLE.md) - Project origin and history
 
-- [LOVABLE README](info/README-LOVABLE.md) - Project origin and history
+### External References
+
+- [Radix UI](https://www.radix-ui.com) - Component primitives and design system
+- [shadcn/ui](https://ui.shadcn.com) - Component library documentation
+- [Tailwind CSS](https://tailwindcss.com) - CSS framework documentation
+- [React Router](https://reactrouter.com) - Routing documentation
+- [Supabase Docs](https://supabase.com/docs) - Backend documentation
+- [Vite](https://vitejs.dev) - Build tool documentation
+
+---
+
+## 📱 iOS Screenshots
+
+| View | Image |
+| -- | -- |
+| Dashboard | <img src="screenshots/iOS/01TimeTrackerPro-iOS.png" width="200" /> |
+| Time Entry - Markdown | <img src="screenshots/iOS/02TimeTrackerPro-iOS.png" width="200" /> |
+| Time Entry - Preview | <img src="screenshots/iOS/03TimeTrackerPro-iOS.png" width="200" /> |
+| Active Tasks | <img src="screenshots/iOS/04TimeTrackerPro-iOS.png" width="200" /> |
+| Day Ended | <img src="screenshots/iOS/06TimeTrackerPro-iOS.png" width="200" /> |
+| Archive | <img src="screenshots/iOS/07TimeTrackerPro-iOS.png" width="200" /> |
+
+---
 
 ## 📄 License
 
@@ -428,22 +1078,30 @@ This project is open source and available under the MIT License.
 
 ---
 
-## 🚀 Getting Started
+## 🙏 Credits
 
-**Ready to take control of your time?**
-
-1. Clone the repository
-2. Run `npm install`
-3. Start with `npm run dev`
-4. Open <http://localhost:8080>
-5. Click "Start Day" and begin tracking!
-
-See where your hours really go with TimeTracker Pro.
+- This project originally began as a [Lovable](https://lovable.dev) prompt - [Learn more](info/README-LOVABLE.md)
+- Badges from [markdown-badges](https://github.com/Ileriayo/markdown-badges)
+- UI components from [shadcn/ui](https://ui.shadcn.com) built on [Radix UI](https://www.radix-ui.com)
+- Icons from [Radix Icons](https://www.radix-ui.com/icons) and [Lucide](https://lucide.dev)
+- Built with [React](https://react.dev), [Vite](https://vitejs.dev), and [Supabase](https://supabase.com)
 
 ---
 
-## 🙏 Credits
+## 🚀 Ready to Get Started?
 
-- This project originally began as a Lovable prompt - [Learn more](info/README-LOVABLE.md)
-- Badges from [markdown-badges](https://github.com/Ileriayo/markdown-badges)
-- Built with [React](https://react.dev), [Vite](https://vitejs.dev), and [Supabase](https://supabase.com)
+**For Users:**
+
+1. Clone the repository or visit the hosted version
+2. Click "Start Day" to begin tracking
+3. Add tasks throughout your day
+4. Review and archive when finished
+
+**For Developers:**
+
+1. Clone the repository: `git clone https://github.com/AdamJ/TimeTrackerPro.git`
+2. Install dependencies: `npm install`
+3. Start developing: `npm run dev`
+4. Read [CLAUDE.md](CLAUDE.md) for comprehensive guidelines
+
+See where your hours really go with **TimeTracker Pro**.
