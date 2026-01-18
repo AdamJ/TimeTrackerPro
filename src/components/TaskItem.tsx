@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
-import { Task } from '@/contexts/TimeTrackingContext';
-import { useTimeTracking } from '@/hooks/useTimeTracking';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { TaskEditDialog } from '@/components/TaskEditDialog';
+import React, { useState } from "react";
+import { Task } from "@/contexts/TimeTrackingContext";
+import { useTimeTracking } from "@/hooks/useTimeTracking";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { TaskEditDialog } from "@/components/TaskEditDialog";
+import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import {
   Edit,
   Trash2,
   ClockPlus,
   ClockFading,
   ClipboardCheck
-} from 'lucide-react';
-import { formatDuration, formatTime } from '@/utils/timeUtil';
-import { Badge } from '@radix-ui/themes';
+} from "lucide-react";
+import { formatDuration, formatTime } from "@/utils/timeUtil";
+import { Badge } from "@radix-ui/themes";
 
 interface TaskItemProps {
   task: Task;
@@ -37,7 +38,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
     <>
       <Card
         className={`transition-all duration-200 ${
-          isActive ? 'ring-2 ring-blue-500 hover:shadow-md hover:shadow-blue-300 bg-white' : 'hover:shadow-md'
+          isActive ? "ring-2 ring-blue-500 hover:shadow-md hover:shadow-blue-300 bg-white" : "hover:shadow-md"
         }`}
       >
         <CardContent className="p-4">
@@ -63,9 +64,9 @@ export const TaskItem: React.FC<TaskItemProps> = ({
               </div>
 
               {task.description && (
-                <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                  {task.description}
-                </p>
+                <div className="mb-2">
+                  <MarkdownDisplay content={task.description} />
+                </div>
               )}
 
               <div className="flex items-center flex-wrap gap-2 text-sm text-gray-600">
@@ -82,7 +83,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 {category && (
                   <Badge
                     radius="full"
-                    style={{ backgroundColor: category.color, color: '#fff' }}
+                    style={{ backgroundColor: category.color, color: "#fff" }}
                   >
                     {category.name}
                   </Badge>

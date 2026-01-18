@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Calendar, Clock, Edit, RotateCcw, FileText } from "lucide-react";
 import { formatDuration, formatDurationLong, formatTime, formatDate, generateDailySummary } from "@/utils/timeUtil";
+import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import { DayRecord } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 
@@ -134,9 +135,10 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
                   Daily Summary
                 </h4>
                 <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md print:bg-white print:border print:border-gray-300">
-                  <p className="text-sm text-gray-700 dark:text-gray-300 print:text-gray-800 leading-relaxed">
-                    {summary}
-                  </p>
+                  <MarkdownDisplay
+                    content={summary}
+                    className="prose-p:text-gray-700 dark:prose-p:text-gray-300 print:prose-p:text-gray-800"
+                  />
                 </div>
               </div>
             );
@@ -188,8 +190,8 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
                     <TableRow key={task.id} className="print:border-black">
                       <TableCell className="font-medium print:text-black">
                         {task.title}
-                        <div className="font-medium text-sm italic text-gray-400 hidden md:block print:text-gray-600">
-                          {task.description}
+                        <div className="text-sm text-gray-400 hidden md:block print:text-gray-600">
+                          <MarkdownDisplay content={task.description} className="prose-sm line-clamp-1 hover:line-clamp-none transition-all duration-200" />
                         </div>
                       </TableCell>
                       <TableCell className="print:text-black">
