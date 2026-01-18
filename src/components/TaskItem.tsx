@@ -6,11 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TaskEditDialog } from "@/components/TaskEditDialog";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import {
-	Edit,
-	Trash2,
-	ClockPlus,
-	ClockFading,
-	ClipboardCheck
+  Edit,
+  Trash2,
+  ClockPlus,
+  ClockFading,
+  ClipboardCheck
 } from "lucide-react";
 import { formatDuration, formatTime } from "@/utils/timeUtil";
 import { Badge } from "@radix-ui/themes";
@@ -36,11 +36,11 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
   return (
     <>
-			<Card
-				className={`transition-all duration-200 ${
-					isActive ? "ring-2 ring-blue-500 hover:shadow-md hover:shadow-blue-300 bg-white" : "hover:shadow-md"
-				}`}
-			>
+      <Card
+        className={`transition-all duration-200 ${
+          isActive ? "ring-2 ring-blue-500 hover:shadow-md hover:shadow-blue-300 bg-white" : "hover:shadow-md"
+        }`}
+      >
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -63,11 +63,11 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 )}
               </div>
 
-							{task.description && (
-								<div className="text-sm text-gray-600 mb-2 line-clamp-2">
-									<MarkdownDisplay content={task.description} />
-								</div>
-							)}
+              {task.description && (
+                <div className="mb-2">
+                  <MarkdownDisplay content={task.description} />
+                </div>
+              )}
 
               <div className="flex items-center flex-wrap gap-2 text-sm text-gray-600">
                 <span className="flex items-center space-x-1">
@@ -80,14 +80,14 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 </span>
               </div>
               <div className="flex items-center flex-wrap gap-2 mt-3">
-								{category && (
-									<Badge
-										radius="full"
-										style={{ backgroundColor: category.color, color: "#fff" }}
-									>
-										{category.name}
-									</Badge>
-								)}
+                {category && (
+                  <Badge
+                    radius="full"
+                    style={{ backgroundColor: category.color, color: "#fff" }}
+                  >
+                    {category.name}
+                  </Badge>
+                )}
                 {task.project && (
                   <Badge color="gray" variant="outline" radius="full">
                     {task.project}

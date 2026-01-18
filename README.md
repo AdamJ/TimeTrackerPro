@@ -15,6 +15,7 @@ A modern, feature-rich Progressive Web App (PWA) for time tracking built with Re
 - [Installation as PWA](#-installation-as-pwa)
 - [Usage Guide](#-usage-guide)
 - [Technical Details](#-technical-details)
+- [Styling Markdown](#-styling-markdown)
 - [Perfect For](#-perfect-for)
 - [Development](#-development)
 - [Documentation](#-documentation)
@@ -25,6 +26,7 @@ A modern, feature-rich Progressive Web App (PWA) for time tracking built with Re
 **TimeTracker Pro is a fully-featured Progressive Web App!**
 
 ### Install Like a Native App
+
 - ✅ **Desktop Installation**: Install from Chrome, Edge, or Firefox on Windows, Mac, and Linux
 - ✅ **Mobile Installation**: Add to home screen on iOS (Safari) and Android (Chrome)
 - ✅ **Standalone Mode**: Launches in its own window without browser UI
@@ -32,6 +34,7 @@ A modern, feature-rich Progressive Web App (PWA) for time tracking built with Re
 - ✅ **Splash Screen**: Native-like launch experience
 
 ### Work Offline
+
 - ✅ **Full Offline Support**: Continue tracking time without internet connection
 - ✅ **Service Worker**: Intelligent caching for instant loading
 - ✅ **Offline Queue**: Actions sync automatically when connection restored
@@ -39,6 +42,7 @@ A modern, feature-rich Progressive Web App (PWA) for time tracking built with Re
 - ✅ **Background Sync**: Data syncs even when app is closed
 
 ### Mobile-Optimized
+
 - ✅ **Touch-Friendly**: 44×44px minimum touch targets
 - ✅ **Bottom Navigation**: Easy thumb access on mobile devices
 - ✅ **Safe Areas**: Proper spacing for notched devices (iPhone X+)
@@ -46,6 +50,7 @@ A modern, feature-rich Progressive Web App (PWA) for time tracking built with Re
 - ✅ **Landscape Support**: Optimized for both orientations
 
 ### Smart Updates
+
 - ✅ **Auto-Update**: New versions install automatically
 - ✅ **Update Notifications**: Prompts to refresh when updates available
 - ✅ **Install Prompts**: Smart timing for installation suggestions
@@ -113,7 +118,7 @@ cp .env.example .env
 npm run dev
 ```
 
-The application will be available at **http://localhost:8080**
+The application will be available at **<http://localhost:8080>**
 
 ## 📲 Installation as PWA
 
@@ -238,6 +243,69 @@ The application will be available at **http://localhost:8080**
 - **Data persistence** - All data persists between sessions
 - **Export capabilities** - Full backup and integration support
 - **Smart migration** - Automatic data migration between localStorage and Supabase
+- **Markdown Support** - Rich text rendering for task descriptions with GFM support
+
+## 🎨 Styling Markdown
+
+TimeTracker Pro uses `@tailwindcss/typography` for beautiful markdown rendering. You can customize the look of rendered markdown in three ways:
+
+### 1. Utility Classes (Recommended)
+
+You can apply Tailwind's `prose` utility classes directly to the `MarkdownDisplay` component.
+
+```tsx
+<MarkdownDisplay
+  content={text}
+  className="prose-p:text-blue-500 prose-headings:underline"
+/>
+```
+
+### 2. Global Theme Overrides
+
+Modify `tailwind.config.ts` to change styles across the entire application:
+
+```typescript
+// tailwind.config.ts
+export default {
+  theme: {
+    extend: {
+      typography: {
+        DEFAULT: {
+          css: {
+            color: '#333',
+            a: {
+              color: '#3182ce',
+              '&:hover': {
+                color: '#2c5282',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+}
+```
+
+### 3. Component-Specific Overrides
+
+For deep customization of specific HTML tags, edit `src/components/MarkdownDisplay.tsx`. This uses `react-markdown` components to swap out standard tags for custom React components.
+
+```tsx
+// src/components/MarkdownDisplay.tsx
+<ReactMarkdown
+  components={{
+    // Swap standard links for custom ones
+    a: ({ href, children }) => (
+      <a href={href} className="custom-link-style">
+        {children}
+      </a>
+    ),
+  }}
+>
+  {content}
+</ReactMarkdown>
+```
 
 ## 🎯 Perfect For
 
@@ -252,7 +320,7 @@ The application will be available at **http://localhost:8080**
 
 ### Available Scripts
 
-- `npm run dev` - Start development server (http://localhost:8080)
+- `npm run dev` - Start development server (<http://localhost:8080>)
 - `npm run build` - Build for production
 - `npm run build:dev` - Build with development mode
 - `npm run preview` - Preview production build locally
@@ -266,6 +334,7 @@ The application will be available at **http://localhost:8080**
 - `npm run screenshots:headed` - Capture screenshots with visible browser (debugging)
 
 **Usage:**
+
 1. Run `npm run screenshots:install` once to install browsers
 2. Start dev server: `npm run dev` (keep running)
 3. In new terminal: `npm run screenshots`
@@ -366,7 +435,7 @@ This project is open source and available under the MIT License.
 1. Clone the repository
 2. Run `npm install`
 3. Start with `npm run dev`
-4. Open http://localhost:8080
+4. Open <http://localhost:8080>
 5. Click "Start Day" and begin tracking!
 
 See where your hours really go with TimeTracker Pro.
