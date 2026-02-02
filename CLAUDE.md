@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Codebase Guide
 
-**Last Updated:** 2025-11-21
-**Version:** 1.0.1
+**Last Updated:** 2026-02-02
+**Version:** 1.0.2
 
 This document provides comprehensive guidance for AI assistants working with the TimeTracker Pro codebase. It covers architecture, conventions, workflows, and best practices.
 
@@ -306,17 +306,19 @@ TimeTrackerPro/
 ### Time Tracking Flow
 
 ```
-1. User starts day
+1. User starts day (via StartDayDialog)
    ↓
 2. TimeTrackingContext updates state
    ↓
-3. User creates tasks
+3. New Task form auto-opens (defaultOpen prop)
    ↓
-4. Tasks saved to state (in-memory)
+4. User creates tasks
    ↓
-5. Manual sync OR critical events (end day, window close)
+5. Tasks saved to state (in-memory)
    ↓
-6. DataService persists to localStorage or Supabase
+6. Manual sync OR critical events (end day, window close)
+   ↓
+7. DataService persists to localStorage or Supabase
 ```
 
 ### Data Service Selection
@@ -984,6 +986,7 @@ Before making changes, verify:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.0.2 | 2026-02-02 | Added auto-open New Task form feature when day starts |
 | 1.0.1 | 2025-11-21 | Updated component list, documentation references, and current state |
 | 1.0.0 | 2025-11-18 | Initial CLAUDE.md creation |
 

@@ -27,6 +27,7 @@ const TimeTrackerContent = () => {
   } = useTimeTracking();
 
   const [showStartDayDialog, setShowStartDayDialog] = useState(false);
+  const [autoOpenTaskForm, setAutoOpenTaskForm] = useState(false);
 
   const handleStartDay = () => {
     setShowStartDayDialog(true);
@@ -34,6 +35,7 @@ const TimeTrackerContent = () => {
 
   const handleStartDayWithDateTime = (startDateTime: Date) => {
     startDay(startDateTime);
+    setAutoOpenTaskForm(true);
   };
 
   const handleEndDay = () => {
@@ -159,7 +161,7 @@ const TimeTrackerContent = () => {
           </Card>
         ) : (
           <>
-            <NewTaskForm onSubmit={handleNewTask} />
+            <NewTaskForm onSubmit={handleNewTask} defaultOpen={autoOpenTaskForm} />
             {tasks.length > 0 && (
               <div className="space-y-4">
                 <h2 className="flex justify-between text-lg font-semibold text-gray-900">Tasks ({tasks.length})

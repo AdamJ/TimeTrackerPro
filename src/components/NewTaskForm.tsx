@@ -22,15 +22,16 @@ interface NewTaskFormProps {
     client?: string,
     category?: string
   ) => void;
+  defaultOpen?: boolean;
 }
 
-export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit }) => {
+export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen = false }) => {
   const { projects, categories } = useTimeTracking();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
 
   const selectedProjectData = projects.find((p) => p.id === selectedProject);
   const selectedCategoryData = categories.find(
