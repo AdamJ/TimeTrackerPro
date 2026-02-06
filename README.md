@@ -29,6 +29,7 @@ A modern, feature-rich Progressive Web App (PWA) for time tracking built with Re
 
 **Additional:**
 
+- [Changelog](#-changelog)
 - [License](#-license)
 - [Credits](#-credits)
 
@@ -60,6 +61,7 @@ TimeTracker Pro is a professional time tracking application that helps you monit
 
 - **Daily Time Tracking** - Start/stop your workday with clear boundaries
 - **Task Management** - Create, edit, and delete tasks with real-time duration tracking
+- **Intuitive Time Selection** - Native browser time inputs for familiar, accessible time entry
 - **Rich Text Support** - Add detailed notes with GitHub Flavored Markdown (tables, lists, formatting)
 - **Automatic Calculations** - Duration and revenue calculated automatically
 - **Archive System** - Permanent record of all completed work days
@@ -1056,6 +1058,18 @@ const MyPage = lazy(() => import("./pages/MyPage"));
 - [React Router](https://reactrouter.com) - Routing documentation
 - [Supabase Docs](https://supabase.com/docs) - Backend documentation
 - [Vite](https://vitejs.dev) - Build tool documentation
+
+---
+
+## 📋 Changelog
+
+For a detailed list of changes, new features, and bug fixes, see [CHANGELOG.md](CHANGELOG.md).
+
+**Recent Updates:**
+- Native HTML5 time inputs for intuitive, accessible time selection
+- Consistent UX with date inputs across all dialogs
+- Mobile-optimized with browser-native time pickers
+- Full keyboard navigation and screen reader support
 
 ---
 

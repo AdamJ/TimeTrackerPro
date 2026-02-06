@@ -101,7 +101,7 @@
 }
 
 :root {
-  input[type="color" i]::-webkit-color-swatch {
+  input[type='color' i]::-webkit-color-swatch {
     border: none !important;
     border-width: 0 !important;
   }

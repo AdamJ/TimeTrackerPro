@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Codebase Guide
 
-**Last Updated:** 2026-02-02
-**Version:** 1.0.2
+**Last Updated:** 2026-02-06
+**Version:** 1.0.4
 
 This document provides comprehensive guidance for AI assistants working with the TimeTracker Pro codebase. It covers architecture, conventions, workflows, and best practices.
 
@@ -196,6 +196,7 @@ TimeTrackerPro/
 ├── src/
 │   ├── components/          # React components
 │   │   ├── ui/             # shadcn/ui base components (49 files)
+│   │   │   └── scroll-time-picker.tsx  # Custom scroll-wheel time picker
 │   │   ├── ArchiveEditDialog.tsx    # Archive entry editing
 │   │   ├── ArchiveItem.tsx          # Archive display component
 │   │   ├── AuthDialog.tsx           # Authentication modal
@@ -627,6 +628,81 @@ const MyPage = lazy(() => import("./pages/MyPage"));
 <Route path="/mypage" element={<MyPage />} />
 ```
 
+### Using the TimePicker Component
+
+The `TimePicker` is a native HTML5 time input wrapped with shadcn/ui styling for consistent appearance and accessibility.
+
+**Component File**: `src/components/ui/scroll-time-picker.tsx`
+
+**Props Interface**:
+```typescript
+interface TimePickerProps {
+	value: string;        // "HH:MM" 24-hour format (e.g., "14:30")
+	onValueChange: (value: string) => void;
+	disabled?: boolean;
+	className?: string;
+	id?: string;
+	"aria-label"?: string;
+	"aria-describedby"?: string;
+}
+```
+
+**Usage Example**:
+```typescript
+import { TimePicker } from "@/components/ui/scroll-time-picker";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+
+const MyComponent = () => {
+	const [time, setTime] = useState("09:00");
+
+	return (
+		<div>
+			<Label htmlFor="my-time">Select Time</Label>
+			<TimePicker
+				id="my-time"
+				value={time}
+				onValueChange={setTime}
+				aria-label="Select your preferred time"
+			/>
+		</div>
+	);
+};
+```
+
+**Features**:
+- Native HTML5 `<input type="time">` for standard web UX
+- **15-minute intervals**: Time selection restricted to :00, :15, :30, :45 using `step={900}`
+- Mobile browsers display native time pickers automatically
+- Desktop browsers provide keyboard-accessible spinners or typed input
+- Full accessibility with ARIA labels, keyboard navigation, and screen reader support
+- Styled with shadcn/ui design tokens (matches Input component)
+- Supports dark mode via CSS variables
+- Compatible with all modern browsers
+
+**Accessibility (A11y)**:
+- Proper label association via `htmlFor` and `id`
+- ARIA labels for screen readers
+- Keyboard navigable (Tab, Arrow keys, Enter)
+- Focus visible indicators
+- Works with browser's native date/time accessibility features
+
+**Used In**:
+- `StartDayDialog.tsx` - Day start time selection (1 picker)
+- `TaskEditDialog.tsx` - Task start/end time selection (2 pickers)
+- `ArchiveEditDialog.tsx` - Day and task time editing (4 pickers total)
+
+**Design Decision**: Native HTML5 inputs were chosen over custom implementations because:
+1. Standard web pattern users already understand
+2. Automatic mobile optimization (native pickers on iOS/Android)
+3. Built-in accessibility features
+4. Consistent with the app's date input approach
+5. No custom scroll/wheel logic to maintain
+6. Better keyboard navigation
+7. Follows shadcn/ui philosophy of enhancing web standards
+
+**Migration Note**: This component replaced a custom scroll-wheel picker and earlier dropdown approach, providing better UX through browser-native functionality.
+
 ### Adding a New Context Method
 
 ```typescript
@@ -951,6 +1027,7 @@ Before making changes, verify:
 ### Documentation
 
 - **Main README**: `README.md` - User-facing documentation
+- **Changelog**: `CHANGELOG.md` - Version history and changes
 - **CLAUDE.md**: `CLAUDE.md` - This file - AI assistant guide
 - **Agent Guidelines**: `AGENTS.md` - Quick agent instructions
 - **Archive System**: `docs/ARCHIVING_DAYS.md` - Archive system guide
@@ -986,6 +1063,8 @@ Before making changes, verify:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.0.4 | 2026-02-06 | Replaced custom scroll picker with native HTML5 time inputs for better UX and a11y |
+| 1.0.3 | 2026-02-06 | Added ScrollTimePicker component, replaced time dropdowns with scroll-wheel UI |
 | 1.0.2 | 2026-02-02 | Added auto-open New Task form feature when day starts |
 | 1.0.1 | 2025-11-21 | Updated component list, documentation references, and current state |
 | 1.0.0 | 2025-11-18 | Initial CLAUDE.md creation |

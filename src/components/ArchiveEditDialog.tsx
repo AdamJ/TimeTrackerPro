@@ -1,25 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle
-} from "@/components/ui/dialog";
-import { Callout } from "@/components/ui/callout";
-import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MarkdownDisplay } from "@/components/MarkdownDisplay";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
+import { Callout } from '@/components/ui/callout';
+import { InfoCircledIcon } from '@radix-ui/react-icons';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MarkdownDisplay } from '@/components/MarkdownDisplay';
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue
-} from "@/components/ui/select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { TimePicker } from '@/components/ui/scroll-time-picker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -85,23 +86,6 @@ function formatTime12Hour(date: Date | undefined): string {
   return `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
 }
 
-type TimeOption = { value: string; label: string };
-function generateTimeOptions(): TimeOption[] {
-  const options: TimeOption[] = [];
-  for (let hour = 0; hour < 24; hour++) {
-    for (let minute = 0; minute < 60; minute += 15) {
-      const value = `${hour.toString().padStart(2, '0')}:${minute
-        .toString()
-        .padStart(2, '0')}`;
-      const date = new Date();
-      date.setHours(hour, minute, 0, 0);
-      const label = formatTime12Hour(date);
-      options.push({ value, label });
-    }
-  }
-  return options;
-}
-
 export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   day,
   isOpen,
@@ -126,7 +110,6 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   });
 
   const [tasks, setTasks] = useState<Task[]>([]);
-  const timeOptions = generateTimeOptions();
 
   // Initialize form data when dialog opens
   useEffect(() => {
@@ -168,7 +151,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 
   const handleSaveDay = async () => {
     // Parse the new date from the input (same as StartDayDialog)
-    const [year, month, dayOfMonth] = dayData.date.split("-").map(Number);
+    const [year, month, dayOfMonth] = dayData.date.split('-').map(Number);
     const selectedDate = new Date(year, month - 1, dayOfMonth);
 
     // Create new start/end times with the selected date but original times
@@ -216,8 +199,8 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
       await updateArchivedDay(day.id, updatedDay);
       setIsEditing(false);
     } catch (error) {
-      console.error("Failed to save archived day:", error);
-      alert("Failed to save changes. Please try again.");
+      console.error('Failed to save archived day:', error);
+      alert('Failed to save changes. Please try again.');
     }
   };
 
@@ -245,7 +228,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   };
 
   const handleTaskSave = (updatedTask: Task) => {
-    const updatedTasks = tasks.map((t) =>
+    const updatedTasks = tasks.map(t =>
       t.id === updatedTask.id ? updatedTask : t
     );
     setTasks(updatedTasks);
@@ -253,7 +236,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   };
 
   const handleTaskDelete = (taskId: string) => {
-    const updatedTasks = tasks.filter((t) => t.id !== taskId);
+    const updatedTasks = tasks.filter(t => t.id !== taskId);
     setTasks(updatedTasks);
   };
 
@@ -280,7 +263,6 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
               <span>{formatDate(day.startTime)}</span>
             </DialogTitle>
           </div>
-
         </DialogHeader>
 
         <div className="space-y-6 overflow-x-hidden">
@@ -349,85 +331,69 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                     <Input
                       type="date"
                       value={dayData.date}
-                      onChange={(e) =>
-                        setDayData((prev) => ({ ...prev, date: e.target.value }))
+                      onChange={e =>
+                        setDayData(prev => ({ ...prev, date: e.target.value }))
                       }
                       className="w-full"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>Start Time</Label>
-                      <Select
+                      <Label htmlFor="day-start-time">Start Time</Label>
+                      <TimePicker
+                        id="day-start-time"
                         value={dayData.startTime}
-                        onValueChange={(value) =>
-                          setDayData((prev) => ({ ...prev, startTime: value }))
+                        onValueChange={value =>
+                          setDayData(prev => ({ ...prev, startTime: value }))
                         }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-60">
-                          {timeOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        aria-label="Day start time"
+                      />
                     </div>
                     <div>
-                      <Label>End Time</Label>
-                      <Select
+                      <Label htmlFor="day-end-time">End Time</Label>
+                      <TimePicker
+                        id="day-end-time"
                         value={dayData.endTime}
-                        onValueChange={(value) =>
-                          setDayData((prev) => ({ ...prev, endTime: value }))
+                        onValueChange={value =>
+                          setDayData(prev => ({ ...prev, endTime: value }))
                         }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-60">
-                          {timeOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        aria-label="Day end time"
+                      />
                     </div>
                   </div>
-									<div>
-										<Label>Notes</Label>
-										<Tabs defaultValue="edit" className="w-full">
-											<TabsList className="grid w-full grid-cols-2">
-												<TabsTrigger value="edit">Edit</TabsTrigger>
-												<TabsTrigger value="preview">Preview</TabsTrigger>
-											</TabsList>
-											<TabsContent value="edit">
-												<Textarea
-													value={dayData.notes}
-													onChange={(e) =>
-														setDayData((prev) => ({
-															...prev,
-															notes: e.target.value
-														}))
-													}
-													placeholder="Add notes about this day (optional, supports Markdown)"
-													className="min-h-[80px] resize-none"
-												/>
-											</TabsContent>
-											<TabsContent value="preview">
-												<div className="w-full min-h-[80px] p-3 border rounded-md bg-background">
-													{dayData.notes ? (
-														<MarkdownDisplay content={dayData.notes} />
-													) : (
-														<p className="text-sm text-muted-foreground">No notes to preview</p>
-													)}
-												</div>
-											</TabsContent>
-										</Tabs>
-									</div>
+                  <div>
+                    <Label>Notes</Label>
+                    <Tabs defaultValue="edit" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="edit">Edit</TabsTrigger>
+                        <TabsTrigger value="preview">Preview</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="edit">
+                        <Textarea
+                          value={dayData.notes}
+                          onChange={e =>
+                            setDayData(prev => ({
+                              ...prev,
+                              notes: e.target.value
+                            }))
+                          }
+                          placeholder="Add notes about this day (optional, supports Markdown)"
+                          className="min-h-[80px] resize-none"
+                        />
+                      </TabsContent>
+                      <TabsContent value="preview">
+                        <div className="w-full min-h-[80px] p-3 border rounded-md bg-background">
+                          {dayData.notes ? (
+                            <MarkdownDisplay content={dayData.notes} />
+                          ) : (
+                            <p className="text-sm text-muted-foreground">
+                              No notes to preview
+                            </p>
+                          )}
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm">
@@ -462,14 +428,14 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                       {tasks.length} total
                     </span>
                   </div>
-									{day.notes && (
-										<div className="col-span-2">
-											<span className="font-medium text-gray-900">Notes:</span>
-											<div className="mt-1 text-gray-600">
-												<MarkdownDisplay content={day.notes} />
-											</div>
-										</div>
-									)}
+                  {day.notes && (
+                    <div className="col-span-2">
+                      <span className="font-medium text-gray-900">Notes:</span>
+                      <div className="mt-1 text-gray-600">
+                        <MarkdownDisplay content={day.notes} />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -494,23 +460,25 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {tasks.map((task) => {
+                    {tasks.map(task => {
                       const category = categories.find(
-                        (c) => c.id === task.category
+                        c => c.id === task.category
                       );
                       return (
                         <TableRow key={task.id}>
                           <TableCell className="font-medium">
-														<div className="min-w-[150px]">
-															<div>{task.title}</div>
-															<span className="hidden lg:block">
-																{task.description && (
-																	<div className="text-sm text-gray-500 mt-1">
-																		<MarkdownDisplay content={task.description} />
-																	</div>
-																)}
-															</span>
-														</div>
+                            <div className="min-w-[150px]">
+                              <div>{task.title}</div>
+                              <span className="hidden lg:block">
+                                {task.description && (
+                                  <div className="text-sm text-gray-500 mt-1">
+                                    <MarkdownDisplay
+                                      content={task.description}
+                                    />
+                                  </div>
+                                )}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell>
                             {category && (
@@ -541,7 +509,9 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                             {formatTime12Hour(task.startTime)}
                           </TableCell>
                           <TableCell className="whitespace-nowrap">
-                            {task.endTime ? formatTime12Hour(task.endTime) : '-'}
+                            {task.endTime
+                              ? formatTime12Hour(task.endTime)
+                              : '-'}
                           </TableCell>
                           <TableCell className="whitespace-nowrap">
                             {formatDuration(task.duration || 0)}
@@ -623,7 +593,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
           />
         )}
       </DialogContent>
-    </Dialog >
+    </Dialog>
   );
 };
 
@@ -654,12 +624,10 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
     endTime: ''
   });
 
-  const timeOptions = generateTimeOptions();
-
   useEffect(() => {
     if (isOpen && task) {
       const projectId =
-        projects.find((p) => p.name === task.project)?.id || 'none';
+        projects.find(p => p.name === task.project)?.id || 'none';
 
       setFormData({
         title: task.title || '',
@@ -696,11 +664,11 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
   const handleSave = () => {
     const selectedProject =
       formData.project !== 'none'
-        ? projects.find((p) => p.id === formData.project)
+        ? projects.find(p => p.id === formData.project)
         : undefined;
     const selectedCategory =
       formData.category !== 'none'
-        ? categories.find((c) => c.id === formData.category)
+        ? categories.find(c => c.id === formData.category)
         : undefined;
 
     const newStartTime = parseTimeInput(timeData.startTime, task.startTime);
@@ -739,52 +707,54 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
             </Label>
             <Input
               value={formData.title}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, title: e.target.value }))
+              onChange={e =>
+                setFormData(prev => ({ ...prev, title: e.target.value }))
               }
               placeholder="Enter task title"
             />
           </div>
 
-					<div>
-						<Label>Description</Label>
-						<Tabs defaultValue="edit" className="w-full">
-							<TabsList className="grid w-full grid-cols-2">
-								<TabsTrigger value="edit">Edit</TabsTrigger>
-								<TabsTrigger value="preview">Preview</TabsTrigger>
-							</TabsList>
-							<TabsContent value="edit">
-								<Textarea
-									value={formData.description}
-									onChange={(e) =>
-										setFormData((prev) => ({
-											...prev,
-											description: e.target.value
-										}))
-									}
-									placeholder="Enter task description (optional, supports Markdown)"
-									className="min-h-[80px] resize-none"
-								/>
-							</TabsContent>
-							<TabsContent value="preview">
-								<div className="w-full min-h-[80px] p-3 border rounded-md bg-background">
-									{formData.description ? (
-										<MarkdownDisplay content={formData.description} />
-									) : (
-										<p className="text-sm text-muted-foreground">No description to preview</p>
-									)}
-								</div>
-							</TabsContent>
-						</Tabs>
-					</div>
+          <div>
+            <Label>Description</Label>
+            <Tabs defaultValue="edit" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="edit">Edit</TabsTrigger>
+                <TabsTrigger value="preview">Preview</TabsTrigger>
+              </TabsList>
+              <TabsContent value="edit">
+                <Textarea
+                  value={formData.description}
+                  onChange={e =>
+                    setFormData(prev => ({
+                      ...prev,
+                      description: e.target.value
+                    }))
+                  }
+                  placeholder="Enter task description (optional, supports Markdown)"
+                  className="min-h-[80px] resize-none"
+                />
+              </TabsContent>
+              <TabsContent value="preview">
+                <div className="w-full min-h-[80px] p-3 border rounded-md bg-background">
+                  {formData.description ? (
+                    <MarkdownDisplay content={formData.description} />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No description to preview
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Category</Label>
               <Select
                 value={formData.category}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, category: value }))
+                onValueChange={value =>
+                  setFormData(prev => ({ ...prev, category: value }))
                 }
               >
                 <SelectTrigger>
@@ -792,7 +762,7 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No category</SelectItem>
-                  {categories.map((category) => (
+                  {categories.map(category => (
                     <SelectItem key={category.id} value={category.id}>
                       <div className="flex items-center space-x-2">
                         <div
@@ -811,8 +781,8 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
               <Label>Project</Label>
               <Select
                 value={formData.project}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, project: value }))
+                onValueChange={value =>
+                  setFormData(prev => ({ ...prev, project: value }))
                 }
               >
                 <SelectTrigger>
@@ -820,7 +790,7 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No project</SelectItem>
-                  {projects.map((project) => (
+                  {projects.map(project => (
                     <SelectItem key={project.id} value={project.id}>
                       <div className="flex flex-col">
                         <span>{project.name}</span>
@@ -837,45 +807,27 @@ const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Start Time</Label>
-              <Select
+              <Label htmlFor="archive-task-start-time">Start Time</Label>
+              <TimePicker
+                id="archive-task-start-time"
                 value={timeData.startTime}
-                onValueChange={(value) =>
-                  setTimeData((prev) => ({ ...prev, startTime: value }))
+                onValueChange={value =>
+                  setTimeData(prev => ({ ...prev, startTime: value }))
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {timeOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                aria-label="Task start time"
+              />
             </div>
 
             <div>
-              <Label>End Time</Label>
-              <Select
+              <Label htmlFor="archive-task-end-time">End Time</Label>
+              <TimePicker
+                id="archive-task-end-time"
                 value={timeData.endTime}
-                onValueChange={(value) =>
-                  setTimeData((prev) => ({ ...prev, endTime: value }))
+                onValueChange={value =>
+                  setTimeData(prev => ({ ...prev, endTime: value }))
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select end time" />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {timeOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                aria-label="Task end time"
+              />
             </div>
           </div>
 
