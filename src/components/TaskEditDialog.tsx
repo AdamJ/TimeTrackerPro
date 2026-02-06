@@ -1,28 +1,29 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue
-} from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MarkdownDisplay } from "@/components/MarkdownDisplay";
-import { Clock, Save } from "lucide-react";
-import { Task } from "@/contexts/TimeTrackingContext";
-import { useTimeTracking } from "@/hooks/useTimeTracking";
-import { formatTime, formatDate } from "@/utils/timeUtil";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { TimePicker } from '@/components/ui/scroll-time-picker';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MarkdownDisplay } from '@/components/MarkdownDisplay';
+import { Clock, Save } from 'lucide-react';
+import { Task } from '@/contexts/TimeTrackingContext';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
+import { formatTime, formatDate } from '@/utils/timeUtil';
 
 interface TaskEditDialogProps {
   task: Task;
@@ -63,7 +64,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
   useEffect(() => {
     if (isOpen && task) {
       const projectId =
-        projects.find((p) => p.name === task.project)?.id || 'none';
+        projects.find(p => p.name === task.project)?.id || 'none';
 
       setFormData({
         title: task.title || '',
@@ -85,7 +86,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
   useEffect(() => {
     if (task && isOpen) {
       const projectId =
-        projects.find((p) => p.name === task.project)?.id || 'none';
+        projects.find(p => p.name === task.project)?.id || 'none';
       const originalData = {
         title: task.title || '',
         description: task.description || '',
@@ -125,39 +126,11 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
     return newDate;
   };
 
-  type TimeOption = { value: string; label: string };
-  function formatTime12Hour(date: Date | undefined): string {
-    if (!date) return '-';
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours === 0 ? 12 : hours;
-    return `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-  }
-  const generateTimeOptions = (): TimeOption[] => {
-    const options: TimeOption[] = [];
-    for (let hour = 0; hour < 24; hour++) {
-      for (let minute = 0; minute < 60; minute += 15) {
-        const value = `${hour.toString().padStart(2, '0')}:${minute
-          .toString()
-          .padStart(2, '0')}`;
-        const date = new Date();
-        date.setHours(hour, minute, 0, 0);
-        const label = formatTime12Hour(date);
-        options.push({ value, label });
-      }
-    }
-    return options;
-  };
-
-  const timeOptions: TimeOption[] = generateTimeOptions();
-
   const handleCancel = () => {
     // Reset form to original values
     if (task) {
       const projectId =
-        projects.find((p) => p.name === task.project)?.id || 'none';
+        projects.find(p => p.name === task.project)?.id || 'none';
 
       setFormData({
         title: task.title || '',
@@ -183,11 +156,11 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
 
     const selectedProject =
       formData.project !== 'none'
-        ? projects.find((p) => p.id === formData.project)
+        ? projects.find(p => p.id === formData.project)
         : undefined;
     const selectedCategory =
       formData.category !== 'none'
-        ? categories.find((c) => c.id === formData.category)
+        ? categories.find(c => c.id === formData.category)
         : undefined;
 
     // Update task details
@@ -257,72 +230,78 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                     <Input
                       id="title"
                       value={formData.title}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, title: e.target.value }))
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          title: e.target.value
+                        }))
                       }
                       placeholder="Enter task title"
                     />
                   </div>
 
-									<div>
-										<Label htmlFor="description">Description</Label>
-										<Tabs defaultValue="edit" className="w-full">
-											<TabsList className="grid w-full grid-cols-2">
-												<TabsTrigger value="edit">Edit</TabsTrigger>
-												<TabsTrigger value="preview">Preview</TabsTrigger>
-											</TabsList>
-											<TabsContent value="edit">
-												<Textarea
-													id="description"
-													value={formData.description}
-													onChange={(e) =>
-														setFormData((prev) => ({
-															...prev,
-															description: e.target.value
-														}))
-													}
-													placeholder="Enter task description (optional, supports Markdown)"
-													className="min-h-[80px] resize-none"
-												/>
-											</TabsContent>
-											<TabsContent value="preview">
-												<div className="w-full min-h-[80px] p-3 border rounded-md bg-background">
-													{formData.description ? (
-														<MarkdownDisplay content={formData.description} />
-													) : (
-														<p className="text-sm text-muted-foreground">No description to preview</p>
-													)}
-												</div>
-											</TabsContent>
-										</Tabs>
-									</div>
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Tabs defaultValue="edit" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="edit">Edit</TabsTrigger>
+                        <TabsTrigger value="preview">Preview</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="edit">
+                        <Textarea
+                          id="description"
+                          value={formData.description}
+                          onChange={e =>
+                            setFormData(prev => ({
+                              ...prev,
+                              description: e.target.value
+                            }))
+                          }
+                          placeholder="Enter task description (optional, supports Markdown)"
+                          className="min-h-[80px] resize-none"
+                        />
+                      </TabsContent>
+                      <TabsContent value="preview">
+                        <div className="w-full min-h-[80px] p-3 border rounded-md bg-background">
+                          {formData.description ? (
+                            <MarkdownDisplay content={formData.description} />
+                          ) : (
+                            <p className="text-sm text-muted-foreground">
+                              No description to preview
+                            </p>
+                          )}
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label>Category</Label>
                       <Select
                         value={formData.category}
-                        onValueChange={(value) =>
-                          setFormData((prev) => ({ ...prev, category: value }))
+                        onValueChange={value =>
+                          setFormData(prev => ({ ...prev, category: value }))
                         }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select category">
-                            {formData.category && formData.category !== 'none' ? (
+                            {formData.category &&
+                            formData.category !== 'none' ? (
                               <div className="flex items-center space-x-2">
                                 <div
                                   className="w-3 h-3 rounded-full border"
                                   style={{
                                     backgroundColor:
                                       categories.find(
-                                        (c) => c.id === formData.category
+                                        c => c.id === formData.category
                                       )?.color || '#gray'
                                   }}
                                 />
                                 <span>
                                   {
                                     categories.find(
-                                      (c) => c.id === formData.category
+                                      c => c.id === formData.category
                                     )?.name
                                   }
                                 </span>
@@ -334,7 +313,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">No category</SelectItem>
-                          {categories.map((category) => (
+                          {categories.map(category => (
                             <SelectItem key={category.id} value={category.id}>
                               <div className="flex items-center space-x-2">
                                 <div
@@ -353,8 +332,8 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                       <Label>Project</Label>
                       <Select
                         value={formData.project}
-                        onValueChange={(value) =>
-                          setFormData((prev) => ({ ...prev, project: value }))
+                        onValueChange={value =>
+                          setFormData(prev => ({ ...prev, project: value }))
                         }
                       >
                         <SelectTrigger>
@@ -363,14 +342,16 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                               <div className="flex flex-col">
                                 <span>
                                   {
-                                    projects.find((p) => p.id === formData.project)
-                                      ?.name
+                                    projects.find(
+                                      p => p.id === formData.project
+                                    )?.name
                                   }
                                 </span>
                                 <span className="text-sm text-gray-500">
                                   {
-                                    projects.find((p) => p.id === formData.project)
-                                      ?.client
+                                    projects.find(
+                                      p => p.id === formData.project
+                                    )?.client
                                   }
                                 </span>
                               </div>
@@ -381,7 +362,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">No project</SelectItem>
-                          {projects.map((project) => (
+                          {projects.map(project => (
                             <SelectItem key={project.id} value={project.id}>
                               <div className="flex flex-col">
                                 <span>{project.name}</span>
@@ -415,52 +396,34 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label>Start Time</Label>
-                      <Select
+                      <Label htmlFor="task-start-time">Start Time</Label>
+                      <TimePicker
+                        id="task-start-time"
                         value={timeData.startTime}
-                        onValueChange={(value) =>
-                          setTimeData((prev) => ({ ...prev, startTime: value }))
+                        onValueChange={value =>
+                          setTimeData(prev => ({ ...prev, startTime: value }))
                         }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select start time" />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-60">
-                          {timeOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        aria-label="Task start time"
+                      />
                     </div>
 
                     <div>
-                      <Label>
+                      <Label htmlFor="task-end-time">
                         End Time {!task.endTime && '(Currently Active)'}
                       </Label>
-                      <Select
+                      <TimePicker
+                        id="task-end-time"
                         value={timeData.endTime}
-                        onValueChange={(value) =>
-                          setTimeData((prev) => ({ ...prev, endTime: value }))
+                        onValueChange={value =>
+                          setTimeData(prev => ({ ...prev, endTime: value }))
                         }
                         disabled={!task.endTime}
-                      >
-                        <SelectTrigger>
-                          <SelectValue
-                            placeholder={
-                              task.endTime ? 'Select end time' : 'Task is active'
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-60">
-                          {timeOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        aria-label={
+                          task.endTime
+                            ? 'Task end time'
+                            : 'Task is currently active'
+                        }
+                      />
                     </div>
                   </div>
 
