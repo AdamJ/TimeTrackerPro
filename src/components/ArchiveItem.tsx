@@ -1,19 +1,26 @@
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow
-} from "@/components/ui/table";
-import { Calendar, Clock, Edit, RotateCcw, FileText } from "lucide-react";
-import { formatDuration, formatDurationLong, formatTime, formatDate, generateDailySummary } from "@/utils/timeUtil";
-import { MarkdownDisplay } from "@/components/MarkdownDisplay";
-import { DayRecord } from "@/contexts/TimeTrackingContext";
-import { useTimeTracking } from "@/hooks/useTimeTracking";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
+import { Calendar, Clock, Edit, RotateCcw, FileText } from 'lucide-react';
+import {
+  formatDuration,
+  formatDurationLong,
+  formatTime,
+  formatDate,
+  generateDailySummary
+} from '@/utils/timeUtil';
+import { MarkdownDisplay } from '@/components/MarkdownDisplay';
+import { DayRecord } from '@/contexts/TimeTrackingContext';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
 
 interface ArchiveItemProps {
   day: DayRecord;
@@ -101,7 +108,9 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
               <div className="flex items-center justify-between text-sm print:text-base">
                 <div className="flex items-center space-x-4">
                   <span className="text-blue-600 print:text-black font-medium">
-                    Total <span className="hidden md:d-inline-flex">Hours: </span>{getHoursWorkedForDay(day).toFixed(2)}h
+                    Total{' '}
+                    <span className="hidden md:d-inline-flex">Hours: </span>
+                    {getHoursWorkedForDay(day).toFixed(2)}h
                   </span>
                   <span className="text-green-600 print:text-black font-medium">
                     Billable: {getBillableHoursForDay(day).toFixed(2)}h
@@ -122,8 +131,8 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
           {/* Daily Summary */}
           {(() => {
             const descriptions = day.tasks
-              .filter((task) => task.description)
-              .map((task) => task.description!);
+              .filter(task => task.description)
+              .map(task => task.description!);
             const summary = generateDailySummary(descriptions);
 
             if (!summary) return null;
@@ -132,14 +141,46 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
               <div className="space-y-2 border-t pt-4">
                 <h4 className="font-medium text-gray-900 flex items-center mb-2">
                   <FileText className="w-4 h-4 mr-2" />
-                  Daily Summary
+                  Overview
                 </h4>
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md print:bg-white print:border print:border-gray-300">
-                  <MarkdownDisplay
-                    content={summary}
-                    className="prose-p:text-gray-700 dark:prose-p:text-gray-300 print:prose-p:text-gray-800"
-                  />
-                </div>
+                <Tabs defaultValue="summary" className="w-full">
+                  <TabsList className="border-b mb-4">
+                    <TabsTrigger
+                      value="summary"
+                      className="px-3 py-1 text-sm font-medium text-gray-700 data-[state=active]:border-blue-600 data-[state=active]:border-b-2 focus:outline-none"
+                    >
+                      Summary
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="notes"
+                      className="px-3 py-1 text-sm font-medium text-gray-700 data-[state=active]:border-blue-600 data-[state=active]:border-b-2 focus:outline-none"
+                    >
+                      Notes
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="summary" className="focus:outline-none">
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md print:bg-white print:border print:border-gray-300">
+                      <MarkdownDisplay
+                        content={summary}
+                        className="prose-p:text-gray-700 dark:prose-p:text-gray-300 print:prose-p:text-gray-800"
+                      />
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="notes" className="focus:outline-none">
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md print:bg-white print:border print:border-gray-300">
+                      {day.notes ? (
+                        <MarkdownDisplay
+                          content={day.notes}
+                          className="prose-p:text-gray-700 dark:prose-p:text-gray-300 print:prose-p:text-gray-800"
+                        />
+                      ) : (
+                        <div className="prose-sm prose-p:leading-relaxed prose-p:my-1 prose-p:text-gray-700 dark:prose-p:text-gray-300 print:prose-p:text-gray-800">
+                          <p>No notes for this day have been entered.</p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
             );
           })()}
@@ -173,25 +214,34 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {day.tasks.map((task) => {
-                  const project = projects.find((p) => p.name === task.project);
-                  const category = categories.find((c) => c.name === task.category);
-                  const taskHours = task.duration ? task.duration / (1000 * 60 * 60) : 0;
+                {day.tasks.map(task => {
+                  const project = projects.find(p => p.name === task.project);
+                  const category = categories.find(
+                    c => c.name === task.category
+                  );
+                  const taskHours = task.duration
+                    ? task.duration / (1000 * 60 * 60)
+                    : 0;
 
                   // Check if both the project and category are billable
                   const projectIsBillable = project?.isBillable !== false;
                   const categoryIsBillable = category?.isBillable !== false;
                   const isBillable = projectIsBillable && categoryIsBillable;
 
-                  const taskValue = isBillable && project?.hourlyRate && task.duration ?
-                    taskHours * project.hourlyRate : 0;
+                  const taskValue =
+                    isBillable && project?.hourlyRate && task.duration
+                      ? taskHours * project.hourlyRate
+                      : 0;
 
                   return (
                     <TableRow key={task.id} className="print:border-black">
                       <TableCell className="font-medium print:text-black">
                         {task.title}
                         <div className="text-sm text-gray-400 hidden md:block print:text-gray-600">
-                          <MarkdownDisplay content={task.description} className="prose-sm line-clamp-1 hover:line-clamp-none transition-all duration-200" />
+                          <MarkdownDisplay
+                            content={task.description}
+                            className="prose-sm line-clamp-1 hover:line-clamp-none transition-all duration-200"
+                          />
                         </div>
                       </TableCell>
                       <TableCell className="print:text-black">
@@ -219,7 +269,9 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
                           <span className="font-medium text-green-600 print:text-black">
                             ${taskValue.toFixed(2)}
                           </span>
-                        ) : '-'}
+                        ) : (
+                          '-'
+                        )}
                       </TableCell>
                     </TableRow>
                   );
