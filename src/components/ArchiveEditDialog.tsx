@@ -33,11 +33,9 @@ import {
 import {
   Calendar,
   Clock,
-  X,
   Save,
   Trash2,
   Edit,
-  Plus,
   AlertTriangle,
   RotateCcw
 } from 'lucide-react';
@@ -314,8 +312,9 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                 <InfoCircledIcon />
               </Callout.Icon>
               <Callout.Text>
-                You will need admin privileges to install and access this
-                application.
+                Only administrators can edit archived days. Changes will be
+                saved immediately and cannot be undone, so please review your
+                changes before saving.
               </Callout.Text>
             </Callout.Root>
           )}
