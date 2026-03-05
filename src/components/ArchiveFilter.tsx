@@ -54,7 +54,7 @@ export const ArchiveFilter: React.FC<ArchiveFilterProps> = ({
 
   return (
     <Card className="print:hidden">
-      <CardContent className="p-4 md:p-6">
+      <CardContent className="p-2 md:p-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <button
@@ -89,7 +89,7 @@ export const ArchiveFilter: React.FC<ArchiveFilterProps> = ({
                   id="startDate"
                   type="date"
                   value={filters.startDate}
-                  onChange={(e) =>
+                  onChange={e =>
                     onFilterChange({ ...filters, startDate: e.target.value })
                   }
                 />
@@ -101,7 +101,7 @@ export const ArchiveFilter: React.FC<ArchiveFilterProps> = ({
                   id="endDate"
                   type="date"
                   value={filters.endDate}
-                  onChange={(e) =>
+                  onChange={e =>
                     onFilterChange({ ...filters, endDate: e.target.value })
                   }
                 />
@@ -112,7 +112,7 @@ export const ArchiveFilter: React.FC<ArchiveFilterProps> = ({
                 <Label htmlFor="project">Project</Label>
                 <Select
                   value={filters.project || ALL_PROJECTS}
-                  onValueChange={(value) =>
+                  onValueChange={value =>
                     onFilterChange({
                       ...filters,
                       project: value === ALL_PROJECTS ? '' : value
@@ -124,7 +124,7 @@ export const ArchiveFilter: React.FC<ArchiveFilterProps> = ({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ALL_PROJECTS}>All Projects</SelectItem>
-                    {projects.map((project) => (
+                    {projects.map(project => (
                       <SelectItem key={project.id} value={project.name}>
                         {project.name}
                       </SelectItem>
@@ -138,7 +138,7 @@ export const ArchiveFilter: React.FC<ArchiveFilterProps> = ({
                 <Label htmlFor="category">Category</Label>
                 <Select
                   value={filters.category || ALL_CATEGORIES}
-                  onValueChange={(value) =>
+                  onValueChange={value =>
                     onFilterChange({
                       ...filters,
                       category: value === ALL_CATEGORIES ? '' : value
@@ -149,8 +149,10 @@ export const ArchiveFilter: React.FC<ArchiveFilterProps> = ({
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={ALL_CATEGORIES}>All Categories</SelectItem>
-                    {categories.map((category) => (
+                    <SelectItem value={ALL_CATEGORIES}>
+                      All Categories
+                    </SelectItem>
+                    {categories.map(category => (
                       <SelectItem key={category.id} value={category.name}>
                         {category.name}
                       </SelectItem>

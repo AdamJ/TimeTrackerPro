@@ -273,24 +273,24 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                   size="sm"
                   className="text-blue-600 hover:text-blue-700"
                 >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Restore
+                  <RotateCcw className="w-4 h-4" />
+                  <span className="hidden md:block md:ml-2">Restore</span>
                 </Button>
                 <Button
                   onClick={() => setShowDeleteConfirm(true)}
                   variant="destructive"
                   size="sm"
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
+                  <Trash2 className="w-4 h-4" />
+                  <span className="hidden md:block md:ml-2">Delete</span>
                 </Button>
                 <Button
                   onClick={() => setIsEditing(true)}
                   variant="default"
                   size="sm"
                 >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit
+                  <Edit className="w-4 h-4" />
+                  <span className="hidden md:block md:ml-2">Edit</span>
                 </Button>
               </>
             ) : (

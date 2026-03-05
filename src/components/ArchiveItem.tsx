@@ -66,8 +66,8 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
               size="sm"
               className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
             >
-              <RotateCcw className="w-4 h-4 hidden md:block" />
-              Restore
+              <RotateCcw className="w-4 h-4 block" />
+              <span className="hidden md:block">Restore</span>
             </Button>
             <Button
               onClick={() => onEdit(day)}
@@ -75,8 +75,8 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
               size="sm"
               className="flex items-center space-x-2"
             >
-              <Edit className="w-4 h-4 hidden md:block" />
-              Edit
+              <Edit className="w-4 h-4 block" />
+              <span className="hidden md:block">Edit</span>
             </Button>
           </div>
         </div>
