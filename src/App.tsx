@@ -1,10 +1,11 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OfflineProvider } from "@/contexts/OfflineContext";
 import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Suspense, lazy } from "react";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { UpdateNotification } from "@/components/UpdateNotification";
@@ -26,6 +27,14 @@ const PageLoader = () => (
   </div>
 );
 
+// Redirects unauthenticated users to home
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <PageLoader />;
+  if (!isAuthenticated) return <Navigate to="/" replace />;
+  return <>{children}</>;
+};
+
 const App = () => (
   <OfflineProvider>
     <AuthProvider>
@@ -41,7 +50,7 @@ const App = () => (
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/archive" element={<Archive />} />
                 <Route path="/settings" element={<Settings />} />
-                <Route path="/report" element={<Report />} />
+                <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
