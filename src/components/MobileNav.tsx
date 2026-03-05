@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Archive, FolderKanban, Settings } from 'lucide-react';
+import { Home, Archive, FolderKanban, Settings, PaperclipIcon } from 'lucide-react';
 
 export const MobileNav = memo(function MobileNav() {
   const location = useLocation();
@@ -16,9 +16,9 @@ export const MobileNav = memo(function MobileNav() {
       label: 'Home'
     },
     {
-      path: '/projectlist',
-      icon: FolderKanban,
-      label: 'Projects'
+      path: '/report',
+      icon: PaperclipIcon,
+      label: 'Report'
     },
     {
       path: '/archive',

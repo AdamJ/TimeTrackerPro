@@ -17,6 +17,7 @@ const ProjectList = lazy(() => import("./pages/ProjectList"));
 const Settings = lazy(() => import("./pages/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Categories = lazy(() => import("./pages/Categories"));
+const Report = lazy(() => import('./pages/Report'));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/archive" element={<Archive />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/report" element={<Report />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

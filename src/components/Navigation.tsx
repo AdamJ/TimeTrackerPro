@@ -77,6 +77,11 @@ const SiteNavigationMenu = () => {
               />
             </Item>
             <Item className="hidden md:flex">
+              <NavLink to="/report" className={({ isActive }) =>
+                  `transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input ... ${isActive ? 'bg-blue-200 hover:bg-accent hover:text-accent-foreground' : 'bg-white'}`
+                }>Report</NavLink>
+            </Item>
+            <Item className="hidden md:flex">
               <Button
                 onClick={handlePrint}
                 variant="outline"
