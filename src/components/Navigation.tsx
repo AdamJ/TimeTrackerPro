@@ -12,7 +12,7 @@ import { ProjectManagement } from '@/components/ProjectManagement';
 import { UserMenu } from '@/components/UserMenu';
 import { AuthDialog } from '@/components/AuthDialog';
 import { Link } from 'react-router-dom';
-import { CogIcon, Printer, Database, CalendarClock } from 'lucide-react';
+import { CogIcon, Printer, CalendarClock } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { formatDuration } from '@/utils/timeUtil';
 import { SyncStatus } from '@/components/SyncStatus';
@@ -36,7 +36,7 @@ const SiteNavigationMenu = () => {
     isSyncing,
     lastSyncTime,
     hasUnsavedChanges,
-    forceSyncToDatabase, // Use manual sync instead of refresh
+    forceSyncToDatabase // Use manual sync instead of refresh
   } = useTimeTracking();
 
   const runningTime = isDayStarted ? getTotalDayDuration() : 0;
@@ -51,7 +51,11 @@ const SiteNavigationMenu = () => {
                 to="/"
                 className="flex items-center text-gray-900 hover:text-blue-700"
               >
-                <img src="favicon-96x96.png" alt="Logo" className="w-8 h-8 sm:mr-2" />
+                <img
+                  src="favicon-96x96.png"
+                  alt="Logo"
+                  className="w-8 h-8 sm:mr-2"
+                />
                 <span className="hidden lg:block">TimeTracker</span>
               </Link>
             </h1>
@@ -102,9 +106,7 @@ const SiteNavigationMenu = () => {
         </List>
 
         <div className="perspective-[2000px] absolute left-0 top-full flex w-full justify-center">
-          <Viewport
-            className="relative mt-2.5 h-[var(--radix-navigation-menu-viewport-height)] w-full origin-[top_center] overflow-hidden rounded-md bg-white transition-[width,_height] duration-300 data-[state=closed]:animate-scaleOut data-[state=open]:animate-scaleIn sm:w-[var(--radix-navigation-menu-viewport-width)]"
-          />
+          <Viewport className="relative mt-2.5 h-[var(--radix-navigation-menu-viewport-height)] w-full origin-[top_center] overflow-hidden rounded-md bg-white transition-[width,_height] duration-300 data-[state=closed]:animate-scaleOut data-[state=open]:animate-scaleIn sm:w-[var(--radix-navigation-menu-viewport-width)]" />
         </div>
       </NavigationMenu>
 
