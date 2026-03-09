@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed duplicate `generateTimeOptions()` helper functions from all dialog components
 
 ### Fixed
+- Improved Weekly Report error messages to distinguish between distinct Gemini API failure modes
+  — `src/hooks/useReportSummary.ts` (added `classifyGeminiError()` and `classifyFinishReason()` helpers; 429 rate limit vs. quota exhaustion, 503 overload, 500 server error, 504 timeout, 403 bad key, 400 precondition, 404 model not found, network failures, and content-blocked responses each produce specific actionable messages instead of Gemini's generic "high demand" text)
+- Fixed Weekly Report page only reading archived data from localStorage, causing empty reports for authenticated (Supabase) users
+  — `src/pages/Report.tsx`, `src/utils/reportUtils.ts` (replaced direct `localStorage.getItem()` call with `useTimeTracking().archivedDays` via new `dayRecordsToArchivedDays()` adapter; both storage modes now work correctly)
 - Resolved merge conflicts in `src/index.css`
 
 ## [0.21.1] - 2026-02-06

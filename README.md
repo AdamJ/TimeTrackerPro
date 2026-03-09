@@ -80,6 +80,7 @@ TimeTracker Pro is a professional time tracking application that helps you monit
 - **Multiple Export Formats** - CSV, JSON, and invoice formats
 - **CSV Import** - Import existing time data from other tools
 - **Print Support** - Print-friendly archive views for physical records
+- **Weekly Report** - AI-generated work summaries from archived days (standup, client, or retrospective tone); works in both guest and authenticated modes; errors surface specific, actionable guidance (rate limit vs. quota exhaustion vs. overload vs. key issues)
 
 ### Progressive Web App
 
@@ -625,12 +626,14 @@ TimeTrackerPro/
 │   │   ├── Archive.tsx         # Archived days
 │   │   ├── ProjectList.tsx     # Project management
 │   │   ├── Categories.tsx      # Category management
+│   │   ├── Report.tsx          # AI weekly summary generator
 │   │   ├── Settings.tsx        # App settings
 │   │   └── NotFound.tsx        # 404 page
 │   ├── services/               # Data Layer
 │   │   └── dataService.ts      # Persistence abstraction
 │   ├── utils/                  # Utilities
-│   │   └── timeUtil.ts         # Time formatting
+│   │   ├── timeUtil.ts         # Time formatting
+│   │   └── reportUtils.ts      # Report grouping, formatting, and DayRecord adapter
 │   ├── App.tsx                 # Root component
 │   └── main.tsx                # Entry point
 ├── public/
@@ -1066,6 +1069,8 @@ const MyPage = lazy(() => import("./pages/MyPage"));
 For a detailed list of changes, new features, and bug fixes, see [CHANGELOG.md](CHANGELOG.md).
 
 **Recent Updates:**
+- Improved Weekly Report error messages to distinguish Gemini API failure modes (rate limit, quota, overload, key issues)
+- Fixed Weekly Report for authenticated users (data now sourced from Supabase, not localStorage only)
 - Native HTML5 time inputs for intuitive, accessible time selection
 - Consistent UX with date inputs across all dialogs
 - Mobile-optimized with browser-native time pickers

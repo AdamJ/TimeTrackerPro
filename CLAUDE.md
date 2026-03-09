@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Codebase Guide
 
-**Last Updated:** 2026-02-06
-**Version:** 1.0.4
+**Last Updated:** 2026-03-09
+**Version:** 1.0.6
 
 This document provides comprehensive guidance for AI assistants working with the TimeTracker Pro codebase. It covers architecture, conventions, workflows, and best practices.
 
@@ -46,6 +46,7 @@ TimeTracker Pro is a modern time tracking application built for freelancers, con
 - **Archive System**: Permanent record of completed work days
 - **Export/Import**: CSV and JSON formats, database-compatible schema
 - **Revenue Tracking**: Automatic calculation based on hourly rates
+- **Weekly Report**: AI-generated work summaries (standup, client, retrospective tones) sourced from `archivedDays` via context — works in both guest and authenticated modes
 - **Responsive Design**: Works on desktop and mobile
 
 ### Project Origin
@@ -225,6 +226,7 @@ TimeTrackerPro/
 │   │   ├── useAuth.tsx              # Auth hook
 │   │   ├── useOffline.tsx           # Offline state hook (PWA)
 │   │   ├── useTimeTracking.tsx      # Time tracking hook
+│   │   ├── useReportSummary.ts      # Gemini API call + error classification for /report
 │   │   ├── use-toast.tsx            # Toast notifications
 │   │   └── useRealtimeSync.ts       # Database sync
 │   ├── lib/                # Utility libraries
@@ -235,12 +237,14 @@ TimeTrackerPro/
 │   │   ├── Archive.tsx     # Archived days
 │   │   ├── ProjectList.tsx # Project management
 │   │   ├── Categories.tsx  # Category management
+│   │   ├── Report.tsx      # AI weekly summary generator
 │   │   ├── Settings.tsx    # App settings
 │   │   └── NotFound.tsx    # 404 page
 │   ├── services/           # Business logic services
 │   │   └── dataService.ts  # Data persistence layer
 │   ├── utils/              # Utility functions
 │   │   ├── timeUtil.ts     # Time formatting helpers
+│   │   ├── reportUtils.ts  # Report grouping, serialization, and DayRecord→ArchivedDay adapter
 │   │   └── supabase.ts     # Supabase utilities
 │   ├── App.tsx             # Root component
 │   ├── main.tsx            # Application entry point
@@ -888,6 +892,22 @@ setTasks([...tasks, newTask]);
 await forceSyncToDatabase(); // Or wait for critical event
 ```
 
+#### 6. Bypassing the DataService (reading localStorage directly)
+```typescript
+// ❌ WRONG - Reads localStorage only; breaks for authenticated users whose
+// data lives in Supabase, not localStorage
+const raw = localStorage.getItem("timetracker_archived_days");
+
+// ✅ CORRECT - Use the context, which routes through LocalStorageService
+// or SupabaseService automatically
+const { archivedDays } = useTimeTracking();
+```
+
+Any utility that needs archived days must consume the context or accept
+`DayRecord[]` as a parameter. Use `dayRecordsToArchivedDays()` from
+`src/utils/reportUtils.ts` to convert to the `ArchivedDay[]` shape that
+the report utils expect.
+
 ### Architecture Gotchas
 
 #### 1. Manual Sync Required
@@ -921,6 +941,26 @@ const { data: { user } } = await supabase.auth.getUser();
 // ✅ CORRECT - Use cached user
 const user = await getCachedUser();
 ```
+
+#### 5. Gemini API Error Classification
+
+Do **not** surface Gemini's raw `error.message` string to the user — it is often
+vague ("high demand", "Resource has been exhausted") and gives no guidance on
+whether to wait, fix a key, or switch plans.
+
+Always classify by HTTP status + `error.status` using `classifyGeminiError()`
+in `src/hooks/useReportSummary.ts`. Key distinctions:
+
+| Symptom | HTTP | Gemini status | Meaning |
+|---------|------|---------------|---------|
+| Multiple consecutive failures | 503 | `UNAVAILABLE` | Server overloaded — retry in seconds |
+| First request of the day fails | 429 | `RESOURCE_EXHAUSTED` + "quota" | Daily free-tier limit hit |
+| Rapid retries fail | 429 | `RESOURCE_EXHAUSTED` + "rate" | Per-minute RPM limit — wait 30–60 s |
+| Always fails | 403 | `PERMISSION_DENIED` | Bad API key |
+| Always fails in region | 400 | `FAILED_PRECONDITION` | Free tier not available in region |
+
+Also handle `finishReason` on 200 OK responses: a `SAFETY` or `RECITATION`
+block returns HTTP 200 with an empty `text` — use `classifyFinishReason()`.
 
 ### Performance Gotchas
 
@@ -1063,6 +1103,8 @@ Before making changes, verify:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.0.6 | 2026-03-09 | Added Gemini API error classification in `useReportSummary.ts`; added gotcha table for HTTP status mapping; added `useReportSummary.ts` to file organization |
+| 1.0.5 | 2026-03-09 | Fixed Report page to use TimeTrackingContext instead of direct localStorage read; added `dayRecordsToArchivedDays()` adapter; added DataService bypass pitfall |
 | 1.0.4 | 2026-02-06 | Replaced custom scroll picker with native HTML5 time inputs for better UX and a11y |
 | 1.0.3 | 2026-02-06 | Added ScrollTimePicker component, replaced time dropdowns with scroll-wheel UI |
 | 1.0.2 | 2026-02-02 | Added auto-open New Task form feature when day starts |

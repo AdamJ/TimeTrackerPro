@@ -1,6 +1,9 @@
 // src/utils/reportUtils.ts
 // Utility functions for the /report route in TimeTracker Pro.
-// Reads directly from localStorage keys: timetracker_archived_days
+// Data is sourced via the TimeTrackingContext (which handles both localStorage
+// and Supabase depending on auth state).
+
+import { DayRecord } from '@/contexts/TimeTrackingContext';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,30 +32,44 @@ export interface ArchivedDay {
 
 export interface WeekGroup {
   weekStart: Date; // Sunday
-  weekEnd: Date;   // Saturday
-  label: string;   // e.g. "Jan 11 – Jan 17, 2026"
+  weekEnd: Date; // Saturday
+  label: string; // e.g. "Jan 11 – Jan 17, 2026"
   days: ArchivedDay[];
   totalDuration: number;
   projects: string[];
 }
 
-export type ReportTone = "standup" | "client" | "retrospective";
+export type ReportTone = 'standup' | 'client' | 'retrospective';
 
 // ---------------------------------------------------------------------------
-// Storage
+// Conversion from context DayRecord[] to ArchivedDay[]
 // ---------------------------------------------------------------------------
 
-const ARCHIVED_DAYS_KEY = "timetracker_archived_days";
-
-export function loadArchivedDays(): ArchivedDay[] {
-  try {
-    const raw = localStorage.getItem(ARCHIVED_DAYS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+/**
+ * Converts DayRecord[] from TimeTrackingContext (where dates are Date objects)
+ * to the ArchivedDay[] format used by report utilities (where dates are strings).
+ * This is the correct data source for Report.tsx — it works for both guest
+ * (localStorage) and authenticated (Supabase) users.
+ */
+export function dayRecordsToArchivedDays(records: DayRecord[]): ArchivedDay[] {
+  return records.map(day => ({
+    id: day.id,
+    date: day.date,
+    startTime: day.startTime.toISOString(),
+    endTime: day.endTime.toISOString(),
+    totalDuration: day.totalDuration,
+    tasks: day.tasks.map(t => ({
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      startTime: t.startTime.toISOString(),
+      endTime: t.endTime?.toISOString() ?? '',
+      duration: t.duration ?? 0,
+      project: t.project,
+      client: t.client,
+      category: t.category
+    }))
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -106,7 +123,7 @@ export function groupByCalendarWeek(days: ArchivedDay[]): WeekGroup[] {
         label: formatWeekLabel(ws, we),
         days: [],
         totalDuration: 0,
-        projects: [],
+        projects: []
       });
     }
 
@@ -147,7 +164,7 @@ export function groupByDateRange(
   const fromMs = new Date(from).setHours(0, 0, 0, 0);
   const toMs = new Date(to).setHours(23, 59, 59, 999);
 
-  const filtered = days.filter((day) => {
+  const filtered = days.filter(day => {
     const t = new Date(day.date).getTime();
     return t >= fromMs && t <= toMs;
   });
@@ -174,7 +191,7 @@ export function groupByDateRange(
     label: formatWeekLabel(new Date(from), new Date(to)),
     days: filtered,
     totalDuration,
-    projects,
+    projects
   };
 }
 
@@ -183,8 +200,18 @@ export function groupByDateRange(
 // ---------------------------------------------------------------------------
 
 const SHORT_MONTH = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec'
 ];
 
 function formatWeekLabel(start: Date, end: Date): string {
@@ -209,17 +236,17 @@ export function formatDuration(ms: number): string {
 /** Short day label: "Mon Jan 15" */
 function formatDayLabel(dateStr: string): string {
   const d = new Date(dateStr);
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   return `${days[d.getDay()]} ${SHORT_MONTH[d.getMonth()]} ${d.getDate()}`;
 }
 
 // Categories to exclude from the summary prompt (non-work noise)
 const EXCLUDED_CATEGORIES = new Set([
-  "break-time",
-  "break",
-  "lunch",
-  "personal",
-  "admin",
+  'break-time',
+  'break',
+  'lunch',
+  'personal',
+  'admin'
 ]);
 
 // ---------------------------------------------------------------------------
@@ -232,11 +259,11 @@ const EXCLUDED_CATEGORIES = new Set([
  * and non-work tasks. Preserves the narrative content of descriptions.
  */
 export function serializeWeekForPrompt(week: WeekGroup): string {
-  const lines: string[] = [`Week of ${week.label}`, ""];
+  const lines: string[] = [`Week of ${week.label}`, ''];
 
   for (const day of week.days) {
     const workTasks = day.tasks.filter(
-      (t) => !EXCLUDED_CATEGORIES.has(t.category?.toLowerCase() ?? "")
+      t => !EXCLUDED_CATEGORIES.has(t.category?.toLowerCase() ?? '')
     );
     if (workTasks.length === 0) continue;
 
@@ -246,7 +273,7 @@ export function serializeWeekForPrompt(week: WeekGroup): string {
     lines.push(`${formatDayLabel(day.date)} (${dayHours})`);
 
     for (const task of workTasks) {
-      const project = task.project ? ` [${task.project}]` : "";
+      const project = task.project ? ` [${task.project}]` : '';
       const desc = task.description?.trim();
       const taskHours = formatDuration(task.duration);
       if (desc) {
@@ -256,10 +283,10 @@ export function serializeWeekForPrompt(week: WeekGroup): string {
       }
     }
 
-    lines.push("");
+    lines.push('');
   }
 
-  return lines.join("\n").trim();
+  return lines.join('\n').trim();
 }
 
 // ---------------------------------------------------------------------------
@@ -268,11 +295,11 @@ export function serializeWeekForPrompt(week: WeekGroup): string {
 
 const TONE_INSTRUCTIONS: Record<ReportTone, string> = {
   standup:
-    "Write in a concise first-person style suitable for a weekly team standup or async update. Focus on what was accomplished and any notable shifts in focus.",
+    'Write in a concise first-person style suitable for a weekly team standup or async update. Focus on what was accomplished and any notable shifts in focus.',
   client:
-    "Write in a professional first-person style suitable for sharing with a client or stakeholder. Emphasize outcomes and progress on deliverables.",
+    'Write in a professional first-person style suitable for sharing with a client or stakeholder. Emphasize outcomes and progress on deliverables.',
   retrospective:
-    "Write in a reflective first-person style suitable for a personal weekly retrospective. Note themes, what went well, and what shifted during the week.",
+    'Write in a reflective first-person style suitable for a personal weekly retrospective. Note themes, what went well, and what shifted during the week.'
 };
 
 /**
@@ -281,7 +308,7 @@ const TONE_INSTRUCTIONS: Record<ReportTone, string> = {
  */
 export function buildSummaryPrompt(
   week: WeekGroup,
-  tone: ReportTone = "standup"
+  tone: ReportTone = 'standup'
 ): { system: string; userMessage: string } {
   const system = `You are a professional writing assistant that creates concise weekly work summaries from time tracking data.
 
@@ -330,6 +357,6 @@ export function getMostRecentCompleteWeek(
 ): WeekGroup | null {
   if (weeks.length === 0) return null;
   const now = new Date();
-  const complete = weeks.find((w) => w.weekEnd < now);
+  const complete = weeks.find(w => w.weekEnd < now);
   return complete ?? weeks[0];
 }
