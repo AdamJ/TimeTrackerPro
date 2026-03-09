@@ -1,6 +1,6 @@
-# Styles
+# Styles — TimeTracker Pro
 
-The following rules are to govern the style choices for Agents. See [Agents.md](../AGENTS.md) for detailed configurations.
+The following rules govern style choices for UI and visual design.
 
 ## Library
 
