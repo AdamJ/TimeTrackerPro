@@ -25,7 +25,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import {
-  loadArchivedDays,
+  dayRecordsToArchivedDays,
   groupByCalendarWeek,
   groupByDateRange,
   getMostRecentCompleteWeek,
@@ -35,6 +35,7 @@ import {
   ReportTone
 } from '@/utils/reportUtils';
 import { useReportSummary } from '@/hooks/useReportSummary';
+import { useTimeTracking } from '@/hooks/useTimeTracking';
 import SiteNavigationMenu from '@/components/Navigation';
 
 // ---------------------------------------------------------------------------
@@ -387,7 +388,11 @@ function ErrorState({
 // ---------------------------------------------------------------------------
 
 export default function Report() {
-  const archivedDays = useMemo(() => loadArchivedDays(), []);
+  const { archivedDays: rawArchivedDays } = useTimeTracking();
+  const archivedDays = useMemo(
+    () => dayRecordsToArchivedDays(rawArchivedDays),
+    [rawArchivedDays]
+  );
   const calendarWeeks = useMemo(
     () => groupByCalendarWeek(archivedDays),
     [archivedDays]

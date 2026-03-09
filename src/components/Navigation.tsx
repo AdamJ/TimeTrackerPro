@@ -52,7 +52,7 @@ const SiteNavigationMenu = () => {
                 className="flex items-center text-gray-900 hover:text-blue-700"
               >
                 <img
-                  src="favicon-96x96.png"
+                  src="icon.png"
                   alt="Logo"
                   className="w-8 h-8 sm:mr-2"
                 />
