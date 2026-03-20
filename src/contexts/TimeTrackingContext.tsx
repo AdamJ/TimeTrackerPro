@@ -11,7 +11,6 @@ import { DEFAULT_PROJECTS, ProjectCategory } from '@/config/projects';
 import { useAuth } from '@/hooks/useAuth';
 import { createDataService, DataService } from '@/services/dataService';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
-import { generateDailySummary } from '@/utils/timeUtil';
 import { toast } from '@/hooks/use-toast';
 import {
   getHoursWorkedForDay as calcHoursWorkedForDay,
@@ -21,6 +20,12 @@ import {
   getTotalHoursForPeriod as calcTotalHoursForPeriod,
   getRevenueForPeriod as calcRevenueForPeriod
 } from '@/utils/calculationUtils';
+import {
+  exportToCSV as utilExportToCSV,
+  exportToJSON as utilExportToJSON,
+  generateInvoiceData as utilGenerateInvoiceData,
+  parseCSVImport
+} from '@/utils/exportUtils';
 
 export interface Task {
   id: string;
@@ -921,453 +926,45 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const getNonBillableHoursForDay = (day: DayRecord): number =>
     calcNonBillableHoursForDay(day, projects, categories);
 
-  const exportToCSV = (startDate?: Date, endDate?: Date): string => {
-    let filteredDays = archivedDays;
+  const exportToCSV = (startDate?: Date, endDate?: Date): string =>
+    utilExportToCSV(archivedDays, projects, categories, user?.id || '', startDate, endDate);
 
-    if (startDate && endDate) {
-      filteredDays = archivedDays.filter(day => {
-        const dayDate = new Date(day.startTime);
-        return dayDate >= startDate && dayDate <= endDate;
-      });
-    }
-
-    // CSV headers matching database schema exactly
-    const headers = [
-      'id',
-      'user_id',
-      'title',
-      'description',
-      'start_time',
-      'end_time',
-      'duration',
-      'project_id',
-      'project_name',
-      'client',
-      'category_id',
-      'category_name',
-      'day_record_id',
-      'is_current',
-      'inserted_at',
-      'updated_at',
-      'daily_summary'
-    ];
-    const rows = [headers.join(',')];
-
-    filteredDays.forEach(day => {
-      // Generate daily summary once per day
-      const dayDescriptions = day.tasks
-        .filter(t => t.description)
-        .map(t => t.description!);
-      const dailySummary = generateDailySummary(dayDescriptions);
-
-      day.tasks.forEach(task => {
-        if (task.duration) {
-          const project = projects.find(p => p.name === task.project);
-          // Fix: Look up category by ID, not name
-          const category = categories.find(c => c.id === task.category);
-
-          // Format timestamps as ISO strings for database compatibility
-          const startTimeISO = task.startTime.toISOString();
-          const endTimeISO = task.endTime?.toISOString() || '';
-          // Use actual timestamps from database, or current time as fallback
-          const insertedAtISO =
-            task.insertedAt?.toISOString() || new Date().toISOString();
-          const updatedAtISO =
-            task.updatedAt?.toISOString() || new Date().toISOString();
-
-          const row = [
-            `"${task.id}"`,
-            `"${user?.id || ''}"`, // user_id from auth context
-            `"${task.title}"`,
-            `"${task.description || ''}"`,
-            `"${startTimeISO}"`,
-            `"${endTimeISO}"`,
-            task.duration || '', // duration in milliseconds
-            `"${project?.id || ''}"`, // project_id
-            `"${task.project || ''}"`, // project_name (denormalized)
-            `"${task.client || ''}"`,
-            `"${category?.id || ''}"`, // category_id
-            `"${task.category || ''}"`, // category_name (denormalized)
-            `"${day.id}"`, // day_record_id
-            'false', // is_current - archived tasks are not current
-            `"${insertedAtISO}"`, // inserted_at - actual database timestamp
-            `"${updatedAtISO}"`, // updated_at - actual database timestamp
-            `"${dailySummary.replace(/"/g, '""')}"` // daily_summary - escape quotes for CSV
-          ];
-          rows.push(row.join(','));
-        }
-      });
-    });
-
-    return rows.join('\n');
-  };
-
-  const exportToJSON = (startDate?: Date, endDate?: Date): string => {
-    let filteredDays = archivedDays;
-
-    if (startDate && endDate) {
-      filteredDays = archivedDays.filter(day => {
-        const dayDate = new Date(day.startTime);
-        return dayDate >= startDate && dayDate <= endDate;
-      });
-    }
-
-    // Add daily summary to each day
-    const daysWithSummary = filteredDays.map(day => {
-      const dayDescriptions = day.tasks
-        .filter(t => t.description)
-        .map(t => t.description!);
-      const dailySummary = generateDailySummary(dayDescriptions);
-
-      return {
-        ...day,
-        dailySummary
-      };
-    });
-
-    const exportData = {
-      exportDate: new Date().toISOString(),
-      period: {
-        startDate: startDate?.toISOString(),
-        endDate: endDate?.toISOString()
-      },
-      summary: {
-        totalDays: filteredDays.length,
-        totalHours: getTotalHoursForPeriod(
-          startDate || new Date(0),
-          endDate || new Date()
-        ),
-        totalRevenue: getRevenueForPeriod(
-          startDate || new Date(0),
-          endDate || new Date()
-        )
-      },
-      days: daysWithSummary,
-      projects: projects
-    };
-
-    return JSON.stringify(exportData, null, 2);
-  };
+  const exportToJSON = (startDate?: Date, endDate?: Date): string =>
+    utilExportToJSON(archivedDays, projects, categories, startDate, endDate);
 
   const generateInvoiceData = (
     clientName: string,
     startDate: Date,
     endDate: Date
-  ) => {
-    // Create lookup maps for O(1) access (performance optimization)
-    const projectMap = new Map(projects.map(p => [p.name, p]));
-    const categoryMap = new Map(categories.map(c => [c.id, c]));
-
-    const filteredDays = archivedDays.filter(day => {
-      const dayDate = new Date(day.startTime);
-      return dayDate >= startDate && dayDate <= endDate;
-    });
-
-    // Generate daily summaries for all days in the period
-    const dailySummaries: {
-      [dayId: string]: { date: string; summary: string };
-    } = {};
-    filteredDays.forEach(day => {
-      const dayDescriptions = day.tasks
-        .filter(t => t.description)
-        .map(t => t.description!);
-      const summary = generateDailySummary(dayDescriptions);
-
-      if (summary) {
-        dailySummaries[day.id] = {
-          date: day.date,
-          summary
-        };
-      }
-    });
-
-    const clientTasks = filteredDays.flatMap(day =>
-      day.tasks
-        .filter(task => {
-          if (!task.client || task.client !== clientName || !task.duration) {
-            return false;
-          }
-
-          // Only include billable tasks in invoices
-          if (task.project && task.category) {
-            const project = projectMap.get(task.project);
-            const category = categoryMap.get(task.category);
-
-            const projectIsBillable = project?.isBillable !== false;
-            const categoryIsBillable = category?.isBillable !== false;
-
-            // Task must be billable to appear on invoice
-            return projectIsBillable && categoryIsBillable;
-          }
-
-          return false;
-        })
-        .map(task => ({
-          ...task,
-          dayId: day.id,
-          dayDate: day.date,
-          dailySummary: dailySummaries[day.id]?.summary || ''
-        }))
-    );
-
-    const projectSummary: {
-      [key: string]: { hours: number; rate: number; amount: number };
-    } = {};
-
-    clientTasks.forEach(task => {
-      const projectName = task.project || 'General';
-      const project = projectMap.get(task.project);
-      const hours = (task.duration || 0) / (1000 * 60 * 60);
-      const rate = project?.hourlyRate || 0;
-
-      if (!projectSummary[projectName]) {
-        projectSummary[projectName] = { hours: 0, rate, amount: 0 };
-      }
-
-      projectSummary[projectName].hours += hours;
-      projectSummary[projectName].amount += hours * rate;
-    });
-
-    const totalHours = Object.values(projectSummary).reduce(
-      (sum, proj) => sum + proj.hours,
-      0
-    );
-    const totalAmount = Object.values(projectSummary).reduce(
-      (sum, proj) => sum + proj.amount,
-      0
-    );
-
-    return {
-      client: clientName,
-      period: { startDate, endDate },
-      projects: projectSummary,
-      summary: {
-        totalHours: Math.round(totalHours * 100) / 100,
-        totalAmount: Math.round(totalAmount * 100) / 100
-      },
-      tasks: clientTasks,
-      dailySummaries
-    };
-  };
+  ): InvoiceData =>
+    utilGenerateInvoiceData(archivedDays, projects, categories, clientName, startDate, endDate);
 
   const importFromCSV = async (
     csvContent: string
   ): Promise<{ success: boolean; message: string; importedCount: number }> => {
     try {
-      const lines = csvContent.split('\n').filter(line => line.trim());
-      if (lines.length === 0) {
-        return {
-          success: false,
-          message: 'CSV file is empty',
-          importedCount: 0
-        };
-      }
-
-      const headerLine = lines[0];
-      const expectedHeaders = [
-        'id',
-        'user_id',
-        'title',
-        'description',
-        'start_time',
-        'end_time',
-        'duration',
-        'project_id',
-        'project_name',
-        'client',
-        'category_id',
-        'category_name',
-        'day_record_id',
-        'is_current',
-        'inserted_at',
-        'updated_at'
-      ];
-
-      // Validate headers
-      const headers = headerLine
-        .split(',')
-        .map(h => h.trim().replace(/"/g, ''));
-      const missingHeaders = expectedHeaders.filter(h => !headers.includes(h));
-      if (missingHeaders.length > 0) {
-        return {
-          success: false,
-          message: `CSV missing required headers: ${missingHeaders.join(', ')}`,
-          importedCount: 0
-        };
-      }
-
-      const tasksByDay: {
-        [dayId: string]: { tasks: Task[]; dayRecord: Partial<DayRecord> };
-      } = {};
-      let importedCount = 0;
-
-      // Process each data line
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-
-        try {
-          // Parse CSV line (handle quoted values)
-          const values: string[] = [];
-          let current = '';
-          let inQuotes = false;
-
-          for (let j = 0; j < line.length; j++) {
-            const char = line[j];
-            if (char === '"') {
-              inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-              values.push(current.trim());
-              current = '';
-            } else {
-              current += char;
-            }
-          }
-          values.push(current.trim()); // Add last value
-
-          if (values.length !== headers.length) {
-            console.warn(
-              `Skipping malformed CSV line ${i + 1}: expected ${headers.length} columns, got ${values.length}`
-            );
-            continue;
-          }
-
-          // Create task object from CSV data
-          const taskData: { [key: string]: string } = {};
-          headers.forEach((header, index) => {
-            taskData[header] = values[index].replace(/^"|"$/g, ''); // Remove quotes
-          });
-
-          // Validate required fields
-          if (!taskData.id || !taskData.title || !taskData.start_time) {
-            console.warn(
-              `Skipping incomplete task on line ${i + 1}: missing required fields`
-            );
-            continue;
-          }
-
-          // Map category name back to category ID for proper storage
-          const categoryByName = categories.find(
-            c => c.name === taskData.category_name
-          );
-          const categoryId =
-            categoryByName?.id || taskData.category_id || undefined;
-
-          const task: Task = {
-            id: taskData.id,
-            title: taskData.title,
-            description: taskData.description || undefined,
-            startTime: new Date(taskData.start_time),
-            endTime: taskData.end_time
-              ? new Date(taskData.end_time)
-              : undefined,
-            duration: taskData.duration
-              ? parseInt(taskData.duration)
-              : undefined,
-            project: taskData.project_name || undefined,
-            client: taskData.client || undefined,
-            category: categoryId // Use category ID, not name
-          };
-
-          // Validate dates
-          if (isNaN(task.startTime.getTime())) {
-            console.warn(
-              `Skipping task with invalid start_time on line ${i + 1}`
-            );
-            continue;
-          }
-
-          if (task.endTime && isNaN(task.endTime.getTime())) {
-            task.endTime = undefined;
-          }
-
-          const dayRecordId = taskData.day_record_id;
-          if (!dayRecordId) {
-            console.warn(
-              `Skipping task without day_record_id on line ${i + 1}`
-            );
-            continue;
-          }
-
-          // Group tasks by day
-          if (!tasksByDay[dayRecordId]) {
-            tasksByDay[dayRecordId] = {
-              tasks: [],
-              dayRecord: {
-                id: dayRecordId,
-                date: task.startTime.toISOString().split('T')[0],
-                startTime: task.startTime,
-                endTime: task.endTime || task.startTime,
-                totalDuration: 0,
-                tasks: []
-              }
-            };
-          }
-
-          tasksByDay[dayRecordId].tasks.push(task);
-
-          // Update day record bounds
-          if (
-            task.startTime <
-            (tasksByDay[dayRecordId].dayRecord.startTime || new Date())
-          ) {
-            tasksByDay[dayRecordId].dayRecord.startTime = task.startTime;
-          }
-          if (
-            task.endTime &&
-            task.endTime >
-              (tasksByDay[dayRecordId].dayRecord.endTime || new Date(0))
-          ) {
-            tasksByDay[dayRecordId].dayRecord.endTime = task.endTime;
-          }
-
-          importedCount++;
-        } catch (error) {
-          console.warn(`Error parsing line ${i + 1}:`, error);
-          continue;
-        }
-      }
-
-      // Create day records and add to archived days
-      const newArchivedDays: DayRecord[] = [];
-
-      for (const [dayId, { tasks, dayRecord }] of Object.entries(tasksByDay)) {
-        const totalDuration = tasks.reduce(
-          (sum, task) => sum + (task.duration || 0),
-          0
-        );
-
-        const completeDay: DayRecord = {
-          id: dayRecord.id!,
-          date: dayRecord.date!,
-          tasks: tasks,
-          totalDuration: totalDuration,
-          startTime: dayRecord.startTime!,
-          endTime: dayRecord.endTime!,
-          notes: dayRecord.notes
-        };
-
-        newArchivedDays.push(completeDay);
+      const result = parseCSVImport(csvContent, categories);
+      if (!result.success) {
+        return { success: false, message: result.message, importedCount: 0 };
       }
 
       // Merge with existing archived days (avoid duplicates)
       const existingIds = new Set(archivedDays.map(day => day.id));
-      const uniqueNewDays = newArchivedDays.filter(
+      const uniqueNewDays = result.newArchivedDays.filter(
         day => !existingIds.has(day.id)
       );
 
       const updatedArchivedDays = [...archivedDays, ...uniqueNewDays];
       setArchivedDays(updatedArchivedDays);
 
-      // Save to storage
       if (dataService) {
         await dataService.saveArchivedDays(updatedArchivedDays);
       }
 
       return {
         success: true,
-        message: `Successfully imported ${importedCount} tasks in ${uniqueNewDays.length} days`,
-        importedCount
+        message: `Successfully imported ${result.importedCount} tasks in ${uniqueNewDays.length} days`,
+        importedCount: result.importedCount
       };
     } catch (error) {
       console.error('CSV import error:', error);
