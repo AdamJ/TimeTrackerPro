@@ -233,9 +233,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     const handleLogout = async () => {
       // Detect logout: was authenticated, now not authenticated
       if (previousAuthState === true && !isAuthenticated && dataService) {
-        console.log(
-          '🔄 User logged out - syncing data to localStorage for offline access'
-        );
         try {
           // Use the current (Supabase) service to sync data to localStorage before switching
           await dataService.migrateToLocalStorage();
@@ -263,40 +260,17 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(true);
       try {
         // Load current day
-        console.log('🔄 Loading current day from database...');
         const currentDay = await dataService.getCurrentDay();
-        console.log('📱 Raw current day data from storage:', currentDay);
         if (currentDay) {
-          console.log('📱 Current day loaded from database:', {
-            tasksCount: currentDay.tasks.length,
-            isDayStarted: currentDay.isDayStarted,
-            hasCurrentTask: !!currentDay.currentTask,
-            dayStartTime: currentDay.dayStartTime,
-            fullData: currentDay
-          });
           setIsDayStarted(currentDay.isDayStarted);
           setDayStartTime(currentDay.dayStartTime);
           setTasks(currentDay.tasks);
           setCurrentTask(currentDay.currentTask);
         } else {
-          console.log('📱 No current day data found in database');
         }
 
         // Load archived days
         const archived = await dataService.getArchivedDays();
-        console.log('📚 Loaded archived days:', {
-          count: archived.length,
-          sample: archived.slice(0, 2).map(day => ({
-            id: day.id,
-            date: day.date,
-            tasksCount: day.tasks.length,
-            tasks: day.tasks.map(task => ({
-              id: task.id,
-              title: task.title,
-              duration: task.duration
-            }))
-          }))
-        });
         setArchivedDays(archived);
 
         // Load projects
@@ -326,13 +300,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         // Load categories
         const loadedCategories = await dataService.getCategories();
         if (loadedCategories.length > 0) {
-          console.log(
-            '📋 Loaded categories from database:',
-            loadedCategories.length
-          );
           setCategories(loadedCategories);
         } else {
-          console.log('📋 No categories found in database, using defaults');
           setCategories(DEFAULT_CATEGORIES);
         }
 
@@ -378,16 +347,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       setIsSyncing(true);
       const state = latestStateRef.current;
-      console.log('💾 Syncing current day to database...', {
-        tasksCount: state.tasks.length,
-        isDayStarted: state.isDayStarted,
-        hasCurrentTask: !!state.currentTask,
-        dayStartTime: state.dayStartTime,
-        fullState: state
-      });
       await dataService.saveCurrentDay(state);
       setLastSyncTime(new Date());
-      console.log('✅ Current day synced successfully');
     } catch (error) {
       console.error('❌ Error saving current day:', error);
     } finally {
@@ -416,11 +377,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   // Manual sync function - saves ALL data types
   const forceSyncToDatabase = useCallback(async () => {
     if (!dataService) {
-      console.log('❌ No data service available for sync');
       return;
     }
 
-    console.log('🔄 Manual sync: Saving all data to database...');
     setIsSyncing(true);
 
     try {
@@ -439,7 +398,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       await Promise.all(savePromises);
       setLastSyncTime(new Date());
       setHasUnsavedChanges(false); // Clear unsaved changes flag
-      console.log('✅ Manual sync completed successfully');
     } catch (error) {
       console.error('❌ Manual sync failed:', error);
     } finally {
@@ -453,14 +411,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       setIsSyncing(true);
-      console.log('🔄 Checking for updates from other devices...');
       const currentDay = await dataService.getCurrentDay();
       if (currentDay) {
-        console.log('📱 Updated data found from other device:', {
-          tasksCount: currentDay.tasks.length,
-          isDayStarted: currentDay.isDayStarted,
-          hasCurrentTask: !!currentDay.currentTask
-        });
         setIsDayStarted(currentDay.isDayStarted);
         setDayStartTime(currentDay.dayStartTime);
         setTasks(currentDay.tasks);
@@ -492,7 +444,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       // Only save if we have unsaved changes
       if (dataService && (isDayStarted || tasks.length > 0)) {
-        console.log('💾 Saving before window close...');
         stableSaveCurrentDay();
         // Don't prevent closing, just save
       }
@@ -506,7 +457,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const handleSyncRequired = () => {
       if (!isAuthenticated) return;
-      console.log('🔄 Sync required event received — pushing state to database...');
       forceSyncToDatabase();
     };
 
@@ -534,16 +484,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsDayStarted(true);
     setDayStartTime(roundedTime);
     setHasUnsavedChanges(true);
-    console.log('Day started at:', roundedTime);
   };
 
   const endDay = () => {
-    console.log('🔚 Ending day - current state before:', {
-      isDayStarted,
-      dayStartTime,
-      tasksLength: tasks.length,
-      currentTask: !!currentTask
-    });
 
     if (currentTask) {
       // End the current task
@@ -559,11 +502,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     setIsDayStarted(false);
     setHasUnsavedChanges(true);
-    console.log('🔚 Day ended - saving state...');
     // Save immediately since this is a critical action
     saveImmediately()
       .then(() => {
-        console.log('✅ State saved after ending day');
       })
       .catch(error => {
         console.error('❌ Error saving state after ending day:', error);
@@ -609,7 +550,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setTasks(prev => [...prev, newTask]);
     setCurrentTask(newTask);
     setHasUnsavedChanges(true);
-    console.log('New task started:', title, 'at', taskStartTime);
     // Save immediately since this is a critical action
     saveImmediately();
   };
@@ -622,7 +562,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       setCurrentTask(prev => (prev ? { ...prev, ...updates } : null));
     }
     setHasUnsavedChanges(true);
-    console.log('Task updated:', taskId, updates);
   };
 
   const deleteTask = (taskId: string) => {
@@ -631,7 +570,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       setCurrentTask(null);
     }
     setHasUnsavedChanges(true);
-    console.log('Task deleted:', taskId);
   };
 
   const postDay = async (notes?: string) => {
@@ -652,13 +590,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       console.warn('⚠️ Archiving day with no tasks');
     }
 
-    console.log('📦 Archiving day:', {
-      id: dayRecord.id,
-      date: dayRecord.date,
-      tasksCount: dayRecord.tasks.length,
-      totalDuration: dayRecord.totalDuration
-    });
-
     // Update state optimistically
     setArchivedDays(prev => [...prev, dayRecord]);
 
@@ -667,15 +598,12 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setCurrentTask(null);
     setTasks([]);
     setIsDayStarted(false);
-    console.log('Day posted to archive');
 
     // Save immediately since this is a critical action
     if (dataService) {
       try {
         // Save the archived days with enhanced error handling
-        console.log('💾 Saving archived data to database...');
         await dataService.saveArchivedDays([...archivedDays, dayRecord]);
-        console.log('✅ Archive saved successfully');
 
         // Save the cleared current day state so refresh shows "Start Day" screen
         await dataService.saveCurrentDay({
@@ -684,7 +612,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           currentTask: null,
           tasks: []
         });
-        console.log('✅ Cleared current day state saved');
 
         setHasUnsavedChanges(false);
 
@@ -717,8 +644,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           setCurrentTask(lastTask);
         }
 
-        console.log('🔄 Restored current day state after failed archive');
-
         // Show error notification to user
         toast({
           title: 'Archive Failed',
@@ -738,7 +663,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     };
     setProjects(prev => [...prev, newProject]);
     setHasUnsavedChanges(true);
-    console.log('📋 Project added (not saved automatically)');
   };
 
   const updateProject = (projectId: string, updates: Partial<Project>) => {
@@ -748,13 +672,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       )
     );
     setHasUnsavedChanges(true);
-    console.log('📋 Project updated (not saved automatically)');
   };
 
   const deleteProject = (projectId: string) => {
     setProjects(prev => prev.filter(project => project.id !== projectId));
     setHasUnsavedChanges(true);
-    console.log('📋 Project deleted (not saved automatically)');
   };
 
   const resetProjectsToDefaults = () => {
@@ -771,7 +693,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!dataService) return;
 
     try {
-      console.log('🔄 Updating archived day:', { dayId, updates });
 
       // Optimistic update - update local state immediately for responsive UI
       setArchivedDays(prev =>
@@ -781,12 +702,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       // Then persist to database
       await dataService.updateArchivedDay(dayId, updates);
       setHasUnsavedChanges(false);
-      console.log('✅ Database update complete');
     } catch (error) {
       console.error('❌ Error updating archived day:', error);
 
       // On error, refresh from database to restore consistent state
-      console.log('⚠️ Rolling back optimistic update...');
       const refreshedDays = await dataService.getArchivedDays();
       setArchivedDays(refreshedDays);
 
@@ -828,7 +747,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setArchivedDays(prev => prev.filter(day => day.id !== dayId));
 
     setHasUnsavedChanges(true);
-    console.log('Day restored from archive');
   };
 
   // Category management functions - NO AUTOMATIC SAVING
@@ -839,7 +757,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     };
     setCategories(prev => [...prev, newCategory]);
     setHasUnsavedChanges(true);
-    console.log('🏷️ Category added (not saved automatically)');
   };
 
   const updateCategory = (
@@ -852,13 +769,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       )
     );
     setHasUnsavedChanges(true);
-    console.log('🏷️ Category updated (not saved automatically)');
   };
 
   const deleteCategory = (categoryId: string) => {
     setCategories(prev => prev.filter(category => category.id !== categoryId));
     setHasUnsavedChanges(true);
-    console.log('🏷️ Category deleted (not saved automatically)');
   };
 
   // Time adjustment function (rounds to nearest 15 minutes)

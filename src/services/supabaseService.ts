@@ -67,7 +67,6 @@ export class SupabaseService implements DataService {
 			this.hasNewSchema = true;
 			SupabaseService.globalSchemaResult = true;
 			SupabaseService.schemaChecked = true;
-			console.log("✅ New schema confirmed and cached globally");
 			return true;
 		} catch (error) {
 			console.warn("Error checking schema, assuming new schema exists:", error);
@@ -79,14 +78,8 @@ export class SupabaseService implements DataService {
 	}
 
 	async saveCurrentDay(data: CurrentDayData): Promise<void> {
-		console.log("💾 SupabaseService: Saving current day...", {
-			tasksCount: data.tasks.length,
-			isDayStarted: data.isDayStarted,
-			hasCurrentTask: !!data.currentTask
-		});
 
 		const user = await getCachedUser();
-		console.log("👤 User authenticated:", user.id);
 
 		const categories = (await getCachedCategories()) || [];
 		const projects = (await getCachedProjects()) || [];
@@ -121,7 +114,6 @@ export class SupabaseService implements DataService {
 					console.error("❌ Error deleting all current tasks:", deleteError);
 					throw deleteError;
 				}
-				console.log("🗑️ Deleted all current tasks (no tasks provided)");
 			} else {
 				// Get existing task IDs to minimize database operations
 				const { data: existingTasks } = await supabase
@@ -149,7 +141,6 @@ export class SupabaseService implements DataService {
 						console.error("❌ Error deleting obsolete tasks:", deleteError);
 						throw deleteError;
 					}
-					console.log("🗑️ Deleted obsolete tasks:", tasksToDelete.length);
 				}
 
 				// 4. Upsert current tasks (single batch operation)
@@ -175,8 +166,6 @@ export class SupabaseService implements DataService {
 					};
 				});
 
-				console.log("📝 Upserting tasks:", tasksToUpsert.length);
-
 				const { error: tasksError } = await supabase
 					.from("tasks")
 					.upsert(tasksToUpsert, { onConflict: "id" });
@@ -187,10 +176,8 @@ export class SupabaseService implements DataService {
 					throw tasksError;
 				}
 
-				console.log("✅ Tasks upserted successfully");
 			}
 
-			console.log("✅ Current day saved successfully");
 		} catch (error) {
 			console.error("❌ Error in saveCurrentDay:", error);
 			throw error;
@@ -198,10 +185,8 @@ export class SupabaseService implements DataService {
 	}
 
 	async getCurrentDay(): Promise<CurrentDayData | null> {
-		console.log("🔄 SupabaseService: Loading current day...");
 
 		const user = await getCachedUser();
-		console.log("👤 User authenticated:", user.id);
 
 		const { data: currentDayData, error: currentDayError } = await supabase
 			.from("current_day")
@@ -226,13 +211,7 @@ export class SupabaseService implements DataService {
 			throw tasksError;
 		}
 
-		console.log("📊 Loaded data:", {
-			hasDayData: !!currentDayData,
-			tasksCount: tasksData?.length || 0
-		});
-
 		if (!currentDayData && (!tasksData || tasksData.length === 0)) {
-			console.log("📭 No current day data found");
 			return null;
 		}
 
@@ -263,20 +242,12 @@ export class SupabaseService implements DataService {
 			currentTask
 		};
 
-		console.log("✅ Current day loaded:", {
-			isDayStarted: result.isDayStarted,
-			tasksCount: result.tasks.length,
-			hasCurrentTask: !!result.currentTask
-		});
-
 		return result;
 	}
 
 	async saveArchivedDays(days: DayRecord[]): Promise<void> {
-		console.log("📁 SupabaseService: Saving archived days...", days.length);
 
 		const user = await getCachedUser();
-		console.log("👤 User authenticated:", user.id);
 
 		const categories = (await getCachedCategories()) || [];
 		const projects = (await getCachedProjects()) || [];
@@ -286,7 +257,6 @@ export class SupabaseService implements DataService {
 		}
 
 		if (days.length === 0) {
-			console.log("📭 No archived days to save - clearing existing data");
 			await supabase.from("tasks").delete().eq("user_id", user.id).eq("is_current", false);
 			await supabase.from("archived_days").delete().eq("user_id", user.id);
 			return;
@@ -326,8 +296,6 @@ export class SupabaseService implements DataService {
 			})
 		);
 
-		console.log("🔄 Prepared data - Days:", archivedDaysToUpsert.length, "Tasks:", allTasks.length);
-
 		try {
 			// Step 1: Get existing data to determine what to delete
 			const { data: existingDays } = await supabase
@@ -351,7 +319,6 @@ export class SupabaseService implements DataService {
 			// Step 2: Delete archived days that no longer exist in local state
 			const daysToDelete = Array.from(existingDayIds).filter(id => !newDayIds.has(id));
 			if (daysToDelete.length > 0) {
-				console.log("🗑️ Deleting obsolete archived days:", daysToDelete.length);
 				const { error: deleteDaysError } = await supabase
 					.from("archived_days")
 					.delete()
@@ -368,7 +335,6 @@ export class SupabaseService implements DataService {
 			// Step 3: Delete archived tasks that no longer exist in local state
 			const tasksToDelete = Array.from(existingTaskIds).filter(id => !newTaskIds.has(id));
 			if (tasksToDelete.length > 0) {
-				console.log("🗑️ Deleting obsolete archived tasks:", tasksToDelete.length);
 				const { error: deleteTasksError } = await supabase
 					.from("tasks")
 					.delete()
@@ -384,7 +350,6 @@ export class SupabaseService implements DataService {
 			}
 
 			// Step 4: Upsert archived days
-			console.log("📅 Upserting archived days...");
 			const { error: daysError } = await supabase
 				.from("archived_days")
 				.upsert(archivedDaysToUpsert, { onConflict: "id" });
@@ -395,11 +360,8 @@ export class SupabaseService implements DataService {
 				throw daysError;
 			}
 
-			console.log("✅ Archived days upserted successfully");
-
 			// Step 5: Upsert archived tasks
 			if (allTasks.length > 0) {
-				console.log("📝 Upserting archived tasks...", allTasks.length);
 
 				const { error: tasksError } = await supabase
 					.from("tasks")
@@ -412,12 +374,8 @@ export class SupabaseService implements DataService {
 					throw tasksError;
 				}
 
-				console.log("✅ Archived tasks upserted successfully");
 			}
 
-			console.log("🎉 All archived data saved successfully");
-
-			console.log("🔍 Verifying archived data was saved correctly...");
 			await this.verifyArchivedDataIntegrity(days);
 		} catch (error) {
 			console.error("💥 Archiving save failed:", error);
@@ -458,13 +416,6 @@ export class SupabaseService implements DataService {
 
 			const expectedTasksCount = expectedDays.reduce((sum, day) => sum + day.tasks.length, 0);
 
-			console.log("📊 Archive verification results:", {
-				expectedDays: expectedDays.length,
-				savedDays: savedDays?.length || 0,
-				expectedTasks: expectedTasksCount,
-				savedTasks: savedTasks?.length || 0
-			});
-
 			if (savedDays?.length !== expectedDays.length) {
 				console.error("❌ Archive verification failed: Day count mismatch");
 			}
@@ -476,7 +427,6 @@ export class SupabaseService implements DataService {
 				);
 			}
 
-			console.log("✅ Archive verification passed");
 		} catch (error) {
 			console.error("❌ Archive verification failed:", error);
 			throw error;
@@ -484,10 +434,8 @@ export class SupabaseService implements DataService {
 	}
 
 	async getArchivedDays(): Promise<DayRecord[]> {
-		console.log("📁 SupabaseService: Loading archived days...");
 
 		const user = await getCachedUser();
-		console.log("👤 User authenticated:", user.id);
 
 		const { data: daysData, error: daysError } = await supabase
 			.from("archived_days")
@@ -501,11 +449,8 @@ export class SupabaseService implements DataService {
 		}
 
 		if (!daysData || daysData.length === 0) {
-			console.log("📭 No archived days found");
 			return [];
 		}
-
-		console.log("📊 Found archived days:", daysData.length);
 
 		const { data: tasksData, error: tasksError } = await supabase
 			.from("tasks")
@@ -518,8 +463,6 @@ export class SupabaseService implements DataService {
 			console.error("❌ Error loading archived tasks:", tasksError);
 			throw tasksError;
 		}
-
-		console.log("📝 Found archived tasks:", tasksData?.length || 0);
 
 		const tasksByDay: Record<string, Task[]> = {};
 		(tasksData || []).forEach((task) => {
@@ -556,9 +499,6 @@ export class SupabaseService implements DataService {
 			updatedAt: day.updated_at ? new Date(day.updated_at) : undefined
 		}));
 
-		console.log("✅ Archived days loaded:", {
-			daysCount: result.length,
-			totalTasks: result.reduce((sum, day) => sum + day.tasks.length, 0)
 		});
 
 		return result;
@@ -666,12 +606,10 @@ export class SupabaseService implements DataService {
 	}
 
 	async saveProjects(projects: Project[]): Promise<void> {
-		console.log("🗂️ SupabaseService: Saving projects...", projects.length);
 
 		const user = await getCachedUser();
 
 		if (projects.length === 0) {
-			console.log("📭 No projects to save - clearing existing data");
 			await supabase.from("projects").delete().eq("user_id", user.id);
 			trackDbCall("delete", "projects");
 			clearDataCaches();
@@ -691,7 +629,6 @@ export class SupabaseService implements DataService {
 			id => !newProjectIds.has(id)
 		);
 		if (projectsToDelete.length > 0) {
-			console.log("🗑️ Deleting obsolete projects:", projectsToDelete.length);
 			const { error: deleteError } = await supabase
 				.from("projects")
 				.delete()
@@ -715,7 +652,6 @@ export class SupabaseService implements DataService {
 			is_billable: project.isBillable !== false
 		}));
 
-		console.log("📝 Upserting projects...");
 		const { error } = await supabase
 			.from("projects")
 			.upsert(projectsToUpsert, { onConflict: "id" });
@@ -727,11 +663,9 @@ export class SupabaseService implements DataService {
 		}
 
 		setCachedProjects(projects);
-		console.log("✅ Projects upserted successfully");
 	}
 
 	async getProjects(): Promise<Project[]> {
-		console.log("🗂️ SupabaseService: Loading projects...");
 
 		const cachedResult = await getCachedProjects();
 		if (cachedResult) {
@@ -761,17 +695,14 @@ export class SupabaseService implements DataService {
 		}));
 
 		setCachedProjects(result);
-		console.log("✅ Projects loaded:", result.length);
 		return result;
 	}
 
 	async saveCategories(categories: TaskCategory[]): Promise<void> {
-		console.log("🏷️ SupabaseService: Saving categories...", categories.length);
 
 		const user = await getCachedUser();
 
 		if (categories.length === 0) {
-			console.log("📭 No categories to save - clearing existing data");
 			await supabase.from("categories").delete().eq("user_id", user.id);
 			trackDbCall("delete", "categories");
 			clearDataCaches();
@@ -791,7 +722,6 @@ export class SupabaseService implements DataService {
 			id => !newCategoryIds.has(id)
 		);
 		if (categoriesToDelete.length > 0) {
-			console.log("🗑️ Deleting obsolete categories:", categoriesToDelete.length);
 			const { error: deleteError } = await supabase
 				.from("categories")
 				.delete()
@@ -814,7 +744,6 @@ export class SupabaseService implements DataService {
 			is_billable: category.isBillable !== false
 		}));
 
-		console.log("📝 Upserting categories...");
 		const { error } = await supabase
 			.from("categories")
 			.upsert(categoriesToUpsert, { onConflict: "id" });
@@ -826,11 +755,9 @@ export class SupabaseService implements DataService {
 		}
 
 		setCachedCategories(categories);
-		console.log("✅ Categories upserted successfully");
 	}
 
 	async getCategories(): Promise<TaskCategory[]> {
-		console.log("🏷️ SupabaseService: Loading categories...");
 
 		const cachedResult = await getCachedCategories();
 		if (cachedResult) {
@@ -858,13 +785,11 @@ export class SupabaseService implements DataService {
 		}));
 
 		setCachedCategories(result);
-		console.log("✅ Categories loaded:", result.length);
 		return result;
 	}
 
 	async migrateFromLocalStorage(): Promise<void> {
 		try {
-			console.log("🔄 Checking for localStorage data to migrate...");
 			const localService = new LocalStorageService();
 
 			const projects = await localService.getProjects();
@@ -878,19 +803,7 @@ export class SupabaseService implements DataService {
 				currentDay && (currentDay.tasks.length > 0 || currentDay.isDayStarted);
 			const hasArchivedDays = archivedDays.length > 0;
 
-			console.log("📊 localStorage data check:", {
-				hasProjects,
-				hasCategories,
-				hasCurrentDay,
-				hasArchivedDays,
-				projectsCount: projects.length,
-				categoriesCount: categories.length,
-				currentDayTasks: currentDay?.tasks.length || 0,
-				archivedDaysCount: archivedDays.length
-			});
-
 			if (!hasProjects && !hasCategories && !hasCurrentDay && !hasArchivedDays) {
-				console.log("✅ No meaningful localStorage data found - skipping migration");
 				return;
 			}
 
@@ -905,7 +818,6 @@ export class SupabaseService implements DataService {
 				existingProjects.length > 0;
 
 			if (hasExistingData) {
-				console.log("⚠️ Supabase already contains data - being cautious with migration");
 
 				const shouldMigrateCurrentDay =
 					hasCurrentDay &&
@@ -915,17 +827,7 @@ export class SupabaseService implements DataService {
 				const shouldMigrateArchived =
 					hasArchivedDays && archivedDays.length > existingArchivedDays.length;
 
-				console.log("🔍 Migration decision:", {
-					shouldMigrateCurrentDay,
-					shouldMigrateArchived,
-					localCurrentDayTasks: currentDay?.tasks.length || 0,
-					existingCurrentDayTasks: existingCurrentDay?.tasks.length || 0,
-					localArchivedDays: archivedDays.length,
-					existingArchivedDays: existingArchivedDays.length
-				});
-
 				if (shouldMigrateCurrentDay) {
-					console.log("📱 Migrating current day from localStorage (has more data)");
 					if (currentDay) {
 						await this.saveCurrentDay(currentDay);
 					} else {
@@ -934,24 +836,19 @@ export class SupabaseService implements DataService {
 				}
 
 				if (shouldMigrateArchived) {
-					console.log("📚 Migrating archived days from localStorage (has more data)");
 					await this.saveArchivedDays(archivedDays);
 				}
 
 				if (hasProjects) {
-					console.log("📋 Migrating projects from localStorage");
 					await this.saveProjects(projects);
 				}
 
 				const existingCategories = await this.getCategories();
 				if (hasCategories && existingCategories.length === 0) {
-					console.log("🏷️ Migrating categories from localStorage (Supabase has no categories)");
 					await this.saveCategories(categories);
 				} else if (hasCategories && existingCategories.length > 0) {
-					console.log("⚠️ Skipping categories migration - Supabase already has categories");
 				}
 			} else {
-				console.log("✅ No existing Supabase data - safe to migrate all localStorage data");
 
 				if (hasProjects) await this.saveProjects(projects);
 				if (hasCategories) await this.saveCategories(categories);
@@ -959,7 +856,6 @@ export class SupabaseService implements DataService {
 				if (hasArchivedDays) await this.saveArchivedDays(archivedDays);
 			}
 
-			console.log("✅ Data migration from localStorage completed safely");
 		} catch (error) {
 			console.error("❌ Error migrating data from localStorage:", error);
 		}
@@ -967,7 +863,6 @@ export class SupabaseService implements DataService {
 
 	async migrateToLocalStorage(): Promise<void> {
 		try {
-			console.log("🔄 Migrating current data TO localStorage for offline access...");
 			const localService = new LocalStorageService();
 
 			const currentDay = await this.getCurrentDay();
@@ -977,25 +872,20 @@ export class SupabaseService implements DataService {
 
 			if (currentDay) {
 				await localService.saveCurrentDay(currentDay);
-				console.log("📱 Current day synced to localStorage");
 			}
 
 			if (archivedDays.length > 0) {
 				await localService.saveArchivedDays(archivedDays);
-				console.log(`📚 ${archivedDays.length} archived days synced to localStorage`);
 			}
 
 			if (projects.length > 0) {
 				await localService.saveProjects(projects);
-				console.log(`📋 ${projects.length} projects synced to localStorage`);
 			}
 
 			if (categories.length > 0) {
 				await localService.saveCategories(categories);
-				console.log(`🏷️ ${categories.length} categories synced to localStorage`);
 			}
 
-			console.log("✅ Data successfully synced to localStorage for offline access");
 		} catch (error) {
 			console.error("❌ Error migrating data to localStorage:", error);
 		}
