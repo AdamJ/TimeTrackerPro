@@ -13,6 +13,14 @@ import { createDataService, DataService } from '@/services/dataService';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { generateDailySummary } from '@/utils/timeUtil';
 import { toast } from '@/hooks/use-toast';
+import {
+  getHoursWorkedForDay as calcHoursWorkedForDay,
+  getRevenueForDay as calcRevenueForDay,
+  getBillableHoursForDay as calcBillableHoursForDay,
+  getNonBillableHoursForDay as calcNonBillableHoursForDay,
+  getTotalHoursForPeriod as calcTotalHoursForPeriod,
+  getRevenueForPeriod as calcRevenueForPeriod
+} from '@/utils/calculationUtils';
 
 export interface Task {
   id: string;
@@ -895,154 +903,23 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     return currentTime.getTime() - currentTask.startTime.getTime();
   };
 
-  const getTotalHoursForPeriod = (startDate: Date, endDate: Date): number => {
-    const filteredDays = archivedDays.filter(day => {
-      const dayDate = new Date(day.startTime);
-      return dayDate >= startDate && dayDate <= endDate;
-    });
+  const getTotalHoursForPeriod = (startDate: Date, endDate: Date): number =>
+    calcTotalHoursForPeriod(archivedDays, startDate, endDate);
 
-    const totalMs = filteredDays.reduce(
-      (total, day) => total + day.totalDuration,
-      0
-    );
-    return Math.round((totalMs / (1000 * 60 * 60)) * 100) / 100;
-  };
+  const getRevenueForPeriod = (startDate: Date, endDate: Date): number =>
+    calcRevenueForPeriod(archivedDays, projects, categories, startDate, endDate);
 
-  const getRevenueForPeriod = (startDate: Date, endDate: Date): number => {
-    const filteredDays = archivedDays.filter(day => {
-      const dayDate = new Date(day.startTime);
-      return dayDate >= startDate && dayDate <= endDate;
-    });
+  const getHoursWorkedForDay = (day: DayRecord): number =>
+    calcHoursWorkedForDay(day);
 
-    // Create lookup maps for O(1) access (performance optimization)
-    const projectMap = new Map(projects.map(p => [p.name, p]));
-    const categoryMap = new Map(categories.map(c => [c.id, c]));
+  const getRevenueForDay = (day: DayRecord): number =>
+    calcRevenueForDay(day, projects, categories);
 
-    let totalRevenue = 0;
-    filteredDays.forEach(day => {
-      day.tasks.forEach(task => {
-        if (task.project && task.duration && task.category) {
-          // Check if both the project and category are billable
-          const project = projectMap.get(task.project);
-          const category = categoryMap.get(task.category);
+  const getBillableHoursForDay = (day: DayRecord): number =>
+    calcBillableHoursForDay(day, projects, categories);
 
-          const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
-          const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
-
-          // Task is billable only if BOTH project AND category are billable
-          const isBillable = projectIsBillable && categoryIsBillable;
-
-          if (isBillable && project?.hourlyRate) {
-            const hours = task.duration / (1000 * 60 * 60);
-            totalRevenue += hours * project.hourlyRate;
-          }
-        }
-      });
-    });
-
-    return Math.round(totalRevenue * 100) / 100;
-  };
-
-  const getHoursWorkedForDay = (day: DayRecord): number => {
-    // Calculate total time worked (sum of all task durations, excluding breaks)
-    let totalTaskDuration = 0;
-    day.tasks.forEach(task => {
-      if (task.duration) {
-        totalTaskDuration += task.duration;
-      }
-    });
-
-    // Convert milliseconds to hours
-    const hours = totalTaskDuration / (1000 * 60 * 60);
-    return Math.round(hours * 100) / 100;
-  };
-
-  const getRevenueForDay = (day: DayRecord): number => {
-    // Create lookup maps for O(1) access (performance optimization)
-    const projectMap = new Map(projects.map(p => [p.name, p]));
-    const categoryMap = new Map(categories.map(c => [c.id, c]));
-
-    let totalRevenue = 0;
-
-    day.tasks.forEach(task => {
-      if (task.project && task.duration && task.category) {
-        // Check if both the project and category are billable
-        const project = projectMap.get(task.project);
-        const category = categoryMap.get(task.category);
-
-        const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
-        const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
-
-        // Task is billable only if BOTH project AND category are billable
-        const isBillable = projectIsBillable && categoryIsBillable;
-
-        if (isBillable && project?.hourlyRate) {
-          const hours = task.duration / (1000 * 60 * 60);
-          const revenue = hours * project.hourlyRate;
-          totalRevenue += revenue;
-        }
-      }
-    });
-
-    return Math.round(totalRevenue * 100) / 100;
-  };
-  const getBillableHoursForDay = (day: DayRecord): number => {
-    // Create lookup maps for O(1) access (performance optimization)
-    const projectMap = new Map(projects.map(p => [p.name, p]));
-    const categoryMap = new Map(categories.map(c => [c.id, c]));
-
-    let billableTime = 0;
-    day.tasks.forEach(task => {
-      if (task.duration && task.category && task.project) {
-        // Check if both the project and category are billable
-        const project = projectMap.get(task.project);
-        const category = categoryMap.get(task.category);
-
-        const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
-        const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
-
-        // Task is billable only if BOTH project AND category are billable
-        const isBillable = projectIsBillable && categoryIsBillable;
-
-        if (isBillable) {
-          billableTime += task.duration;
-        }
-      }
-    });
-
-    // Convert milliseconds to hours
-    const hours = billableTime / (1000 * 60 * 60);
-    return Math.round(hours * 100) / 100;
-  };
-
-  const getNonBillableHoursForDay = (day: DayRecord): number => {
-    // Create lookup maps for O(1) access (performance optimization)
-    const projectMap = new Map(projects.map(p => [p.name, p]));
-    const categoryMap = new Map(categories.map(c => [c.id, c]));
-
-    let nonBillableTime = 0;
-    day.tasks.forEach(task => {
-      if (task.duration && task.category && task.project) {
-        // Check if both the project and category are billable
-        const project = projectMap.get(task.project);
-        const category = categoryMap.get(task.category);
-
-        const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
-        const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
-
-        // Task is billable only if BOTH project AND category are billable
-        const isBillable = projectIsBillable && categoryIsBillable;
-
-        if (!isBillable) {
-          nonBillableTime += task.duration;
-        }
-      }
-    });
-
-    // Convert milliseconds to hours
-    const hours = nonBillableTime / (1000 * 60 * 60);
-    return Math.round(hours * 100) / 100;
-  };
+  const getNonBillableHoursForDay = (day: DayRecord): number =>
+    calcNonBillableHoursForDay(day, projects, categories);
 
   const exportToCSV = (startDate?: Date, endDate?: Date): string => {
     let filteredDays = archivedDays;
