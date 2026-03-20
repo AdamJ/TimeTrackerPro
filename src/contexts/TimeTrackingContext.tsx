@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { createDataService, DataService } from '@/services/dataService';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { toast } from '@/hooks/use-toast';
+import { SYNC_REQUIRED_EVENT } from '@/contexts/OfflineContext';
 import {
   getHoursWorkedForDay as calcHoursWorkedForDay,
   getRevenueForDay as calcRevenueForDay,
@@ -500,6 +501,18 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [dataService, isDayStarted, tasks, stableSaveCurrentDay]);
+
+  // Sync all data to the backend when the app comes back online
+  useEffect(() => {
+    const handleSyncRequired = () => {
+      if (!isAuthenticated) return;
+      console.log('🔄 Sync required event received — pushing state to database...');
+      forceSyncToDatabase();
+    };
+
+    window.addEventListener(SYNC_REQUIRED_EVENT, handleSyncRequired);
+    return () => window.removeEventListener(SYNC_REQUIRED_EVENT, handleSyncRequired);
+  }, [isAuthenticated, forceSyncToDatabase]);
 
   // Update current time every 30 seconds (instead of every second for better performance)
   useEffect(() => {

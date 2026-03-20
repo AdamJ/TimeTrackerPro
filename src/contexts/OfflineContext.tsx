@@ -7,6 +7,8 @@ import {
 } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
+export const SYNC_REQUIRED_EVENT = 'timetracker:sync-required';
+
 interface OfflineAction {
   id: string;
   timestamp: Date;
@@ -66,6 +68,21 @@ export const OfflineProvider = ({ children }: OfflineProviderProps) => {
     }
   }, [offlineQueue]);
 
+  const processQueue = useCallback(async () => {
+    if (offlineQueue.length === 0) return;
+
+    console.log(`Dispatching sync for ${offlineQueue.length} queued action(s)...`);
+
+    // Signal the data layer to push all current state to the backend.
+    // TimeTrackingContext listens for this event and calls forceSyncToDatabase.
+    window.dispatchEvent(new CustomEvent(SYNC_REQUIRED_EVENT, {
+      detail: { queueLength: offlineQueue.length }
+    }));
+
+    // Clear the queue — sync outcome is handled by TimeTrackingContext
+    setOfflineQueue([]);
+  }, [offlineQueue]);
+
   useEffect(() => {
     const handleOnline = () => {
       console.log('App is online');
@@ -97,8 +114,7 @@ export const OfflineProvider = ({ children }: OfflineProviderProps) => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toast]);
+  }, [processQueue, toast]);
 
   const addToQueue = useCallback(
     (action: string, data: unknown) => {
@@ -121,54 +137,6 @@ export const OfflineProvider = ({ children }: OfflineProviderProps) => {
     },
     [toast]
   );
-
-  const processQueue = useCallback(async () => {
-    if (offlineQueue.length === 0) {
-      return;
-    }
-
-    console.log(`Processing ${offlineQueue.length} queued actions...`);
-
-    const successfulActions: string[] = [];
-    const failedActions: OfflineAction[] = [];
-
-    for (const item of offlineQueue) {
-      try {
-        console.log('Processing queued action:', item.action, item.data);
-
-        // Process the queued action here
-        // This would integrate with your existing data service
-        // For now, we'll just log it
-        // In a real implementation, you'd call the appropriate service methods
-
-        successfulActions.push(item.id);
-      } catch (error) {
-        console.error('Failed to process queued action:', item, error);
-        failedActions.push(item);
-      }
-    }
-
-    // Remove successful actions from queue
-    if (successfulActions.length > 0) {
-      setOfflineQueue(failedActions);
-
-      toast({
-        title: 'Sync Complete',
-        description: `Successfully synced ${successfulActions.length} queued action(s).`,
-        duration: 3000
-      });
-    }
-
-    // Notify about failed actions
-    if (failedActions.length > 0) {
-      toast({
-        title: 'Sync Issues',
-        description: `${failedActions.length} action(s) failed to sync. Will retry later.`,
-        variant: 'destructive',
-        duration: 5000
-      });
-    }
-  }, [offlineQueue, toast]);
 
   return (
     <OfflineContext.Provider
