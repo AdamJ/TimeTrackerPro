@@ -71,8 +71,6 @@ export const OfflineProvider = ({ children }: OfflineProviderProps) => {
   const processQueue = useCallback(async () => {
     if (offlineQueue.length === 0) return;
 
-    console.log(`Dispatching sync for ${offlineQueue.length} queued action(s)...`);
-
     // Signal the data layer to push all current state to the backend.
     // TimeTrackingContext listens for this event and calls forceSyncToDatabase.
     window.dispatchEvent(new CustomEvent(SYNC_REQUIRED_EVENT, {
@@ -85,7 +83,6 @@ export const OfflineProvider = ({ children }: OfflineProviderProps) => {
 
   useEffect(() => {
     const handleOnline = () => {
-      console.log('App is online');
       setIsOnline(true);
       toast({
         title: 'Back Online',
@@ -96,7 +93,6 @@ export const OfflineProvider = ({ children }: OfflineProviderProps) => {
     };
 
     const handleOffline = () => {
-      console.log('App is offline');
       setIsOnline(false);
       toast({
         title: "You're Offline",
@@ -126,8 +122,6 @@ export const OfflineProvider = ({ children }: OfflineProviderProps) => {
       };
 
       setOfflineQueue(prev => [...prev, queueItem]);
-
-      console.log('Added to offline queue:', queueItem);
 
       toast({
         title: 'Action Queued',

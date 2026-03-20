@@ -41,6 +41,5 @@ export interface DataService {
 
 // Factory function to get the appropriate service
 export const createDataService = (isAuthenticated: boolean): DataService => {
-	console.log("🔧 Creating data service:", { isAuthenticated });
 	return isAuthenticated ? new SupabaseService() : new LocalStorageService();
 };

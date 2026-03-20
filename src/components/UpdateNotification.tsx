@@ -13,8 +13,6 @@ export const UpdateNotification = memo(function UpdateNotification() {
 		updateServiceWorker
 	} = useRegisterSW({
 		onRegisteredSW(swUrl, registration) {
-			console.log("Service Worker registered:", swUrl);
-
 			// Check for updates every hour
 			if (registration) {
 				setInterval(() => {

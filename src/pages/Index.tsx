@@ -71,14 +71,6 @@ const TimeTrackerContent = () => {
   // Calculate running timer for navigation
   const runningTime = isDayStarted ? getTotalDayDuration() : 0;
 
-  // Debug logging to understand state
-  console.log('🔍 Index component state:', {
-    isDayStarted,
-    dayStartTime,
-    tasksLength: tasks.length,
-    shouldShowSummary: !isDayStarted && dayStartTime && tasks.length > 0
-  });
-
   // Show day summary if day has ended but not yet posted
   if (!isDayStarted && dayStartTime && tasks.length > 0) {
     return (

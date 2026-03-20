@@ -47,7 +47,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const {
       data: { subscription }
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔐 Auth state changed:', event);
       trackAuthCall('onAuthStateChange', `AuthContext.${event}`);
 
       // Clear user cache when auth state changes
