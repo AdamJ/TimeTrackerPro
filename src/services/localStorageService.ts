@@ -23,7 +23,7 @@ export class LocalStorageService implements DataService {
 			return {
 				...data,
 				dayStartTime: data.dayStartTime ? new Date(data.dayStartTime) : null,
-				tasks: data.tasks.map((task: Task) => ({
+				tasks: (data.tasks ?? []).map((task: Task) => ({
 					...task,
 					startTime: new Date(task.startTime),
 					endTime: task.endTime ? new Date(task.endTime) : undefined

@@ -143,7 +143,15 @@ export const trackDbCall = (operation: string, table?: string, source?: string) 
 export const trackAuthCall = (operation: string, source?: string) => {
   authCallCount++;
   const timestamp = new Date();
-
+  const logEntry = {
+    timestamp,
+    operation,
+    source: source || new Error().stack?.split('\n')[2]?.trim()
+  };
+  dbCallLog.push(logEntry);
+  if (dbCallLog.length > 100) {
+    dbCallLog = dbCallLog.slice(-100);
+  }
 };
 
 export const getDbCallStats = () => {

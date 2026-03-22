@@ -434,6 +434,17 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [dataService, isDayStarted, tasks, stableSaveCurrentDay]);
 
+  // Sync to backend when coming back online
+  useEffect(() => {
+    const handleOnline = () => {
+      if (!isAuthenticated) return;
+      forceSyncToDatabase();
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [isAuthenticated, forceSyncToDatabase]);
+
   // Update current time every 30 seconds (instead of every second for better performance)
   useEffect(() => {
     const timer = setInterval(() => {
