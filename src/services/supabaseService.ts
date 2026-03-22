@@ -499,8 +499,6 @@ export class SupabaseService implements DataService {
 			updatedAt: day.updated_at ? new Date(day.updated_at) : undefined
 		}));
 
-		});
-
 		return result;
 	}
 
@@ -846,7 +844,6 @@ export class SupabaseService implements DataService {
 				const existingCategories = await this.getCategories();
 				if (hasCategories && existingCategories.length === 0) {
 					await this.saveCategories(categories);
-				} else if (hasCategories && existingCategories.length > 0) {
 				}
 			} else {
 

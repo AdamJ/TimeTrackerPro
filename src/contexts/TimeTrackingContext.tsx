@@ -266,7 +266,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           setDayStartTime(currentDay.dayStartTime);
           setTasks(currentDay.tasks);
           setCurrentTask(currentDay.currentTask);
-        } else {
         }
 
         // Load archived days
