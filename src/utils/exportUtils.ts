@@ -314,7 +314,7 @@ export function parseCSVImport(
 				description: taskData.description || undefined,
 				startTime: new Date(taskData.start_time),
 				endTime: taskData.end_time ? new Date(taskData.end_time) : undefined,
-				duration: taskData.duration ? parseInt(taskData.duration) : undefined,
+				duration: taskData.duration ? parseInt(taskData.duration, 10) : undefined,
 				project: taskData.project_name || undefined,
 				client: taskData.client || undefined,
 				category: categoryId
