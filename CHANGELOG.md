@@ -38,6 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `addToQueue`, `offlineQueue`, `processQueue`, and `SYNC_REQUIRED_EVENT` from `OfflineContext` — the offline action queue was implemented but `addToQueue` was never called, so the queue was permanently empty and the sync event was never dispatched; `OfflineContext` now exposes only `isOnline` with online/offline toast notifications
 
 ### Fixed
+- Fixed online reconnection never triggering a backend sync for authenticated users
+  — `src/contexts/TimeTrackingContext.tsx` (added native `online` window event listener that calls `forceSyncToDatabase()` when authenticated; the previous offline-queue mechanism was broken because the queue was never populated, so reconnection silently dropped any pending changes)
+- Fixed `trackAuthCall` stub recording no log details
+  — `src/lib/supabase.ts` (the function incremented `authCallCount` but created a `timestamp` variable it never used and pushed nothing to `dbCallLog`, making auth call debugging impossible; now writes a full log entry matching `trackDbCall` so `getDbCallStats()` shows auth calls alongside DB calls)
+- Fixed `getCurrentDay()` crashing and silently discarding the stored day when the `tasks` field is absent from a localStorage record
+  — `src/services/localStorageService.ts` (`data.tasks.map()` threw a TypeError on a missing/null field; replaced with `(data.tasks ?? []).map()` so a corrupt or partial record produces an empty task list instead of swallowing the entire day)
 - Improved Weekly Report error messages to distinguish between distinct Gemini API failure modes
   — `src/hooks/useReportSummary.ts` (added `classifyGeminiError()` and `classifyFinishReason()` helpers; 429 rate limit vs. quota exhaustion, 503 overload, 500 server error, 504 timeout, 403 bad key, 400 precondition, 404 model not found, network failures, and content-blocked responses each produce specific actionable messages instead of Gemini's generic "high demand" text)
 - Fixed Weekly Report page only reading archived data from localStorage, causing empty reports for authenticated (Supabase) users
