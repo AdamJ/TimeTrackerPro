@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Accessibility
+- Added `aria-label` to all icon-only buttons whose visible text label is hidden on mobile viewports: Restore and Edit in `ArchiveItem`, Restore/Delete/Edit in `ArchiveEditDialog` header, per-task Edit/Delete in `ArchiveEditDialog` task table, and Edit/Delete in `ProjectManagement`
+- Replaced `focus:outline-none` with `focus-visible:outline-none` + `focus-visible:ring-2 focus-visible:ring-ring` on Radix `TabsTrigger` elements in `ArchiveItem` — the browser focus ring was previously stripped for all input methods; it is now suppressed only for pointer clicks while remaining fully visible for keyboard navigation
+- Connected `Label`/`Textarea` pairs via `htmlFor`/`id` in `ArchiveEditDialog` (day notes field) and `TaskEditInArchiveDialog` (task description field) so screen readers announce the field label when the input receives focus
+
+### Code Quality
+- Replaced hardcoded Tailwind gray color classes (`text-gray-900`, `text-gray-600/500/400`) with theme variables (`text-foreground`, `text-muted-foreground`) across `ArchiveItem`, `ArchiveEditDialog`, `TaskEditInArchiveDialog`, `ProjectManagement`, and `ExportDialog`
+- Replaced hardcoded red color classes (`text-red-*`, `bg-red-*`, `border-red-*`) with `text-destructive`, `bg-destructive/5`, and `border-destructive/20` in the `ArchiveEditDialog` delete confirmation card, `ExportDialog` import error alert, and `TaskEditInArchiveDialog` required-field indicator; switched icon-only Delete buttons to `variant="destructive"` in `ArchiveEditDialog` and `ProjectManagement`
+- Replaced `data-[state=active]:border-blue-600` with `data-[state=active]:border-primary` on tab triggers in `ArchiveItem`; replaced `bg-gray-50 dark:bg-gray-800` note/summary panels with `bg-muted`
+- Fixed inline style violations: `style={{ marginBottom: '1rem' }}` → `className="mb-4"` in `ArchiveEditDialog`; `style={{ display: 'none' }}` → `className="hidden"` in `ExportDialog`
+
 ### Performance
 - **Archive page summary stats** (`src/pages/Archive.tsx`): Wrapped the four summary-stat `reduce()` calls (total hours, billable hours, non-billable hours, revenue) in a single `useMemo` keyed on `[filteredDays, projects, categories]`; previously they recomputed on every render regardless of whether the underlying data had changed. Also replaced unstable context method wrappers with stable module-level imports from `calculationUtils` so the memo invalidates only when data actually changes.
 - **Archive item row rendering** (`src/components/ArchiveItem.tsx`): Per-day stats (`hoursWorked`, `billableHours`, `nonBillableHours`, `revenue`) are now computed in a `useMemo([day, projects, categories])` instead of inline on every render; also eliminates the duplicate `getRevenueForDay()` call that previously appeared twice in the revenue badge. Project and category lookups in the task table now use `Map.get()` (O(1)) instead of `Array.find()` (O(n)) per row via `useMemo`-cached lookup maps. The daily-summary `generateDailySummary()` call is memoized on `day.tasks` so it only runs when task descriptions change.
