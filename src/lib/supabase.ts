@@ -4,11 +4,6 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.warn('Supabase env vars not found. Supabase sync will be disabled.');
-} else {
-  console.log('✅ Supabase configured:', {
-    url: SUPABASE_URL,
-    hasKey: !!SUPABASE_ANON_KEY
-  });
 }
 
 export const supabase = createClient(
@@ -143,19 +138,19 @@ export const trackDbCall = (operation: string, table?: string, source?: string) 
     dbCallLog = dbCallLog.slice(-100);
   }
 
-  // Only log to console if explicitly enabled
-  if (ENABLE_DB_LOGGING) {
-    console.log(`📊 DB Call #${dbCallCount}: ${operation}${table ? ` on ${table}` : ''}${source ? ` from ${source}` : ''} at ${timestamp.toLocaleTimeString()}`);
-  }
 };
 
 export const trackAuthCall = (operation: string, source?: string) => {
   authCallCount++;
   const timestamp = new Date();
-
-  // Only log to console if explicitly enabled
-  if (ENABLE_DB_LOGGING) {
-    console.log(`🔐 Auth Call #${authCallCount}: ${operation}${source ? ` from ${source}` : ''} at ${timestamp.toLocaleTimeString()}`);
+  const logEntry = {
+    timestamp,
+    operation,
+    source: source || new Error().stack?.split('\n')[2]?.trim()
+  };
+  dbCallLog.push(logEntry);
+  if (dbCallLog.length > 100) {
+    dbCallLog = dbCallLog.slice(-100);
   }
 };
 
@@ -194,7 +189,6 @@ export const resetDbCallStats = () => {
   dbCallCount = 0;
   authCallCount = 0;
   dbCallLog = [];
-  console.log('📊 DB and Auth call stats reset');
 };
 
 // Make these functions available globally for debugging

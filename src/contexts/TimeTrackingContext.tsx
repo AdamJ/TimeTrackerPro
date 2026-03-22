@@ -10,9 +10,21 @@ import { DEFAULT_CATEGORIES, TaskCategory } from '@/config/categories';
 import { DEFAULT_PROJECTS, ProjectCategory } from '@/config/projects';
 import { useAuth } from '@/hooks/useAuth';
 import { createDataService, DataService } from '@/services/dataService';
-import { useRealtimeSync } from '@/hooks/useRealtimeSync';
-import { generateDailySummary } from '@/utils/timeUtil';
 import { toast } from '@/hooks/use-toast';
+import {
+  getHoursWorkedForDay as calcHoursWorkedForDay,
+  getRevenueForDay as calcRevenueForDay,
+  getBillableHoursForDay as calcBillableHoursForDay,
+  getNonBillableHoursForDay as calcNonBillableHoursForDay,
+  getTotalHoursForPeriod as calcTotalHoursForPeriod,
+  getRevenueForPeriod as calcRevenueForPeriod
+} from '@/utils/calculationUtils';
+import {
+  exportToCSV as utilExportToCSV,
+  exportToJSON as utilExportToJSON,
+  generateInvoiceData as utilGenerateInvoiceData,
+  parseCSVImport
+} from '@/utils/exportUtils';
 
 export interface Task {
   id: string;
@@ -219,9 +231,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     const handleLogout = async () => {
       // Detect logout: was authenticated, now not authenticated
       if (previousAuthState === true && !isAuthenticated && dataService) {
-        console.log(
-          '🔄 User logged out - syncing data to localStorage for offline access'
-        );
         try {
           // Use the current (Supabase) service to sync data to localStorage before switching
           await dataService.migrateToLocalStorage();
@@ -249,40 +258,16 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       setLoading(true);
       try {
         // Load current day
-        console.log('🔄 Loading current day from database...');
         const currentDay = await dataService.getCurrentDay();
-        console.log('📱 Raw current day data from storage:', currentDay);
         if (currentDay) {
-          console.log('📱 Current day loaded from database:', {
-            tasksCount: currentDay.tasks.length,
-            isDayStarted: currentDay.isDayStarted,
-            hasCurrentTask: !!currentDay.currentTask,
-            dayStartTime: currentDay.dayStartTime,
-            fullData: currentDay
-          });
           setIsDayStarted(currentDay.isDayStarted);
           setDayStartTime(currentDay.dayStartTime);
           setTasks(currentDay.tasks);
           setCurrentTask(currentDay.currentTask);
-        } else {
-          console.log('📱 No current day data found in database');
         }
 
         // Load archived days
         const archived = await dataService.getArchivedDays();
-        console.log('📚 Loaded archived days:', {
-          count: archived.length,
-          sample: archived.slice(0, 2).map(day => ({
-            id: day.id,
-            date: day.date,
-            tasksCount: day.tasks.length,
-            tasks: day.tasks.map(task => ({
-              id: task.id,
-              title: task.title,
-              duration: task.duration
-            }))
-          }))
-        });
         setArchivedDays(archived);
 
         // Load projects
@@ -312,13 +297,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         // Load categories
         const loadedCategories = await dataService.getCategories();
         if (loadedCategories.length > 0) {
-          console.log(
-            '📋 Loaded categories from database:',
-            loadedCategories.length
-          );
           setCategories(loadedCategories);
         } else {
-          console.log('📋 No categories found in database, using defaults');
           setCategories(DEFAULT_CATEGORIES);
         }
 
@@ -335,9 +315,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     loadData();
   }, [dataService]);
-
-  // Stable reference to the actual save function
-  const saveCurrentDayRef = useRef<() => Promise<void>>();
 
   // Refs to hold the latest state without causing effect reruns
   const latestStateRef = useRef({
@@ -364,16 +341,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       setIsSyncing(true);
       const state = latestStateRef.current;
-      console.log('💾 Syncing current day to database...', {
-        tasksCount: state.tasks.length,
-        isDayStarted: state.isDayStarted,
-        hasCurrentTask: !!state.currentTask,
-        dayStartTime: state.dayStartTime,
-        fullState: state
-      });
       await dataService.saveCurrentDay(state);
       setLastSyncTime(new Date());
-      console.log('✅ Current day synced successfully');
     } catch (error) {
       console.error('❌ Error saving current day:', error);
     } finally {
@@ -402,11 +371,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   // Manual sync function - saves ALL data types
   const forceSyncToDatabase = useCallback(async () => {
     if (!dataService) {
-      console.log('❌ No data service available for sync');
       return;
     }
 
-    console.log('🔄 Manual sync: Saving all data to database...');
     setIsSyncing(true);
 
     try {
@@ -425,7 +392,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       await Promise.all(savePromises);
       setLastSyncTime(new Date());
       setHasUnsavedChanges(false); // Clear unsaved changes flag
-      console.log('✅ Manual sync completed successfully');
     } catch (error) {
       console.error('❌ Manual sync failed:', error);
     } finally {
@@ -439,14 +405,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       setIsSyncing(true);
-      console.log('🔄 Checking for updates from other devices...');
       const currentDay = await dataService.getCurrentDay();
       if (currentDay) {
-        console.log('📱 Updated data found from other device:', {
-          tasksCount: currentDay.tasks.length,
-          isDayStarted: currentDay.isDayStarted,
-          hasCurrentTask: !!currentDay.currentTask
-        });
         setIsDayStarted(currentDay.isDayStarted);
         setDayStartTime(currentDay.dayStartTime);
         setTasks(currentDay.tasks);
@@ -460,25 +420,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [dataService, loading]);
 
-  // Setup periodic sync - DISABLED for single device usage
-  // useRealtimeSync({
-  //   onCurrentDayUpdate: loadCurrentDay,
-  //   isAuthenticated,
-  //   enabled: !loading
-  // });
-
-  // DISABLED: Automatic saves - only save on critical events for single-device usage
-  // Critical events that trigger saves:
-  // 1. Day end (postDay)
-  // 2. Window close (beforeunload)
-  // 3. Manual sync button
-
   // Save on window close to prevent data loss
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       // Only save if we have unsaved changes
       if (dataService && (isDayStarted || tasks.length > 0)) {
-        console.log('💾 Saving before window close...');
         stableSaveCurrentDay();
         // Don't prevent closing, just save
       }
@@ -487,6 +433,17 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [dataService, isDayStarted, tasks, stableSaveCurrentDay]);
+
+  // Sync to backend when coming back online
+  useEffect(() => {
+    const handleOnline = () => {
+      if (!isAuthenticated) return;
+      forceSyncToDatabase();
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [isAuthenticated, forceSyncToDatabase]);
 
   // Update current time every 30 seconds (instead of every second for better performance)
   useEffect(() => {
@@ -508,16 +465,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsDayStarted(true);
     setDayStartTime(roundedTime);
     setHasUnsavedChanges(true);
-    console.log('Day started at:', roundedTime);
   };
 
   const endDay = () => {
-    console.log('🔚 Ending day - current state before:', {
-      isDayStarted,
-      dayStartTime,
-      tasksLength: tasks.length,
-      currentTask: !!currentTask
-    });
 
     if (currentTask) {
       // End the current task
@@ -533,11 +483,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     setIsDayStarted(false);
     setHasUnsavedChanges(true);
-    console.log('🔚 Day ended - saving state...');
     // Save immediately since this is a critical action
     saveImmediately()
       .then(() => {
-        console.log('✅ State saved after ending day');
       })
       .catch(error => {
         console.error('❌ Error saving state after ending day:', error);
@@ -583,7 +531,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setTasks(prev => [...prev, newTask]);
     setCurrentTask(newTask);
     setHasUnsavedChanges(true);
-    console.log('New task started:', title, 'at', taskStartTime);
     // Save immediately since this is a critical action
     saveImmediately();
   };
@@ -596,7 +543,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       setCurrentTask(prev => (prev ? { ...prev, ...updates } : null));
     }
     setHasUnsavedChanges(true);
-    console.log('Task updated:', taskId, updates);
   };
 
   const deleteTask = (taskId: string) => {
@@ -605,7 +551,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       setCurrentTask(null);
     }
     setHasUnsavedChanges(true);
-    console.log('Task deleted:', taskId);
   };
 
   const postDay = async (notes?: string) => {
@@ -626,13 +571,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       console.warn('⚠️ Archiving day with no tasks');
     }
 
-    console.log('📦 Archiving day:', {
-      id: dayRecord.id,
-      date: dayRecord.date,
-      tasksCount: dayRecord.tasks.length,
-      totalDuration: dayRecord.totalDuration
-    });
-
     // Update state optimistically
     setArchivedDays(prev => [...prev, dayRecord]);
 
@@ -641,15 +579,12 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setCurrentTask(null);
     setTasks([]);
     setIsDayStarted(false);
-    console.log('Day posted to archive');
 
     // Save immediately since this is a critical action
     if (dataService) {
       try {
         // Save the archived days with enhanced error handling
-        console.log('💾 Saving archived data to database...');
         await dataService.saveArchivedDays([...archivedDays, dayRecord]);
-        console.log('✅ Archive saved successfully');
 
         // Save the cleared current day state so refresh shows "Start Day" screen
         await dataService.saveCurrentDay({
@@ -658,7 +593,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           currentTask: null,
           tasks: []
         });
-        console.log('✅ Cleared current day state saved');
 
         setHasUnsavedChanges(false);
 
@@ -691,8 +625,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           setCurrentTask(lastTask);
         }
 
-        console.log('🔄 Restored current day state after failed archive');
-
         // Show error notification to user
         toast({
           title: 'Archive Failed',
@@ -712,7 +644,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     };
     setProjects(prev => [...prev, newProject]);
     setHasUnsavedChanges(true);
-    console.log('📋 Project added (not saved automatically)');
   };
 
   const updateProject = (projectId: string, updates: Partial<Project>) => {
@@ -722,13 +653,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       )
     );
     setHasUnsavedChanges(true);
-    console.log('📋 Project updated (not saved automatically)');
   };
 
   const deleteProject = (projectId: string) => {
     setProjects(prev => prev.filter(project => project.id !== projectId));
     setHasUnsavedChanges(true);
-    console.log('📋 Project deleted (not saved automatically)');
   };
 
   const resetProjectsToDefaults = () => {
@@ -745,7 +674,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!dataService) return;
 
     try {
-      console.log('🔄 Updating archived day:', { dayId, updates });
 
       // Optimistic update - update local state immediately for responsive UI
       setArchivedDays(prev =>
@@ -755,12 +683,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       // Then persist to database
       await dataService.updateArchivedDay(dayId, updates);
       setHasUnsavedChanges(false);
-      console.log('✅ Database update complete');
     } catch (error) {
       console.error('❌ Error updating archived day:', error);
 
       // On error, refresh from database to restore consistent state
-      console.log('⚠️ Rolling back optimistic update...');
       const refreshedDays = await dataService.getArchivedDays();
       setArchivedDays(refreshedDays);
 
@@ -802,7 +728,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setArchivedDays(prev => prev.filter(day => day.id !== dayId));
 
     setHasUnsavedChanges(true);
-    console.log('Day restored from archive');
   };
 
   // Category management functions - NO AUTOMATIC SAVING
@@ -813,7 +738,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     };
     setCategories(prev => [...prev, newCategory]);
     setHasUnsavedChanges(true);
-    console.log('🏷️ Category added (not saved automatically)');
   };
 
   const updateCategory = (
@@ -826,13 +750,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       )
     );
     setHasUnsavedChanges(true);
-    console.log('🏷️ Category updated (not saved automatically)');
   };
 
   const deleteCategory = (categoryId: string) => {
     setCategories(prev => prev.filter(category => category.id !== categoryId));
     setHasUnsavedChanges(true);
-    console.log('🏷️ Category deleted (not saved automatically)');
   };
 
   // Time adjustment function (rounds to nearest 15 minutes)
@@ -895,602 +817,63 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     return currentTime.getTime() - currentTask.startTime.getTime();
   };
 
-  const getTotalHoursForPeriod = (startDate: Date, endDate: Date): number => {
-    const filteredDays = archivedDays.filter(day => {
-      const dayDate = new Date(day.startTime);
-      return dayDate >= startDate && dayDate <= endDate;
-    });
+  const getTotalHoursForPeriod = (startDate: Date, endDate: Date): number =>
+    calcTotalHoursForPeriod(archivedDays, startDate, endDate);
 
-    const totalMs = filteredDays.reduce(
-      (total, day) => total + day.totalDuration,
-      0
-    );
-    return Math.round((totalMs / (1000 * 60 * 60)) * 100) / 100;
-  };
+  const getRevenueForPeriod = (startDate: Date, endDate: Date): number =>
+    calcRevenueForPeriod(archivedDays, projects, categories, startDate, endDate);
 
-  const getRevenueForPeriod = (startDate: Date, endDate: Date): number => {
-    const filteredDays = archivedDays.filter(day => {
-      const dayDate = new Date(day.startTime);
-      return dayDate >= startDate && dayDate <= endDate;
-    });
+  const getHoursWorkedForDay = (day: DayRecord): number =>
+    calcHoursWorkedForDay(day);
 
-    // Create lookup maps for O(1) access (performance optimization)
-    const projectMap = new Map(projects.map(p => [p.name, p]));
-    const categoryMap = new Map(categories.map(c => [c.id, c]));
+  const getRevenueForDay = (day: DayRecord): number =>
+    calcRevenueForDay(day, projects, categories);
 
-    let totalRevenue = 0;
-    filteredDays.forEach(day => {
-      day.tasks.forEach(task => {
-        if (task.project && task.duration && task.category) {
-          // Check if both the project and category are billable
-          const project = projectMap.get(task.project);
-          const category = categoryMap.get(task.category);
+  const getBillableHoursForDay = (day: DayRecord): number =>
+    calcBillableHoursForDay(day, projects, categories);
 
-          const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
-          const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
+  const getNonBillableHoursForDay = (day: DayRecord): number =>
+    calcNonBillableHoursForDay(day, projects, categories);
 
-          // Task is billable only if BOTH project AND category are billable
-          const isBillable = projectIsBillable && categoryIsBillable;
+  const exportToCSV = (startDate?: Date, endDate?: Date): string =>
+    utilExportToCSV(archivedDays, projects, categories, user?.id || '', startDate, endDate);
 
-          if (isBillable && project?.hourlyRate) {
-            const hours = task.duration / (1000 * 60 * 60);
-            totalRevenue += hours * project.hourlyRate;
-          }
-        }
-      });
-    });
-
-    return Math.round(totalRevenue * 100) / 100;
-  };
-
-  const getHoursWorkedForDay = (day: DayRecord): number => {
-    // Calculate total time worked (sum of all task durations, excluding breaks)
-    let totalTaskDuration = 0;
-    day.tasks.forEach(task => {
-      if (task.duration) {
-        totalTaskDuration += task.duration;
-      }
-    });
-
-    // Convert milliseconds to hours
-    const hours = totalTaskDuration / (1000 * 60 * 60);
-    return Math.round(hours * 100) / 100;
-  };
-
-  const getRevenueForDay = (day: DayRecord): number => {
-    // Create lookup maps for O(1) access (performance optimization)
-    const projectMap = new Map(projects.map(p => [p.name, p]));
-    const categoryMap = new Map(categories.map(c => [c.id, c]));
-
-    let totalRevenue = 0;
-
-    day.tasks.forEach(task => {
-      if (task.project && task.duration && task.category) {
-        // Check if both the project and category are billable
-        const project = projectMap.get(task.project);
-        const category = categoryMap.get(task.category);
-
-        const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
-        const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
-
-        // Task is billable only if BOTH project AND category are billable
-        const isBillable = projectIsBillable && categoryIsBillable;
-
-        if (isBillable && project?.hourlyRate) {
-          const hours = task.duration / (1000 * 60 * 60);
-          const revenue = hours * project.hourlyRate;
-          totalRevenue += revenue;
-        }
-      }
-    });
-
-    return Math.round(totalRevenue * 100) / 100;
-  };
-  const getBillableHoursForDay = (day: DayRecord): number => {
-    // Create lookup maps for O(1) access (performance optimization)
-    const projectMap = new Map(projects.map(p => [p.name, p]));
-    const categoryMap = new Map(categories.map(c => [c.id, c]));
-
-    let billableTime = 0;
-    day.tasks.forEach(task => {
-      if (task.duration && task.category && task.project) {
-        // Check if both the project and category are billable
-        const project = projectMap.get(task.project);
-        const category = categoryMap.get(task.category);
-
-        const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
-        const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
-
-        // Task is billable only if BOTH project AND category are billable
-        const isBillable = projectIsBillable && categoryIsBillable;
-
-        if (isBillable) {
-          billableTime += task.duration;
-        }
-      }
-    });
-
-    // Convert milliseconds to hours
-    const hours = billableTime / (1000 * 60 * 60);
-    return Math.round(hours * 100) / 100;
-  };
-
-  const getNonBillableHoursForDay = (day: DayRecord): number => {
-    // Create lookup maps for O(1) access (performance optimization)
-    const projectMap = new Map(projects.map(p => [p.name, p]));
-    const categoryMap = new Map(categories.map(c => [c.id, c]));
-
-    let nonBillableTime = 0;
-    day.tasks.forEach(task => {
-      if (task.duration && task.category && task.project) {
-        // Check if both the project and category are billable
-        const project = projectMap.get(task.project);
-        const category = categoryMap.get(task.category);
-
-        const projectIsBillable = project?.isBillable !== false; // Default to billable if not specified
-        const categoryIsBillable = category?.isBillable !== false; // Default to billable if not specified
-
-        // Task is billable only if BOTH project AND category are billable
-        const isBillable = projectIsBillable && categoryIsBillable;
-
-        if (!isBillable) {
-          nonBillableTime += task.duration;
-        }
-      }
-    });
-
-    // Convert milliseconds to hours
-    const hours = nonBillableTime / (1000 * 60 * 60);
-    return Math.round(hours * 100) / 100;
-  };
-
-  const exportToCSV = (startDate?: Date, endDate?: Date): string => {
-    let filteredDays = archivedDays;
-
-    if (startDate && endDate) {
-      filteredDays = archivedDays.filter(day => {
-        const dayDate = new Date(day.startTime);
-        return dayDate >= startDate && dayDate <= endDate;
-      });
-    }
-
-    // CSV headers matching database schema exactly
-    const headers = [
-      'id',
-      'user_id',
-      'title',
-      'description',
-      'start_time',
-      'end_time',
-      'duration',
-      'project_id',
-      'project_name',
-      'client',
-      'category_id',
-      'category_name',
-      'day_record_id',
-      'is_current',
-      'inserted_at',
-      'updated_at',
-      'daily_summary'
-    ];
-    const rows = [headers.join(',')];
-
-    filteredDays.forEach(day => {
-      // Generate daily summary once per day
-      const dayDescriptions = day.tasks
-        .filter(t => t.description)
-        .map(t => t.description!);
-      const dailySummary = generateDailySummary(dayDescriptions);
-
-      day.tasks.forEach(task => {
-        if (task.duration) {
-          const project = projects.find(p => p.name === task.project);
-          // Fix: Look up category by ID, not name
-          const category = categories.find(c => c.id === task.category);
-
-          // Format timestamps as ISO strings for database compatibility
-          const startTimeISO = task.startTime.toISOString();
-          const endTimeISO = task.endTime?.toISOString() || '';
-          // Use actual timestamps from database, or current time as fallback
-          const insertedAtISO =
-            task.insertedAt?.toISOString() || new Date().toISOString();
-          const updatedAtISO =
-            task.updatedAt?.toISOString() || new Date().toISOString();
-
-          const row = [
-            `"${task.id}"`,
-            `"${user?.id || ''}"`, // user_id from auth context
-            `"${task.title}"`,
-            `"${task.description || ''}"`,
-            `"${startTimeISO}"`,
-            `"${endTimeISO}"`,
-            task.duration || '', // duration in milliseconds
-            `"${project?.id || ''}"`, // project_id
-            `"${task.project || ''}"`, // project_name (denormalized)
-            `"${task.client || ''}"`,
-            `"${category?.id || ''}"`, // category_id
-            `"${task.category || ''}"`, // category_name (denormalized)
-            `"${day.id}"`, // day_record_id
-            'false', // is_current - archived tasks are not current
-            `"${insertedAtISO}"`, // inserted_at - actual database timestamp
-            `"${updatedAtISO}"`, // updated_at - actual database timestamp
-            `"${dailySummary.replace(/"/g, '""')}"` // daily_summary - escape quotes for CSV
-          ];
-          rows.push(row.join(','));
-        }
-      });
-    });
-
-    return rows.join('\n');
-  };
-
-  const exportToJSON = (startDate?: Date, endDate?: Date): string => {
-    let filteredDays = archivedDays;
-
-    if (startDate && endDate) {
-      filteredDays = archivedDays.filter(day => {
-        const dayDate = new Date(day.startTime);
-        return dayDate >= startDate && dayDate <= endDate;
-      });
-    }
-
-    // Add daily summary to each day
-    const daysWithSummary = filteredDays.map(day => {
-      const dayDescriptions = day.tasks
-        .filter(t => t.description)
-        .map(t => t.description!);
-      const dailySummary = generateDailySummary(dayDescriptions);
-
-      return {
-        ...day,
-        dailySummary
-      };
-    });
-
-    const exportData = {
-      exportDate: new Date().toISOString(),
-      period: {
-        startDate: startDate?.toISOString(),
-        endDate: endDate?.toISOString()
-      },
-      summary: {
-        totalDays: filteredDays.length,
-        totalHours: getTotalHoursForPeriod(
-          startDate || new Date(0),
-          endDate || new Date()
-        ),
-        totalRevenue: getRevenueForPeriod(
-          startDate || new Date(0),
-          endDate || new Date()
-        )
-      },
-      days: daysWithSummary,
-      projects: projects
-    };
-
-    return JSON.stringify(exportData, null, 2);
-  };
+  const exportToJSON = (startDate?: Date, endDate?: Date): string =>
+    utilExportToJSON(archivedDays, projects, categories, startDate, endDate);
 
   const generateInvoiceData = (
     clientName: string,
     startDate: Date,
     endDate: Date
-  ) => {
-    // Create lookup maps for O(1) access (performance optimization)
-    const projectMap = new Map(projects.map(p => [p.name, p]));
-    const categoryMap = new Map(categories.map(c => [c.id, c]));
-
-    const filteredDays = archivedDays.filter(day => {
-      const dayDate = new Date(day.startTime);
-      return dayDate >= startDate && dayDate <= endDate;
-    });
-
-    // Generate daily summaries for all days in the period
-    const dailySummaries: {
-      [dayId: string]: { date: string; summary: string };
-    } = {};
-    filteredDays.forEach(day => {
-      const dayDescriptions = day.tasks
-        .filter(t => t.description)
-        .map(t => t.description!);
-      const summary = generateDailySummary(dayDescriptions);
-
-      if (summary) {
-        dailySummaries[day.id] = {
-          date: day.date,
-          summary
-        };
-      }
-    });
-
-    const clientTasks = filteredDays.flatMap(day =>
-      day.tasks
-        .filter(task => {
-          if (!task.client || task.client !== clientName || !task.duration) {
-            return false;
-          }
-
-          // Only include billable tasks in invoices
-          if (task.project && task.category) {
-            const project = projectMap.get(task.project);
-            const category = categoryMap.get(task.category);
-
-            const projectIsBillable = project?.isBillable !== false;
-            const categoryIsBillable = category?.isBillable !== false;
-
-            // Task must be billable to appear on invoice
-            return projectIsBillable && categoryIsBillable;
-          }
-
-          return false;
-        })
-        .map(task => ({
-          ...task,
-          dayId: day.id,
-          dayDate: day.date,
-          dailySummary: dailySummaries[day.id]?.summary || ''
-        }))
-    );
-
-    const projectSummary: {
-      [key: string]: { hours: number; rate: number; amount: number };
-    } = {};
-
-    clientTasks.forEach(task => {
-      const projectName = task.project || 'General';
-      const project = projectMap.get(task.project);
-      const hours = (task.duration || 0) / (1000 * 60 * 60);
-      const rate = project?.hourlyRate || 0;
-
-      if (!projectSummary[projectName]) {
-        projectSummary[projectName] = { hours: 0, rate, amount: 0 };
-      }
-
-      projectSummary[projectName].hours += hours;
-      projectSummary[projectName].amount += hours * rate;
-    });
-
-    const totalHours = Object.values(projectSummary).reduce(
-      (sum, proj) => sum + proj.hours,
-      0
-    );
-    const totalAmount = Object.values(projectSummary).reduce(
-      (sum, proj) => sum + proj.amount,
-      0
-    );
-
-    return {
-      client: clientName,
-      period: { startDate, endDate },
-      projects: projectSummary,
-      summary: {
-        totalHours: Math.round(totalHours * 100) / 100,
-        totalAmount: Math.round(totalAmount * 100) / 100
-      },
-      tasks: clientTasks,
-      dailySummaries
-    };
-  };
+  ): InvoiceData =>
+    utilGenerateInvoiceData(archivedDays, projects, categories, clientName, startDate, endDate);
 
   const importFromCSV = async (
     csvContent: string
   ): Promise<{ success: boolean; message: string; importedCount: number }> => {
     try {
-      const lines = csvContent.split('\n').filter(line => line.trim());
-      if (lines.length === 0) {
-        return {
-          success: false,
-          message: 'CSV file is empty',
-          importedCount: 0
-        };
-      }
-
-      const headerLine = lines[0];
-      const expectedHeaders = [
-        'id',
-        'user_id',
-        'title',
-        'description',
-        'start_time',
-        'end_time',
-        'duration',
-        'project_id',
-        'project_name',
-        'client',
-        'category_id',
-        'category_name',
-        'day_record_id',
-        'is_current',
-        'inserted_at',
-        'updated_at'
-      ];
-
-      // Validate headers
-      const headers = headerLine
-        .split(',')
-        .map(h => h.trim().replace(/"/g, ''));
-      const missingHeaders = expectedHeaders.filter(h => !headers.includes(h));
-      if (missingHeaders.length > 0) {
-        return {
-          success: false,
-          message: `CSV missing required headers: ${missingHeaders.join(', ')}`,
-          importedCount: 0
-        };
-      }
-
-      const tasksByDay: {
-        [dayId: string]: { tasks: Task[]; dayRecord: Partial<DayRecord> };
-      } = {};
-      let importedCount = 0;
-
-      // Process each data line
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-
-        try {
-          // Parse CSV line (handle quoted values)
-          const values: string[] = [];
-          let current = '';
-          let inQuotes = false;
-
-          for (let j = 0; j < line.length; j++) {
-            const char = line[j];
-            if (char === '"') {
-              inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-              values.push(current.trim());
-              current = '';
-            } else {
-              current += char;
-            }
-          }
-          values.push(current.trim()); // Add last value
-
-          if (values.length !== headers.length) {
-            console.warn(
-              `Skipping malformed CSV line ${i + 1}: expected ${headers.length} columns, got ${values.length}`
-            );
-            continue;
-          }
-
-          // Create task object from CSV data
-          const taskData: { [key: string]: string } = {};
-          headers.forEach((header, index) => {
-            taskData[header] = values[index].replace(/^"|"$/g, ''); // Remove quotes
-          });
-
-          // Validate required fields
-          if (!taskData.id || !taskData.title || !taskData.start_time) {
-            console.warn(
-              `Skipping incomplete task on line ${i + 1}: missing required fields`
-            );
-            continue;
-          }
-
-          // Map category name back to category ID for proper storage
-          const categoryByName = categories.find(
-            c => c.name === taskData.category_name
-          );
-          const categoryId =
-            categoryByName?.id || taskData.category_id || undefined;
-
-          const task: Task = {
-            id: taskData.id,
-            title: taskData.title,
-            description: taskData.description || undefined,
-            startTime: new Date(taskData.start_time),
-            endTime: taskData.end_time
-              ? new Date(taskData.end_time)
-              : undefined,
-            duration: taskData.duration
-              ? parseInt(taskData.duration)
-              : undefined,
-            project: taskData.project_name || undefined,
-            client: taskData.client || undefined,
-            category: categoryId // Use category ID, not name
-          };
-
-          // Validate dates
-          if (isNaN(task.startTime.getTime())) {
-            console.warn(
-              `Skipping task with invalid start_time on line ${i + 1}`
-            );
-            continue;
-          }
-
-          if (task.endTime && isNaN(task.endTime.getTime())) {
-            task.endTime = undefined;
-          }
-
-          const dayRecordId = taskData.day_record_id;
-          if (!dayRecordId) {
-            console.warn(
-              `Skipping task without day_record_id on line ${i + 1}`
-            );
-            continue;
-          }
-
-          // Group tasks by day
-          if (!tasksByDay[dayRecordId]) {
-            tasksByDay[dayRecordId] = {
-              tasks: [],
-              dayRecord: {
-                id: dayRecordId,
-                date: task.startTime.toISOString().split('T')[0],
-                startTime: task.startTime,
-                endTime: task.endTime || task.startTime,
-                totalDuration: 0,
-                tasks: []
-              }
-            };
-          }
-
-          tasksByDay[dayRecordId].tasks.push(task);
-
-          // Update day record bounds
-          if (
-            task.startTime <
-            (tasksByDay[dayRecordId].dayRecord.startTime || new Date())
-          ) {
-            tasksByDay[dayRecordId].dayRecord.startTime = task.startTime;
-          }
-          if (
-            task.endTime &&
-            task.endTime >
-              (tasksByDay[dayRecordId].dayRecord.endTime || new Date(0))
-          ) {
-            tasksByDay[dayRecordId].dayRecord.endTime = task.endTime;
-          }
-
-          importedCount++;
-        } catch (error) {
-          console.warn(`Error parsing line ${i + 1}:`, error);
-          continue;
-        }
-      }
-
-      // Create day records and add to archived days
-      const newArchivedDays: DayRecord[] = [];
-
-      for (const [dayId, { tasks, dayRecord }] of Object.entries(tasksByDay)) {
-        const totalDuration = tasks.reduce(
-          (sum, task) => sum + (task.duration || 0),
-          0
-        );
-
-        const completeDay: DayRecord = {
-          id: dayRecord.id!,
-          date: dayRecord.date!,
-          tasks: tasks,
-          totalDuration: totalDuration,
-          startTime: dayRecord.startTime!,
-          endTime: dayRecord.endTime!,
-          notes: dayRecord.notes
-        };
-
-        newArchivedDays.push(completeDay);
+      const result = parseCSVImport(csvContent, categories);
+      if (!result.success) {
+        return { success: false, message: result.message, importedCount: 0 };
       }
 
       // Merge with existing archived days (avoid duplicates)
       const existingIds = new Set(archivedDays.map(day => day.id));
-      const uniqueNewDays = newArchivedDays.filter(
+      const uniqueNewDays = result.newArchivedDays.filter(
         day => !existingIds.has(day.id)
       );
 
       const updatedArchivedDays = [...archivedDays, ...uniqueNewDays];
       setArchivedDays(updatedArchivedDays);
 
-      // Save to storage
       if (dataService) {
         await dataService.saveArchivedDays(updatedArchivedDays);
       }
 
       return {
         success: true,
-        message: `Successfully imported ${importedCount} tasks in ${uniqueNewDays.length} days`,
-        importedCount
+        message: `Successfully imported ${result.importedCount} tasks in ${uniqueNewDays.length} days`,
+        importedCount: result.importedCount
       };
     } catch (error) {
       console.error('CSV import error:', error);

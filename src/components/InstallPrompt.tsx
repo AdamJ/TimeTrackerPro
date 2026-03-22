@@ -73,8 +73,6 @@ export const InstallPrompt = memo(function InstallPrompt() {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
 
-      console.log(`User response to install prompt: ${outcome}`);
-
       if (outcome === 'accepted') {
         setIsInstalled(true);
       }

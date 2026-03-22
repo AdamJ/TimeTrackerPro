@@ -58,7 +58,6 @@ Complex logic is extracted into custom hooks:
 
 - `useAuth()` — Access authentication state and methods
 - `useTimeTracking()` — Access time tracking state and methods
-- `useRealtimeSync()` — Real-time sync (currently disabled)
 
 ### 4. Lazy Loading Pattern
 
