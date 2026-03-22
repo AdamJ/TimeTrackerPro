@@ -139,7 +139,7 @@ export const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = (
 				<div className="space-y-4">
 					<div>
 						<Label>
-							Task Title <span className="text-red-700">*</span>
+							Task Title <span className="text-destructive">*</span>
 						</Label>
 						<Input
 							value={formData.title}
@@ -151,7 +151,7 @@ export const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = (
 					</div>
 
 					<div>
-						<Label>Description</Label>
+						<Label htmlFor="task-description">Description</Label>
 						<Tabs defaultValue="edit" className="w-full">
 							<TabsList className="grid w-full grid-cols-2">
 								<TabsTrigger value="edit">Edit</TabsTrigger>
@@ -159,6 +159,7 @@ export const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = (
 							</TabsList>
 							<TabsContent value="edit">
 								<Textarea
+									id="task-description"
 									value={formData.description}
 									onChange={e =>
 										setFormData(prev => ({
@@ -230,7 +231,7 @@ export const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = (
 										<SelectItem key={project.id} value={project.id}>
 											<div className="flex flex-col">
 												<span>{project.name}</span>
-												<span className="text-sm text-gray-500">
+												<span className="text-sm text-muted-foreground">
 													{project.client}
 												</span>
 											</div>

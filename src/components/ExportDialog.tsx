@@ -355,7 +355,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                 <CardTitle className="text-lg">Export Summary</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-sm text-gray-600 space-y-1">
+                <div className="text-sm text-muted-foreground space-y-1">
                   <p>Total archived days: {archivedDays.length}</p>
                   {startDate && endDate && (
                     <p>
@@ -380,21 +380,21 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Select a CSV file that was previously exported from this application.
                       The file must match the expected database schema format.
                     </p>
 
                     {/* Import Result Alert */}
                     {importResult && (
-                      <Alert className={`${importResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                      <Alert className={`${importResult.success ? 'border-green-200 bg-green-50' : 'border-destructive/20 bg-destructive/5'}`}>
                         <div className="flex items-center space-x-2">
                           {importResult.success ? (
                             <CheckCircle className="h-4 w-4 text-green-600" />
                           ) : (
-                            <XCircle className="h-4 w-4 text-red-600" />
+                            <XCircle className="h-4 w-4 text-destructive" />
                           )}
-                          <AlertDescription className={`${importResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                          <AlertDescription className={`${importResult.success ? 'text-green-800' : 'text-destructive'}`}>
                             <strong>{importResult.success ? 'Success!' : 'Error:'}</strong> {importResult.message}
                             {importResult.success && importResult.importedCount > 0 && (
                               <span className="block mt-1 text-sm">
@@ -407,7 +407,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                     )}
 
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                      <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                       <p className="text-sm text-gray-600 mb-2">
                         Click to select a CSV file
                       </p>
@@ -425,7 +425,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                   <CardTitle className="text-lg">Import Instructions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-sm text-gray-600 space-y-3">
+                  <div className="text-sm text-muted-foreground space-y-3">
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                       <div className="flex items-center justify-between">
                         <div>
@@ -485,7 +485,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
             type="file"
             accept=".csv"
             onChange={handleFileChange}
-            style={{ display: 'none' }}
+            className="hidden"
           />
         </div>
       </DialogContent>

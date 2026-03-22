@@ -235,8 +235,8 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
             {projects.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-8">
-                  <Briefcase className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">
+                  <Briefcase className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">
                     No projects yet. Add your first project to get started!
                   </p>
                 </CardContent>
@@ -259,7 +259,7 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
                             />
                             <div>
                               <div className="flex items-center space-x-2">
-                                <h4 className="font-semibold text-gray-900">
+                                <h4 className="font-semibold text-foreground">
                                   {project.name}
                                 </h4>
                                 {project.id.startsWith('default-') && (
@@ -268,7 +268,7 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
                                   </span>
                                 )}
                               </div>
-                              <p className="text-sm text-gray-600">
+                              <p className="text-sm text-muted-foreground">
                                 {project.client}
                               </p>
                               {project.hourlyRate && (
@@ -284,15 +284,16 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
                           <Button
                             size="sm"
                             variant="outline"
+                            aria-label="Edit project"
                             onClick={() => handleEdit(project)}
                           >
                             <Edit className="w-3 h-3" />
                           </Button>
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="destructive"
+                            aria-label="Delete project"
                             onClick={() => handleDelete(project.id)}
-                            className="text-red-600 hover:text-red-700"
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>
