@@ -10,9 +10,7 @@ import { DEFAULT_CATEGORIES, TaskCategory } from '@/config/categories';
 import { DEFAULT_PROJECTS, ProjectCategory } from '@/config/projects';
 import { useAuth } from '@/hooks/useAuth';
 import { createDataService, DataService } from '@/services/dataService';
-import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { toast } from '@/hooks/use-toast';
-import { SYNC_REQUIRED_EVENT } from '@/contexts/OfflineContext';
 import {
   getHoursWorkedForDay as calcHoursWorkedForDay,
   getRevenueForDay as calcRevenueForDay,
@@ -318,9 +316,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     loadData();
   }, [dataService]);
 
-  // Stable reference to the actual save function
-  const saveCurrentDayRef = useRef<() => Promise<void>>();
-
   // Refs to hold the latest state without causing effect reruns
   const latestStateRef = useRef({
     isDayStarted,
@@ -425,19 +420,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [dataService, loading]);
 
-  // Setup periodic sync - DISABLED for single device usage
-  // useRealtimeSync({
-  //   onCurrentDayUpdate: loadCurrentDay,
-  //   isAuthenticated,
-  //   enabled: !loading
-  // });
-
-  // DISABLED: Automatic saves - only save on critical events for single-device usage
-  // Critical events that trigger saves:
-  // 1. Day end (postDay)
-  // 2. Window close (beforeunload)
-  // 3. Manual sync button
-
   // Save on window close to prevent data loss
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -451,17 +433,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [dataService, isDayStarted, tasks, stableSaveCurrentDay]);
-
-  // Sync all data to the backend when the app comes back online
-  useEffect(() => {
-    const handleSyncRequired = () => {
-      if (!isAuthenticated) return;
-      forceSyncToDatabase();
-    };
-
-    window.addEventListener(SYNC_REQUIRED_EVENT, handleSyncRequired);
-    return () => window.removeEventListener(SYNC_REQUIRED_EVENT, handleSyncRequired);
-  }, [isAuthenticated, forceSyncToDatabase]);
 
   // Update current time every 30 seconds (instead of every second for better performance)
   useEffect(() => {
