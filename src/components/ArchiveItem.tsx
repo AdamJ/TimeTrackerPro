@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -20,6 +20,12 @@ import {
 import { MarkdownDisplay } from '@/components/MarkdownDisplay';
 import { DayRecord } from '@/contexts/TimeTrackingContext';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
+import {
+  getHoursWorkedForDay as calcHoursWorked,
+  getBillableHoursForDay as calcBillableHours,
+  getNonBillableHoursForDay as calcNonBillableHours,
+  getRevenueForDay as calcRevenue
+} from '@/utils/calculationUtils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
 
 interface ArchiveItemProps {
@@ -31,13 +37,30 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
   const {
     restoreArchivedDay,
     isDayStarted,
-    getHoursWorkedForDay,
-    getRevenueForDay,
-    getBillableHoursForDay,
-    getNonBillableHoursForDay,
     projects,
     categories
   } = useTimeTracking();
+
+  // Memoize per-day stats so they only recompute when the day data,
+  // project rates, or category billing settings change.
+  const dayStats = useMemo(() => ({
+    hoursWorked: calcHoursWorked(day),
+    billableHours: calcBillableHours(day, projects, categories),
+    nonBillableHours: calcNonBillableHours(day, projects, categories),
+    revenue: calcRevenue(day, projects, categories)
+  }), [day, projects, categories]);
+
+  // Build lookup maps once so the task table doesn't do O(n) searches per row.
+  const projectMap = useMemo(() => new Map(projects.map(p => [p.name, p])), [projects]);
+  const categoryMap = useMemo(() => new Map(categories.map(c => [c.name, c])), [categories]);
+
+  // Generate daily summary only when task descriptions change.
+  const dailySummary = useMemo(() => {
+    const descriptions = day.tasks
+      .filter(task => task.description)
+      .map(task => task.description!);
+    return generateDailySummary(descriptions);
+  }, [day.tasks]);
 
   const handleRestore = () => {
     if (isDayStarted) {
@@ -110,18 +133,18 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
                   <span className="text-blue-600 print:text-black font-medium">
                     Total{' '}
                     <span className="hidden md:d-inline-flex">Hours: </span>
-                    {getHoursWorkedForDay(day).toFixed(2)}h
+                    {dayStats.hoursWorked.toFixed(2)}h
                   </span>
                   <span className="text-green-600 print:text-black font-medium">
-                    Billable: {getBillableHoursForDay(day).toFixed(2)}h
+                    Billable: {dayStats.billableHours.toFixed(2)}h
                   </span>
                   <span className="text-gray-600 print:text-black font-medium">
-                    Non-billable: {getNonBillableHoursForDay(day).toFixed(2)}h
+                    Non-billable: {dayStats.nonBillableHours.toFixed(2)}h
                   </span>
                 </div>
-                {getRevenueForDay(day) > 0 && (
+                {dayStats.revenue > 0 && (
                   <span className="text-green-600 print:text-black font-semibold">
-                    Revenue: ${getRevenueForDay(day).toFixed(2)}
+                    Revenue: ${dayStats.revenue.toFixed(2)}
                   </span>
                 )}
               </div>
@@ -129,61 +152,52 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
           </div>
 
           {/* Daily Summary */}
-          {(() => {
-            const descriptions = day.tasks
-              .filter(task => task.description)
-              .map(task => task.description!);
-            const summary = generateDailySummary(descriptions);
-
-            if (!summary) return null;
-
-            return (
-              <div className="space-y-2 border-t pt-4">
-                <h4 className="font-medium text-gray-900 flex items-center mb-2">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Overview
-                </h4>
-                <Tabs defaultValue="summary" className="w-full">
-                  <TabsList className="border-b mb-4">
-                    <TabsTrigger
-                      value="summary"
-                      className="px-3 py-1 text-sm font-medium text-gray-700 data-[state=active]:border-blue-600 data-[state=active]:border-b-2 focus:outline-none"
-                    >
-                      Summary
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="notes"
-                      className="px-3 py-1 text-sm font-medium text-gray-700 data-[state=active]:border-blue-600 data-[state=active]:border-b-2 focus:outline-none"
-                    >
-                      Notes
-                    </TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="summary" className="focus:outline-none">
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md print:bg-white print:border print:border-gray-300">
+          {dailySummary && (
+            <div className="space-y-2 border-t pt-4">
+              <h4 className="font-medium text-gray-900 flex items-center mb-2">
+                <FileText className="w-4 h-4 mr-2" />
+                Overview
+              </h4>
+              <Tabs defaultValue="summary" className="w-full">
+                <TabsList className="border-b mb-4">
+                  <TabsTrigger
+                    value="summary"
+                    className="px-3 py-1 text-sm font-medium text-gray-700 data-[state=active]:border-blue-600 data-[state=active]:border-b-2 focus:outline-none"
+                  >
+                    Summary
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="notes"
+                    className="px-3 py-1 text-sm font-medium text-gray-700 data-[state=active]:border-blue-600 data-[state=active]:border-b-2 focus:outline-none"
+                  >
+                    Notes
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="summary" className="focus:outline-none">
+                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md print:bg-white print:border print:border-gray-300">
+                    <MarkdownDisplay
+                      content={dailySummary}
+                      className="prose-p:text-gray-700 dark:prose-p:text-gray-300 print:prose-p:text-gray-800"
+                    />
+                  </div>
+                </TabsContent>
+                <TabsContent value="notes" className="focus:outline-none">
+                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md print:bg-white print:border print:border-gray-300">
+                    {day.notes ? (
                       <MarkdownDisplay
-                        content={summary}
+                        content={day.notes}
                         className="prose-p:text-gray-700 dark:prose-p:text-gray-300 print:prose-p:text-gray-800"
                       />
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="notes" className="focus:outline-none">
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md print:bg-white print:border print:border-gray-300">
-                      {day.notes ? (
-                        <MarkdownDisplay
-                          content={day.notes}
-                          className="prose-p:text-gray-700 dark:prose-p:text-gray-300 print:prose-p:text-gray-800"
-                        />
-                      ) : (
-                        <div className="prose-sm prose-p:leading-relaxed prose-p:my-1 prose-p:text-gray-700 dark:prose-p:text-gray-300 print:prose-p:text-gray-800">
-                          <p>No notes for this day have been entered.</p>
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            );
-          })()}
+                    ) : (
+                      <div className="prose-sm prose-p:leading-relaxed prose-p:my-1 prose-p:text-gray-700 dark:prose-p:text-gray-300 print:prose-p:text-gray-800">
+                        <p>No notes for this day have been entered.</p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
 
           {/* Tasks Table */}
           <div className="print:mt-2">
@@ -215,10 +229,8 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
               </TableHeader>
               <TableBody>
                 {day.tasks.map(task => {
-                  const project = projects.find(p => p.name === task.project);
-                  const category = categories.find(
-                    c => c.name === task.category
-                  );
+                  const project = projectMap.get(task.project ?? '');
+                  const category = categoryMap.get(task.category ?? '');
                   const taskHours = task.duration
                     ? task.duration / (1000 * 60 * 60)
                     : 0;

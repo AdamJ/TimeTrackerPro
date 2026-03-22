@@ -4,6 +4,12 @@ import {
   DayRecord
 } from '@/contexts/TimeTrackingContext';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
+import {
+  getHoursWorkedForDay as calcHoursWorked,
+  getBillableHoursForDay as calcBillableHours,
+  getNonBillableHoursForDay as calcNonBillableHours,
+  getRevenueForDay as calcRevenue
+} from '@/utils/calculationUtils';
 import { ArchiveItem } from '@/components/ArchiveItem';
 import { ArchiveEditDialog } from '@/components/ArchiveEditDialog';
 import { ExportDialog } from '@/components/ExportDialog';
@@ -21,10 +27,6 @@ import SiteNavigationMenu from '@/components/Navigation';
 const ArchiveContent: React.FC = () => {
   const {
     archivedDays,
-    getHoursWorkedForDay,
-    getBillableHoursForDay,
-    getNonBillableHoursForDay,
-    getRevenueForDay,
     projects,
     categories
   } = useTimeTracking();
@@ -83,23 +85,14 @@ const ArchiveContent: React.FC = () => {
     );
   }, [archivedDays, filters]);
 
-  // Calculate summary stats based on filtered days
-  const totalHoursWorked = filteredDays.reduce(
-    (sum, day) => sum + getHoursWorkedForDay(day),
-    0
-  );
-  const totalBillableHours = filteredDays.reduce(
-    (sum, day) => sum + getBillableHoursForDay(day),
-    0
-  );
-  const totalNonBillableHours = filteredDays.reduce(
-    (sum, day) => sum + getNonBillableHoursForDay(day),
-    0
-  );
-  const totalRevenue = filteredDays.reduce(
-    (sum, day) => sum + getRevenueForDay(day),
-    0
-  );
+  // Calculate summary stats based on filtered days — memoized so they only
+  // recompute when filteredDays, projects, or categories actually change.
+  const { totalHoursWorked, totalBillableHours, totalNonBillableHours, totalRevenue } = useMemo(() => ({
+    totalHoursWorked: filteredDays.reduce((sum, day) => sum + calcHoursWorked(day), 0),
+    totalBillableHours: filteredDays.reduce((sum, day) => sum + calcBillableHours(day, projects, categories), 0),
+    totalNonBillableHours: filteredDays.reduce((sum, day) => sum + calcNonBillableHours(day, projects, categories), 0),
+    totalRevenue: filteredDays.reduce((sum, day) => sum + calcRevenue(day, projects, categories), 0)
+  }), [filteredDays, projects, categories]);
 
   const handleEdit = (day: DayRecord) => {
     setEditingDay(day);
