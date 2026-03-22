@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Archive Edit Dialog**: 4 time pickers (2 for day start/end, 2 for task start/end)
 - Removed duplicate `generateTimeOptions()` helper functions from all dialog components
 
+### Security
+- Removed unsafe `as string` type assertions on `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `src/lib/supabase.ts` — the assertions hid the `string | undefined` type from TypeScript, preventing the compiler from enforcing the existing null-guard; variables are now correctly typed so the `?? ''` fallback and early warn are properly enforced
+- Gated `getDbCallStats`, `resetDbCallStats`, and `clearDbCallLog` window attachments behind `import.meta.env.DEV` in `src/lib/supabase.ts` — internal database call telemetry was previously exposed to anyone with DevTools access in production; Vite now tree-shakes the attachment block out of production bundles
+- Added explicit radix `10` to `parseInt()` call in CSV import (`src/utils/exportUtils.ts`) — implicit radix is deprecated and could silently misparse duration strings with leading zeros
+
 ### Removed
 - Deleted `src/hooks/.useReportSummary-Claude.ts` — unused development dotfile that contained a direct Anthropic API key reference
 - Deleted `src/utils/supabase.ts` — duplicate Supabase client that was never imported, creating a redundant connection
