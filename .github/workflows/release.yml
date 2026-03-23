@@ -105,10 +105,10 @@ jobs:
           # Get the most recent tag (if any)
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 
-          if [ -z "$PREVIOUS_TAG" ]; then
-            COMMITS=$(git log --pretty=format: "- %s (%h)" --no-merges)
-          else
-            COMMITS=$(git log $PREVIOUS_TAG..HEAD --pretty=format: "- %s (%h)" --no-merges)
+          if [ -z "$PREVIOUS_TAG" ]; then COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+
+          else COMMITS=$(git log "$PREVIOUS_TAG"..HEAD --pretty=format:"- %s (%h)" --no-merges)
+
           fi
 
           # Create changelog content
