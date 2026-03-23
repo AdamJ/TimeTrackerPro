@@ -265,6 +265,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                   onClick={handleRestoreDay}
                   variant="outline"
                   size="sm"
+                  aria-label="Restore this day"
                   className="text-blue-600 hover:text-blue-700"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -274,6 +275,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                   onClick={() => setShowDeleteConfirm(true)}
                   variant="destructive"
                   size="sm"
+                  aria-label="Delete this day"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span className="hidden md:block md:ml-2">Delete</span>
@@ -282,6 +284,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                   onClick={() => setIsEditing(true)}
                   variant="default"
                   size="sm"
+                  aria-label="Edit this day"
                 >
                   <Edit className="w-4 h-4" />
                   <span className="hidden md:block md:ml-2">Edit</span>
@@ -312,7 +315,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
               </Callout.Text>
             </Callout.Root>
           )}
-          <Card style={{ marginBottom: '1rem' }}>
+          <Card className="mb-4">
             <CardHeader>
               <CardTitle className="text-lg">Summary of Day</CardTitle>
             </CardHeader>
@@ -355,7 +358,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                     </div>
                   </div>
                   <div>
-                    <Label>Notes</Label>
+                    <Label htmlFor="day-notes">Notes</Label>
                     <Tabs defaultValue="edit" className="w-full">
                       <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="edit">Edit</TabsTrigger>
@@ -363,6 +366,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                       </TabsList>
                       <TabsContent value="edit">
                         <Textarea
+                          id="day-notes"
                           value={dayData.notes}
                           onChange={e =>
                             setDayData(prev => ({
@@ -391,21 +395,21 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm">
                   <div>
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-foreground">
                       Start Time:
                     </span>
-                    <span className="ml-2 text-gray-600">
+                    <span className="ml-2 text-muted-foreground">
                       {formatTime12Hour(day.startTime)}
                     </span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-900">End Time:</span>
-                    <span className="ml-2 text-gray-600">
+                    <span className="font-medium text-foreground">End Time:</span>
+                    <span className="ml-2 text-muted-foreground">
                       {formatTime12Hour(day.endTime)}
                     </span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-foreground">
                       Total Duration:
                     </span>
                     <div className="flex items-center space-x-2 mt-1">
@@ -416,15 +420,15 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                     </div>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-900">Tasks:</span>
-                    <span className="ml-2 text-gray-600">
+                    <span className="font-medium text-foreground">Tasks:</span>
+                    <span className="ml-2 text-muted-foreground">
                       {tasks.length} total
                     </span>
                   </div>
                   {day.notes && (
                     <div className="col-span-2">
-                      <span className="font-medium text-gray-900">Notes:</span>
-                      <div className="mt-1 text-gray-600">
+                      <span className="font-medium text-foreground">Notes:</span>
+                      <div className="mt-1 text-muted-foreground">
                         <MarkdownDisplay content={day.notes} />
                       </div>
                     </div>
@@ -464,7 +468,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                               <div>{task.title}</div>
                               <span className="hidden lg:block">
                                 {task.description && (
-                                  <div className="text-sm text-gray-500 mt-1">
+                                  <div className="text-sm text-muted-foreground mt-1">
                                     <MarkdownDisplay
                                       content={task.description}
                                     />
@@ -491,7 +495,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                                   {task.project}
                                 </div>
                                 {task.client && (
-                                  <div className="text-xs text-gray-500">
+                                  <div className="text-xs text-muted-foreground">
                                     {task.client}
                                   </div>
                                 )}
@@ -516,14 +520,15 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                                   onClick={() => handleTaskEdit(task)}
                                   size="sm"
                                   variant="outline"
+                                  aria-label="Edit task"
                                 >
                                   <Edit className="w-3 h-3" />
                                 </Button>
                                 <Button
                                   onClick={() => handleTaskDelete(task.id)}
                                   size="sm"
-                                  variant="outline"
-                                  className="text-red-600 hover:text-red-700"
+                                  variant="destructive"
+                                  aria-label="Delete task"
                                 >
                                   <Trash2 className="w-3 h-3" />
                                 </Button>
@@ -541,15 +546,15 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 
           {/* Delete Confirmation */}
           {showDeleteConfirm && (
-            <Card className="border-red-200 bg-red-50">
+            <Card className="border-destructive/20 bg-destructive/5">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-3">
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
                   <div className="flex-1">
-                    <h4 className="font-medium text-red-900">
+                    <h4 className="font-medium text-destructive">
                       Delete Archived Day
                     </h4>
-                    <p className="text-sm text-red-700 mt-1">
+                    <p className="text-sm text-destructive mt-1">
                       Are you sure you want to delete this archived day? This
                       action cannot be undone.
                     </p>
@@ -558,7 +563,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                     <Button
                       onClick={handleDeleteDay}
                       size="sm"
-                      className="bg-red-600 hover:bg-red-700 text-white"
+                      variant="destructive"
                     >
                       Delete
                     </Button>

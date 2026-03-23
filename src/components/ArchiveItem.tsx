@@ -87,6 +87,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
               onClick={handleRestore}
               variant="ghost"
               size="sm"
+              aria-label="Restore this day"
               className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
             >
               <RotateCcw className="w-4 h-4 block" />
@@ -96,6 +97,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
               onClick={() => onEdit(day)}
               variant="default"
               size="sm"
+              aria-label="Edit this day"
               className="flex items-center space-x-2"
             >
               <Edit className="w-4 h-4 block" />
@@ -111,10 +113,10 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm print:text-base">
               <div className="flex items-center space-x-4">
-                <span className="text-gray-600 print:text-black">
+                <span className="text-muted-foreground print:text-black">
                   Started: {formatTime(day.startTime)}
                 </span>
-                <span className="text-gray-600 print:text-black">
+                <span className="text-muted-foreground print:text-black">
                   Ended: {formatTime(day.endTime)}
                 </span>
               </div>
@@ -138,7 +140,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
                   <span className="text-green-600 print:text-black font-medium">
                     Billable: {dayStats.billableHours.toFixed(2)}h
                   </span>
-                  <span className="text-gray-600 print:text-black font-medium">
+                  <span className="text-muted-foreground print:text-black font-medium">
                     Non-billable: {dayStats.nonBillableHours.toFixed(2)}h
                   </span>
                 </div>
@@ -154,7 +156,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
           {/* Daily Summary */}
           {dailySummary && (
             <div className="space-y-2 border-t pt-4">
-              <h4 className="font-medium text-gray-900 flex items-center mb-2">
+              <h4 className="font-medium text-foreground flex items-center mb-2">
                 <FileText className="w-4 h-4 mr-2" />
                 Overview
               </h4>
@@ -162,34 +164,34 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
                 <TabsList className="border-b mb-4">
                   <TabsTrigger
                     value="summary"
-                    className="px-3 py-1 text-sm font-medium text-gray-700 data-[state=active]:border-blue-600 data-[state=active]:border-b-2 focus:outline-none"
+                    className="px-3 py-1 text-sm font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     Summary
                   </TabsTrigger>
                   <TabsTrigger
                     value="notes"
-                    className="px-3 py-1 text-sm font-medium text-gray-700 data-[state=active]:border-blue-600 data-[state=active]:border-b-2 focus:outline-none"
+                    className="px-3 py-1 text-sm font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     Notes
                   </TabsTrigger>
                 </TabsList>
-                <TabsContent value="summary" className="focus:outline-none">
-                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md print:bg-white print:border print:border-gray-300">
+                <TabsContent value="summary" className="focus-visible:outline-none">
+                  <div className="bg-muted p-4 rounded-md print:bg-white print:border print:border-border">
                     <MarkdownDisplay
                       content={dailySummary}
-                      className="prose-p:text-gray-700 dark:prose-p:text-gray-300 print:prose-p:text-gray-800"
+                      className="prose-p:text-muted-foreground print:prose-p:text-foreground"
                     />
                   </div>
                 </TabsContent>
-                <TabsContent value="notes" className="focus:outline-none">
-                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md print:bg-white print:border print:border-gray-300">
+                <TabsContent value="notes" className="focus-visible:outline-none">
+                  <div className="bg-muted p-4 rounded-md print:bg-white print:border print:border-border">
                     {day.notes ? (
                       <MarkdownDisplay
                         content={day.notes}
-                        className="prose-p:text-gray-700 dark:prose-p:text-gray-300 print:prose-p:text-gray-800"
+                        className="prose-p:text-muted-foreground print:prose-p:text-foreground"
                       />
                     ) : (
-                      <div className="prose-sm prose-p:leading-relaxed prose-p:my-1 prose-p:text-gray-700 dark:prose-p:text-gray-300 print:prose-p:text-gray-800">
+                      <div className="prose-sm prose-p:leading-relaxed prose-p:my-1 prose-p:text-muted-foreground print:prose-p:text-foreground">
                         <p>No notes for this day have been entered.</p>
                       </div>
                     )}
@@ -201,7 +203,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 
           {/* Tasks Table */}
           <div className="print:mt-2">
-            <h4 className="font-medium text-gray-900 print:hidden mb-2">
+            <h4 className="font-medium text-foreground print:hidden mb-2">
               Tasks ({day.tasks.length})
             </h4>
             <Table>
@@ -249,7 +251,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
                     <TableRow key={task.id} className="print:border-black">
                       <TableCell className="font-medium print:text-black">
                         {task.title}
-                        <div className="text-sm text-gray-400 hidden md:block print:text-gray-600">
+                        <div className="text-sm text-muted-foreground hidden md:block print:text-foreground">
                           <MarkdownDisplay
                             content={task.description}
                             className="prose-sm line-clamp-1 hover:line-clamp-none transition-all duration-200"
@@ -259,7 +261,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
                       <TableCell className="print:text-black">
                         {task.project || '-'}
                         {project?.hourlyRate && (
-                          <div className="text-xs text-gray-500 print:text-gray-600">
+                          <div className="text-xs text-muted-foreground print:text-foreground">
                             ${project.hourlyRate}/hr
                           </div>
                         )}
