@@ -28,16 +28,20 @@ export const InstallPrompt = memo(function InstallPrompt() {
     }
 
     // Check if user has previously dismissed the prompt
-    const dismissed = localStorage.getItem('pwa-install-dismissed');
-    if (dismissed) {
-      const dismissedTime = parseInt(dismissed, 10);
-      const daysSinceDismissed =
-        (Date.now() - dismissedTime) / (1000 * 60 * 60 * 24);
+    try {
+      const dismissed = localStorage.getItem('pwa-install-dismissed');
+      if (dismissed) {
+        const dismissedTime = parseInt(dismissed, 10);
+        const daysSinceDismissed =
+          (Date.now() - dismissedTime) / (1000 * 60 * 60 * 24);
 
-      // Show again after 7 days
-      if (daysSinceDismissed < 7) {
-        return;
+        // Show again after 7 days
+        if (daysSinceDismissed < 7) {
+          return;
+        }
       }
+    } catch {
+      // localStorage unavailable (private mode etc.); proceed to show prompt
     }
 
     const handler = (e: Event) => {
@@ -86,7 +90,11 @@ export const InstallPrompt = memo(function InstallPrompt() {
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+    try {
+      localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+    } catch {
+      // localStorage unavailable; dismiss state not persisted
+    }
   };
 
   if (!showPrompt || !deferredPrompt || isInstalled) {

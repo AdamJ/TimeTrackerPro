@@ -377,21 +377,27 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsSyncing(true);
 
     try {
-      // Save all data types in parallel
-      const savePromises = [
-        // Current day data
+      // Save all data types in parallel; use allSettled so a single failure
+      // doesn't silently leave other saves in an unknown state.
+      const results = await Promise.allSettled([
         stableSaveCurrentDay(),
-        // Projects
         dataService.saveProjects(projects),
-        // Categories
         dataService.saveCategories(categories),
-        // Archived days
         dataService.saveArchivedDays(archivedDays)
-      ];
+      ]);
 
-      await Promise.all(savePromises);
+      const failed = results.filter((r) => r.status === "rejected");
+      if (failed.length > 0) {
+        console.error(
+          "❌ Manual sync partially failed:",
+          failed.map((f) => (f as PromiseRejectedResult).reason)
+        );
+        // Do not mark sync as successful when any save failed
+        return;
+      }
+
       setLastSyncTime(new Date());
-      setHasUnsavedChanges(false); // Clear unsaved changes flag
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error('❌ Manual sync failed:', error);
     } finally {
@@ -422,17 +428,24 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Save on window close to prevent data loss
   useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      // Only save if we have unsaved changes
-      if (dataService && (isDayStarted || tasks.length > 0)) {
-        stableSaveCurrentDay();
-        // Don't prevent closing, just save
+    const handleBeforeUnload = (_event: BeforeUnloadEvent) => {
+      if (!dataService || (!isDayStarted && tasks.length === 0)) return;
+      // Async saves cannot be reliably awaited during beforeunload, so write the
+      // current state synchronously to localStorage as a guaranteed crash backup.
+      // Supabase-mode users will have this local copy available for recovery on next load.
+      try {
+        localStorage.setItem(
+          STORAGE_KEYS.CURRENT_DAY,
+          JSON.stringify({ isDayStarted, dayStartTime, tasks, currentTask })
+        );
+      } catch {
+        // localStorage unavailable (quota exceeded, private mode); best effort only.
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [dataService, isDayStarted, tasks, stableSaveCurrentDay]);
+  }, [dataService, isDayStarted, tasks, currentTask, dayStartTime]);
 
   // Sync to backend when coming back online
   useEffect(() => {
@@ -485,10 +498,15 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setHasUnsavedChanges(true);
     // Save immediately since this is a critical action
     saveImmediately()
-      .then(() => {
-      })
+      .then(() => {})
       .catch(error => {
         console.error('❌ Error saving state after ending day:', error);
+        toast({
+          title: 'Save Failed',
+          description: 'Your day was ended but the data could not be saved. Please use Manual Sync to retry.',
+          variant: 'destructive',
+          duration: 7000
+        });
       });
   };
 

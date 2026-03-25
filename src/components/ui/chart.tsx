@@ -68,6 +68,15 @@ const ChartContainer = React.forwardRef<
 })
 ChartContainer.displayName = "Chart"
 
+// Allow only alphanumeric characters, hyphens, and underscores in chart IDs
+// to prevent CSS selector injection via the data-chart attribute.
+const SAFE_ID_PATTERN = /^[a-zA-Z0-9_-]+$/
+
+// Allow CSS color values: hex, rgb/rgba/hsl/hsla, CSS variable references,
+// and named color keywords. Rejects strings containing semicolons, braces, or
+// other characters that could escape the CSS declaration context.
+const SAFE_COLOR_PATTERN = /^[a-zA-Z0-9\s#(),%./-]+$/
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([_, config]) => config.theme || config.color
@@ -77,18 +86,26 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
+  // Validate the chart ID before interpolating it into the <style> block.
+  const safeId = SAFE_ID_PATTERN.test(id) ? id : ""
+  if (!safeId) {
+    return null
+  }
+
   return (
     <style
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
           .map(
             ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
+${prefix} [data-chart=${safeId}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
-    const color =
+    const rawColor =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color
+    // Validate the color value before embedding it in CSS.
+    const color = rawColor && SAFE_COLOR_PATTERN.test(rawColor) ? rawColor : null
     return color ? `  --color-${key}: ${color};` : null
   })
   .join("\n")}

@@ -35,12 +35,28 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="application-name" content="TimeTracker Pro" />
 
+    <!-- Content Security Policy -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline';
+        style-src 'self' 'unsafe-inline';
+        connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com;
+        font-src 'self' data:;
+        img-src 'self' data: blob:;
+        frame-src 'none';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+      "
+    />
+
     <link rel="stylesheet" href="/print.css" media="print" />
     <link rel="stylesheet" href="/pwa.css" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script src="https://cdn.gpteng.co/gptengineer.js" defer></script>
   </body>
 </html>

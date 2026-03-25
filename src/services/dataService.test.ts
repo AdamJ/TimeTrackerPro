@@ -97,8 +97,10 @@ describe("DataService", () => {
 				expect(saved).toBeTruthy();
 
 				const parsed = JSON.parse(saved!);
-				expect(parsed).toHaveLength(1);
-				expect(parsed[0].id).toBe("day-1");
+				// Data is stored in versioned envelope { days: [...], _v: number }
+				expect(parsed.days).toHaveLength(1);
+				expect(parsed.days[0].id).toBe("day-1");
+				expect(parsed._v).toBe(1);
 			});
 		});
 
