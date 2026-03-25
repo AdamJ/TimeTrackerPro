@@ -9,9 +9,19 @@ export const STORAGE_KEYS = {
 	CATEGORIES: "timetracker_categories"
 };
 
+// Increment this when the stored data format changes in a breaking way.
+// On read, if the stored version is lower than SCHEMA_VERSION the data is
+// treated as legacy and the key is cleared rather than letting corrupted data
+// propagate through the application.
+export const SCHEMA_VERSION = 1;
+
 export class LocalStorageService implements DataService {
 	async saveCurrentDay(data: CurrentDayData): Promise<void> {
-		localStorage.setItem(STORAGE_KEYS.CURRENT_DAY, JSON.stringify(data));
+		try {
+			localStorage.setItem(STORAGE_KEYS.CURRENT_DAY, JSON.stringify({ ...data, _v: SCHEMA_VERSION }));
+		} catch (error) {
+			console.warn("Failed to save current day to localStorage:", error);
+		}
 	}
 
 	async getCurrentDay(): Promise<CurrentDayData | null> {
@@ -20,6 +30,11 @@ export class LocalStorageService implements DataService {
 			if (!saved) return null;
 
 			const data = JSON.parse(saved);
+			if (data._v !== SCHEMA_VERSION) {
+				console.warn("localStorage current day schema mismatch — clearing stale data");
+				localStorage.removeItem(STORAGE_KEYS.CURRENT_DAY);
+				return null;
+			}
 			return {
 				...data,
 				dayStartTime: data.dayStartTime ? new Date(data.dayStartTime) : null,
@@ -45,7 +60,11 @@ export class LocalStorageService implements DataService {
 	}
 
 	async saveArchivedDays(days: DayRecord[]): Promise<void> {
-		localStorage.setItem(STORAGE_KEYS.ARCHIVED_DAYS, JSON.stringify(days));
+		try {
+			localStorage.setItem(STORAGE_KEYS.ARCHIVED_DAYS, JSON.stringify({ days, _v: SCHEMA_VERSION }));
+		} catch (error) {
+			console.warn("Failed to save archived days to localStorage:", error);
+		}
 	}
 
 	async getArchivedDays(): Promise<DayRecord[]> {
@@ -53,7 +72,15 @@ export class LocalStorageService implements DataService {
 			const saved = localStorage.getItem(STORAGE_KEYS.ARCHIVED_DAYS);
 			if (!saved) return [];
 
-			const data = JSON.parse(saved);
+			const parsed = JSON.parse(saved);
+			// Support both versioned format { days, _v } and legacy bare array
+			const data: DayRecord[] | undefined = Array.isArray(parsed) ? parsed : parsed?.days;
+			if (!Array.isArray(parsed) && parsed?._v !== SCHEMA_VERSION) {
+				console.warn("localStorage archived days schema mismatch — clearing stale data");
+				localStorage.removeItem(STORAGE_KEYS.ARCHIVED_DAYS);
+				return [];
+			}
+			if (!Array.isArray(data)) return [];
 			return data.map((day: DayRecord) => ({
 				...day,
 				startTime: new Date(day.startTime),
@@ -85,13 +112,26 @@ export class LocalStorageService implements DataService {
 	}
 
 	async saveProjects(projects: Project[]): Promise<void> {
-		localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
+		try {
+			localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify({ data: projects, _v: SCHEMA_VERSION }));
+		} catch (error) {
+			console.warn("Failed to save projects to localStorage:", error);
+		}
 	}
 
 	async getProjects(): Promise<Project[]> {
 		try {
 			const saved = localStorage.getItem(STORAGE_KEYS.PROJECTS);
-			return saved ? JSON.parse(saved) : [];
+			if (!saved) return [];
+			const parsed = JSON.parse(saved);
+			// Support legacy bare array and new versioned format { data, _v }
+			const data: Project[] = Array.isArray(parsed) ? parsed : parsed?.data;
+			if (!Array.isArray(parsed) && parsed?._v !== SCHEMA_VERSION) {
+				console.warn("localStorage projects schema mismatch — clearing stale data");
+				localStorage.removeItem(STORAGE_KEYS.PROJECTS);
+				return [];
+			}
+			return Array.isArray(data) ? data : [];
 		} catch (error) {
 			console.error("Error loading projects from localStorage:", error);
 			return [];
@@ -99,13 +139,26 @@ export class LocalStorageService implements DataService {
 	}
 
 	async saveCategories(categories: TaskCategory[]): Promise<void> {
-		localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
+		try {
+			localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify({ data: categories, _v: SCHEMA_VERSION }));
+		} catch (error) {
+			console.warn("Failed to save categories to localStorage:", error);
+		}
 	}
 
 	async getCategories(): Promise<TaskCategory[]> {
 		try {
 			const saved = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
-			return saved ? JSON.parse(saved) : [];
+			if (!saved) return [];
+			const parsed = JSON.parse(saved);
+			// Support legacy bare array and new versioned format { data, _v }
+			const data: TaskCategory[] = Array.isArray(parsed) ? parsed : parsed?.data;
+			if (!Array.isArray(parsed) && parsed?._v !== SCHEMA_VERSION) {
+				console.warn("localStorage categories schema mismatch — clearing stale data");
+				localStorage.removeItem(STORAGE_KEYS.CATEGORIES);
+				return [];
+			}
+			return Array.isArray(data) ? data : [];
 		} catch (error) {
 			console.error("Error loading categories from localStorage:", error);
 			return [];

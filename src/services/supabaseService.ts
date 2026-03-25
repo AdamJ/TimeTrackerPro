@@ -20,6 +20,19 @@ export class SupabaseService implements DataService {
 	private static schemaChecked: boolean = false;
 	private static globalSchemaResult: boolean | null = null;
 
+	/**
+	 * Resolves the authenticated user and validates their ID.
+	 * Throws descriptively if the user is unauthenticated or the ID is empty,
+	 * ensuring every DB method fails fast before touching the database.
+	 */
+	private async requireUser(): Promise<{ id: string }> {
+		const cachedUser = await getCachedUser(); // throws if unauthenticated
+		if (!cachedUser.id) {
+			throw new Error("Authenticated user has no ID — cannot perform database operation");
+		}
+		return cachedUser;
+	}
+
 	private async checkNewSchema(): Promise<boolean> {
 		// Use global cache first (survives across service instances)
 		if (SupabaseService.schemaChecked && SupabaseService.globalSchemaResult !== null) {
@@ -79,7 +92,7 @@ export class SupabaseService implements DataService {
 
 	async saveCurrentDay(data: CurrentDayData): Promise<void> {
 
-		const user = await getCachedUser();
+		const user = await this.requireUser();
 
 		const categories = (await getCachedCategories()) || [];
 		const projects = (await getCachedProjects()) || [];
@@ -186,7 +199,7 @@ export class SupabaseService implements DataService {
 
 	async getCurrentDay(): Promise<CurrentDayData | null> {
 
-		const user = await getCachedUser();
+		const user = await this.requireUser();
 
 		const { data: currentDayData, error: currentDayError } = await supabase
 			.from("current_day")
@@ -247,14 +260,10 @@ export class SupabaseService implements DataService {
 
 	async saveArchivedDays(days: DayRecord[]): Promise<void> {
 
-		const user = await getCachedUser();
+		const user = await this.requireUser();
 
 		const categories = (await getCachedCategories()) || [];
 		const projects = (await getCachedProjects()) || [];
-
-		if (!user.id) {
-			throw new Error("User ID is null - cannot save archived data");
-		}
 
 		if (days.length === 0) {
 			await supabase.from("tasks").delete().eq("user_id", user.id).eq("is_current", false);
@@ -391,7 +400,7 @@ export class SupabaseService implements DataService {
 
 	private async verifyArchivedDataIntegrity(expectedDays: DayRecord[]): Promise<void> {
 		try {
-			const user = await getCachedUser();
+			const user = await this.requireUser();
 
 			const { data: savedDays, error: daysError } = await supabase
 				.from("archived_days")
@@ -435,7 +444,7 @@ export class SupabaseService implements DataService {
 
 	async getArchivedDays(): Promise<DayRecord[]> {
 
-		const user = await getCachedUser();
+		const user = await this.requireUser();
 
 		const { data: daysData, error: daysError } = await supabase
 			.from("archived_days")
@@ -503,7 +512,7 @@ export class SupabaseService implements DataService {
 	}
 
 	async updateArchivedDay(dayId: string, updates: Partial<DayRecord>): Promise<void> {
-		const user = await getCachedUser();
+		const user = await this.requireUser();
 
 		const categories = await getCachedCategories();
 		const projects = await getCachedProjects();
@@ -585,7 +594,7 @@ export class SupabaseService implements DataService {
 	}
 
 	async deleteArchivedDay(dayId: string): Promise<void> {
-		const user = await getCachedUser();
+		const user = await this.requireUser();
 
 		// Delete tasks first (foreign key dependency)
 		await supabase
@@ -605,7 +614,7 @@ export class SupabaseService implements DataService {
 
 	async saveProjects(projects: Project[]): Promise<void> {
 
-		const user = await getCachedUser();
+		const user = await this.requireUser();
 
 		if (projects.length === 0) {
 			await supabase.from("projects").delete().eq("user_id", user.id);
@@ -670,7 +679,7 @@ export class SupabaseService implements DataService {
 			return cachedResult;
 		}
 
-		const user = await getCachedUser();
+		const user = await this.requireUser();
 
 		const { data, error } = await supabase
 			.from("projects")
@@ -698,7 +707,7 @@ export class SupabaseService implements DataService {
 
 	async saveCategories(categories: TaskCategory[]): Promise<void> {
 
-		const user = await getCachedUser();
+		const user = await this.requireUser();
 
 		if (categories.length === 0) {
 			await supabase.from("categories").delete().eq("user_id", user.id);
@@ -762,7 +771,7 @@ export class SupabaseService implements DataService {
 			return cachedResult;
 		}
 
-		const user = await getCachedUser();
+		const user = await this.requireUser();
 
 		const { data, error } = await supabase
 			.from("categories")

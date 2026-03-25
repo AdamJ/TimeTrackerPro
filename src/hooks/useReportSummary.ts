@@ -1,11 +1,12 @@
 // src/hooks/useReportSummary.ts
 // Manages the AI summary generation lifecycle for the /report route.
-// Uses the Google Gemini API (free tier via AI Studio).
+// Uses the Google Gemini API via a Supabase Edge Function proxy (ai-proxy).
 //
 // Setup:
 // 1. Get a free API key at https://aistudio.google.com
-// 2. Add to .env: VITE_GEMINI_API_KEY=your_key_here
-// 3. Add to .env.example: VITE_GEMINI_API_KEY=
+// 2. Deploy the Edge Function: supabase functions deploy ai-proxy
+// 3. Set the server-side secret: supabase secrets set GEMINI_API_KEY=<your-key>
+//    The API key is NEVER exposed to the client — it lives only on the server.
 
 import { useState, useCallback } from "react";
 import {
@@ -13,6 +14,7 @@ import {
   ReportTone,
   buildSummaryPrompt,
 } from "@/utils/reportUtils";
+import { supabase } from "@/lib/supabase";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -38,7 +40,6 @@ export interface UseReportSummaryReturn {
 // ---------------------------------------------------------------------------
 
 const GEMINI_MODEL = "gemini-2.5-flash"; // Free-tier Gemini model as of June 2024. Check ai.google.dev for updates.
-const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 
 // ---------------------------------------------------------------------------
 // Error classification
@@ -146,30 +147,14 @@ export function useReportSummary(): UseReportSummaryReturn {
       setError(null);
       setSummary("");
 
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string;
-
-      if (!apiKey) {
-        setState("error");
-        setError(
-          "Gemini API key not found. Add VITE_GEMINI_API_KEY to your .env file. Get a free key at https://aistudio.google.com"
-        );
-        return;
-      }
-
       try {
         const { system, userMessage } = buildSummaryPrompt(week, tone);
 
-        // Gemini combines system prompt and user message into a single
-        // "contents" array. The system instruction goes in systemInstruction,
-        // the user message goes in contents.
-        const url = `${GEMINI_API_BASE}/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+        // API key stays server-side in the Edge Function.
+        // The client posts the prompt; the proxy injects the key and forwards to Gemini.
+        const { data, error: fnError } = await supabase.functions.invoke("ai-proxy", {
+          body: {
+            model: GEMINI_MODEL,
             systemInstruction: {
               parts: [{ text: system }],
             },
@@ -190,20 +175,25 @@ export function useReportSummary(): UseReportSummaryReturn {
                 thinkingBudget: 0,
               },
             },
-          }),
+          },
         });
 
-        if (!response.ok) {
-          const errBody: GeminiErrorBody = await response.json().catch(() => ({}));
-          const retryAfter = response.headers.get("Retry-After");
-          throw new Error(classifyGeminiError(response.status, errBody, retryAfter));
+        if (fnError) {
+          // Try to extract Gemini's structured error from the HTTP error context
+          const httpError = fnError as { context?: Response };
+          if (httpError.context) {
+            const status = httpError.context.status;
+            const errBody: GeminiErrorBody = await httpError.context.json().catch(() => ({}));
+            const retryAfter = httpError.context.headers.get("Retry-After");
+            throw new Error(classifyGeminiError(status, errBody, retryAfter));
+          }
+          throw new Error(fnError.message ?? "AI proxy request failed");
         }
 
-        const data = await response.json();
-
+        // data is already the parsed Gemini response body
         // Gemini response shape:
         // { candidates: [{ finishReason: string, content: { parts: [{ text: "..." }] } }] }
-        const candidate = data.candidates?.[0];
+        const candidate = (data as { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> })?.candidates?.[0];
         const finishReason: string = candidate?.finishReason ?? "STOP";
 
         const text: string =
@@ -233,7 +223,7 @@ export function useReportSummary(): UseReportSummaryReturn {
         setState("error");
         // Distinguish network/connectivity failures from API errors
         if (err instanceof TypeError && err.message.toLowerCase().includes("fetch")) {
-          setError("Network error — could not reach Gemini. Check your internet connection and try again.");
+          setError("Network error — could not reach the AI service. Check your internet connection and try again.");
         } else {
           setError(err instanceof Error ? err.message : "An unexpected error occurred.");
         }
