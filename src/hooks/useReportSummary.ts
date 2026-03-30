@@ -14,6 +14,7 @@ import {
   ReportTone,
   buildSummaryPrompt,
 } from "@/utils/reportUtils";
+import { TodoItem } from "@/contexts/TimeTrackingContext";
 import { supabase } from "@/lib/supabase";
 
 // ---------------------------------------------------------------------------
@@ -30,7 +31,7 @@ export interface UseReportSummaryReturn {
   summary: string;
   state: GenerationState;
   error: string | null;
-  generate: (week: WeekGroup, tone: ReportTone) => Promise<void>;
+  generate: (week: WeekGroup, tone: ReportTone, todos?: TodoItem[]) => Promise<void>;
   updateSummary: (value: string) => void;
   reset: () => void;
 }
@@ -142,13 +143,13 @@ export function useReportSummary(): UseReportSummaryReturn {
   const [error, setError] = useState<string | null>(null);
 
   const generate = useCallback(
-    async (week: WeekGroup, tone: ReportTone) => {
+    async (week: WeekGroup, tone: ReportTone, todos?: TodoItem[]) => {
       setState("loading");
       setError(null);
       setSummary("");
 
       try {
-        const { system, userMessage } = buildSummaryPrompt(week, tone);
+        const { system, userMessage } = buildSummaryPrompt(week, tone, todos);
 
         // API key stays server-side in the Edge Function.
         // The client posts the prompt; the proxy injects the key and forwards to Gemini.

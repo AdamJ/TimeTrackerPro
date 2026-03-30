@@ -193,6 +193,37 @@ CREATE POLICY "Users can update their own current day" ON current_day
 CREATE POLICY "Users can delete their own current day" ON current_day
   FOR DELETE USING (auth.uid() = user_id);
 
+-- Create todo_items table
+CREATE TABLE IF NOT EXISTS todo_items (
+  id text PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  text text NOT NULL,
+  completed boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  completed_at timestamptz,
+  inserted_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_todo_items_user_id ON todo_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_todo_items_created_at ON todo_items(created_at);
+
+CREATE TRIGGER trg_update_todo_items_updated_at
+BEFORE UPDATE ON todo_items
+FOR EACH ROW
+EXECUTE PROCEDURE update_updated_at_column();
+
+ALTER TABLE todo_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own todos" ON todo_items
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own todos" ON todo_items
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own todos" ON todo_items
+  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own todos" ON todo_items
+  FOR DELETE USING (auth.uid() = user_id);
+
 -- Migration: Add is_billable columns if they don't exist
 DO $$
 BEGIN

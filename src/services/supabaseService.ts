@@ -9,7 +9,7 @@ import {
 	clearDataCaches,
 	trackAuthCall
 } from "@/lib/supabase";
-import { Task, DayRecord, Project } from "@/contexts/TimeTrackingContext";
+import { Task, DayRecord, Project, TodoItem } from "@/contexts/TimeTrackingContext";
 import { TaskCategory } from "@/config/categories";
 import { DataService, CurrentDayData } from "@/services/dataService";
 import { LocalStorageService } from "@/services/localStorageService";
@@ -795,6 +795,81 @@ export class SupabaseService implements DataService {
 		return result;
 	}
 
+	async saveTodos(todos: TodoItem[]): Promise<void> {
+		const user = await this.requireUser();
+
+		if (todos.length === 0) {
+			await supabase.from("todo_items").delete().eq("user_id", user.id);
+			trackDbCall("delete", "todo_items");
+			return;
+		}
+
+		const { data: existingTodos } = await supabase
+			.from("todo_items")
+			.select("id")
+			.eq("user_id", user.id);
+		trackDbCall("select", "todo_items");
+
+		const existingIds = new Set(existingTodos?.map((t: { id: string }) => t.id) || []);
+		const newIds = new Set(todos.map((t) => t.id));
+
+		const toDelete = Array.from(existingIds).filter((id) => !newIds.has(id));
+		if (toDelete.length > 0) {
+			const { error: deleteError } = await supabase
+				.from("todo_items")
+				.delete()
+				.eq("user_id", user.id)
+				.in("id", toDelete);
+			trackDbCall("delete", "todo_items");
+			if (deleteError) throw deleteError;
+		}
+
+		const toUpsert = todos.map((item) => ({
+			id: item.id,
+			user_id: user.id,
+			text: item.text,
+			completed: item.completed,
+			created_at: item.createdAt,
+			completed_at: item.completedAt ?? null
+		}));
+
+		const { error } = await supabase
+			.from("todo_items")
+			.upsert(toUpsert, { onConflict: "id" });
+		trackDbCall("upsert", "todo_items");
+		if (error) throw error;
+	}
+
+	async getTodos(): Promise<TodoItem[]> {
+		const user = await this.requireUser();
+
+		const { data, error } = await supabase
+			.from("todo_items")
+			.select("*")
+			.eq("user_id", user.id)
+			.order("created_at", { ascending: true });
+		trackDbCall("select", "todo_items");
+
+		if (error) {
+			console.error("❌ Error loading todos:", error);
+			throw error;
+		}
+
+		return (data || []).map((row: {
+			id: string;
+			text: string;
+			completed: boolean;
+			created_at: string;
+			completed_at: string | null;
+		}) => ({
+			id: row.id,
+			text: row.text,
+			completed: row.completed,
+			createdAt: row.created_at,
+			completedAt: row.completed_at ?? undefined
+		}));
+	}
+
 	async migrateFromLocalStorage(): Promise<void> {
 		try {
 			const localService = new LocalStorageService();
@@ -803,14 +878,16 @@ export class SupabaseService implements DataService {
 			const categories = await localService.getCategories();
 			const currentDay = await localService.getCurrentDay();
 			const archivedDays = await localService.getArchivedDays();
+			const todos = await localService.getTodos();
 
 			const hasProjects = projects.length > 0;
 			const hasCategories = categories.length > 0;
 			const hasCurrentDay =
 				currentDay && (currentDay.tasks.length > 0 || currentDay.isDayStarted);
 			const hasArchivedDays = archivedDays.length > 0;
+			const hasTodos = todos.length > 0;
 
-			if (!hasProjects && !hasCategories && !hasCurrentDay && !hasArchivedDays) {
+			if (!hasProjects && !hasCategories && !hasCurrentDay && !hasArchivedDays && !hasTodos) {
 				return;
 			}
 
@@ -854,12 +931,17 @@ export class SupabaseService implements DataService {
 				if (hasCategories && existingCategories.length === 0) {
 					await this.saveCategories(categories);
 				}
+
+				if (hasTodos) {
+					await this.saveTodos(todos);
+				}
 			} else {
 
 				if (hasProjects) await this.saveProjects(projects);
 				if (hasCategories) await this.saveCategories(categories);
 				if (hasCurrentDay) await this.saveCurrentDay(currentDay);
 				if (hasArchivedDays) await this.saveArchivedDays(archivedDays);
+				if (hasTodos) await this.saveTodos(todos);
 			}
 
 		} catch (error) {
@@ -875,6 +957,7 @@ export class SupabaseService implements DataService {
 			const archivedDays = await this.getArchivedDays();
 			const projects = await this.getProjects();
 			const categories = await this.getCategories();
+			const todos = await this.getTodos();
 
 			if (currentDay) {
 				await localService.saveCurrentDay(currentDay);
@@ -890,6 +973,10 @@ export class SupabaseService implements DataService {
 
 			if (categories.length > 0) {
 				await localService.saveCategories(categories);
+			}
+
+			if (todos.length > 0) {
+				await localService.saveTodos(todos);
 			}
 
 		} catch (error) {

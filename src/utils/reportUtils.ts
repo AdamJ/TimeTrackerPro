@@ -3,7 +3,7 @@
 // Data is sourced via the TimeTrackingContext (which handles both localStorage
 // and Supabase depending on auth state).
 
-import { DayRecord } from '@/contexts/TimeTrackingContext';
+import { DayRecord, TodoItem } from '@/contexts/TimeTrackingContext';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -257,8 +257,10 @@ const EXCLUDED_CATEGORIES = new Set([
  * Serializes a WeekGroup into a lean, human-readable string suitable
  * for inclusion in the Anthropic API prompt. Strips IDs, timestamps,
  * and non-work tasks. Preserves the narrative content of descriptions.
+ *
+ * Optionally appends a section listing todos completed during the week.
  */
-export function serializeWeekForPrompt(week: WeekGroup): string {
+export function serializeWeekForPrompt(week: WeekGroup, todos?: TodoItem[]): string {
   const lines: string[] = [`Week of ${week.label}`, ''];
 
   for (const day of week.days) {
@@ -286,6 +288,25 @@ export function serializeWeekForPrompt(week: WeekGroup): string {
     lines.push('');
   }
 
+  // Append completed todos that fall within this week's date range
+  if (todos && todos.length > 0) {
+    const weekStartMs = week.weekStart.getTime();
+    const weekEndMs = week.weekEnd.getTime();
+    const completedThisWeek = todos.filter((t) => {
+      if (!t.completed || !t.completedAt) return false;
+      const ts = new Date(t.completedAt).getTime();
+      return ts >= weekStartMs && ts <= weekEndMs;
+    });
+
+    if (completedThisWeek.length > 0) {
+      lines.push('Completed to-dos this week:');
+      for (const item of completedThisWeek) {
+        lines.push(`- ${item.text}`);
+      }
+      lines.push('');
+    }
+  }
+
   return lines.join('\n').trim();
 }
 
@@ -308,7 +329,8 @@ const TONE_INSTRUCTIONS: Record<ReportTone, string> = {
  */
 export function buildSummaryPrompt(
   week: WeekGroup,
-  tone: ReportTone = 'standup'
+  tone: ReportTone = 'standup',
+  todos?: TodoItem[]
 ): { system: string; userMessage: string } {
   const system = `You are a professional writing assistant that creates concise weekly work summaries from time tracking data.
 
@@ -323,7 +345,7 @@ ${TONE_INSTRUCTIONS[tone]}
 
 Omit breaks, lunch, and any purely administrative tasks. If multiple days covered the same project or theme, synthesize them into a single coherent statement rather than repeating.`;
 
-  const userMessage = `Please summarize the following work week:\n\n${serializeWeekForPrompt(week)}`;
+  const userMessage = `Please summarize the following work week:\n\n${serializeWeekForPrompt(week, todos)}`;
 
   return { system, userMessage };
 }

@@ -1,4 +1,4 @@
-import { Task, DayRecord, Project } from "@/contexts/TimeTrackingContext";
+import { Task, DayRecord, Project, TodoItem } from "@/contexts/TimeTrackingContext";
 import { TaskCategory } from "@/config/categories";
 import { DataService, CurrentDayData } from "@/services/dataService";
 
@@ -6,7 +6,8 @@ export const STORAGE_KEYS = {
 	CURRENT_DAY: "timetracker_current_day",
 	ARCHIVED_DAYS: "timetracker_archived_days",
 	PROJECTS: "timetracker_projects",
-	CATEGORIES: "timetracker_categories"
+	CATEGORIES: "timetracker_categories",
+	TODOS: "timetracker_todos"
 };
 
 // Increment this when the stored data format changes in a breaking way.
@@ -161,6 +162,32 @@ export class LocalStorageService implements DataService {
 			return Array.isArray(data) ? data : [];
 		} catch (error) {
 			console.error("Error loading categories from localStorage:", error);
+			return [];
+		}
+	}
+
+	async saveTodos(todos: TodoItem[]): Promise<void> {
+		try {
+			localStorage.setItem(STORAGE_KEYS.TODOS, JSON.stringify({ data: todos, _v: SCHEMA_VERSION }));
+		} catch (error) {
+			console.warn("Failed to save todos to localStorage:", error);
+		}
+	}
+
+	async getTodos(): Promise<TodoItem[]> {
+		try {
+			const saved = localStorage.getItem(STORAGE_KEYS.TODOS);
+			if (!saved) return [];
+			const parsed = JSON.parse(saved);
+			const data: TodoItem[] = Array.isArray(parsed) ? parsed : parsed?.data;
+			if (!Array.isArray(parsed) && parsed?._v !== SCHEMA_VERSION) {
+				console.warn("localStorage todos schema mismatch — clearing stale data");
+				localStorage.removeItem(STORAGE_KEYS.TODOS);
+				return [];
+			}
+			return Array.isArray(data) ? data : [];
+		} catch (error) {
+			console.error("Error loading todos from localStorage:", error);
 			return [];
 		}
 	}
