@@ -388,7 +388,7 @@ function ErrorState({
 // ---------------------------------------------------------------------------
 
 export default function Report() {
-  const { archivedDays: rawArchivedDays } = useTimeTracking();
+  const { archivedDays: rawArchivedDays, todoItems } = useTimeTracking();
   const archivedDays = useMemo(
     () => dayRecordsToArchivedDays(rawArchivedDays),
     [rawArchivedDays]
@@ -445,7 +445,7 @@ export default function Report() {
 
   function handleGenerate() {
     if (!selectedWeek) return;
-    generate(selectedWeek, tone);
+    generate(selectedWeek, tone, todoItems);
   }
 
   const canGoPrev = !isCustomRange && calendarIndex < calendarWeeks.length - 1;

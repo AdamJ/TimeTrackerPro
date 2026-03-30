@@ -61,6 +61,14 @@ export interface Project {
   isBillable?: boolean;
 }
 
+export interface TodoItem {
+  id: string;
+  text: string;
+  completed: boolean;
+  createdAt: string;    // ISO string
+  completedAt?: string; // ISO string — set when toggled to done, cleared when toggled back
+}
+
 export interface TimeEntry {
   id: string;
   date: string;
@@ -102,6 +110,13 @@ interface TimeTrackingContextType {
 
   // Archive state
   archivedDays: DayRecord[];
+
+  // Todo items
+  todoItems: TodoItem[];
+  addTodoItem: (text: string) => void;
+  toggleTodoItem: (id: string) => void;
+  deleteTodoItem: (id: string) => void;
+  clearCompletedTodos: () => void;
 
   // Projects and clients
   projects: Project[];
@@ -206,6 +221,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     convertDefaultProjects(DEFAULT_PROJECTS)
   );
   const [categories, setCategories] = useState<TaskCategory[]>([]);
+  const [todoItems, setTodoItems] = useState<TodoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
@@ -302,6 +318,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           setCategories(DEFAULT_CATEGORIES);
         }
 
+        // Load todos
+        const loadedTodos = await dataService.getTodos();
+        setTodoItems(loadedTodos);
+
         // If switching from localStorage to Supabase, migrate data
         if (currentAuthStateRef.current && dataService) {
           await dataService.migrateFromLocalStorage();
@@ -383,7 +403,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         stableSaveCurrentDay(),
         dataService.saveProjects(projects),
         dataService.saveCategories(categories),
-        dataService.saveArchivedDays(archivedDays)
+        dataService.saveArchivedDays(archivedDays),
+        dataService.saveTodos(todoItems)
       ]);
 
       const failed = results.filter((r) => r.status === "rejected");
@@ -403,7 +424,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setIsSyncing(false);
     }
-  }, [dataService, stableSaveCurrentDay, projects, categories, archivedDays]);
+  }, [dataService, stableSaveCurrentDay, projects, categories, archivedDays, todoItems]);
 
   // Load current day data (for periodic sync)
   const loadCurrentDay = useCallback(async () => {
@@ -866,6 +887,46 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   ): InvoiceData =>
     utilGenerateInvoiceData(archivedDays, projects, categories, clientName, startDate, endDate);
 
+  const addTodoItem = useCallback(async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const newItem: TodoItem = {
+      id: `todo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      text: trimmed,
+      completed: false,
+      createdAt: new Date().toISOString()
+    };
+    const updated = [...todoItems, newItem];
+    setTodoItems(updated);
+    if (dataService) await dataService.saveTodos(updated);
+  }, [todoItems, dataService]);
+
+  const toggleTodoItem = useCallback(async (id: string) => {
+    const updated = todoItems.map((item) => {
+      if (item.id !== id) return item;
+      const nowCompleted = !item.completed;
+      return {
+        ...item,
+        completed: nowCompleted,
+        completedAt: nowCompleted ? new Date().toISOString() : undefined
+      };
+    });
+    setTodoItems(updated);
+    if (dataService) await dataService.saveTodos(updated);
+  }, [todoItems, dataService]);
+
+  const deleteTodoItem = useCallback(async (id: string) => {
+    const updated = todoItems.filter((item) => item.id !== id);
+    setTodoItems(updated);
+    if (dataService) await dataService.saveTodos(updated);
+  }, [todoItems, dataService]);
+
+  const clearCompletedTodos = useCallback(async () => {
+    const updated = todoItems.filter((item) => !item.completed);
+    setTodoItems(updated);
+    if (dataService) await dataService.saveTodos(updated);
+  }, [todoItems, dataService]);
+
   const importFromCSV = async (
     csvContent: string
   ): Promise<{ success: boolean; message: string; importedCount: number }> => {
@@ -917,6 +978,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         refreshFromDatabase: loadCurrentDay,
         forceSyncToDatabase,
         archivedDays,
+        todoItems,
+        addTodoItem,
+        toggleTodoItem,
+        deleteTodoItem,
+        clearCompletedTodos,
         projects,
         categories,
         startDay,
