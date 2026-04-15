@@ -18,7 +18,7 @@ const ProjectList = lazy(() => import("./pages/ProjectList"));
 const Settings = lazy(() => import("./pages/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Categories = lazy(() => import("./pages/Categories"));
-const Report = lazy(() => import('./pages/Report'));
+const Report = lazy(() => import("./pages/Report"));
 
 // Loading fallback component
 const PageLoader = () => (
