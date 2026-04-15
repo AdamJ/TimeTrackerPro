@@ -1,0 +1,92 @@
+name: Bug Report
+description: Create a report to help us improve
+title: "[BUG] - "
+labels: "bug"
+assignees:
+  - AdamJ
+type: bug
+projects: ["TimeTrackerPro"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the template below to help us understand the issue and how to reproduce it.
+
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Information (optional)
+      description: Please provide your GitHub username (or email) so we can follow up with you if we need more details.
+      placeholder: Your GitHub username or email here
+    validations:
+      required: false
+
+  - type: text-area
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Describe what actually happened.
+    validations:
+      required: true
+
+  - type: text-area
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Please provide a step-by-step description of how to reproduce the issue.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+
+  - type: text-area
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior (optional)
+      description: What did you expect to happen?
+      placeholder: Describe what you expected to happen.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: browsers
+    attributes:
+      label: Affected Browsers
+      description: Select the browsers where you experienced the issue.
+      options:
+        - label: Chrome
+          value: chrome
+        - label: Firefox
+          value: firefox
+        - label: Safari
+          value: safari
+        - label: Edge
+          value: edge
+        - label: Mobile
+          value: Mobile
+    validations:
+      required: true
+
+  - type: checkbox
+    id: device
+    attributes:
+      label: Affected Devices
+      description: Was this issue found on a mobile device?
+      options:
+        - label: Yes
+          value: Yes
+          required: true
+
+  - type: upload
+    id: screenshots
+    attributes:
+      label: Screenshots (optional)
+      description: If applicable, add screenshots to help explain your problem.
+    validations:
+      required: false
+
+  - type: checkboxes
