@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle
+} from "@/components/ui/dialog";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -16,14 +16,14 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Edit, Trash2, Tag } from 'lucide-react';
-import { TaskCategory } from '@/config/categories';
-import { useTimeTracking } from '@/hooks/useTimeTracking';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Edit, Trash2, Tag } from "lucide-react";
+import { TaskCategory } from "@/config/categories";
+import { useTimeTracking } from "@/hooks/useTimeTracking";
 
 interface CategoryManagementProps {
   isOpen: boolean;
@@ -93,11 +93,11 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
   };
 
   const handleDeleteConfirm = async () => {
-	if (!deleteTargetId) return;
-	deleteCategory(deleteTargetId);
-	await forceSyncToDatabase();
-	setDeleteTargetId(null);
-};
+    if (!deleteTargetId) return;
+    deleteCategory(deleteTargetId);
+    await forceSyncToDatabase();
+    setDeleteTargetId(null);
+  };
 
   const predefinedColors = [
     '#3B82F6',
@@ -339,24 +339,24 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
       </DialogContent>
     </Dialog>
     <AlertDialog open={deleteTargetId !== null} onOpenChange={(open) => !open && setDeleteTargetId(null)}>
-	<AlertDialogContent>
-		<AlertDialogHeader>
-			<AlertDialogTitle>Delete this category?</AlertDialogTitle>
-			<AlertDialogDescription>
-				This action cannot be undone.
-			</AlertDialogDescription>
-		</AlertDialogHeader>
-		<AlertDialogFooter>
-			<AlertDialogCancel>Cancel</AlertDialogCancel>
-			<AlertDialogAction
-				onClick={handleDeleteConfirm}
-				className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-			>
-				Delete
-			</AlertDialogAction>
-		</AlertDialogFooter>
-	</AlertDialogContent>
-</AlertDialog>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete this category?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDeleteConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 };
