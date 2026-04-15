@@ -6,6 +6,16 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +40,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
     null
   );
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -81,17 +92,12 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
     setIsAddingNew(true);
   };
 
-  const handleDelete = async (categoryId: string) => {
-    if (
-      confirm(
-        'Are you sure you want to delete this category? This action cannot be undone.'
-      )
-    ) {
-      deleteCategory(categoryId);
-      // Save changes to database
-      await forceSyncToDatabase();
-    }
-  };
+  const handleDeleteConfirm = async () => {
+	if (!deleteTargetId) return;
+	deleteCategory(deleteTargetId);
+	await forceSyncToDatabase();
+	setDeleteTargetId(null);
+};
 
   const predefinedColors = [
     '#3B82F6',
@@ -107,6 +113,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
   ];
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
@@ -315,7 +322,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDelete(category.id)}
+                            onClick={() => setDeleteTargetId(category.id)}
                             className="text-red-600 hover:text-red-700"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -331,5 +338,25 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
         </div>
       </DialogContent>
     </Dialog>
+    <AlertDialog open={deleteTargetId !== null} onOpenChange={(open) => !open && setDeleteTargetId(null)}>
+	<AlertDialogContent>
+		<AlertDialogHeader>
+			<AlertDialogTitle>Delete this category?</AlertDialogTitle>
+			<AlertDialogDescription>
+				This action cannot be undone.
+			</AlertDialogDescription>
+		</AlertDialogHeader>
+		<AlertDialogFooter>
+			<AlertDialogCancel>Cancel</AlertDialogCancel>
+			<AlertDialogAction
+				onClick={handleDeleteConfirm}
+				className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+			>
+				Delete
+			</AlertDialogAction>
+		</AlertDialogFooter>
+	</AlertDialogContent>
+</AlertDialog>
+    </>
   );
 };
