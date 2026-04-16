@@ -25,6 +25,7 @@ import {
   generateInvoiceData as utilGenerateInvoiceData,
   parseCSVImport
 } from '@/utils/exportUtils';
+import { parseTaskChecklist } from '@/utils/checklistUtils';
 
 export interface Task {
   id: string;
@@ -595,6 +596,21 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const postDay = async (notes?: string) => {
     if (!dayStartTime) return;
 
+    // Collect incomplete checklist items from task descriptions so they carry
+    // over to the next day as standalone to-do items.
+    const nowMs = Date.now();
+    const carriedOverItems: TodoItem[] = tasks.flatMap((task, taskIdx) =>
+      parseTaskChecklist(task.description ?? "")
+        .filter(entry => !entry.completed)
+        .map((entry, entryIdx) => ({
+          id: `todo-${nowMs}-${taskIdx}-${entryIdx}-${Math.random().toString(36).slice(2, 7)}`,
+          text: entry.text,
+          completed: false,
+          createdAt: new Date().toISOString()
+        }))
+    );
+    const carriedOverIds = new Set(carriedOverItems.map(item => item.id));
+
     const dayRecord: DayRecord = {
       id: Date.now().toString(),
       date: dayStartTime.toDateString(),
@@ -612,6 +628,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Update state optimistically
     setArchivedDays(prev => [...prev, dayRecord]);
+
+    // Carry over incomplete checklist items as to-dos (always update state for consistency)
+    const updatedTodos = [...todoItems, ...carriedOverItems];
+    setTodoItems(updatedTodos);
 
     // Clear current day data
     setDayStartTime(null);
@@ -633,6 +653,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           tasks: []
         });
 
+        // Persist carried-over to-do items
+        if (carriedOverItems.length > 0) {
+          await dataService.saveTodos(updatedTodos);
+        }
+
         setHasUnsavedChanges(false);
 
         // Show success notification to user
@@ -652,6 +677,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Rollback optimistic update since save failed
         setArchivedDays(prev => prev.filter(day => day.id !== dayRecord.id));
+
+        // Rollback carried-over to-do items using IDs to avoid stale-closure issues
+        if (carriedOverItems.length > 0) {
+          setTodoItems(prev => prev.filter(item => !carriedOverIds.has(item.id)));
+        }
 
         // Restore the current day state since archiving failed
         setDayStartTime(dayRecord.startTime);

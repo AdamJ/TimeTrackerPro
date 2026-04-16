@@ -403,4 +403,74 @@ describe("TimeTrackingContext", () => {
 			});
 		});
 	});
+
+	describe("Checklist carry-over on postDay", () => {
+		it("should carry over incomplete checklist items as todo items when day is archived", async () => {
+			const { result } = renderHook(() => useTimeTracking(), { wrapper });
+
+			await act(async () => {
+				result.current.startDay(new Date("2024-12-03T09:00:00.000Z"));
+			});
+
+			// Add a task whose description contains mixed checklist items
+			await act(async () => {
+				result.current.startNewTask(
+					"Feature Work",
+					"- [ ] Write unit tests\n- [x] Update README\n- [ ] Fix lint errors"
+				);
+			});
+
+			await waitFor(() => {
+				expect(result.current.tasks.length).toBe(1);
+			});
+
+			// Archive the day
+			await act(async () => {
+				result.current.postDay();
+			});
+
+			await waitFor(() => {
+				expect(result.current.isDayStarted).toBe(false);
+				// Only the two incomplete items should be carried over
+				expect(result.current.todoItems.length).toBe(2);
+				const texts = result.current.todoItems.map((t) => t.text);
+				expect(texts).toContain("Write unit tests");
+				expect(texts).toContain("Fix lint errors");
+				// The already-completed item must NOT be carried over
+				expect(texts).not.toContain("Update README");
+			});
+		});
+
+		it("should not create duplicate todo items when there are no checklist items", async () => {
+			const { result } = renderHook(() => useTimeTracking(), { wrapper });
+
+			await act(async () => {
+				result.current.startDay(new Date("2024-12-04T09:00:00.000Z"));
+			});
+
+			await act(async () => {
+				result.current.startNewTask("Plain task", "No checklist here");
+			});
+
+			// Add an existing todo before archiving
+			await act(async () => {
+				result.current.addTodoItem("Pre-existing todo");
+			});
+
+			await waitFor(() => {
+				expect(result.current.todoItems.length).toBe(1);
+			});
+
+			await act(async () => {
+				result.current.postDay();
+			});
+
+			await waitFor(() => {
+				expect(result.current.isDayStarted).toBe(false);
+				// No new todos should be added — only the pre-existing one remains
+				expect(result.current.todoItems.length).toBe(1);
+				expect(result.current.todoItems[0].text).toBe("Pre-existing todo");
+			});
+		});
+	});
 });
