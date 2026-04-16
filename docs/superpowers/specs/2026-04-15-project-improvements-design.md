@@ -21,6 +21,7 @@ This document captures two things:
 #### 1. Replace all `confirm()` dialogs with AlertDialog
 
 **Files affected:**
+
 - `src/components/ArchiveItem.tsx`
 - `src/components/ProjectManagement.tsx`
 - `src/components/ArchiveEditDialog.tsx`
@@ -32,6 +33,7 @@ This document captures two things:
 **Why:** Native `confirm()` is an anti-pattern in PWAs — it blocks the main thread, cannot be styled, and fails accessibility standards. shadcn/ui `AlertDialog` is already available in the project. 10 instances exist across 6+ files.
 
 **Pattern to use:**
+
 ```tsx
 <AlertDialog>
   <AlertDialogTrigger asChild>
@@ -79,6 +81,7 @@ Every page repeats the same boilerplate — `min-h-screen bg-gradient-to-br from
 A shared component eliminates this duplication and makes the background gradient a single-point fix for dark mode support later.
 
 **Proposed API:**
+
 ```tsx
 <PageLayout title="Settings" icon={<CogIcon />}>
   {/* page content */}
@@ -112,6 +115,7 @@ Same pattern as above: `src/pages/Categories.tsx` (330 lines) and `src/component
 #### 8. Split TimeTrackingContext
 
 `src/contexts/TimeTrackingContext.tsx` is 1022 lines managing too many concerns. Natural split points:
+
 - Task operations (start, stop, update, delete)
 - Day lifecycle (start day, end day, post day)
 - Archive operations
@@ -124,6 +128,7 @@ Not urgent since the file works, but will become a pain point as features are ad
 #### 9. Expand test coverage
 
 Currently only 4 test files exist for the entire app. Highest-value additions:
+
 - Component tests for destructive-action flows (delete project, clear all data, delete archive entry)
 - Integration tests for the guest → authenticated data migration path — highest-risk logic in the app
 - Unit tests for `exportUtils.ts` and `reportUtils.ts` (complex logic, no current coverage)
@@ -140,18 +145,18 @@ Apply these rules when building any new feature or component.
 
 Never use hardcoded Tailwind color classes. Always use theme variables:
 
-| Instead of | Use |
-|---|---|
-| `text-gray-900` | `text-foreground` |
-| `text-gray-600` / `text-gray-500` | `text-muted-foreground` |
-| `text-blue-600` / `text-blue-500` | `text-primary` |
-| `text-green-600` | `text-chart-2` or semantic equivalent |
-| `text-red-600` / `text-red-700` | `text-destructive` |
-| `bg-blue-500` / `bg-blue-600` | `bg-primary` |
-| `bg-red-50` / `border-red-*` | `bg-destructive/10` / `border-destructive/20` |
-| `bg-gray-50` / `bg-gray-100` | `bg-muted` |
-| `bg-gradient-to-br from-gray-50 to-blue-50` | Handled by `PageLayout` (once built) |
-| `border-gray-*` | `border-border` |
+| Instead of                                  | Use                                           |
+| ------------------------------------------- | --------------------------------------------- |
+| `text-gray-900`                             | `text-foreground`                             |
+| `text-gray-600` / `text-gray-500`           | `text-muted-foreground`                       |
+| `text-blue-600` / `text-blue-500`           | `text-primary`                                |
+| `text-green-600`                            | `text-chart-2` or semantic equivalent         |
+| `text-red-600` / `text-red-700`             | `text-destructive`                            |
+| `bg-blue-500` / `bg-blue-600`               | `bg-primary`                                  |
+| `bg-red-50` / `border-red-*`                | `bg-destructive/10` / `border-destructive/20` |
+| `bg-gray-50` / `bg-gray-100`                | `bg-muted`                                    |
+| `bg-gradient-to-br from-gray-50 to-blue-50` | Handled by `PageLayout` (once built)          |
+| `border-gray-*`                             | `border-border`                               |
 
 ---
 
@@ -176,7 +181,7 @@ Never read from localStorage directly. Always go through the DataService via con
 const { archivedDays } = useTimeTracking();
 
 // ❌ WRONG — silently breaks for Supabase users
-const raw = localStorage.getItem("timetracker_archived_days");
+const raw = localStorage.getItem('timetracker_archived_days');
 ```
 
 ---
@@ -184,6 +189,7 @@ const raw = localStorage.getItem("timetracker_archived_days");
 ### Dual-Mode Compatibility
 
 Every new feature must work in both guest (localStorage) and authenticated (Supabase) modes. Before considering any feature complete, verify in both modes. Features that genuinely require authentication must:
+
 1. Be gated with `ProtectedRoute`
 2. Show a clear explanation to guest users — never silently omit functionality
 
@@ -191,12 +197,12 @@ Every new feature must work in both guest (localStorage) and authenticated (Supa
 
 ### Feedback & Confirmation Patterns
 
-| Situation | Pattern |
-|---|---|
-| Destructive action (delete, clear, reset) | `AlertDialog` — blocks until confirmed |
-| Success feedback | `toast()` via sonner — non-blocking |
-| Error feedback | `toast()` with destructive variant |
-| Form validation errors | Inline field-level messages via React Hook Form + Zod |
+| Situation                                 | Pattern                                               |
+| ----------------------------------------- | ----------------------------------------------------- |
+| Destructive action (delete, clear, reset) | `AlertDialog` — blocks until confirmed                |
+| Success feedback                          | `toast()` via sonner — non-blocking                   |
+| Error feedback                            | `toast()` with destructive variant                    |
+| Form validation errors                    | Inline field-level messages via React Hook Form + Zod |
 
 No new `alert()`, `confirm()`, or `prompt()` calls, ever.
 
