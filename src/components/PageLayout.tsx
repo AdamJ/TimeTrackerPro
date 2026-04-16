@@ -2,9 +2,13 @@ import type { ReactNode } from "react";
 import SiteNavigationMenu from "@/components/Navigation";
 
 interface PageLayoutProps {
+	/** Page title. When provided, renders the full header section (icon, title, actions, description). */
 	title?: ReactNode;
+	/** Icon displayed to the left of the title. Only renders when title is provided. */
 	icon?: ReactNode;
+	/** Action buttons displayed to the right of the title. Only renders when title is provided. */
 	actions?: ReactNode;
+	/** Subtitle text displayed below the title. Only renders when title is provided. */
 	description?: ReactNode;
 	children: ReactNode;
 }

@@ -65,4 +65,9 @@ describe("PageLayout", () => {
 		expect(screen.getByText("Archive")).toBeInTheDocument();
 		expect(screen.getByText("for user@example.com")).toBeInTheDocument();
 	});
+
+	it("does not render actions when title is omitted", () => {
+		render(<PageLayout actions={<button>Add</button>}><p>content</p></PageLayout>);
+		expect(screen.queryByRole("button", { name: "Add" })).not.toBeInTheDocument();
+	});
 });
