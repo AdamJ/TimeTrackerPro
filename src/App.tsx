@@ -18,12 +18,12 @@ const ProjectList = lazy(() => import("./pages/ProjectList"));
 const Settings = lazy(() => import("./pages/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Categories = lazy(() => import("./pages/Categories"));
-const Report = lazy(() => import('./pages/Report'));
+const Report = lazy(() => import("./pages/Report"));
 
 // Loading fallback component
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center">
-    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
   </div>
 );
 
