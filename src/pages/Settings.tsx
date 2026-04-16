@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
-import SiteNavigationMenu from '@/components/Navigation';
+import { PageLayout } from '@/components/PageLayout';
 
 const SettingsContent: React.FC = () => {
 	const { archivedDays, projects, categories } = useTimeTracking();
@@ -35,18 +35,7 @@ const SettingsContent: React.FC = () => {
 	};
 
 	return (
-		<div className="min-h-screen bg-background">
-			{/* Navigation Header */}
-			<SiteNavigationMenu />
-			{/* Main Content */}
-			<div className="max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
-				<div className="flex items-center justify-between">
-					<h1 className="md:text-2xl font-bold text-foreground flex items-center space-x-1">
-						<CogIcon className="w-6 h-6 mr-1" />
-						<span>Settings</span>
-					</h1>
-				</div>
-			</div>
+		<PageLayout title="Settings" icon={<CogIcon className="w-6 h-6" />}>
 			<div className="max-w-6xl mx-auto p-6">
 				<div className="grid gap-6">
 					{/* Overview Stats */}
@@ -239,7 +228,7 @@ const SettingsContent: React.FC = () => {
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
-		</div>
+		</PageLayout>
 	);
 };
 
