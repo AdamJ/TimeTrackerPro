@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CirclePlay, CircleStop, Archive as Play } from 'lucide-react';
 import { DashboardIcon } from '@radix-ui/react-icons';
-import SiteNavigationMenu from '@/components/Navigation';
+import { PageLayout } from "@/components/PageLayout";
 import { TaskTrackingPanel } from '@/components/TaskTrackingPanel';
 import { useState } from 'react';
 
@@ -75,8 +75,7 @@ const TimeTrackerContent = () => {
   // Show day summary if day has ended but not yet posted
   if (!isDayStarted && dayStartTime && tasks.length > 0) {
     return (
-      <>
-        <SiteNavigationMenu />
+      <PageLayout>
         <div className="max-w-4xl mx-auto p-6 space-y-6">
           <DaySummary
             tasks={tasks}
@@ -85,13 +84,12 @@ const TimeTrackerContent = () => {
             onPostDay={handlePostDay}
           />
         </div>
-      </>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <SiteNavigationMenu />
+    <PageLayout>
       <div className="max-w-6xl mx-auto pt-4 pb-6 px-4 md:p-6 print:p-4 space-y-6">
         <StartDayDialog
           isOpen={showStartDayDialog}
@@ -103,7 +101,7 @@ const TimeTrackerContent = () => {
         {!isDayStarted && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h1 className="md:text-2xl font-bold text-gray-900 flex items-center space-x-1">
+              <h1 className="md:text-2xl font-bold text-foreground flex items-center space-x-1">
                 <DashboardIcon className="w-6 h-6 mr-1" />
                 <span>Dashboard</span>
               </h1>
@@ -111,18 +109,18 @@ const TimeTrackerContent = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
               <Card>
                 <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-primary">
                     {sortedDays.length}
                   </div>
-                  <div className="text-sm text-gray-600">Days Tracked</div>
+                  <div className="text-sm text-muted-foreground">Days Tracked</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-2xl font-bold text-chart-2">
                     {totalHours}h
                   </div>
-                  <div className="text-sm text-gray-600">Total Hours</div>
+                  <div className="text-sm text-muted-foreground">Total Hours</div>
                 </CardContent>
               </Card>
             </div>
@@ -134,21 +132,21 @@ const TimeTrackerContent = () => {
           {/* Left column: day actions + tasks */}
           <div className="space-y-6">
             {!isDayStarted ? (
-              <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
+              <Card className="bg-muted border-border">
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2 text-blue-800">
+                  <CardTitle className="flex items-center space-x-2 text-primary">
                     <Play className="w-5 h-5" />
                     <span>Start Your Work Day</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-muted-foreground mb-4">
                     Click the button below to start tracking your work time for
                     today.
                   </p>
                   <Button
                     onClick={handleStartDay}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center space-x-2 py-3"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center space-x-2 py-3"
                   >
                     <CirclePlay className="w-4 h-4" />
                     <span>Start Day</span>
@@ -160,10 +158,10 @@ const TimeTrackerContent = () => {
                 <NewTaskForm onSubmit={handleNewTask} defaultOpen={autoOpenTaskForm} />
                 {tasks.length > 0 && (
                   <div className="space-y-4">
-                    <h2 className="flex justify-between text-lg font-semibold text-gray-900">
+                    <h2 className="flex justify-between text-lg font-semibold text-foreground">
                       Tasks ({tasks.length})
                       {dayStartTime && (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           Day started at: {dayStartTime.toLocaleTimeString()}
                         </p>
                       )}
@@ -184,7 +182,7 @@ const TimeTrackerContent = () => {
                 <Button
                   variant="outline"
                   onClick={handleEndDay}
-                  className="w-full font-bold bg-red-50 border-red-700 text-red-700 hover:bg-red-100 hover:text-red-700"
+                  className="w-full font-bold bg-destructive/10 border-destructive text-destructive hover:bg-destructive/20 hover:text-destructive"
                 >
                   <CircleStop className="w-4 h-4" />
                   End Day
@@ -199,7 +197,7 @@ const TimeTrackerContent = () => {
           </div>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 };
 

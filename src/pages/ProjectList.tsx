@@ -17,7 +17,7 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Edit, Briefcase, Trash2, RotateCcw, Plus } from "lucide-react";
-import SiteNavigationMenu from "@/components/Navigation";
+import { PageLayout } from "@/components/PageLayout";
 import { Badge } from "@radix-ui/themes";
 
 const ProjectContent: React.FC = () => {
@@ -103,58 +103,27 @@ const ProjectContent: React.FC = () => {
 	};
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-			{/* Navigation Header */}
-			<SiteNavigationMenu />
-			{/* Main Content */}
-			<div className="max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
-				<div className="flex items-center justify-between">
-					<h1 className="md:text-2xl font-bold text-gray-900 flex items-center space-x-1">
-						<Briefcase className="w-6 h-6 mr-1" />
-						Project List
-						<span>({projects.length})</span>
-					</h1>
-					<div className="flex space-x-2 print:hidden">
-						{!isAddingNew && (
-							<>
-								<Button
-									onClick={() => setShowResetDialog(true)}
-									variant="outline"
-									className="w-full"
-								>
-									<RotateCcw className="w-4 h-4 sm:mr-2" />
-									Reset to Defaults
-								</Button>
-								<Button onClick={() => setIsAddingNew(true)} className="w-full">
-									<Plus className="w-4 h-4 sm:mr-2" />
-									Add Project
-								</Button>
-							</>
-						)}
-						{isAddingNew && (
-							<>
-								<Button
-									onClick={() => setShowResetDialog(true)}
-									variant="outline"
-									className="w-full"
-									disabled
-								>
-									<RotateCcw className="w-4 h-4 sm:mr-2" />
-									<span className="hidden sm:block">Reset to Defaults</span>
-								</Button>
-								<Button
-									onClick={() => setIsAddingNew(true)}
-									className="w-full"
-									disabled
-								>
-									<Plus className="w-4 h-4 sm:mr-2" />
-									<span className="hidden sm:block">Add Project</span>
-								</Button>
-							</>
-						)}
+		<PageLayout
+			title={<>Project List <span>({projects.length})</span></>}
+			icon={<Briefcase className="w-6 h-6" />}
+			actions={
+				!isAddingNew ? (
+					<div className="flex space-x-2">
+						<Button
+							onClick={() => setShowResetDialog(true)}
+							variant="outline"
+						>
+							<RotateCcw className="w-4 h-4 sm:mr-2" />
+							Reset to Defaults
+						</Button>
+						<Button onClick={() => setIsAddingNew(true)}>
+							<Plus className="w-4 h-4 sm:mr-2" />
+							Add Project
+						</Button>
 					</div>
-				</div>
-			</div>
+				) : undefined
+			}
+		>
 			{/* Add/Edit Project Form */}
 			{isAddingNew && (
 				<div className="max-w-6xl mx-auto p-6 print:p-4">
@@ -169,7 +138,7 @@ const ProjectContent: React.FC = () => {
 								<div className="grid grid-cols-2 gap-4">
 									<div>
 										<Label htmlFor="name">
-											Project Name <span className="text-red-700">*</span>
+											Project Name <span className="text-destructive">*</span>
 										</Label>
 										<Input
 											id="name"
@@ -186,7 +155,7 @@ const ProjectContent: React.FC = () => {
 									</div>
 									<div>
 										<Label htmlFor="client">
-											Client Name <span className="text-red-700">*</span>
+											Client Name <span className="text-destructive">*</span>
 										</Label>
 										<Input
 											id="client"
@@ -234,7 +203,7 @@ const ProjectContent: React.FC = () => {
 												}
 												className="w-16 h-10"
 											/>
-											<span className="text-sm text-gray-500">
+											<span className="text-sm text-muted-foreground">
 												{formData.color}
 											</span>
 										</div>
@@ -255,7 +224,7 @@ const ProjectContent: React.FC = () => {
 									<Label htmlFor="billable" className="text-sm font-medium">
 										Billable project
 									</Label>
-									<span className="text-xs text-gray-500">
+									<span className="text-xs text-muted-foreground">
 										(Tasks in this project can generate revenue)
 									</span>
 								</div>
@@ -279,8 +248,8 @@ const ProjectContent: React.FC = () => {
 					{projects.length === 0 ? (
 						<Card>
 							<CardContent className="text-center py-8">
-								<Briefcase className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-								<p className="text-gray-600">
+								<Briefcase className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+								<p className="text-muted-foreground">
 									No projects yet. Add your first project to get started!
 								</p>
 							</CardContent>
@@ -303,7 +272,7 @@ const ProjectContent: React.FC = () => {
 													/>
 													<div>
 														<div className="flex items-center space-x-2">
-															<h4 className="font-semibold text-gray-900">
+															<h4 className="font-semibold text-foreground">
 																{project.name}
 															</h4>
 															{project.id.startsWith("default-") && (
@@ -321,11 +290,11 @@ const ProjectContent: React.FC = () => {
 																</Badge>
 															)}
 														</div>
-														<p className="text-sm text-gray-600">
+														<p className="text-sm text-muted-foreground">
 															{project.client}
 														</p>
 														{project.hourlyRate && (
-															<p className="text-sm text-green-600 font-medium">
+															<p className="text-sm text-chart-2 font-medium">
 																${project.hourlyRate}/hour
 															</p>
 														)}
@@ -344,7 +313,7 @@ const ProjectContent: React.FC = () => {
 													size="sm"
 													variant="outline"
 													onClick={() => setDeleteTargetId(project.id)}
-													className="text-red-600 hover:text-red-700"
+													className="text-destructive hover:text-destructive/80"
 												>
 													<Trash2 className="w-3 h-3" />
 												</Button>
@@ -397,7 +366,7 @@ const ProjectContent: React.FC = () => {
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
-		</div>
+		</PageLayout>
 	);
 };
 

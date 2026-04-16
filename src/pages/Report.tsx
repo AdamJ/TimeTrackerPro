@@ -36,7 +36,7 @@ import {
 } from '@/utils/reportUtils';
 import { useReportSummary } from '@/hooks/useReportSummary';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
-import SiteNavigationMenu from '@/components/Navigation';
+import { PageLayout } from "@/components/PageLayout";
 
 // ---------------------------------------------------------------------------
 // Week Preview
@@ -178,8 +178,8 @@ function CopyButton({ text }: { text: string }) {
     >
       {copied ? (
         <>
-          <CheckIcon className="h-3.5 w-3.5 text-green-600" />
-          <span className="text-green-600">Copied</span>
+          <CheckIcon className="h-3.5 w-3.5 text-chart-2" />
+          <span className="text-chart-2">Copied</span>
         </>
       ) : (
         <>
@@ -455,8 +455,7 @@ export default function Report() {
   // Empty state — no archived data at all
   if (archivedDays.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-        <SiteNavigationMenu />
+      <PageLayout>
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-6">
           <div className="rounded-full bg-muted p-4">
             <CalendarCheck className="h-6 w-6 text-muted-foreground" />
@@ -469,25 +468,16 @@ export default function Report() {
             </p>
           </div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <SiteNavigationMenu />
-
-      {/* Page header */}
-      <div className="max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-2">
-        <h1 className="md:text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <CalendarCheck className="w-6 h-6 shrink-0" />
-          Weekly report
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Generate an AI-written summary of your work week.
-        </p>
-      </div>
-
+    <PageLayout
+      title="Weekly report"
+      icon={<CalendarCheck className="w-6 h-6 shrink-0" />}
+      description="Generate an AI-written summary of your work week."
+    >
       <div className="max-w-6xl mx-auto px-4 md:px-6 pb-12 print:p-2">
         <Separator className="mb-6" />
 
@@ -605,6 +595,6 @@ export default function Report() {
 
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }
