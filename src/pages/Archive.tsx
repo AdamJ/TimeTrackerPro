@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Archive as ArchiveIcon, Database } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import SiteNavigationMenu from '@/components/Navigation';
+import { PageLayout } from "@/components/PageLayout";
 
 const ArchiveContent: React.FC = () => {
   const {
@@ -105,30 +105,26 @@ const ArchiveContent: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      {/* Navigation Header */}
-      <SiteNavigationMenu />
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-2">
-        <div className="flex items-center justify-between">
-          <h1 className="md:text-2xl font-bold text-gray-900 flex items-center space-x-1">
-            <ArchiveIcon className="w-6 h-6" />
-            <span>Archive</span>
-            {isAuthenticated && user?.email && (
-              <>
-                &nbsp;<span className="hidden md:block">for {user.email}</span>
-              </>
-            )}
-          </h1>
-        </div>
-      </div>
+    <PageLayout
+      title={
+        <>
+          <span>Archive</span>
+          {isAuthenticated && user?.email && (
+            <span className="hidden md:block text-base font-normal text-muted-foreground">
+              for {user.email}
+            </span>
+          )}
+        </>
+      }
+      icon={<ArchiveIcon className="w-6 h-6" />}
+    >
       <div className="max-w-6xl mx-auto p-6 print:p-2">
         {filteredDays.length === 0 && archivedDays.length === 0 ? (
           <Card className="text-center py-12 print:hidden">
             <CardContent>
-              <ArchiveIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <ArchiveIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <CardTitle className="mb-2">No Archived Days</CardTitle>
-              <p className="text-gray-600 mb-4">
+              <p className="text-muted-foreground mb-4">
                 Complete and post your first day to see it in the archive.
               </p>
               <Link to="/">
@@ -149,9 +145,9 @@ const ArchiveContent: React.FC = () => {
             {filteredDays.length === 0 ? (
               <Card className="text-center py-12">
                 <CardContent>
-                  <ArchiveIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <ArchiveIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <CardTitle className="mb-2">No Results Found</CardTitle>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-muted-foreground mb-4">
                     No archived days match your filter criteria.
                   </p>
                   <Button
@@ -190,52 +186,52 @@ const ArchiveContent: React.FC = () => {
                 <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 print:hidden">
                   <Card>
                     <CardContent className="p-4">
-                      <div className="text-2xl font-bold text-blue-600">
+                      <div className="text-2xl font-bold text-primary">
                         {filteredDays.length}
                       </div>
-                      <div className="text-sm text-gray-600">Days Shown</div>
+                      <div className="text-sm text-muted-foreground">Days Shown</div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4">
-                      <div className="text-2xl font-bold text-green-600">
+                      <div className="text-2xl font-bold text-chart-2">
                         {totalBillableHours.toFixed(1)}h
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-muted-foreground">
                         Billable Hours
                       </div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4">
-                      <div className="text-2xl font-bold text-gray-600">
+                      <div className="text-2xl font-bold text-muted-foreground">
                         {totalNonBillableHours.toFixed(1)}h
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-muted-foreground">
                         Non-billable Hours
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         {totalHoursWorked.toFixed(1)}h total work
                       </div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4">
-                      <div className="text-2xl font-bold text-purple-600">
+                      <div className="text-2xl font-bold text-chart-4">
                         ${totalRevenue.toFixed(2)}
                       </div>
-                      <div className="text-sm text-gray-600">Total Revenue</div>
+                      <div className="text-sm text-muted-foreground">Total Revenue</div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4">
-                      <div className="text-2xl font-bold text-orange-600">
+                      <div className="text-2xl font-bold text-chart-5">
                         $
                         {totalBillableHours > 0
                           ? (totalRevenue / totalBillableHours).toFixed(2)
                           : '0.00'}
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-muted-foreground">
                         Avg Billable Rate
                       </div>
                     </CardContent>
@@ -272,7 +268,7 @@ const ArchiveContent: React.FC = () => {
         isOpen={showProjectManagement}
         onClose={() => setShowProjectManagement(false)}
       />
-    </div>
+    </PageLayout>
   );
 };
 
