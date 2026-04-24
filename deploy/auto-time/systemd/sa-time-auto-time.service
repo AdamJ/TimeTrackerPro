@@ -1,0 +1,10 @@
+[Unit]
+Description=SA-TIME auto time worker
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/sa-time-auto-time/deploy/auto-time
+ExecStart=/usr/bin/docker compose --env-file .env.auto-time.prod -f docker-compose.auto-time.yml run --rm sa-time-auto-time-worker

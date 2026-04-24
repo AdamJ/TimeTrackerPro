@@ -1,0 +1,11 @@
+﻿services:
+  sa-time-auto-time-worker:
+    image: node:20-bullseye
+    working_dir: /workspace
+    command: ["bash", "deploy/auto-time/run-auto-time.sh"]
+    env_file:
+      - .env.auto-time.prod
+    volumes:
+      - ../../:/workspace
+      - /opt/sa-time/auto-time/logs:/logs
+    restart: "no"
