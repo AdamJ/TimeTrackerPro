@@ -36,15 +36,16 @@
     <meta name="application-name" content="TimeTracker Pro" />
 
     <!-- Content Security Policy -->
+    <!-- capacitor://localhost is included for WKWebView (iOS Capacitor) -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
-        default-src 'self';
-        script-src 'self' 'unsafe-inline';
-        style-src 'self' 'unsafe-inline';
-        connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com;
-        font-src 'self' data:;
-        img-src 'self' data: blob:;
+        default-src 'self' capacitor://localhost;
+        script-src 'self' 'unsafe-inline' capacitor://localhost;
+        style-src 'self' 'unsafe-inline' capacitor://localhost;
+        connect-src 'self' capacitor://localhost https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com;
+        font-src 'self' data: capacitor://localhost;
+        img-src 'self' data: blob: capacitor://localhost;
         frame-src 'none';
         object-src 'none';
         base-uri 'self';

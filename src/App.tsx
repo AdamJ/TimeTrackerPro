@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OfflineProvider } from "@/contexts/OfflineContext";
 import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
@@ -9,6 +9,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Suspense, lazy } from "react";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { UpdateNotification } from "@/components/UpdateNotification";
+
+const isIosBuild = import.meta.env.VITE_IOS_BUILD === "true";
 import { MobileNav } from "@/components/MobileNav";
 
 // Lazy load pages for code splitting
@@ -42,7 +44,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <HashRouter>
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
@@ -56,9 +58,9 @@ const App = () => (
               </Routes>
               <MobileNav />
             </Suspense>
-          </BrowserRouter>
-          <InstallPrompt />
-          <UpdateNotification />
+          </HashRouter>
+          {!isIosBuild && <InstallPrompt />}
+          {!isIosBuild && <UpdateNotification />}
         </TooltipProvider>
       </TimeTrackingProvider>
     </AuthProvider>
