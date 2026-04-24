@@ -234,11 +234,18 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const lastSavedStateRef = useRef<string>(''); // Track last saved state to prevent duplicate saves
   const currentAuthStateRef = useRef<boolean>(false); // Track current auth state without triggering re-renders
 
+  // Ref-based access to dataService for todo save effect (avoids adding dataService
+  // to todo callback deps, which would invalidate them on every auth change).
+  const dataServiceRef = useRef<DataService | null>(null);
+  // Guards against saving todos during the initial data load.
+  const todoLoadedRef = useRef(false);
+
   // Initialize data service when auth state changes
   useEffect(() => {
     if (!authLoading) {
       const service = createDataService(isAuthenticated);
       setDataService(service);
+      dataServiceRef.current = service;
       currentAuthStateRef.current = isAuthenticated;
     }
   }, [isAuthenticated, authLoading]);
@@ -327,6 +334,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         if (currentAuthStateRef.current && dataService) {
           await dataService.migrateFromLocalStorage();
         }
+
+        // Allow todo save effect to fire for user-initiated changes going forward
+        todoLoadedRef.current = true;
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -917,7 +927,16 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   ): InvoiceData =>
     utilGenerateInvoiceData(archivedDays, projects, categories, clientName, startDate, endDate);
 
-  const addTodoItem = useCallback(async (text: string) => {
+  // Persist todos whenever todoItems changes due to a user action.
+  // Uses refs so this effect doesn't recreate todo callbacks on every change.
+  useEffect(() => {
+    if (!todoLoadedRef.current || !dataServiceRef.current) return;
+    dataServiceRef.current.saveTodos(todoItems);
+  }, [todoItems]);
+
+  // Stable callbacks — no todoItems in deps. Functional updates ensure each
+  // callback always operates on the latest state without closing over it.
+  const addTodoItem = useCallback((text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     const newItem: TodoItem = {
@@ -926,36 +945,24 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       completed: false,
       createdAt: new Date().toISOString()
     };
-    const updated = [...todoItems, newItem];
-    setTodoItems(updated);
-    if (dataService) await dataService.saveTodos(updated);
-  }, [todoItems, dataService]);
+    setTodoItems(prev => [...prev, newItem]);
+  }, []);
 
-  const toggleTodoItem = useCallback(async (id: string) => {
-    const updated = todoItems.map((item) => {
+  const toggleTodoItem = useCallback((id: string) => {
+    setTodoItems(prev => prev.map(item => {
       if (item.id !== id) return item;
       const nowCompleted = !item.completed;
-      return {
-        ...item,
-        completed: nowCompleted,
-        completedAt: nowCompleted ? new Date().toISOString() : undefined
-      };
-    });
-    setTodoItems(updated);
-    if (dataService) await dataService.saveTodos(updated);
-  }, [todoItems, dataService]);
+      return { ...item, completed: nowCompleted, completedAt: nowCompleted ? new Date().toISOString() : undefined };
+    }));
+  }, []);
 
-  const deleteTodoItem = useCallback(async (id: string) => {
-    const updated = todoItems.filter((item) => item.id !== id);
-    setTodoItems(updated);
-    if (dataService) await dataService.saveTodos(updated);
-  }, [todoItems, dataService]);
+  const deleteTodoItem = useCallback((id: string) => {
+    setTodoItems(prev => prev.filter(item => item.id !== id));
+  }, []);
 
-  const clearCompletedTodos = useCallback(async () => {
-    const updated = todoItems.filter((item) => !item.completed);
-    setTodoItems(updated);
-    if (dataService) await dataService.saveTodos(updated);
-  }, [todoItems, dataService]);
+  const clearCompletedTodos = useCallback(() => {
+    setTodoItems(prev => prev.filter(item => !item.completed));
+  }, []);
 
   const importFromCSV = async (
     csvContent: string

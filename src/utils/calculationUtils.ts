@@ -17,6 +17,52 @@ function isTaskBillable(
 	return projectIsBillable && categoryIsBillable;
 }
 
+export interface DayStats {
+	hoursWorked: number;
+	billableHours: number;
+	nonBillableHours: number;
+	revenue: number;
+}
+
+/**
+ * Computes all four day stats in a single pass with pre-built maps.
+ * Prefer this over calling the individual functions separately when
+ * you need multiple stats for the same day.
+ */
+export function getDayStats(
+	day: DayRecord,
+	projectMap: Map<string, Project>,
+	categoryMap: Map<string, TaskCategory>
+): DayStats {
+	let totalMs = 0;
+	let billableMs = 0;
+	let nonBillableMs = 0;
+	let revenue = 0;
+
+	day.tasks.forEach(task => {
+		if (!task.duration) return;
+		totalMs += task.duration;
+		if (task.project && task.category) {
+			if (isTaskBillable(task, projectMap, categoryMap)) {
+				billableMs += task.duration;
+				const project = projectMap.get(task.project);
+				if (project?.hourlyRate) {
+					revenue += (task.duration / 3600000) * project.hourlyRate;
+				}
+			} else {
+				nonBillableMs += task.duration;
+			}
+		}
+	});
+
+	return {
+		hoursWorked: Math.round((totalMs / 3600000) * 100) / 100,
+		billableHours: Math.round((billableMs / 3600000) * 100) / 100,
+		nonBillableHours: Math.round((nonBillableMs / 3600000) * 100) / 100,
+		revenue: Math.round(revenue * 100) / 100
+	};
+}
+
 export function getHoursWorkedForDay(day: DayRecord): number {
 	let totalTaskDuration = 0;
 	day.tasks.forEach(task => {

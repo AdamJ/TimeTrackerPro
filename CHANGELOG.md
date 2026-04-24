@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Capacitor iOS native app scaffolding (Phase 2)
+  — `capacitor.config.ts`, `ios/` Xcode project, `package.json` (appId `com.adamjolicoeur.timetrackerpro`, iOS 15+ minimum via SPM, `sync:ios` script combines `build:ios` + `cap sync ios`; `ios/App/App/public` gitignored and regenerated on every sync)
+- Renamed Xcode project and target from "App" to "TimeTrackerPro"
+  — `ios/App/TimeTrackerPro.xcodeproj/project.pbxproj` (updated target name, productName, product path, and all configuration list comments so Xcode navigator and scheme list show "TimeTrackerPro" instead of generic "App")
+- Capacitor iOS integration prep (Phase 1)
+  — `src/App.tsx`, `src/components/Navigation.tsx`, `src/pages/Settings.tsx`, `vite.config.ts`, `.env.ios`, `index.html`, `package.json` (BrowserRouter → HashRouter for filesystem loading; `VITE_IOS_BUILD` flag disables PWA SW and hides auth/sync UI in native builds; CSP updated with `capacitor://localhost`; `build:ios` npm script added)
+- `PageLayout` shared layout component for consistent page chrome
+  — `src/components/PageLayout.tsx`, `src/components/PageLayout.test.tsx` (standardizes title + optional actions slot across all six pages; all page components migrated to use it)
+
+### Fixed
+- Carry over incomplete GFM checklist items as todo tasks when a day is archived
+  — `src/contexts/TimeTrackingContext.tsx`, `src/contexts/TimeTracking.test.tsx` (unchecked `- [ ]` items from task descriptions are now extracted and appended as new todo tasks on archive; unique IDs and safe functional setState ensure no data loss on rollback)
+
 ### Accessibility
 - Added `aria-label` to all icon-only buttons whose visible text label is hidden on mobile viewports: Restore and Edit in `ArchiveItem`, Restore/Delete/Edit in `ArchiveEditDialog` header, per-task Edit/Delete in `ArchiveEditDialog` task table, and Edit/Delete in `ProjectManagement`
 - Replaced `focus:outline-none` with `focus-visible:outline-none` + `focus-visible:ring-2 focus-visible:ring-ring` on Radix `TabsTrigger` elements in `ArchiveItem` — the browser focus ring was previously stripped for all input methods; it is now suppressed only for pointer clicks while remaining fully visible for keyboard navigation

@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
   plugins: [
     react(),
     VitePWA({
-      disabled: isIosBuild,
+      disable: isIosBuild,
       registerType: "autoUpdate",
       includeAssets: [
         "favicon.svg",

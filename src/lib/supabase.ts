@@ -72,16 +72,12 @@ let lastProjectsCheck: Date | null = null;
 let lastCategoriesCheck: Date | null = null;
 const DATA_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-export const getCachedProjects = async (): Promise<Project[] | null> => {
-  const now = new Date();
-
-  // Check if cache is still valid
+export const getCachedProjects = (): Project[] | null => {
   if (cachedProjects && lastProjectsCheck &&
-      (now.getTime() - lastProjectsCheck.getTime()) < DATA_CACHE_DURATION) {
+      (Date.now() - lastProjectsCheck.getTime()) < DATA_CACHE_DURATION) {
     return cachedProjects;
   }
-
-  return null; // Cache miss
+  return null;
 };
 
 export const setCachedProjects = (projects: Project[]) => {
@@ -89,16 +85,12 @@ export const setCachedProjects = (projects: Project[]) => {
   lastProjectsCheck = new Date();
 };
 
-export const getCachedCategories = async (): Promise<TaskCategory[] | null> => {
-  const now = new Date();
-
-  // Check if cache is still valid
+export const getCachedCategories = (): TaskCategory[] | null => {
   if (cachedCategories && lastCategoriesCheck &&
-      (now.getTime() - lastCategoriesCheck.getTime()) < DATA_CACHE_DURATION) {
+      (Date.now() - lastCategoriesCheck.getTime()) < DATA_CACHE_DURATION) {
     return cachedCategories;
   }
-
-  return null; // Cache miss
+  return null;
 };
 
 export const setCachedCategories = (categories: TaskCategory[]) => {
@@ -128,7 +120,7 @@ export const trackDbCall = (operation: string, table?: string, source?: string) 
     timestamp,
     operation,
     table,
-    source: source || new Error().stack?.split('\n')[2]?.trim() // Capture call stack for debugging
+    source: source || (ENABLE_DB_LOGGING ? new Error().stack?.split('\n')[2]?.trim() : undefined)
   };
 
   dbCallLog.push(logEntry);
@@ -146,7 +138,7 @@ export const trackAuthCall = (operation: string, source?: string) => {
   const logEntry = {
     timestamp,
     operation,
-    source: source || new Error().stack?.split('\n')[2]?.trim()
+    source: source || (ENABLE_DB_LOGGING ? new Error().stack?.split('\n')[2]?.trim() : undefined)
   };
   dbCallLog.push(logEntry);
   if (dbCallLog.length > 100) {

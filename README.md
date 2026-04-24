@@ -2,7 +2,7 @@
 
 A modern, feature-rich Progressive Web App (PWA) for time tracking built with React, TypeScript, and Tailwind CSS. Installable on desktop and mobile devices with full offline support. Perfect for freelancers, consultants, and professionals who need to track time, manage projects, and generate invoices.
 
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white) ![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white) ![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white) ![Capacitor](https://img.shields.io/badge/Capacitor-119EFF?style=for-the-badge&logo=capacitor&logoColor=white)
 
 ## 📑 Table of Contents
 
@@ -89,6 +89,7 @@ TimeTracker Pro is a professional time tracking application that helps you monit
 - **Mobile Optimized** - Touch-friendly with bottom navigation
 - **Auto-Updates** - New versions install seamlessly
 - **Cross-Platform** - Works on Windows, Mac, Linux, iOS, and Android
+- **Native iOS App** - Distributed as a native iOS app via Capacitor (App Store / sideload)
 
 ---
 
@@ -150,9 +151,7 @@ That's it! No complex configuration required.
 1. Click "Start Day" button to begin tracking
 2. The timer starts automatically
 
-**Throughout the Day:**
-3. Click "New Task" to create a task
-4. Fill in task details:
+**Throughout the Day:** 3. Click "New Task" to create a task 4. Fill in task details:
 
 - **Title** (required) - Brief description of the work
 - **Description** (optional) - Detailed notes with markdown support
@@ -162,10 +161,7 @@ That's it! No complex configuration required.
 1. Task duration calculates automatically
 2. Create new tasks as you switch between different work items
 
-**Evening:**
-7. Click "End Day" when you're finished working
-8. Review your day summary (total time, revenue, task breakdown)
-9. Click "Post Time to Archive" to save permanently
+**Evening:** 7. Click "End Day" when you're finished working 8. Review your day summary (total time, revenue, task breakdown) 9. Click "Post Time to Archive" to save permanently
 
 **Ongoing:**
 
@@ -241,7 +237,7 @@ Task descriptions support **GitHub Flavored Markdown (GFM)** for rich formatting
 
 **Supported Features:**
 
-- **Bold** and *italic* text
+- **Bold** and _italic_ text
 - Lists (bulleted and numbered)
 - Task lists with checkboxes
 - Tables
@@ -259,11 +255,13 @@ Task descriptions support **GitHub Flavored Markdown (GFM)** for rich formatting
 **Attendees:** John, Sarah, Mike
 
 **Topics Discussed:**
+
 1. Q1 project timeline
 2. Budget approval
 3. Design mockups
 
 **Action Items:**
+
 - [ ] Send meeting minutes
 - [ ] Update project roadmap
 - [ ] Schedule follow-up
@@ -293,7 +291,7 @@ This renders beautifully in the task view with proper formatting and styling.
 2. Tap the Share button (□↑)
 3. Scroll and tap "Add to Home Screen"
 4. Tap "Add" to confirm
-    - Toggle "Open as Web App" to "On"
+   - Toggle "Open as Web App" to "On"
 5. Find the app icon on your home screen
 
 **Android (Chrome):**
@@ -409,6 +407,10 @@ npm run screenshots:install   # Install Playwright browsers (first time)
 npm run screenshots           # Capture PWA screenshots (headless)
 npm run screenshots:headed    # Capture screenshots with visible browser
 
+# iOS / Capacitor
+npm run build:ios             # Build for iOS (vite --mode ios, no PWA/auth UI)
+npm run sync:ios              # build:ios + cap sync ios (copies dist into Xcode project)
+
 # CSV Import Testing
 npm run test-csv-import       # Test standard CSV import
 npm run test-full-import      # Test full CSV import functionality
@@ -444,6 +446,11 @@ npm run test-error-handling   # Test CSV error handling
 - **Local Storage** - Browser storage for offline data persistence
 - **Supabase** (optional) - PostgreSQL database and authentication
 
+**Native Mobile:**
+
+- **Capacitor 8** - Native iOS app wrapper (appId: `com.adamjolicoeur.timetrackerpro`, iOS 15+ minimum)
+- **iOS-only build mode** - `VITE_IOS_BUILD` flag disables PWA/auth UI for native distribution
+
 **PWA & Performance:**
 
 - **Vite PWA Plugin** - Service worker and manifest generation
@@ -476,15 +483,15 @@ Data persistence is abstracted through a service interface with two implementati
 
 ```typescript
 interface DataService {
-  loadCurrentDay(): Promise<DayData>
-  saveCurrentDay(data: DayData): Promise<void>
-  loadArchivedDays(): Promise<ArchivedDay[]>
-  saveArchivedDays(days: ArchivedDay[]): Promise<void>
+  loadCurrentDay(): Promise<DayData>;
+  saveCurrentDay(data: DayData): Promise<void>;
+  loadArchivedDays(): Promise<ArchivedDay[]>;
+  saveArchivedDays(days: ArchivedDay[]): Promise<void>;
   // ... other methods
 }
 
 // Factory pattern selects implementation
-const service = createDataService(isAuthenticated)
+const service = createDataService(isAuthenticated);
 // Returns: LocalStorageService OR SupabaseService
 ```
 
@@ -958,14 +965,14 @@ export default {
             color: '#333',
             a: {
               color: '#3182ce',
-              '&:hover': { color: '#2c5282' },
-            },
-          },
-        },
-      },
-    },
-  },
-}
+              '&:hover': { color: '#2c5282' }
+            }
+          }
+        }
+      }
+    }
+  }
+};
 ```
 
 **3. Component-Specific Overrides:**
@@ -978,7 +985,7 @@ export default {
       <a href={href} className="custom-link-style">
         {children}
       </a>
-    ),
+    )
   }}
 >
   {content}
@@ -995,7 +1002,7 @@ export default {
 // 3. Use shadcn/ui components
 // 4. Import in parent component
 
-import { MyFeature } from "@/components/MyFeature";
+import { MyFeature } from '@/components/MyFeature';
 ```
 
 **Adding a New Page:**
@@ -1069,25 +1076,26 @@ const MyPage = lazy(() => import("./pages/MyPage"));
 For a detailed list of changes, new features, and bug fixes, see [CHANGELOG.md](CHANGELOG.md).
 
 **Recent Updates:**
+
+- Native iOS app via Capacitor 8 — Xcode project scaffolded, iOS-specific build mode (`build:ios` / `sync:ios`) with auth/PWA UI disabled for native distribution
+- `PageLayout` shared component standardizes page chrome (title + actions) across all pages
+- Incomplete checklist items in task descriptions are now carried over as todo tasks when a day is archived
 - Improved Weekly Report error messages to distinguish Gemini API failure modes (rate limit, quota, overload, key issues)
 - Fixed Weekly Report for authenticated users (data now sourced from Supabase, not localStorage only)
 - Native HTML5 time inputs for intuitive, accessible time selection
-- Consistent UX with date inputs across all dialogs
-- Mobile-optimized with browser-native time pickers
-- Full keyboard navigation and screen reader support
 
 ---
 
 ## 📱 iOS Screenshots
 
-| View | Image |
-| -- | -- |
-| Dashboard | <img src="screenshots/iOS/01TimeTrackerPro-iOS.png" width="200" /> |
+| View                  | Image                                                              |
+| --------------------- | ------------------------------------------------------------------ |
+| Dashboard             | <img src="screenshots/iOS/01TimeTrackerPro-iOS.png" width="200" /> |
 | Time Entry - Markdown | <img src="screenshots/iOS/02TimeTrackerPro-iOS.png" width="200" /> |
-| Time Entry - Preview | <img src="screenshots/iOS/03TimeTrackerPro-iOS.png" width="200" /> |
-| Active Tasks | <img src="screenshots/iOS/04TimeTrackerPro-iOS.png" width="200" /> |
-| Day Ended | <img src="screenshots/iOS/06TimeTrackerPro-iOS.png" width="200" /> |
-| Archive | <img src="screenshots/iOS/07TimeTrackerPro-iOS.png" width="200" /> |
+| Time Entry - Preview  | <img src="screenshots/iOS/03TimeTrackerPro-iOS.png" width="200" /> |
+| Active Tasks          | <img src="screenshots/iOS/04TimeTrackerPro-iOS.png" width="200" /> |
+| Day Ended             | <img src="screenshots/iOS/06TimeTrackerPro-iOS.png" width="200" /> |
+| Archive               | <img src="screenshots/iOS/07TimeTrackerPro-iOS.png" width="200" /> |
 
 ---
 

@@ -4,12 +4,7 @@ import {
   DayRecord
 } from '@/contexts/TimeTrackingContext';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
-import {
-  getHoursWorkedForDay as calcHoursWorked,
-  getBillableHoursForDay as calcBillableHours,
-  getNonBillableHoursForDay as calcNonBillableHours,
-  getRevenueForDay as calcRevenue
-} from '@/utils/calculationUtils';
+import { getDayStats } from '@/utils/calculationUtils';
 import { ArchiveItem } from '@/components/ArchiveItem';
 import { ArchiveEditDialog } from '@/components/ArchiveEditDialog';
 import { ExportDialog } from '@/components/ExportDialog';
@@ -85,14 +80,23 @@ const ArchiveContent: React.FC = () => {
     );
   }, [archivedDays, filters]);
 
-  // Calculate summary stats based on filtered days — memoized so they only
-  // recompute when filteredDays, projects, or categories actually change.
-  const { totalHoursWorked, totalBillableHours, totalNonBillableHours, totalRevenue } = useMemo(() => ({
-    totalHoursWorked: filteredDays.reduce((sum, day) => sum + calcHoursWorked(day), 0),
-    totalBillableHours: filteredDays.reduce((sum, day) => sum + calcBillableHours(day, projects, categories), 0),
-    totalNonBillableHours: filteredDays.reduce((sum, day) => sum + calcNonBillableHours(day, projects, categories), 0),
-    totalRevenue: filteredDays.reduce((sum, day) => sum + calcRevenue(day, projects, categories), 0)
-  }), [filteredDays, projects, categories]);
+  // Calculate summary stats in a single pass — builds maps once and iterates filteredDays once.
+  const { totalHoursWorked, totalBillableHours, totalNonBillableHours, totalRevenue } = useMemo(() => {
+    const projectMap = new Map(projects.map(p => [p.name, p]));
+    const categoryMap = new Map(categories.map(c => [c.id, c]));
+    return filteredDays.reduce(
+      (acc, day) => {
+        const stats = getDayStats(day, projectMap, categoryMap);
+        return {
+          totalHoursWorked: acc.totalHoursWorked + stats.hoursWorked,
+          totalBillableHours: acc.totalBillableHours + stats.billableHours,
+          totalNonBillableHours: acc.totalNonBillableHours + stats.nonBillableHours,
+          totalRevenue: acc.totalRevenue + stats.revenue
+        };
+      },
+      { totalHoursWorked: 0, totalBillableHours: 0, totalNonBillableHours: 0, totalRevenue: 0 }
+    );
+  }, [filteredDays, projects, categories]);
 
   const handleEdit = (day: DayRecord) => {
     setEditingDay(day);

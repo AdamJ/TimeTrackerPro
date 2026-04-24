@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "build:ios": "vite build --mode ios",
+    "sync:ios": "npm run build:ios && npx cap sync ios",
+    "open:ios": "open ios/App/App.xcodeproj/project.xcworkspace",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "test": "vitest",
@@ -19,6 +21,8 @@
     "screenshots:headed": "playwright test screenshots.spec.ts --headed"
   },
   "dependencies": {
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/ios": "^8.3.1",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
@@ -84,6 +88,7 @@
     "@testing-library/react": "^14.0.0",
     "@types/node": "^22.5.5",
     "@types/react": "^18.3.3",
+    "@capacitor/cli": "^8.3.1",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "autoprefixer": "^10.4.20",
