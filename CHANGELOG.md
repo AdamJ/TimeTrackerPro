@@ -7,11 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Reverted Xcode project filename from `TimeTrackerPro.xcodeproj` back to `App.xcodeproj`
+  — `ios/App/App.xcodeproj/` (Capacitor CLI hardcodes `App.xcodeproj`; renaming it broke `npm run sync:ios` with ENOENT on `project.pbxproj`; the Xcode target/product name remains "TimeTrackerPro")
+- Fixed `open:ios` npm script pointing to the old renamed project path
+  — `package.json` (updated from `TimeTrackerPro.xcodeproj/project.xcworkspace` to `App.xcodeproj/project.xcworkspace`)
+- Fixed `vite-plugin-pwa` not disabling PWA during iOS builds due to wrong option name
+  — `vite.config.ts` (changed `disabled: isIosBuild` → `disable: isIosBuild`; plugin uses `disable`, not `disabled`, so `sw.js`, `workbox-*.js`, and `manifest.webmanifest` were being generated and synced into the iOS bundle on every build)
+- Fixed outdated device capability declaration in iOS Info.plist
+  — `ios/App/App/Info.plist` (changed `UIRequiredDeviceCapabilities` from `armv7` to `arm64`; Apple dropped 32-bit support in iOS 11 and this stale Capacitor template value can fail App Store validation)
+- Removed stale `-DCOCOAPODS` Swift compiler flag from Xcode Debug build settings
+  — `ios/App/App.xcodeproj/project.pbxproj` (project uses SPM, not CocoaPods; flag was a leftover from Capacitor's original CocoaPods template with no runtime effect)
+
 ### Added
 - Capacitor iOS native app scaffolding (Phase 2)
   — `capacitor.config.ts`, `ios/` Xcode project, `package.json` (appId `com.adamjolicoeur.timetrackerpro`, iOS 15+ minimum via SPM, `sync:ios` script combines `build:ios` + `cap sync ios`; `ios/App/App/public` gitignored and regenerated on every sync)
-- Renamed Xcode project and target from "App" to "TimeTrackerPro"
-  — `ios/App/TimeTrackerPro.xcodeproj/project.pbxproj` (updated target name, productName, product path, and all configuration list comments so Xcode navigator and scheme list show "TimeTrackerPro" instead of generic "App")
+- Renamed Xcode target and product from "App" to "TimeTrackerPro"
+  — `ios/App/App.xcodeproj/project.pbxproj` (updated target name, productName, product path, and configuration list comments so Xcode shows "TimeTrackerPro"; project file itself remains `App.xcodeproj` per Capacitor's requirement)
 - Capacitor iOS integration prep (Phase 1)
   — `src/App.tsx`, `src/components/Navigation.tsx`, `src/pages/Settings.tsx`, `vite.config.ts`, `.env.ios`, `index.html`, `package.json` (BrowserRouter → HashRouter for filesystem loading; `VITE_IOS_BUILD` flag disables PWA SW and hides auth/sync UI in native builds; CSP updated with `capacitor://localhost`; `build:ios` npm script added)
 - `PageLayout` shared layout component for consistent page chrome

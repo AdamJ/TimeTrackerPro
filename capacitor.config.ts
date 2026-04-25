@@ -16,6 +16,15 @@ const config: CapacitorConfig = {
 		limitsNavigationsToAppBoundDomains: true,
 	},
 
+	experimental: {
+		ios: {
+			spm: {
+				// iOS 26 requires PackageDescription 6.2; without this cap sync defaults to 5.9
+				swiftToolsVersion: "6.2",
+			},
+		},
+	},
+
 	plugins: {
 		// Placeholder — native plugin config goes here in Phase 4 (widget bridge)
 	},
