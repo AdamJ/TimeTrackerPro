@@ -41,14 +41,17 @@ export function exportToCSV(
 	];
 	const rows = [headers.join(",")];
 
+	const projectMap = new Map(projects.map(p => [p.name, p]));
+	const categoryMap = new Map(categories.map(c => [c.id, c]));
+
 	filteredDays.forEach(day => {
 		const dayDescriptions = day.tasks.filter(t => t.description).map(t => t.description!);
 		const dailySummary = generateDailySummary(dayDescriptions);
 
 		day.tasks.forEach(task => {
 			if (task.duration) {
-				const project = projects.find(p => p.name === task.project);
-				const category = categories.find(c => c.id === task.category);
+				const project = projectMap.get(task.project ?? "");
+				const category = categoryMap.get(task.category ?? "");
 
 				const startTimeISO = task.startTime.toISOString();
 				const endTimeISO = task.endTime?.toISOString() || "";
@@ -261,6 +264,9 @@ export function parseCSVImport(
 		};
 	}
 
+	// Build lookup map once before the row loop
+	const categoryByNameMap = new Map(categories.map(c => [c.name, c]));
+
 	const tasksByDay: {
 		[dayId: string]: { tasks: Task[]; dayRecord: Partial<DayRecord> };
 	} = {};
@@ -305,7 +311,7 @@ export function parseCSVImport(
 				continue;
 			}
 
-			const categoryByName = categories.find(c => c.name === taskData.category_name);
+			const categoryByName = categoryByNameMap.get(taskData.category_name);
 			const categoryId = categoryByName?.id || taskData.category_id || undefined;
 
 			const task: Task = {

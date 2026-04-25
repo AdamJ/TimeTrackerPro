@@ -16,14 +16,11 @@ export function parseTaskChecklist(description: string): ChecklistEntry[] {
 	if (!description) return [];
 
 	return description.split("\n").flatMap((line, lineIndex) => {
+		if (!line.includes("- [")) return []; // fast path: skip non-checklist lines
 		const unchecked = line.match(/^(\s*)-\s\[ \]\s(.+)/);
+		if (unchecked) return [{ text: unchecked[2].trim(), completed: false, lineIndex }];
 		const checked = line.match(/^(\s*)-\s\[x\]\s(.+)/i);
-		if (unchecked) {
-			return [{ text: unchecked[2].trim(), completed: false, lineIndex }];
-		}
-		if (checked) {
-			return [{ text: checked[2].trim(), completed: true, lineIndex }];
-		}
+		if (checked) return [{ text: checked[2].trim(), completed: true, lineIndex }];
 		return [];
 	});
 }

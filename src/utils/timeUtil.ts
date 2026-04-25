@@ -25,30 +25,17 @@ export const formatDurationLong = (milliseconds: number): string => {
   }
 };
 
-export const formatTime = (date: Date): string => {
-  return date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
-};
+// Pre-constructed formatters — Intl.DateTimeFormat is expensive to construct
+// but cheap to reuse. Module-level constants are created once per page load.
+const _timeFormatter = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+const _dateFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+const _dateShortFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-export const formatDate = (date: Date): string => {
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-};
+export const formatTime = (date: Date): string => _timeFormatter.format(date);
 
-export const formatDateShort = (date: Date): string => {
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  });
-};
+export const formatDate = (date: Date): string => _dateFormatter.format(date);
+
+export const formatDateShort = (date: Date): string => _dateShortFormatter.format(date);
 
 export const formatHoursDecimal = (milliseconds: number): number => {
   return Math.round((milliseconds / (1000 * 60 * 60)) * 100) / 100;

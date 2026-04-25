@@ -94,8 +94,10 @@ export class SupabaseService implements DataService {
 
 		const user = await this.requireUser();
 
-		const categories = (await getCachedCategories()) || [];
-		const projects = (await getCachedProjects()) || [];
+		const categories = getCachedCategories() ?? [];
+		const projects = getCachedProjects() ?? [];
+		const categoryMap = new Map(categories.map(c => [c.id, c]));
+		const projectMap = new Map(projects.map(p => [p.name, p]));
 
 		try {
 			// 1. Save current day state
@@ -158,8 +160,8 @@ export class SupabaseService implements DataService {
 
 				// 4. Upsert current tasks (single batch operation)
 				const tasksToUpsert = data.tasks.map((task) => {
-					const category = categories.find(c => c.id === task.category);
-					const project = projects.find(p => p.name === task.project);
+					const category = categoryMap.get(task.category ?? "");
+					const project = projectMap.get(task.project ?? "");
 
 					return {
 						id: task.id,
@@ -262,8 +264,10 @@ export class SupabaseService implements DataService {
 
 		const user = await this.requireUser();
 
-		const categories = (await getCachedCategories()) || [];
-		const projects = (await getCachedProjects()) || [];
+		const categories = getCachedCategories() ?? [];
+		const projects = getCachedProjects() ?? [];
+		const categoryMap = new Map(categories.map(c => [c.id, c]));
+		const projectMap = new Map(projects.map(p => [p.name, p]));
 
 		if (days.length === 0) {
 			await supabase.from("tasks").delete().eq("user_id", user.id).eq("is_current", false);
@@ -283,8 +287,8 @@ export class SupabaseService implements DataService {
 
 		const allTasks = days.flatMap((day) =>
 			day.tasks.map((task) => {
-				const category = categories.find(c => c.id === task.category);
-				const project = projects.find(p => p.name === task.project);
+				const category = categoryMap.get(task.category ?? "");
+				const project = projectMap.get(task.project ?? "");
 
 				return {
 					id: task.id,
@@ -514,8 +518,10 @@ export class SupabaseService implements DataService {
 	async updateArchivedDay(dayId: string, updates: Partial<DayRecord>): Promise<void> {
 		const user = await this.requireUser();
 
-		const categories = await getCachedCategories();
-		const projects = await getCachedProjects();
+		const categories = getCachedCategories() ?? [];
+		const projects = getCachedProjects() ?? [];
+		const categoryMap = new Map(categories.map(c => [c.id, c]));
+		const projectMap = new Map(projects.map(p => [p.name, p]));
 
 		const updateData: Record<string, unknown> = {};
 
@@ -562,8 +568,8 @@ export class SupabaseService implements DataService {
 
 			if (updates.tasks.length > 0) {
 				const tasksToUpsert = updates.tasks.map((task) => {
-					const category = categories.find(c => c.id === task.category);
-					const project = projects.find(p => p.name === task.project);
+					const category = categoryMap.get(task.category ?? "");
+					const project = projectMap.get(task.project ?? "");
 
 					return {
 						id: task.id,

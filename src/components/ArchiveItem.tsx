@@ -30,12 +30,7 @@ import {
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import { DayRecord } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
-import {
-	getHoursWorkedForDay as calcHoursWorked,
-	getBillableHoursForDay as calcBillableHours,
-	getNonBillableHoursForDay as calcNonBillableHours,
-	getRevenueForDay as calcRevenue,
-} from "@/utils/calculationUtils";
+import { getDayStats } from "@/utils/calculationUtils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 
 interface ArchiveItemProps {
@@ -53,18 +48,16 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 
 	const [showRestoreDialog, setShowRestoreDialog] = useState(false);
 
-	// Memoize per-day stats so they only recompute when the day data,
-	// project rates, or category billing settings change.
-	const dayStats = useMemo(() => ({
-		hoursWorked: calcHoursWorked(day),
-		billableHours: calcBillableHours(day, projects, categories),
-		nonBillableHours: calcNonBillableHours(day, projects, categories),
-		revenue: calcRevenue(day, projects, categories),
-	}), [day, projects, categories]);
-
-	// Build lookup maps once so the task table doesn't do O(n) searches per row.
+	// Build lookup maps once — shared by dayStats and the task table.
 	const projectMap = useMemo(() => new Map(projects.map(p => [p.name, p])), [projects]);
-	const categoryMap = useMemo(() => new Map(categories.map(c => [c.name, c])), [categories]);
+	const categoryMap = useMemo(() => new Map(categories.map(c => [c.id, c])), [categories]);
+
+	// Memoize per-day stats using the pre-built maps so they only recompute
+	// when the day data, project rates, or category billing settings change.
+	const dayStats = useMemo(
+		() => getDayStats(day, projectMap, categoryMap),
+		[day, projectMap, categoryMap]
+	);
 
 	// Generate daily summary only when task descriptions change.
 	const dailySummary = useMemo(() => {

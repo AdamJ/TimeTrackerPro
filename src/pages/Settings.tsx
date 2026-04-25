@@ -31,7 +31,8 @@ const SettingsContent: React.FC = () => {
 
 	const handleClearAllData = () => {
 		localStorage.clear();
-		window.location.reload();
+		// Navigate to root instead of reload() so Capacitor's JS bridge is not interrupted
+		window.location.replace(window.location.pathname);
 	};
 
 	return (

@@ -108,6 +108,9 @@ export function weekKey(weekStart: Date): string {
 export function groupByCalendarWeek(days: ArchivedDay[]): WeekGroup[] {
   const map = new Map<string, WeekGroup>();
 
+  // Track unique projects per week with a Set to avoid O(n²) Array.includes
+  const projectSets = new Map<string, Set<string>>();
+
   for (const day of days) {
     const dayDate = new Date(day.date);
     if (isNaN(dayDate.getTime())) continue;
@@ -125,18 +128,22 @@ export function groupByCalendarWeek(days: ArchivedDay[]): WeekGroup[] {
         totalDuration: 0,
         projects: []
       });
+      projectSets.set(key, new Set());
     }
 
     const group = map.get(key)!;
+    const projectSet = projectSets.get(key)!;
     group.days.push(day);
     group.totalDuration += day.totalDuration;
 
-    // Collect unique non-empty project names
     for (const task of day.tasks) {
-      if (task.project && !group.projects.includes(task.project)) {
-        group.projects.push(task.project);
-      }
+      if (task.project) projectSet.add(task.project);
     }
+  }
+
+  // Materialise unique project lists from sets
+  for (const [key, group] of map) {
+    group.projects = Array.from(projectSets.get(key) ?? []);
   }
 
   // Sort days within each week chronologically
@@ -173,17 +180,17 @@ export function groupByDateRange(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
-  const projects: string[] = [];
+  const projectSet = new Set<string>();
   let totalDuration = 0;
 
   for (const day of filtered) {
     totalDuration += day.totalDuration;
     for (const task of day.tasks) {
-      if (task.project && !projects.includes(task.project)) {
-        projects.push(task.project);
-      }
+      if (task.project) projectSet.add(task.project);
     }
   }
+
+  const projects = Array.from(projectSet);
 
   return {
     weekStart: new Date(from),

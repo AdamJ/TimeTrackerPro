@@ -18,6 +18,8 @@ import { formatDuration } from '@/utils/timeUtil';
 import { SyncStatus } from '@/components/SyncStatus';
 import { useAuth } from '@/hooks/useAuth';
 
+const isIosBuild = import.meta.env.VITE_IOS_BUILD === "true";
+
 const SiteNavigationMenu = () => {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showProjectManagement, setShowProjectManagement] = useState(false);
@@ -67,16 +69,18 @@ const SiteNavigationMenu = () => {
             )}
           </Item>
           <div className="flex space-x-4">
-            <Item>
-              <SyncStatus
-                isAuthenticated={isAuthenticated}
-                lastSyncTime={lastSyncTime}
-                isSyncing={isSyncing}
-                hasUnsavedChanges={hasUnsavedChanges}
-                onRefresh={forceSyncToDatabase}
-              />
-            </Item>
-            {isAuthenticated && (
+            {!isIosBuild && (
+              <Item>
+                <SyncStatus
+                  isAuthenticated={isAuthenticated}
+                  lastSyncTime={lastSyncTime}
+                  isSyncing={isSyncing}
+                  hasUnsavedChanges={hasUnsavedChanges}
+                  onRefresh={forceSyncToDatabase}
+                />
+              </Item>
+            )}
+            {!isIosBuild && isAuthenticated && (
               <Item className="hidden md:flex">
                 <NavLink to="/report" className={({ isActive }) =>
                     `transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input ... ${isActive ? 'bg-blue-200 hover:bg-accent hover:text-accent-foreground' : 'bg-white'}`
@@ -104,11 +108,13 @@ const SiteNavigationMenu = () => {
                 <span className="hidden lg:block">Settings</span>
               </NavLink>
             </Item>
-            <Item>
-              <div className="flex">
-                <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
-              </div>
-            </Item>
+            {!isIosBuild && (
+              <Item>
+                <div className="flex">
+                  <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
+                </div>
+              </Item>
+            )}
           </div>
         </List>
 
@@ -117,10 +123,12 @@ const SiteNavigationMenu = () => {
         </div>
       </NavigationMenu>
 
-      <AuthDialog
-        isOpen={showAuthDialog}
-        onClose={() => setShowAuthDialog(false)}
-      />
+      {!isIosBuild && (
+        <AuthDialog
+          isOpen={showAuthDialog}
+          onClose={() => setShowAuthDialog(false)}
+        />
+      )}
 
       <ExportDialog
         isOpen={showExportDialog}

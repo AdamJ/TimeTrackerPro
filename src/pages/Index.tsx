@@ -10,7 +10,10 @@ import { CirclePlay, CircleStop, Archive as Play } from 'lucide-react';
 import { DashboardIcon } from '@radix-ui/react-icons';
 import { PageLayout } from "@/components/PageLayout";
 import { TaskTrackingPanel } from '@/components/TaskTrackingPanel';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+
+// Stable epoch constant — avoids creating new Date(0) on every render
+const EPOCH = new Date(0);
 
 const TimeTrackerContent = () => {
   const {
@@ -18,13 +21,15 @@ const TimeTrackerContent = () => {
     dayStartTime,
     currentTask,
     tasks,
+    archivedDays,
     startDay,
     endDay,
     startNewTask,
     deleteTask,
     postDay,
     getTotalDayDuration,
-    getCurrentTaskDuration
+    getCurrentTaskDuration,
+    getTotalHoursForPeriod
   } = useTimeTracking();
 
   const [showStartDayDialog, setShowStartDayDialog] = useState(false);
@@ -60,13 +65,14 @@ const TimeTrackerContent = () => {
   const handlePostDay = () => {
     postDay();
   };
-  const { archivedDays, getTotalHoursForPeriod } = useTimeTracking();
-  const totalHours =
-    archivedDays.length > 0
-      ? getTotalHoursForPeriod(new Date(0), new Date())
-      : 0;
-  const sortedDays = [...archivedDays].sort(
-    (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+
+  const totalHours = useMemo(
+    () => archivedDays.length > 0 ? getTotalHoursForPeriod(EPOCH, new Date()) : 0,
+    [archivedDays, getTotalHoursForPeriod]
+  );
+  const sortedDays = useMemo(
+    () => [...archivedDays].sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()),
+    [archivedDays]
   );
 
   // Calculate running timer for navigation

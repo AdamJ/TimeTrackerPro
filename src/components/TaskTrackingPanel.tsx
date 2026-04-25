@@ -3,7 +3,7 @@
 //   1. A standalone to-do list (stored via DataService, synced across devices for auth users)
 //   2. GFM checklist items extracted from current-day task descriptions
 
-import { useState, KeyboardEvent } from "react";
+import { useState, useMemo, KeyboardEvent } from "react";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { parseTaskChecklist, toggleDescriptionChecklistItem } from "@/utils/checklistUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,14 +31,12 @@ export function TaskTrackingPanel() {
 	const completedTodos = todoItems.filter((item) => item.completed);
 
 	// Gather checklist items from current-day task descriptions
-	const taskChecklists = isDayStarted
-		? tasks
-				.map((task) => ({
-					task,
-					entries: parseTaskChecklist(task.description ?? "")
-				}))
-				.filter(({ entries }) => entries.length > 0)
-		: [];
+	const taskChecklists = useMemo(() => {
+		if (!isDayStarted) return [];
+		return tasks
+			.map((task) => ({ task, entries: parseTaskChecklist(task.description ?? "") }))
+			.filter(({ entries }) => entries.length > 0);
+	}, [isDayStarted, tasks]);
 
 	function handleAdd() {
 		const trimmed = inputValue.trim();
