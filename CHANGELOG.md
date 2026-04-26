@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Persistent report summaries — generated summaries are auto-saved to localStorage
+  keyed by week + tone (`ttp_report_{weekKey}_{tone}`); a banner prompts users to
+  restore a prior summary when returning to a week/tone combo they've already generated
+  — `src/hooks/useReportStorage.ts`, `src/pages/Report.tsx`
+- Markdown preview toggle in report output panel — Edit/Preview button pair lets users
+  render the summary as formatted markdown before exporting
+  — `src/components/SummaryOutput.tsx` (uses existing `MarkdownDisplay`)
+- Enhanced export actions — Download .txt (slugified filename) and Print/PDF button
+  alongside existing Copy; print mode scopes output to summary region only
+  — `src/components/SummaryOutput.tsx`, `public/print.css`
+
 ### Fixed
 - Reverted Xcode project filename from `TimeTrackerPro.xcodeproj` back to `App.xcodeproj`
   — `ios/App/App.xcodeproj/` (Capacitor CLI hardcodes `App.xcodeproj`; renaming it broke `npm run sync:ios` with ENOENT on `project.pbxproj`; the Xcode target/product name remains "TimeTrackerPro")
