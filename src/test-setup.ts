@@ -62,6 +62,20 @@ Object.defineProperty(window, "localStorage", {
 	value: localStorageMock
 });
 
+// Mock URL.createObjectURL / revokeObjectURL (not available in jsdom)
+if (typeof URL.createObjectURL === "undefined") {
+	Object.defineProperty(URL, "createObjectURL", {
+		writable: true,
+		value: vi.fn(() => "blob:mock"),
+	});
+}
+if (typeof URL.revokeObjectURL === "undefined") {
+	Object.defineProperty(URL, "revokeObjectURL", {
+		writable: true,
+		value: vi.fn(),
+	});
+}
+
 // Mock Date.now() for consistent testing
 const mockDate = new Date("2024-12-03T10:00:00.000Z");
 vi.setSystemTime(mockDate);

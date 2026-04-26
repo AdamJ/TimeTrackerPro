@@ -192,3 +192,26 @@
     background-color: transparent !important;
   }
 }
+
+/* Report page: print only the summary region when triggered by Print/PDF button.
+   These rules are intentionally outside @media print — visibility:hidden is applied
+   to the screen DOM before window.print() is called, then cleaned up via afterprint.
+   In the print context both these rules and the @media print block above apply;
+   the print-summary-mode visibility rules take precedence and correctly isolate
+   the summary region. */
+body.print-summary-mode * {
+  visibility: hidden;
+}
+
+body.print-summary-mode .summary-print-region,
+body.print-summary-mode .summary-print-region * {
+  visibility: visible;
+}
+
+body.print-summary-mode .summary-print-region {
+  position: fixed;
+  top: 0.75in;
+  left: 0.75in;
+  right: 0.75in;
+  width: auto;
+}
