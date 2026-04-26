@@ -192,3 +192,21 @@
     background-color: transparent !important;
   }
 }
+
+/* Report page: print only the summary region when triggered by Print/PDF button */
+body.print-summary-mode * {
+  visibility: hidden;
+}
+
+body.print-summary-mode .summary-print-region,
+body.print-summary-mode .summary-print-region * {
+  visibility: visible;
+}
+
+body.print-summary-mode .summary-print-region {
+  position: fixed;
+  top: 0.75in;
+  left: 0.75in;
+  right: 0.75in;
+  width: auto;
+}

@@ -6,15 +6,12 @@ import {
   ChevronRightIcon,
   CalendarIcon,
   MixerHorizontalIcon,
-  ClipboardCopyIcon,
-  CheckIcon,
   ReloadIcon,
-  FileTextIcon,
-  InfoCircledIcon
+  InfoCircledIcon,
+  Cross2Icon,
 } from '@radix-ui/react-icons';
 import { CalendarCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -32,14 +29,17 @@ import {
   getMostRecentCompleteWeek,
   formatDuration,
   serializeWeekForPrompt,
+  weekKey,
   WeekGroup,
   ReportTone,
   TONE_INSTRUCTIONS,
   getToneSystemPrompt
 } from '@/utils/reportUtils';
 import { useReportSummary } from '@/hooks/useReportSummary';
+import { useReportStorage, SavedSummary } from '@/hooks/useReportStorage';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { PageLayout } from "@/components/PageLayout";
+import SummaryOutput from '@/components/SummaryOutput';
 
 // ---------------------------------------------------------------------------
 // Week Preview
@@ -182,42 +182,6 @@ function ToneSelector({
 }
 
 // ---------------------------------------------------------------------------
-// Copy Button
-// ---------------------------------------------------------------------------
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-
-  function handleCopy() {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
-
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handleCopy}
-      className="gap-1.5 transition-all"
-    >
-      {copied ? (
-        <>
-          <CheckIcon className="h-3.5 w-3.5 text-chart-2" />
-          <span className="text-chart-2">Copied</span>
-        </>
-      ) : (
-        <>
-          <ClipboardCopyIcon className="h-3.5 w-3.5" />
-          Copy
-        </>
-      )}
-    </Button>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Date Range Popover
 // ---------------------------------------------------------------------------
 
@@ -295,24 +259,6 @@ function DateRangePopover({
 // Right panel states
 // ---------------------------------------------------------------------------
 
-function OutputPanelIdle() {
-  return (
-    <div className="h-full flex flex-col items-center justify-center gap-3 text-center px-8 py-16 rounded-lg border border-dashed">
-      <div className="rounded-full bg-muted p-3">
-        <FileTextIcon className="h-5 w-5 text-muted-foreground" />
-      </div>
-      <div className="space-y-1">
-        <p className="text-sm font-medium text-foreground">
-          Your summary will appear here
-        </p>
-        <p className="text-xs text-muted-foreground max-w-[200px]">
-          Select a week and tone, then generate to see your AI-written summary.
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function GeneratingState({ weekLabel }: { weekLabel: string }) {
   return (
     <div className="rounded-lg border bg-card overflow-hidden animate-slideUpAndFade">
@@ -334,47 +280,6 @@ function GeneratingState({ weekLabel }: { weekLabel: string }) {
           <div className="h-2.5 bg-muted rounded-full w-3/4 animate-pulse [animation-delay:450ms]" />
         </div>
       </div>
-    </div>
-  );
-}
-
-function SummaryDraft({
-  summary,
-  onUpdate,
-  onRegenerate
-}: {
-  summary: string;
-  onUpdate: (v: string) => void;
-  onRegenerate: () => void;
-}) {
-  return (
-    <div className="space-y-2 animate-slideUpAndFade">
-      <div className="flex items-center justify-between">
-        <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Summary
-        </Label>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onRegenerate}
-            className="gap-1.5 text-xs text-muted-foreground hover:text-foreground h-7 px-2"
-          >
-            <ReloadIcon className="h-3 w-3" />
-            Regenerate
-          </Button>
-          <CopyButton text={summary} />
-        </div>
-      </div>
-      <Textarea
-        value={summary}
-        onChange={e => onUpdate(e.target.value)}
-        className="min-h-[160px] text-sm resize-none leading-relaxed focus-visible:ring-1 bg-muted/20"
-        aria-label="Generated weekly summary — editable before copying"
-      />
-      <p className="text-xs text-muted-foreground">
-        Edit before copying. Changes are not saved.
-      </p>
     </div>
   );
 }
@@ -410,6 +315,59 @@ function ErrorState({
 }
 
 // ---------------------------------------------------------------------------
+// Saved summary banner
+// ---------------------------------------------------------------------------
+
+function SavedSummaryBanner({
+  tone,
+  saved,
+  onLoad,
+  onDismiss,
+}: {
+  tone: ReportTone;
+  saved: SavedSummary;
+  onLoad: () => void;
+  onDismiss: () => void;
+}) {
+  const date = new Date(saved.generatedAt).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  const toneLabel = tone.charAt(0).toUpperCase() + tone.slice(1);
+
+  return (
+    <div className="rounded-lg border bg-muted/30 px-4 py-3 flex items-center justify-between gap-3 animate-slideDownAndFade">
+      <div className="space-y-0.5">
+        <p className="text-sm font-medium">You have a saved summary for this week</p>
+        <p className="text-xs text-muted-foreground">
+          {toneLabel} · Generated {date}
+        </p>
+      </div>
+      <div className="flex items-center gap-1.5 shrink-0">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onLoad}
+          className="text-xs h-7 px-2.5"
+        >
+          Load summary
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={onDismiss}
+          className="h-7 w-7"
+          aria-label="Dismiss saved summary"
+        >
+          <Cross2Icon className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main Page
 // ---------------------------------------------------------------------------
 
@@ -429,8 +387,23 @@ export default function Report() {
   const [calendarIndex, setCalendarIndex] = useState(0);
   const [tone, setTone] = useState<ReportTone>('standup');
 
-  const { summary, state, error, generate, updateSummary, reset } =
+  const { summary, state, error, generate, load, updateSummary, reset } =
     useReportSummary();
+
+  // Derive the localStorage key for the current week+tone
+  const currentWeekKey = selectedWeek ? weekKey(selectedWeek.weekStart) : "";
+  const {
+    saved: savedSummary,
+    save: saveSummary,
+    clear: clearSavedSummary,
+  } = useReportStorage(currentWeekKey, tone);
+
+  // Auto-save whenever generation succeeds or the user edits the summary
+  useEffect(() => {
+    if (state === "success" && summary && selectedWeek) {
+      saveSummary(summary, selectedWeek.label);
+    }
+  }, [state, summary, selectedWeek, saveSummary]);
 
   useEffect(() => {
     const initial = getMostRecentCompleteWeek(calendarWeeks);
@@ -472,6 +445,17 @@ export default function Report() {
   function handleGenerate() {
     if (!selectedWeek) return;
     generate(selectedWeek, tone, todoItems);
+  }
+
+  function handleSummaryUpdate(v: string) {
+    updateSummary(v);
+    // Auto-save is handled by the useEffect watching [state, summary]
+  }
+
+  function handleLoadSaved() {
+    if (savedSummary) {
+      load(savedSummary.text);
+    }
   }
 
   const canGoPrev = !isCustomRange && calendarIndex < calendarWeeks.length - 1;
@@ -600,7 +584,31 @@ export default function Report() {
 
           {/* ── Right column: output ── */}
           <div className="space-y-4">
-            {state === 'idle' && <OutputPanelIdle />}
+            {/* Saved summary banner — shown above idle state when a prior summary exists */}
+            {state === 'idle' && savedSummary && (
+              <SavedSummaryBanner
+                tone={tone}
+                saved={savedSummary}
+                onLoad={handleLoadSaved}
+                onDismiss={clearSavedSummary}
+              />
+            )}
+
+            {state === 'idle' && (
+              <div className="h-full flex flex-col items-center justify-center gap-3 text-center px-8 py-16 rounded-lg border border-dashed">
+                <div className="rounded-full bg-muted p-3">
+                  <CalendarCheck className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">
+                    Your summary will appear here
+                  </p>
+                  <p className="text-xs text-muted-foreground max-w-[200px]">
+                    Select a week and tone, then generate to see your AI-written summary.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {state === 'loading' && selectedWeek && (
               <GeneratingState weekLabel={selectedWeek.label} />
@@ -610,10 +618,11 @@ export default function Report() {
               <ErrorState message={error} onRetry={handleGenerate} />
             )}
 
-            {state === 'success' && summary && (
-              <SummaryDraft
+            {state === 'success' && summary && selectedWeek && (
+              <SummaryOutput
                 summary={summary}
-                onUpdate={updateSummary}
+                weekLabel={selectedWeek.label}
+                onUpdate={handleSummaryUpdate}
                 onRegenerate={handleGenerate}
               />
             )}
