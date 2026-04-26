@@ -449,7 +449,8 @@ export default function Report() {
 
   function handleSummaryUpdate(v: string) {
     updateSummary(v);
-    // Auto-save is handled by the useEffect watching [state, summary]
+    // The auto-save useEffect watches [state, summary] and fires on every
+    // summary change (including keystrokes) when state === "success"
   }
 
   function handleLoadSaved() {
@@ -584,7 +585,9 @@ export default function Report() {
 
           {/* ── Right column: output ── */}
           <div className="space-y-4">
-            {/* Saved summary banner — shown above idle state when a prior summary exists */}
+            {/* Saved summary banner — shown only in idle state so it doesn't overlap an
+                active or loading summary. Changing tone calls reset() → idle, so the
+                banner re-appears correctly for the new tone. */}
             {state === 'idle' && savedSummary && (
               <SavedSummaryBanner
                 tone={tone}
