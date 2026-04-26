@@ -1,3 +1,8 @@
+// src/hooks/useReportStorage.ts
+// Persists AI-generated report summaries to localStorage.
+// Each entry is keyed by week (ISO Sunday date) + tone, giving one saved
+// summary per week/tone combination.
+
 import { useState, useEffect, useCallback } from "react";
 import { ReportTone } from "@/utils/reportUtils";
 
