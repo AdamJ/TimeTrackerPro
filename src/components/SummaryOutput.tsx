@@ -36,6 +36,8 @@ function CopyButton({ text }: { text: string }) {
 		navigator.clipboard.writeText(text).then(() => {
 			setCopied(true);
 			setTimeout(() => setCopied(false), 2000);
+		}).catch(() => {
+			// clipboard unavailable — leave button in default state
 		});
 	}
 
@@ -78,7 +80,9 @@ function downloadAsTxt(text: string, weekLabel: string): void {
 	const a = document.createElement("a");
 	a.href = url;
 	a.download = `summary-${slugifyLabel(weekLabel)}.txt`;
+	document.body.appendChild(a);
 	a.click();
+	document.body.removeChild(a);
 	URL.revokeObjectURL(url);
 }
 
@@ -87,6 +91,7 @@ function downloadAsTxt(text: string, weekLabel: string): void {
 // ---------------------------------------------------------------------------
 
 function printSummary(): void {
+	if (document.body.classList.contains("print-summary-mode")) return;
 	document.body.classList.add("print-summary-mode");
 	const cleanup = () => {
 		document.body.classList.remove("print-summary-mode");
