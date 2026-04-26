@@ -9,7 +9,8 @@ import {
   ClipboardCopyIcon,
   CheckIcon,
   ReloadIcon,
-  FileTextIcon
+  FileTextIcon,
+  InfoCircledIcon
 } from '@radix-ui/react-icons';
 import { CalendarCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,7 +33,9 @@ import {
   formatDuration,
   serializeWeekForPrompt,
   WeekGroup,
-  ReportTone
+  ReportTone,
+  TONE_INSTRUCTIONS,
+  getToneSystemPrompt
 } from '@/utils/reportUtils';
 import { useReportSummary } from '@/hooks/useReportSummary';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
@@ -117,7 +120,7 @@ function WeekPreview({ week }: { week: WeekGroup }) {
 // Tone Selector
 // ---------------------------------------------------------------------------
 
-const TONE_DESCRIPTIONS: Record<ReportTone, string> = {
+const TONE_LABELS: Record<ReportTone, string> = {
   standup: 'Team update or async standup',
   client: 'Client or stakeholder facing',
   retrospective: 'Personal weekly reflection'
@@ -132,9 +135,32 @@ function ToneSelector({
 }) {
   return (
     <div className="space-y-2">
-      <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Tone
-      </Label>
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Tone
+        </Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5 text-muted-foreground hover:text-foreground"
+              aria-label="View full system prompt for this tone"
+            >
+              <InfoCircledIcon className="h-3.5 w-3.5" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-96 space-y-3" align="end">
+            <div>
+              <p className="text-sm font-medium capitalize">{value} prompt</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{TONE_LABELS[value]}</p>
+            </div>
+            <pre className="text-[11px] leading-relaxed whitespace-pre-wrap bg-muted/30 rounded-md p-3 max-h-[280px] overflow-y-auto font-mono">
+              {getToneSystemPrompt(value)}
+            </pre>
+          </PopoverContent>
+        </Popover>
+      </div>
       <Tabs value={value} onValueChange={v => onChange(v as ReportTone)}>
         <TabsList className="w-full h-auto p-1 grid grid-cols-3">
           {(['standup', 'client', 'retrospective'] as ReportTone[]).map(
@@ -150,7 +176,7 @@ function ToneSelector({
           )}
         </TabsList>
       </Tabs>
-      <p className="text-xs text-muted-foreground">{TONE_DESCRIPTIONS[value]}</p>
+      <p className="text-xs text-muted-foreground">{TONE_INSTRUCTIONS[value]}</p>
     </div>
   );
 }

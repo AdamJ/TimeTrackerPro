@@ -321,7 +321,7 @@ export function serializeWeekForPrompt(week: WeekGroup, todos?: TodoItem[]): str
 // Prompt builder
 // ---------------------------------------------------------------------------
 
-const TONE_INSTRUCTIONS: Record<ReportTone, string> = {
+export const TONE_INSTRUCTIONS: Record<ReportTone, string> = {
   standup:
     'Write in a concise first-person style suitable for a weekly team standup or async update. Focus on what was accomplished and any notable shifts in focus.',
   client:
@@ -331,15 +331,11 @@ const TONE_INSTRUCTIONS: Record<ReportTone, string> = {
 };
 
 /**
- * Builds the full prompt to send to the Anthropic API.
- * Returns a messages array ready for the /v1/messages endpoint.
+ * Returns the static system prompt template for a given tone.
+ * Does not include week data — useful for displaying the prompt in the UI.
  */
-export function buildSummaryPrompt(
-  week: WeekGroup,
-  tone: ReportTone = 'standup',
-  todos?: TodoItem[]
-): { system: string; userMessage: string } {
-  const system = `You are a professional writing assistant that creates concise weekly work summaries from time tracking data.
+export function getToneSystemPrompt(tone: ReportTone): string {
+  return `You are a professional writing assistant that creates concise weekly work summaries from time tracking data.
 
 Your summaries are:
 - 3 to 5 sentences in length
@@ -351,6 +347,18 @@ Your summaries are:
 ${TONE_INSTRUCTIONS[tone]}
 
 Omit breaks, lunch, and any purely administrative tasks. If multiple days covered the same project or theme, synthesize them into a single coherent statement rather than repeating.`;
+}
+
+/**
+ * Builds the full prompt to send to the Anthropic API.
+ * Returns a messages array ready for the /v1/messages endpoint.
+ */
+export function buildSummaryPrompt(
+  week: WeekGroup,
+  tone: ReportTone = 'standup',
+  todos?: TodoItem[]
+): { system: string; userMessage: string } {
+  const system = getToneSystemPrompt(tone);
 
   const userMessage = `Please summarize the following work week:\n\n${serializeWeekForPrompt(week, todos)}`;
 
