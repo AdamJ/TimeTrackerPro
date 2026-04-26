@@ -32,6 +32,7 @@ export interface UseReportSummaryReturn {
   state: GenerationState;
   error: string | null;
   generate: (week: WeekGroup, tone: ReportTone, todos?: TodoItem[]) => Promise<void>;
+  load: (text: string) => void;
   updateSummary: (value: string) => void;
   reset: () => void;
 }
@@ -233,6 +234,12 @@ export function useReportSummary(): UseReportSummaryReturn {
     []
   );
 
+  const load = useCallback((text: string) => {
+    setSummary(text);
+    setState("success");
+    setError(null);
+  }, []);
+
   const updateSummary = useCallback((value: string) => {
     setSummary(value);
   }, []);
@@ -243,5 +250,5 @@ export function useReportSummary(): UseReportSummaryReturn {
     setError(null);
   }, []);
 
-  return { summary, state, error, generate, updateSummary, reset };
+  return { summary, state, error, generate, load, updateSummary, reset };
 }
