@@ -63,16 +63,29 @@ describe("SummaryOutput", () => {
 		printSpy.mockRestore();
 	});
 
-	it("triggers a file download when the download button is clicked", () => {
+	it("triggers a file download with a slugified filename when download button is clicked", () => {
 		const createObjectURLSpy = vi
 			.spyOn(URL, "createObjectURL")
 			.mockReturnValue("blob:test");
 		vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
 
+		// Spy on createElement to capture the anchor's download attribute
+		const anchors: HTMLAnchorElement[] = [];
+		const originalCreate = document.createElement.bind(document);
+		const createSpy = vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+			const el = originalCreate(tag);
+			if (tag === "a") anchors.push(el as HTMLAnchorElement);
+			return el;
+		});
+
 		render(<SummaryOutput {...defaultProps} />);
 		fireEvent.click(screen.getByRole("button", { name: /download/i }));
 
 		expect(createObjectURLSpy).toHaveBeenCalledWith(expect.any(Blob));
+		expect(anchors.length).toBeGreaterThan(0);
+		expect(anchors[0].download).toBe("summary-jan-11-jan-17-2026.txt");
+
 		createObjectURLSpy.mockRestore();
+		createSpy.mockRestore();
 	});
 });

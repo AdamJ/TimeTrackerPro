@@ -391,6 +391,8 @@ export default function Report() {
     useReportSummary();
 
   // Derive the localStorage key for the current week+tone
+  // Empty string when no week is selected yet; useReportStorage will return null
+  // for this key and save() is gated behind the generate button (requires selectedWeek)
   const currentWeekKey = selectedWeek ? weekKey(selectedWeek.weekStart) : "";
   const {
     saved: savedSummary,
@@ -400,9 +402,12 @@ export default function Report() {
 
   // Auto-save whenever generation succeeds or the user edits the summary
   useEffect(() => {
-    if (state === "success" && summary && selectedWeek) {
+    if (state !== "success" || !summary || !selectedWeek) return;
+    // Debounce saves to avoid write-on-every-keystroke (important for iOS WebView)
+    const timer = setTimeout(() => {
       saveSummary(summary, selectedWeek.label);
-    }
+    }, 300);
+    return () => clearTimeout(timer);
   }, [state, summary, selectedWeek, saveSummary]);
 
   useEffect(() => {
@@ -587,7 +592,10 @@ export default function Report() {
           <div className="space-y-4">
             {/* Saved summary banner — shown only in idle state so it doesn't overlap an
                 active or loading summary. Changing tone calls reset() → idle, so the
-                banner re-appears correctly for the new tone. */}
+                banner re-appears correctly for the new tone.
+                Note: dismissing clears the saved entry for this week+tone. If the user
+                subsequently generates a new summary, auto-save writes a new entry and the
+                banner will re-appear on next visit — intentional, as it is a new summary. */}
             {state === 'idle' && savedSummary && (
               <SavedSummaryBanner
                 tone={tone}
