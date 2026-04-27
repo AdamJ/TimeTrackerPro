@@ -20,6 +20,9 @@ import { useAuth } from '@/hooks/useAuth';
 
 const isIosBuild = import.meta.env.VITE_IOS_BUILD === "true";
 
+const getNavLinkClasses = (isActive: boolean) =>
+	`transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 border border-gray-200 hover:border-input ${isActive ? "bg-accent hover:bg-accent/80 hover:text-accent-foreground" : "bg-white hover:bg-accent hover:text-accent-foreground"}`;
+
 const SiteNavigationMenu = () => {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showProjectManagement, setShowProjectManagement] = useState(false);
@@ -82,9 +85,7 @@ const SiteNavigationMenu = () => {
             )}
             {!isIosBuild && isAuthenticated && (
               <Item className="hidden md:flex">
-                <NavLink to="/report" className={({ isActive }) =>
-                    `transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input ... ${isActive ? 'bg-blue-200 hover:bg-accent hover:text-accent-foreground' : 'bg-white'}`
-                  }>Report</NavLink>
+                <NavLink to="/report" className={({ isActive }) => getNavLinkClasses(isActive)}>Report</NavLink>
               </Item>
             )}
             <Item className="hidden md:flex">
@@ -100,9 +101,7 @@ const SiteNavigationMenu = () => {
             <Item className="hidden md:flex">
               <NavLink
                 to="/settings"
-                className={({ isActive }) =>
-                  `transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 bg-white border border-gray-200 hover:bg-accent hover:accent-foreground hover:border-input ... ${isActive ? 'bg-blue-200 hover:bg-accent hover:text-accent-foreground' : 'bg-white'}`
-                }
+                className={({ isActive }) => getNavLinkClasses(isActive)}
               >
                 <CogIcon className="w-4 h-4" />
                 <span className="hidden lg:block">Settings</span>
