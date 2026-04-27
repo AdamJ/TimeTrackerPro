@@ -7,7 +7,7 @@ TimeTracker Pro is a React 18 + TypeScript time tracking PWA for freelancers and
 
 ## Documentation
 
-After making changes, always sync documentation files (CHANGELOG.md, README.md, AGENTS.md) to reflect current codebase state.
+After making changes, always sync documentation files before opening a PR. Use the **sync-docs** skill (`.claude/skills/sync-docs/SKILL.md`) to update CHANGELOG.md, README.md, README-EXT.md, and CLAUDE.md to reflect the current codebase state, then commit the updates.
 
 ## Git Workflow
 
