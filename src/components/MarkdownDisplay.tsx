@@ -16,7 +16,7 @@ export const MarkdownDisplay: React.FC<MarkdownDisplayProps> = ({ content, class
       prose-headings:font-bold prose-headings:text-foreground
       prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline
       prose-strong:text-foreground prose-strong:font-bold
-      prose-pre:bg-muted prose-pre:text-muted-foreground prose-pre:p-2 prose-pre:rounded-lg
+      prose-pre:bg-muted prose-pre:text-foreground prose-pre:p-2 prose-pre:rounded-lg
       ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}

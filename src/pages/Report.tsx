@@ -60,8 +60,7 @@ function WeekPreview({ week }: { week: WeekGroup }) {
   if (workDays.length === 0) {
     return (
       <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-6 text-center">
-        <p className="text-sm text-muted-foreground">
-          No work entries found for this week.
+        <p className="text-sm text-foreground">
         </p>
       </div>
     );
@@ -70,8 +69,7 @@ function WeekPreview({ week }: { week: WeekGroup }) {
   return (
     <div className="rounded-lg border bg-card overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
-        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Week breakdown
+        <span className="text-xs font-medium uppercase tracking-wide text-foreground">
         </span>
         <span className="text-xs font-medium tabular-nums">
           {formatDuration(week.totalDuration)} total
@@ -340,8 +338,7 @@ function SavedSummaryBanner({
     <div className="rounded-lg border bg-muted/30 px-4 py-3 flex items-center justify-between gap-3 animate-slideDownAndFade">
       <div className="space-y-0.5">
         <p className="text-sm font-medium">You have a saved summary for this week</p>
-        <p className="text-xs text-muted-foreground">
-          {toneLabel} · Generated {date}
+        <p className="text-xs text-foreground">
         </p>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
