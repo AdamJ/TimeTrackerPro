@@ -78,25 +78,7 @@ export const MyComponent = () => {
 
 ## iOS Environment Health Check
 
-Before making any changes to iOS-related code or configs, run this health check and auto-fix any failures before proceeding.
-
-**Checks to run:**
-
-1. **swift-tools-version drift** — Verify `// swift-tools-version:` in `ios/App/CapApp-SPM/Package.swift` matches `experimental.ios.spm.swiftToolsVersion` in `capacitor.config.ts`
-2. **Stale Package.resolved** — Run `swift package resolve` inside `ios/App/CapApp-SPM/` to confirm `Package.resolved` is current
-3. **iOS build targets** — Verify all `IPHONEOS_DEPLOYMENT_TARGET` entries in `ios/App/App.xcodeproj/project.pbxproj` match the platform version in `Package.swift`
-4. **Workspace integrity** — Confirm no `.xcworkspace` or `.pbxproj` file references paths that no longer exist
-5. **Build validation** — Run `npm run build:ios` and capture any errors
-
-**Auto-fix solutions:**
-
-| Failure | Fix |
-| ------- | --- |
-| swift-tools-version drift | Update `experimental.ios.spm.swiftToolsVersion` in `capacitor.config.ts`, then run `npm run sync:ios` |
-| Stale Package.resolved | Delete `ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` and re-run `swift package resolve` |
-| Build target mismatch | Update all `IPHONEOS_DEPLOYMENT_TARGET` entries in `project.pbxproj` to match `Package.swift` |
-
-Report what was found and fixed, then proceed with the actual task.
+Before making any changes to iOS-related code or configs, run the **ios-health-check** skill (`.claude/skills/ios-health-check/SKILL.md`). It runs five checks, auto-fixes any failures, and reports results before proceeding with the actual task.
 
 ---
 
@@ -148,16 +130,19 @@ When working on iOS/Capacitor projects, remember that `cap sync` overwrites Pack
 
 Read these files proactively based on what you're working on:
 
-| When you're working on...                                       | Read this file            |
-| --------------------------------------------------------------- | ------------------------- |
-| Architecture, data flow, auth flow, contexts, DataService       | `agents/architecture.md`  |
-| Naming conventions, TypeScript patterns, UI/styling rules       | `agents/conventions.md`   |
-| Dev setup, npm commands, git workflow, Supabase                 | `agents/workflow.md`      |
-| Adding components, pages, context methods, data service methods | `agents/operations.md`    |
-| Testing, QA checklists, code quality requirements               | `agents/testing.md`       |
-| Debugging, common mistakes, architecture gotchas, Gemini errors | `agents/pitfalls.md`      |
-| UI/styling rules and Radix component usage                      | `agents/styles.md`        |
-| Pull request guidelines                                         | `agents/pull_requests.md` |
+| When you're working on...                                       | Read this file                              |
+| --------------------------------------------------------------- | ------------------------------------------- |
+| Architecture, data flow, auth flow, contexts, DataService       | `agents/architecture.md`                    |
+| Naming conventions, TypeScript patterns, UI/styling rules       | `agents/conventions.md`                     |
+| Dev setup, npm commands, git workflow, Supabase                 | `agents/workflow.md`                        |
+| Adding components, pages, context methods, data service methods | `agents/operations.md`                      |
+| Testing, QA checklists, code quality requirements               | `agents/testing.md`                         |
+| Debugging, common mistakes, architecture gotchas, Gemini errors | `agents/pitfalls.md`                        |
+| UI/styling rules and Radix component usage                      | `agents/styles.md`                          |
+| Pull request guidelines                                         | `agents/pull_requests.md`                   |
+| Adding a new feature (TDD workflow)                             | `.claude/skills/new-feature/SKILL.md`       |
+| Syncing docs before a PR                                        | `.claude/skills/sync-docs/SKILL.md`         |
+| Any iOS/Capacitor changes                                       | `.claude/skills/ios-health-check/SKILL.md`  |
 
 ---
 
