@@ -146,7 +146,7 @@ const TimeTrackerContent = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground mb-4">
+                  <p className="text-foreground mb-4">
                     Click the button below to start tracking your work time for
                     today.
                   </p>

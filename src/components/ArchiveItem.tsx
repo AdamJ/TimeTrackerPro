@@ -184,7 +184,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 									<div className="bg-muted p-4 rounded-md print:bg-white print:border print:border-border">
 										<MarkdownDisplay
 											content={dailySummary}
-											className="prose-p:text-muted-foreground print:prose-p:text-foreground"
+											className="prose-p:text-foreground print:prose-p:text-foreground"
 										/>
 									</div>
 								</TabsContent>
@@ -193,10 +193,10 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 										{day.notes ? (
 											<MarkdownDisplay
 												content={day.notes}
-												className="prose-p:text-muted-foreground print:prose-p:text-foreground"
+												className="prose-p:text-foreground print:prose-p:text-foreground"
 											/>
 										) : (
-											<div className="prose-sm prose-p:leading-relaxed prose-p:my-1 prose-p:text-muted-foreground print:prose-p:text-foreground">
+											<div className="prose-sm prose-p:leading-relaxed prose-p:my-1 prose-p:text-foreground print:prose-p:text-foreground">
 												<p>No notes for this day have been entered.</p>
 											</div>
 										)}

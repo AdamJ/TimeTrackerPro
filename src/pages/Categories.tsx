@@ -266,7 +266,7 @@ const CategoryContent: React.FC = () => {
 															</h4>
 															<span className={`px-2 py-1 text-xs rounded-full ${category.isBillable !== false
 																? "bg-chart-2/20 text-chart-2"
-																: "bg-muted text-muted-foreground"
+																: "bg-muted text-foreground"
 																}`}>
 																{category.isBillable !== false ? "Billable" : "Non-billable"}
 															</span>
