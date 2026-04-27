@@ -8,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
@@ -76,15 +78,20 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter task title"
-            className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-            autoFocus
-          />
+          <div>
+            <Label htmlFor="task-title">
+              Task Title <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="task-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter task title"
+              required
+              autoFocus
+            />
+          </div>
 
           <Tabs defaultValue="edit" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
