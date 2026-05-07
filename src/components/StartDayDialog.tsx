@@ -16,7 +16,7 @@ import { Calendar, Clock } from 'lucide-react';
 interface StartDayDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onStartDay: (date: Date, time: string) => void;
+  onStartDay: (date: Date) => void;
 }
 
 // Helper functions
@@ -57,7 +57,7 @@ export const StartDayDialog: React.FC<StartDayDialogProps> = ({
     const [hours, minutes] = selectedTime.split(':').map(Number);
 
     const startDateTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
-    onStartDay(startDateTime, selectedTime);
+    onStartDay(startDateTime);
     onClose();
   };
 
