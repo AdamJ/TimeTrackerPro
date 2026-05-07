@@ -1,4 +1,4 @@
-# Development Workflow — TimeTracker Pro
+# Development Workflow — Timetraked
 
 ## Initial Setup
 
@@ -74,7 +74,7 @@ git commit -m "refactor: improve data service caching"
 
 ### Creating Pull Requests
 
-1. **Title Format**: `[TimeTrackerPro] <Descriptive Title>`
+1. **Title Format**: `[Timetraked] <Descriptive Title>`
 2. **Description**: Clear explanation of changes
 3. **Wait for checks**: Don't merge until all tests pass
 4. **Add labels**: Appropriate PR labels

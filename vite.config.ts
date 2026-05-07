@@ -27,8 +27,8 @@ export default defineConfig(({ mode }) => {
         "print.css"
       ],
       manifest: {
-        name: "TimeTracker Pro",
-        short_name: "TimeTracker",
+        name: "Timetraked",
+        short_name: "Timetraked",
         description: "Professional time tracking for freelancers and consultants",
         theme_color: "#3b82f6",
         background_color: "#ffffff",

@@ -1,9 +1,9 @@
-# Pull Requests — TimeTracker Pro
+# Pull Requests — Timetraked
 
 ## Title Format
 
 ```text
-[TimeTrackerPro] <Descriptive Title>
+[Timetraked] <Descriptive Title>
 ```
 
 ## Requirements

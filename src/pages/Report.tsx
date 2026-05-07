@@ -476,7 +476,7 @@ export default function Report() {
           <div className="space-y-1">
             <h2 className="text-base font-semibold">No archived days yet</h2>
             <p className="text-sm text-muted-foreground max-w-xs">
-              Archive at least one completed day in TimeTracker Pro to generate
+              Archive at least one completed day in Timetraked to generate
               your first weekly summary.
             </p>
           </div>

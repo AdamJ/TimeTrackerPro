@@ -1,7 +1,7 @@
 // Enhanced localStorage Recovery Check
 // Copy and paste this entire script into the browser console
 
-console.log("🔍 TimeTrackerPro Enhanced Data Recovery");
+console.log("🔍 Timetraked Enhanced Data Recovery");
 console.log("========================================");
 
 // First, let's see ALL localStorage keys

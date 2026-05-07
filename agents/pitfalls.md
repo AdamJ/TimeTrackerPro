@@ -1,4 +1,4 @@
-# Pitfalls & Gotchas — TimeTracker Pro
+# Pitfalls & Gotchas — Timetraked
 
 ## Common Code Mistakes
 

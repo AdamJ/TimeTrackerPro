@@ -2,17 +2,19 @@
 
 ## Overview
 
-TimeTracker Pro uses GitHub Actions for continuous integration and continuous deployment. The CI/CD pipeline automatically runs tests, linting, and builds on every pull request and push to the main branch.
+Timetraked uses GitHub Actions for continuous integration and continuous deployment. The CI/CD pipeline automatically runs tests, linting, and builds on every pull request and push to the main branch.
 
 ## Workflows
 
 ### Test Workflow (`.github/workflows/test.yml`)
 
 **Triggers:**
+
 - Pull requests to `main` or `master` branches
 - Pushes to `main` or `master` branches
 
 **Jobs:**
+
 1. **Checkout code** - Retrieves the repository code
 2. **Setup Node.js** - Configures Node.js 20.x environment
 3. **Install dependencies** - Runs `npm ci` for clean install
@@ -23,6 +25,7 @@ TimeTracker Pro uses GitHub Actions for continuous integration and continuous de
 
 **Environment Variables:**
 The workflow sets mock Supabase credentials for testing:
+
 - `VITE_SUPABASE_URL`: Test URL (not a real Supabase instance)
 - `VITE_SUPABASE_ANON_KEY`: Test key (not a real key)
 
@@ -66,26 +69,31 @@ The test suite includes 41 comprehensive tests covering:
 ## Running Tests Locally
 
 ### Quick Test Run
+
 ```bash
 npm run test
 ```
 
 ### Run Tests Once (CI Mode)
+
 ```bash
 npm run test -- --run
 ```
 
 ### Run Linter
+
 ```bash
 npm run lint
 ```
 
 ### Run Build
+
 ```bash
 npm run build
 ```
 
 ### Run All CI Checks Locally
+
 ```bash
 npm run lint && npm run test -- --run && npm run build
 ```
@@ -102,6 +110,7 @@ npm run lint && npm run test -- --run && npm run build
 ### For Contributors
 
 1. **Run tests locally** before pushing:
+
    ```bash
    npm run lint
    npm run test -- --run

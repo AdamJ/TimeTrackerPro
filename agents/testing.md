@@ -1,4 +1,4 @@
-# Testing & Quality — TimeTracker Pro
+# Testing & Quality — Timetraked
 
 ## Running Tests
 

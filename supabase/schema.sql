@@ -1,4 +1,4 @@
--- Supabase schema for TimeTrackerPro
+-- Supabase schema for Timetraked
 -- Create projects table
 CREATE TABLE IF NOT EXISTS projects (
   id text PRIMARY KEY,

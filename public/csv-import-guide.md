@@ -2,7 +2,7 @@
 
 ## Overview
 
-This template shows the exact format required for importing time tracking data into TimeTrackerPro. The CSV must match the database schema exactly.
+This template shows the exact format required for importing time tracking data into Timetraked. The CSV must match the database schema exactly.
 
 ## Required Columns
 

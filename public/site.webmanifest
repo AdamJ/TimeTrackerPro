@@ -1,6 +1,6 @@
 {
-  "name": "TimeTracker Pro",
-  "short_name": "TimeTracker",
+  "name": "Timetraked",
+  "short_name": "Timetraked",
   "description": "Professional time tracking for freelancers and consultants",
   "start_url": "/",
   "display": "standalone",
@@ -29,14 +29,14 @@
       "sizes": "1920x1080",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "TimeTracker Pro Dashboard"
+      "label": "Timetraked Dashboard"
     },
     {
       "src": "/screenshots/mobile-1.png",
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "TimeTracker Pro Mobile View"
+      "label": "Timetraked Mobile View"
     }
   ],
   "shortcuts": [

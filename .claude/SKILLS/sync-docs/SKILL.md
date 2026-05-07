@@ -5,7 +5,7 @@ description: >
   Use before opening a PR or after completing significant work.
 ---
 
-# Sync Docs — TimeTracker Pro
+# Sync Docs — Timetraked
 
 ## When to Use
 

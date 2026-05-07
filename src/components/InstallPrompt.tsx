@@ -111,7 +111,7 @@ export const InstallPrompt = memo(function InstallPrompt() {
         <X className="h-4 w-4" />
       </button>
       <CardHeader>
-        <CardTitle className="text-lg">Install TimeTracker Pro</CardTitle>
+        <CardTitle className="text-lg">Install Timetraked</CardTitle>
         <CardDescription>
           Install the app for quick access and offline functionality
         </CardDescription>

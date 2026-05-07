@@ -1,4 +1,4 @@
-# Common Operations — TimeTracker Pro
+# Common Operations — Timetraked
 
 ## Adding a New Feature Component
 

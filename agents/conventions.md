@@ -1,4 +1,4 @@
-# Conventions — TimeTracker Pro
+# Conventions — Timetraked
 
 ## Code Style (CRITICAL)
 

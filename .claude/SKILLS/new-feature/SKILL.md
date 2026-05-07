@@ -4,7 +4,7 @@ description: >
   Implements a new feature using a strict TDD workflow: read codebase patterns, write failing tests first, implement iteratively until all tests pass and lint is clean, then summarize decisions. Use when asked to add a feature or when "implement [FEATURE]" is requested.
 ---
 
-# New Feature — TimeTracker Pro
+# New Feature — Timetraked
 
 ## Clarification (if needed)
 
