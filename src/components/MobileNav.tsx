@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Archive, FolderKanban, Settings, PaperclipIcon } from 'lucide-react';
+import { Home, Archive, Settings, PaperclipIcon } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export const MobileNav = memo(function MobileNav() {

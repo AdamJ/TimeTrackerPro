@@ -1,4 +1,4 @@
-# Styles — TimeTracker Pro
+# Styles — Timetraked
 
 The following rules govern style choices for UI and visual design.
 

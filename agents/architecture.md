@@ -1,8 +1,8 @@
-# Architecture — TimeTracker Pro
+# Architecture — Timetraked
 
 ## Overall Architecture
 
-TimeTracker Pro follows a **context-driven architecture** with a **service-oriented data layer**:
+Timetraked follows a **context-driven architecture** with a **service-oriented data layer**:
 
 ```mermaid
 ┌─────────────────────────────────────────────────────────┐

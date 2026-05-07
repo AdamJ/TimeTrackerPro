@@ -61,7 +61,7 @@ const SiteNavigationMenu = () => {
                   alt="Logo"
                   className="w-8 h-8 sm:mr-2"
                 />
-                <span className="hidden lg:block">TimeTracker</span>
+                <span className="hidden lg:block">Timetraked</span>
               </Link>
             </h1>
             {isDayStarted && tasks.length > 0 && (

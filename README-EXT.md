@@ -1,4 +1,4 @@
-# TimeTracker Pro — Extended Reference
+# Timetraked — Extended Reference
 
 This document contains detailed usage guides, technical architecture, and developer workflow information.
 For the main overview, see [README.md](README.md).
@@ -138,19 +138,19 @@ Task descriptions support **GitHub Flavored Markdown (GFM)**:
 
 **Desktop (Chrome / Edge / Firefox):**
 
-1. Open TimeTracker Pro in your browser.
+1. Open Timetraked in your browser.
 2. Click the install icon (⊕) in the address bar.
 3. Click "Install" — the app opens in its own window.
 
 **iOS (Safari):**
 
-1. Open TimeTracker Pro in Safari.
+1. Open Timetraked in Safari.
 2. Tap the Share button (□↑) → "Add to Home Screen" → "Add".
 3. Toggle "Open as Web App" to On.
 
 **Android (Chrome):**
 
-1. Open TimeTracker Pro in Chrome.
+1. Open Timetraked in Chrome.
 2. Tap the menu (⋮) → "Install app" or "Add to Home screen".
 
 ### PWA Features
@@ -176,7 +176,7 @@ Task descriptions support **GitHub Flavored Markdown (GFM)**:
 
 ### How Data Storage Works
 
-TimeTracker Pro uses a **manual sync** approach optimized for single-device usage:
+Timetraked uses a **manual sync** approach optimized for single-device usage:
 
 1. **In-Memory First** — changes update React state immediately.
 2. **Critical Event Saves** — data persists only on day end, window close, or manual sync.
@@ -400,7 +400,7 @@ git commit -m "fix: resolve data recovery issue"
 # Types: feat, fix, refactor, docs, style, test, chore
 ```
 
-**Pull Requests:** Title format `[TimeTrackerPro] Descriptive Title`. See [agents/pull_requests.md](agents/pull_requests.md) for full guidelines.
+**Pull Requests:** Title format `[Timetraked] Descriptive Title`. See [agents/pull_requests.md](agents/pull_requests.md) for full guidelines.
 
 ### Testing
 
@@ -518,9 +518,9 @@ typography: {
 
 | View                  | Image                                                              |
 | --------------------- | ------------------------------------------------------------------ |
-| Dashboard             | <img src="screenshots/iOS/01TimeTrackerPro-iOS.png" width="200" alt="Timetracker screenshot 01" /> |
-| Time Entry — Markdown | <img src="screenshots/iOS/02TimeTrackerPro-iOS.png" width="200" alt="Timetracker screenshot 02" /> |
-| Time Entry — Preview  | <img src="screenshots/iOS/03TimeTrackerPro-iOS.png" width="200" alt="Timetracker screenshot 03" /> |
-| Active Tasks          | <img src="screenshots/iOS/04TimeTrackerPro-iOS.png" width="200" alt="Timetracker screenshot 04" /> |
-| Day Ended             | <img src="screenshots/iOS/06TimeTrackerPro-iOS.png" width="200" alt="Timetracker screenshot 06" /> |
-| Archive               | <img src="screenshots/iOS/07TimeTrackerPro-iOS.png" width="200" alt="Timetracker screenshot 07" /> |
+| Dashboard             | <img src="screenshots/iOS/01Timetraked-iOS.png" width="200" alt="Timetracker screenshot 01" /> |
+| Time Entry — Markdown | <img src="screenshots/iOS/02Timetraked-iOS.png" width="200" alt="Timetracker screenshot 02" /> |
+| Time Entry — Preview  | <img src="screenshots/iOS/03Timetraked-iOS.png" width="200" alt="Timetracker screenshot 03" /> |
+| Active Tasks          | <img src="screenshots/iOS/04Timetraked-iOS.png" width="200" alt="Timetracker screenshot 04" /> |
+| Day Ended             | <img src="screenshots/iOS/06Timetraked-iOS.png" width="200" alt="Timetracker screenshot 06" /> |
+| Archive               | <img src="screenshots/iOS/07Timetraked-iOS.png" width="200" alt="Timetracker screenshot 07" /> |

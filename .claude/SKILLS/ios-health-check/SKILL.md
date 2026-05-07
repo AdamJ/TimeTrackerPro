@@ -6,7 +6,7 @@ description: >
   code, Capacitor config, or Xcode project files.
 ---
 
-# iOS Environment Health Check — TimeTracker Pro
+# iOS Environment Health Check — Timetraked
 
 ## When to Use
 

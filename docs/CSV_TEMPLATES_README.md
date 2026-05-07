@@ -1,18 +1,21 @@
-# CSV Import Templates for TimeTrackerPro
+# CSV Import Templates for Timetraked
 
 ## Available Templates
 
 ### 1. **Blank Template** (`time-tracker-blank-template.csv`)
+
 - Contains only the header row with all required column names
 - Perfect for starting from scratch
 - Headers: `id,user_id,title,description,start_time,end_time,duration,project_id,project_name,client,category_id,category_name,day_record_id,is_current,inserted_at,updated_at`
 
 ### 2. **Example Template** (`time-tracker-import-template.csv`)
+
 - Contains headers plus 2 sample rows showing correct data format
 - Useful for understanding the expected data structure
 - Shows proper timestamp formatting, duration calculation, etc.
 
 ### 3. **Documentation** (`csv-import-guide.md`)
+
 - Complete field reference with descriptions
 - Data type requirements
 - Formatting examples
@@ -34,6 +37,7 @@
 - **Day Grouping**: Tasks with same `day_record_id` are grouped together
 
 ## Quick Example Row
+
 ```csv
 "task-001","user-123","Web Development","Fixed login bug","2025-10-12T09:00:00.000Z","2025-10-12T10:30:00.000Z",5400000,"proj-001","Website Project","Acme Corp","cat-dev","Development","day-2025-10-12",false,"2025-10-12T10:30:00.000Z","2025-10-12T10:30:00.000Z"
 ```

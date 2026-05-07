@@ -1,6 +1,6 @@
 # Authentication and Storage Integration
 
-The TimeTrackerPro app now supports both authenticated and unauthenticated usage:
+The Timetraked app now supports both authenticated and unauthenticated usage:
 
 ## 🔐 Authentication Features
 

@@ -1,5 +1,5 @@
 // src/utils/reportUtils.ts
-// Utility functions for the /report route in TimeTracker Pro.
+// Utility functions for the /report route in Timetraked.
 // Data is sourced via the TimeTrackingContext (which handles both localStorage
 // and Supabase depending on auth state).
 

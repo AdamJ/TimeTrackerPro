@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to TimeTracker Pro will be documented in this file.
+All notable changes to Timetraked will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Persistent report summaries — generated summaries are auto-saved to localStorage
   keyed by week + tone (`ttp_report_{weekKey}_{tone}`); a banner prompts users to
   restore a prior summary when returning to a week/tone combo they've already generated
@@ -20,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   — `src/components/SummaryOutput.tsx`, `public/print.css`
 
 ### Fixed
+
 - Reverted Xcode project filename from `TimeTrackerPro.xcodeproj` back to `App.xcodeproj`
   — `ios/App/App.xcodeproj/` (Capacitor CLI hardcodes `App.xcodeproj`; renaming it broke `npm run sync:ios` with ENOENT on `project.pbxproj`; the Xcode target/product name remains "TimeTrackerPro")
 - Fixed `open:ios` npm script pointing to the old renamed project path
@@ -32,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   — `ios/App/App.xcodeproj/project.pbxproj` (project uses SPM, not CocoaPods; flag was a leftover from Capacitor's original CocoaPods template with no runtime effect)
 
 ### Added
+
 - Capacitor iOS native app scaffolding (Phase 2)
   — `capacitor.config.ts`, `ios/` Xcode project, `package.json` (appId `com.adamjolicoeur.timetrackerpro`, iOS 15+ minimum via SPM, `sync:ios` script combines `build:ios` + `cap sync ios`; `ios/App/App/public` gitignored and regenerated on every sync)
 - Renamed Xcode target and product from "App" to "TimeTrackerPro"
@@ -42,25 +45,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   — `src/components/PageLayout.tsx`, `src/components/PageLayout.test.tsx` (standardizes title + optional actions slot across all six pages; all page components migrated to use it)
 
 ### Fixed
+
 - Carry over incomplete GFM checklist items as todo tasks when a day is archived
   — `src/contexts/TimeTrackingContext.tsx`, `src/contexts/TimeTracking.test.tsx` (unchecked `- [ ]` items from task descriptions are now extracted and appended as new todo tasks on archive; unique IDs and safe functional setState ensure no data loss on rollback)
 
 ### Accessibility
+
 - Added `aria-label` to all icon-only buttons whose visible text label is hidden on mobile viewports: Restore and Edit in `ArchiveItem`, Restore/Delete/Edit in `ArchiveEditDialog` header, per-task Edit/Delete in `ArchiveEditDialog` task table, and Edit/Delete in `ProjectManagement`
 - Replaced `focus:outline-none` with `focus-visible:outline-none` + `focus-visible:ring-2 focus-visible:ring-ring` on Radix `TabsTrigger` elements in `ArchiveItem` — the browser focus ring was previously stripped for all input methods; it is now suppressed only for pointer clicks while remaining fully visible for keyboard navigation
 - Connected `Label`/`Textarea` pairs via `htmlFor`/`id` in `ArchiveEditDialog` (day notes field) and `TaskEditInArchiveDialog` (task description field) so screen readers announce the field label when the input receives focus
 
 ### Code Quality
+
 - Replaced hardcoded Tailwind gray color classes (`text-gray-900`, `text-gray-600/500/400`) with theme variables (`text-foreground`, `text-muted-foreground`) across `ArchiveItem`, `ArchiveEditDialog`, `TaskEditInArchiveDialog`, `ProjectManagement`, and `ExportDialog`
 - Replaced hardcoded red color classes (`text-red-*`, `bg-red-*`, `border-red-*`) with `text-destructive`, `bg-destructive/5`, and `border-destructive/20` in the `ArchiveEditDialog` delete confirmation card, `ExportDialog` import error alert, and `TaskEditInArchiveDialog` required-field indicator; switched icon-only Delete buttons to `variant="destructive"` in `ArchiveEditDialog` and `ProjectManagement`
 - Replaced `data-[state=active]:border-blue-600` with `data-[state=active]:border-primary` on tab triggers in `ArchiveItem`; replaced `bg-gray-50 dark:bg-gray-800` note/summary panels with `bg-muted`
 - Fixed inline style violations: `style={{ marginBottom: '1rem' }}` → `className="mb-4"` in `ArchiveEditDialog`; `style={{ display: 'none' }}` → `className="hidden"` in `ExportDialog`
 
 ### Performance
+
 - **Archive page summary stats** (`src/pages/Archive.tsx`): Wrapped the four summary-stat `reduce()` calls (total hours, billable hours, non-billable hours, revenue) in a single `useMemo` keyed on `[filteredDays, projects, categories]`; previously they recomputed on every render regardless of whether the underlying data had changed. Also replaced unstable context method wrappers with stable module-level imports from `calculationUtils` so the memo invalidates only when data actually changes.
 - **Archive item row rendering** (`src/components/ArchiveItem.tsx`): Per-day stats (`hoursWorked`, `billableHours`, `nonBillableHours`, `revenue`) are now computed in a `useMemo([day, projects, categories])` instead of inline on every render; also eliminates the duplicate `getRevenueForDay()` call that previously appeared twice in the revenue badge. Project and category lookups in the task table now use `Map.get()` (O(1)) instead of `Array.find()` (O(n)) per row via `useMemo`-cached lookup maps. The daily-summary `generateDailySummary()` call is memoized on `day.tasks` so it only runs when task descriptions change.
 
 ### Added
+
 - Native HTML5 time picker component (`TimePicker`) following web standards and a11y best practices
   - Uses `<input type="time">` for familiar, intuitive UX
   - **15-minute intervals**: Time selection restricted to :00, :15, :30, and :45 using HTML5 `step` attribute
@@ -70,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Styled with shadcn/ui design tokens for consistency
 
 ### Changed
+
 - **Improved time selection UX**: Replaced custom scroll-wheel time picker with native HTML5 time inputs
   - Follows standard web conventions for familiar, intuitive user experience
   - Better desktop experience with keyboard-accessible inputs
@@ -83,11 +92,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed duplicate `generateTimeOptions()` helper functions from all dialog components
 
 ### Security
+
 - Removed unsafe `as string` type assertions on `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `src/lib/supabase.ts` — the assertions hid the `string | undefined` type from TypeScript, preventing the compiler from enforcing the existing null-guard; variables are now correctly typed so the `?? ''` fallback and early warn are properly enforced
 - Gated `getDbCallStats`, `resetDbCallStats`, and `clearDbCallLog` window attachments behind `import.meta.env.DEV` in `src/lib/supabase.ts` — internal database call telemetry was previously exposed to anyone with DevTools access in production; Vite now tree-shakes the attachment block out of production bundles
 - Added explicit radix `10` to `parseInt()` call in CSV import (`src/utils/exportUtils.ts`) — implicit radix is deprecated and could silently misparse duration strings with leading zeros
 
 ### Removed
+
 - Deleted `src/hooks/.useReportSummary-Claude.ts` — unused development dotfile that contained a direct Anthropic API key reference
 - Deleted `src/utils/supabase.ts` — duplicate Supabase client that was never imported, creating a redundant connection
 - Deleted `src/hooks/useRealtimeSync.ts` — hook whose body was fully disabled (`return;` / `return () => {}`) and was only referenced in a commented-out call
@@ -96,6 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `addToQueue`, `offlineQueue`, `processQueue`, and `SYNC_REQUIRED_EVENT` from `OfflineContext` — the offline action queue was implemented but `addToQueue` was never called, so the queue was permanently empty and the sync event was never dispatched; `OfflineContext` now exposes only `isOnline` with online/offline toast notifications
 
 ### Fixed
+
 - Fixed online reconnection never triggering a backend sync for authenticated users
   — `src/contexts/TimeTrackingContext.tsx` (added native `online` window event listener that calls `forceSyncToDatabase()` when authenticated; the previous offline-queue mechanism was broken because the queue was never populated, so reconnection silently dropped any pending changes)
 - Fixed `trackAuthCall` stub recording no log details
@@ -111,6 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.21.1] - 2026-02-06
 
 ### Initial Release Features
+
 - Daily time tracking with start/stop functionality
 - Task management with real-time duration tracking
 - Rich text support with GitHub Flavored Markdown
@@ -134,10 +147,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Version History
 
 ### Versioning Guidelines
+
 - **Major** (X.0.0): Breaking changes, major feature overhauls
 - **Minor** (0.X.0): New features, significant improvements, non-breaking changes
 - **Patch** (0.0.X): Bug fixes, minor improvements, documentation updates
 
 ### Links
+
 - [Unreleased Changes](https://github.com/AdamJ/TimeTrackerPro/compare/v0.21.1...HEAD)
 - [Version 0.21.1](https://github.com/AdamJ/TimeTrackerPro/releases/tag/v0.21.1)

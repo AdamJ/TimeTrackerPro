@@ -1,7 +1,7 @@
-// TimeTrackerPro Data Recovery Script
+// Timetraked Data Recovery Script
 // This script helps recover missing task data from archived days
 
-console.log("🔍 TimeTrackerPro Data Recovery Tool");
+console.log("🔍 Timetraked Data Recovery Tool");
 console.log("===================================");
 
 // Check localStorage for any archived data
@@ -92,5 +92,5 @@ if (typeof window !== 'undefined') {
 } else {
     // Running in Node.js
     console.log("This script should be run in the browser console.");
-    console.log("Open your TimeTrackerPro app and paste this script into the console.");
+    console.log("Open your Timetraked app and paste this script into the console.");
 }

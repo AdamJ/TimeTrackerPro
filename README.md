@@ -1,4 +1,6 @@
-# TimeTracker Pro
+# Timetraked
+
+> Previously TimeTracker Pro
 
 A Progressive Web App (PWA) for time tracking built with React, TypeScript, and Tailwind CSS. Installable on desktop and mobile with full offline support. Built for freelancers, consultants, and professionals who need to track time, manage projects, and generate invoices.
 
