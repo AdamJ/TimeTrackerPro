@@ -88,16 +88,18 @@ const SiteNavigationMenu = () => {
                 <NavLink to="/report" className={({ isActive }) => getNavLinkClasses(isActive)}>Report</NavLink>
               </Item>
             )}
-            <Item className="hidden md:flex">
-              <Button
-                onClick={handlePrint}
-                variant="outline"
-                className="flex items-center space-x-2"
-              >
-                <Printer className="w-4 h-4" />
-                <span className="hidden lg:block">Print</span>
-              </Button>
-            </Item>
+            {!isIosBuild && (
+              <Item className="hidden md:flex">
+                <Button
+                  onClick={handlePrint}
+                  variant="outline"
+                  className="flex items-center space-x-2"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span className="hidden lg:block">Print</span>
+                </Button>
+              </Item>
+            )}
             <Item className="hidden md:flex">
               <NavLink
                 to="/settings"
