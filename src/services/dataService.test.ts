@@ -26,7 +26,7 @@ describe('DataService', () => {
 
         await service.saveCurrentDay(mockState);
 
-        const saved = localStorage.getItem('traktimer_current_day');
+        const saved = localStorage.getItem('timetracker_current_day');
         expect(saved).toBeTruthy();
         const parsed = JSON.parse(saved!);
         expect(parsed.isDayStarted).toBe(true);
@@ -91,7 +91,7 @@ describe('DataService', () => {
 
         await service.saveArchivedDays(mockArchivedDays);
 
-        const saved = localStorage.getItem('traktimer_archived_days');
+        const saved = localStorage.getItem('timetracker_archived_days');
         expect(saved).toBeTruthy();
 
         const parsed = JSON.parse(saved!);
