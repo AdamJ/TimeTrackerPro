@@ -176,11 +176,12 @@ Task descriptions support **GitHub Flavored Markdown (GFM)**:
 
 ### How Data Storage Works
 
-Timetraked uses a **manual sync** approach optimized for single-device usage:
+Timetraked uses an **action-triggered save** approach optimized for single-device usage:
 
 1. **In-Memory First** — changes update React state immediately.
-2. **Critical Event Saves** — data persists only on day end, window close, or manual sync.
-3. **No Auto-Save** — prevents unnecessary API calls and rate limiting.
+2. **Action Saves** — every task mutation (start, update, delete) and day lifecycle event (start day, end day) triggers an immediate `saveCurrentDay()` call with the freshly computed state, keeping localStorage and Supabase in sync without a debounce delay.
+3. **Emergency Backups** — `visibilitychange` (iOS app backgrounding) and `beforeunload` (browser close) write a synchronous localStorage snapshot as a last-resort fallback before JavaScript execution is suspended.
+4. **Manual Sync** — the sync button in the navigation saves all data types (tasks, projects, categories, archived days, todos) in one batch, useful after recovering from an error.
 
 When you sign in, your `localStorage` data automatically migrates to Supabase (timestamps compared to prevent overwriting newer data, no data loss). When you sign out, Supabase data syncs back to `localStorage`.
 
@@ -294,7 +295,7 @@ DataService.save()
 localStorage OR Supabase
 ```
 
-**Critical save events:** day end (`postDay()`), window close (`beforeunload`), manual sync (`forceSyncToDatabase()`).
+**Save triggers:** every task mutation and day lifecycle event calls `dataService.saveCurrentDay()` directly; `postDay()` additionally saves archived days and todos; `visibilitychange` and `beforeunload` write synchronous localStorage backups; `forceSyncToDatabase()` (manual sync) saves all data types in parallel.
 
 **Service Worker caching:**
 
