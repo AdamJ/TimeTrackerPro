@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed iOS task data loss where tasks entered during a session were not present after closing the app
+  — `src/contexts/TimeTrackingContext.tsx` (React batches `setState` calls asynchronously, so `saveImmediately()` was reading a stale `latestStateRef` that did not yet include the newly added task; all mutation functions — `startDay`, `startNewTask`, `endDay`, `updateTask`, `deleteTask` — now compute state synchronously and call `dataService.saveCurrentDay()` directly with the correct snapshot; `updateTask` and `deleteTask` were not persisting at all previously; added `visibilitychange` listener as a synchronous `localStorage` backup for iOS app backgrounding since `beforeunload` does not fire reliably in Capacitor/WKWebView; fixed the existing `beforeunload` backup which was missing `_v: SCHEMA_VERSION`, causing it to be discarded on next load by the schema version check in `getCurrentDay()`)
+
 - Reverted Xcode project filename from `TimeTrackerPro.xcodeproj` back to `App.xcodeproj`
   — `ios/App/App.xcodeproj/` (Capacitor CLI hardcodes `App.xcodeproj`; renaming it broke `npm run sync:ios` with ENOENT on `project.pbxproj`; the Xcode target/product name remains "TimeTrackerPro")
 - Fixed `open:ios` npm script pointing to the old renamed project path
