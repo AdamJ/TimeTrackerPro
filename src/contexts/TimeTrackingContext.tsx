@@ -26,6 +26,7 @@ import {
   parseCSVImport
 } from '@/utils/exportUtils';
 import { parseTaskChecklist } from '@/utils/checklistUtils';
+import { SCHEMA_VERSION } from '@/services/localStorageService';
 
 export interface Task {
   id: string;
@@ -468,7 +469,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         localStorage.setItem(
           STORAGE_KEYS.CURRENT_DAY,
-          JSON.stringify({ isDayStarted, dayStartTime, tasks, currentTask })
+          JSON.stringify({ isDayStarted, dayStartTime, tasks, currentTask, _v: SCHEMA_VERSION })
         );
       } catch {
         // localStorage unavailable (quota exceeded, private mode); best effort only.
@@ -478,6 +479,27 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [dataService, isDayStarted, tasks, currentTask, dayStartTime]);
+
+  // iOS/Capacitor apps don't reliably fire beforeunload when backgrounded or killed.
+  // visibilitychange fires when the app is suspended, giving us a last chance to
+  // write a synchronous backup before JavaScript execution is frozen.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== "hidden") return;
+      if (!isDayStarted && tasks.length === 0) return;
+      try {
+        localStorage.setItem(
+          STORAGE_KEYS.CURRENT_DAY,
+          JSON.stringify({ isDayStarted, dayStartTime, tasks, currentTask, _v: SCHEMA_VERSION })
+        );
+      } catch {
+        // best effort
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [isDayStarted, dayStartTime, tasks, currentTask]);
 
   // Sync to backend when coming back online
   useEffect(() => {
@@ -510,36 +532,40 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsDayStarted(true);
     setDayStartTime(roundedTime);
     setHasUnsavedChanges(true);
+
+    if (dataService) {
+      dataService.saveCurrentDay({ isDayStarted: true, dayStartTime: roundedTime, currentTask: null, tasks })
+        .catch(error => console.error("❌ Error saving after starting day:", error));
+    }
   };
 
   const endDay = () => {
-
+    let finalTasks = tasks;
     if (currentTask) {
-      // End the current task
-      const updatedTask = {
+      const endedTask = {
         ...currentTask,
         endTime: new Date(),
         duration: new Date().getTime() - currentTask.startTime.getTime()
       };
-      setTasks(prev =>
-        prev.map(t => (t.id === currentTask.id ? updatedTask : t))
-      );
+      finalTasks = tasks.map(t => (t.id === currentTask.id ? endedTask : t));
+      setTasks(finalTasks);
       setCurrentTask(null);
     }
     setIsDayStarted(false);
     setHasUnsavedChanges(true);
-    // Save immediately since this is a critical action
-    saveImmediately()
-      .then(() => {})
-      .catch(error => {
-        console.error('❌ Error saving state after ending day:', error);
-        toast({
-          title: 'Save Failed',
-          description: 'Your day was ended but the data could not be saved. Please use Manual Sync to retry.',
-          variant: 'destructive',
-          duration: 7000
+    // Save with freshly computed state to avoid reading from stale latestStateRef
+    if (dataService) {
+      dataService.saveCurrentDay({ isDayStarted: false, dayStartTime, currentTask: null, tasks: finalTasks })
+        .catch(error => {
+          console.error("❌ Error saving state after ending day:", error);
+          toast({
+            title: "Save Failed",
+            description: "Your day was ended but the data could not be saved. Please use Manual Sync to retry.",
+            variant: "destructive",
+            duration: 7000
+          });
         });
-      });
+    }
   };
 
   const startNewTask = (
@@ -551,16 +577,16 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   ) => {
     const now = new Date();
 
-    // End current task if exists
+    // End current task if exists and compute the updated task list synchronously
+    let baseTasks = tasks;
     if (currentTask) {
-      const updatedTask = {
+      const endedTask = {
         ...currentTask,
         endTime: now,
         duration: now.getTime() - currentTask.startTime.getTime()
       };
-      setTasks(prev =>
-        prev.map(t => (t.id === currentTask.id ? updatedTask : t))
-      );
+      baseTasks = tasks.map(t => (t.id === currentTask.id ? endedTask : t));
+      setTasks(baseTasks);
     }
 
     // Determine start time: use dayStartTime for first task, otherwise use current time
@@ -578,29 +604,43 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       category
     };
 
-    setTasks(prev => [...prev, newTask]);
+    const updatedTasks = [...baseTasks, newTask];
+    setTasks(updatedTasks);
     setCurrentTask(newTask);
     setHasUnsavedChanges(true);
-    // Save immediately since this is a critical action
-    saveImmediately();
+    // Save with freshly computed state to avoid reading from stale latestStateRef
+    if (dataService) {
+      dataService.saveCurrentDay({ isDayStarted, dayStartTime, currentTask: newTask, tasks: updatedTasks })
+        .catch(error => console.error("❌ Error saving after starting task:", error));
+    }
   };
 
   const updateTask = (taskId: string, updates: Partial<Task>) => {
-    setTasks(prev =>
-      prev.map(task => (task.id === taskId ? { ...task, ...updates } : task))
-    );
+    const updatedTasks = tasks.map(task => (task.id === taskId ? { ...task, ...updates } : task));
+    const updatedCurrentTask = currentTask?.id === taskId ? { ...currentTask, ...updates } : currentTask;
+    setTasks(updatedTasks);
     if (currentTask?.id === taskId) {
-      setCurrentTask(prev => (prev ? { ...prev, ...updates } : null));
+      setCurrentTask(updatedCurrentTask ?? null);
     }
     setHasUnsavedChanges(true);
+    if (dataService) {
+      dataService.saveCurrentDay({ isDayStarted, dayStartTime, currentTask: updatedCurrentTask ?? null, tasks: updatedTasks })
+        .catch(error => console.error("❌ Error saving after updating task:", error));
+    }
   };
 
   const deleteTask = (taskId: string) => {
-    setTasks(prev => prev.filter(task => task.id !== taskId));
+    const updatedTasks = tasks.filter(task => task.id !== taskId);
+    const updatedCurrentTask = currentTask?.id === taskId ? null : currentTask;
+    setTasks(updatedTasks);
     if (currentTask?.id === taskId) {
       setCurrentTask(null);
     }
     setHasUnsavedChanges(true);
+    if (dataService) {
+      dataService.saveCurrentDay({ isDayStarted, dayStartTime, currentTask: updatedCurrentTask, tasks: updatedTasks })
+        .catch(error => console.error("❌ Error saving after deleting task:", error));
+    }
   };
 
   const postDay = async (notes?: string) => {
