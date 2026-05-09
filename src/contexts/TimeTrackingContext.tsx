@@ -535,6 +535,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (dataService) {
       dataService.saveCurrentDay({ isDayStarted: true, dayStartTime: roundedTime, currentTask: null, tasks })
+        .then(() => setLastSyncTime(new Date()))
         .catch(error => console.error("❌ Error saving after starting day:", error));
     }
   };
@@ -556,6 +557,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     // Save with freshly computed state to avoid reading from stale latestStateRef
     if (dataService) {
       dataService.saveCurrentDay({ isDayStarted: false, dayStartTime, currentTask: null, tasks: finalTasks })
+        .then(() => setLastSyncTime(new Date()))
         .catch(error => {
           console.error("❌ Error saving state after ending day:", error);
           toast({
@@ -611,6 +613,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     // Save with freshly computed state to avoid reading from stale latestStateRef
     if (dataService) {
       dataService.saveCurrentDay({ isDayStarted, dayStartTime, currentTask: newTask, tasks: updatedTasks })
+        .then(() => setLastSyncTime(new Date()))
         .catch(error => console.error("❌ Error saving after starting task:", error));
     }
   };
@@ -625,6 +628,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setHasUnsavedChanges(true);
     if (dataService) {
       dataService.saveCurrentDay({ isDayStarted, dayStartTime, currentTask: updatedCurrentTask ?? null, tasks: updatedTasks })
+        .then(() => setLastSyncTime(new Date()))
         .catch(error => console.error("❌ Error saving after updating task:", error));
     }
   };
@@ -639,6 +643,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setHasUnsavedChanges(true);
     if (dataService) {
       dataService.saveCurrentDay({ isDayStarted, dayStartTime, currentTask: updatedCurrentTask, tasks: updatedTasks })
+        .then(() => setLastSyncTime(new Date()))
         .catch(error => console.error("❌ Error saving after deleting task:", error));
     }
   };
