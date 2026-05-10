@@ -1,0 +1,73 @@
+import type { DayRecord, Project, TodoItem } from "@/contexts/TimeTrackingContext";
+import type { TaskCategory } from "@/config/categories";
+import type { DataService, CurrentDayData } from "@/services/dataService";
+import { saveCurrentDay, getCurrentDay } from "./currentDay";
+import {
+	saveArchivedDays,
+	getArchivedDays,
+	updateArchivedDay,
+	deleteArchivedDay
+} from "./archivedDays";
+import { saveProjects, getProjects } from "./projects";
+import { saveCategories, getCategories } from "./categories";
+import { saveTodos, getTodos } from "./todos";
+
+export { STORAGE_KEYS, SCHEMA_VERSION } from "./constants";
+
+export class LocalStorageService implements DataService {
+	saveCurrentDay(data: CurrentDayData): Promise<void> {
+		return saveCurrentDay(data);
+	}
+
+	getCurrentDay(): Promise<CurrentDayData | null> {
+		return getCurrentDay();
+	}
+
+	saveArchivedDays(days: DayRecord[]): Promise<void> {
+		return saveArchivedDays(days);
+	}
+
+	getArchivedDays(): Promise<DayRecord[]> {
+		return getArchivedDays();
+	}
+
+	updateArchivedDay(dayId: string, updates: Partial<DayRecord>): Promise<void> {
+		return updateArchivedDay(dayId, updates);
+	}
+
+	deleteArchivedDay(dayId: string): Promise<void> {
+		return deleteArchivedDay(dayId);
+	}
+
+	saveProjects(projects: Project[]): Promise<void> {
+		return saveProjects(projects);
+	}
+
+	getProjects(): Promise<Project[]> {
+		return getProjects();
+	}
+
+	saveCategories(categories: TaskCategory[]): Promise<void> {
+		return saveCategories(categories);
+	}
+
+	getCategories(): Promise<TaskCategory[]> {
+		return getCategories();
+	}
+
+	saveTodos(todos: TodoItem[]): Promise<void> {
+		return saveTodos(todos);
+	}
+
+	getTodos(): Promise<TodoItem[]> {
+		return getTodos();
+	}
+
+	async migrateFromLocalStorage(): Promise<void> {
+		// No-op for localStorage service
+	}
+
+	async migrateToLocalStorage(): Promise<void> {
+		// No-op for localStorage service — already in localStorage
+	}
+}
