@@ -45,6 +45,8 @@ jobs:
 
       - name: Build iOS project
         run: npm run build:ios
+        env:
+          VITE_IOS_BUILD: "true"
 
       - name: Upload test results
         if: always()
