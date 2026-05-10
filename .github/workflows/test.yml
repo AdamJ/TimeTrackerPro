@@ -8,6 +8,7 @@ on:
 
 jobs:
   test:
+    if: ${{ !(github.event_name == 'push' && github.actor == 'github-actions[bot]' && startsWith(github.event.head_commit.message, 'chore: bump version to ')) }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -41,6 +42,9 @@ jobs:
         env:
           VITE_SUPABASE_URL: https://test.supabase.co
           VITE_SUPABASE_ANON_KEY: test-key
+
+      - name: Build iOS project
+        run: npm run build:ios
 
       - name: Upload test results
         if: always()
