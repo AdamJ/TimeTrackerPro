@@ -8,9 +8,64 @@ on:
       - main
 
 jobs:
-  release:
+  detect:
     # Only run if PR was merged
     if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    outputs:
+      bump_type: ${{ steps.bump_type.outputs.type }}
+
+    steps:
+      - name: Determine version bump type
+        id: bump_type
+        run: |
+          # Determine source of commit/PR title. For merged PRs prefer the PR title.
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            COMMIT_MSG=$(node -e "const e=require(process.env.GITHUB_EVENT_PATH); console.log((e && e.pull_request && e.pull_request.title) || '');")
+          else
+            COMMIT_MSG=$(git log -1 --pretty=%B)
+          fi
+          echo "Commit message / PR title: $COMMIT_MSG"
+
+          # Determine bump type based on conventional commit prefix (support optional scope)
+          if echo "$COMMIT_MSG" | grep -qiE "^(major)(\([^)]*\))?:"; then
+            echo "type=major" >> $GITHUB_OUTPUT
+            echo "Version bump: MAJOR"
+          elif echo "$COMMIT_MSG" | grep -qiE "^(feat|feature|fix)(\([^)]*\))?:"; then
+            echo "type=minor" >> $GITHUB_OUTPUT
+            echo "Version bump: MINOR (feat/feature)"
+          elif echo "$COMMIT_MSG" | grep -qiE "^patch(\([^)]*\))?:"; then
+            echo "type=patch" >> $GITHUB_OUTPUT
+            echo "Version bump: PATCH (fix)"
+          elif echo "$COMMIT_MSG" | grep -qiE "^(bump|maint|refactor|a11y)(\([^)]*\))?:"; then
+            echo "type=patch" >> $GITHUB_OUTPUT
+            echo "Version bump: PATCH"
+          else
+            echo "type=none" >> $GITHUB_OUTPUT
+            echo "No version bump (commit doesn't match versioning patterns)"
+          fi
+
+  # This job only exists for major bumps and targets the protected environment.
+  # GitHub will pause here and send an approval request to the required reviewers
+  # configured on the "major-release" environment in Settings → Environments.
+  approve-major:
+    needs: detect
+    if: needs.detect.outputs.bump_type == 'major'
+    runs-on: ubuntu-latest
+    environment: major-release
+    steps:
+      - name: Awaiting approval
+        run: echo "Major version bump approved. Proceeding with release."
+
+  release:
+    needs: [detect, approve-major]
+    # Run when: bump type is non-major and non-none, OR when approve-major succeeded.
+    # needs.approve-major.result is 'skipped' for non-major runs, so we allow that through.
+    if: |
+      always() &&
+      needs.detect.result == 'success' &&
+      needs.detect.outputs.bump_type != 'none' &&
+      (needs.approve-major.result == 'success' || needs.approve-major.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -41,37 +96,10 @@ jobs:
           echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "Current version: $CURRENT_VERSION"
 
-      - name: Determine version bump type
-        id: bump_type
-        run: |
-          # Determine source of commit/PR title. For merged PRs prefer the PR title.
-          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            COMMIT_MSG=$(node -e "const e=require(process.env.GITHUB_EVENT_PATH); console.log((e && e.pull_request && e.pull_request.title) || '');")
-          else
-            COMMIT_MSG=$(git log -1 --pretty=%B)
-          fi
-          echo "Commit message / PR title: $COMMIT_MSG"
-
-          # Determine bump type based on conventional commit prefix (support optional scope)
-          if echo "$COMMIT_MSG" | grep -qiE "^(feat|feature|fix)(\([^)]*\))?:"; then
-            echo "type=minor" >> $GITHUB_OUTPUT
-            echo "Version bump: MINOR (feat/feature)"
-          elif echo "$COMMIT_MSG" | grep -qiE "^patch(\([^)]*\))?:"; then
-            echo "type=patch" >> $GITHUB_OUTPUT
-            echo "Version bump: PATCH (fix)"
-          elif echo "$COMMIT_MSG" | grep -qiE "^(bump|maint|chore|refactor)(\([^)]*\))?:"; then
-            echo "type=patch" >> $GITHUB_OUTPUT
-            echo "Version bump: PATCH"
-          else
-            echo "type=none" >> $GITHUB_OUTPUT
-            echo "No version bump (commit doesn't match versioning patterns)"
-          fi
-
       - name: Bump version
         id: new_version
-        if: steps.bump_type.outputs.type != 'none'
         run: |
-          BUMP_TYPE=${{ steps.bump_type.outputs.type }}
+          BUMP_TYPE=${{ needs.detect.outputs.bump_type }}
 
           # Bump the version
           npm version $BUMP_TYPE --no-git-tag-version
@@ -82,7 +110,6 @@ jobs:
           echo "New version: $NEW_VERSION"
 
       - name: Commit version bump
-        if: steps.bump_type.outputs.type != 'none'
         run: |
           git add package.json package-lock.json || true
           if git diff --cached --quiet; then
@@ -93,34 +120,53 @@ jobs:
           fi
 
       - name: Create Git tag
-        if: steps.bump_type.outputs.type != 'none'
         run: |
           git tag "v${{ steps.new_version.outputs.version }}"
           git push --tags
 
       - name: Generate changelog
         id: changelog
-        if: steps.bump_type.outputs.type != 'none'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Get the most recent tag (if any)
+          # Get the date of the previous tag so we can filter PRs merged after it
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 
-          if [ -z "$PREVIOUS_TAG" ]; then COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
-
-          else COMMITS=$(git log "$PREVIOUS_TAG"..HEAD --pretty=format:"- %s (%h)" --no-merges)
-
+          if [ -z "$PREVIOUS_TAG" ]; then
+            SINCE_DATE="2000-01-01T00:00:00Z"
+          else
+            SINCE_DATE=$(git log -1 --format=%aI "$PREVIOUS_TAG")
           fi
 
-          # Create changelog content
-          CHANGELOG="## Changes in v${{ steps.new_version.outputs.version }}\n\n$COMMITS"
+          echo "Fetching PRs merged into main since: $SINCE_DATE"
+
+          # Fetch merged PRs since the previous tag, ordered oldest-first
+          PRS=$(gh pr list \
+            --state merged \
+            --base main \
+            --json number,title,body,mergedAt,author \
+            --jq "sort_by(.mergedAt) | [.[] | select(.mergedAt > \"$SINCE_DATE\")]")
+
+          PR_COUNT=$(echo "$PRS" | jq 'length')
+          echo "Found $PR_COUNT pull request(s)"
+
+          # Build the changelog file
+          echo "## Changes in v${{ steps.new_version.outputs.version }}" > /tmp/changelog.md
+          echo "" >> /tmp/changelog.md
+
+          if [ "$PR_COUNT" -eq 0 ]; then
+            echo "_No pull requests found since the last release._" >> /tmp/changelog.md
+          else
+            echo "$PRS" | jq -r '.[] | "### [#\(.number)] \(.title)\n\n\(if .body and (.body | length) > 0 then .body else "_No description provided._" end)\n\n---\n"' \
+              >> /tmp/changelog.md
+          fi
 
           # Save to output (multiline)
           echo "content<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          cat /tmp/changelog.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
-        if: steps.bump_type.outputs.type != 'none'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.new_version.outputs.version }}
@@ -131,25 +177,13 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Summary
-        if: steps.bump_type.outputs.type != 'none'
         run: |
-          echo "## 🚀 Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Previous Version:** ${{ steps.current_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- **New Version:** ${{ steps.new_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Bump Type:** ${{ steps.bump_type.outputs.type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bump Type:** ${{ needs.detect.outputs.bump_type }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag:** v${{ steps.new_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Changelog" >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.changelog.outputs.content }}" >> $GITHUB_STEP_SUMMARY
-
-      - name: No version bump
-        if: steps.bump_type.outputs.type == 'none'
-        run: |
-          echo "## ℹ️ No Version Bump" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "The commit message doesn't match any versioning patterns:" >> $GITHUB_STEP_SUMMARY
-          echo "- \`feat:\` or \`fix:\` for minor version bump" >> $GITHUB_STEP_SUMMARY
-          echo "- \`patch:\`, \`bump:\`, \`maint:\`, or \`refactor:\` for patch version bump" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Current version remains: **${{ steps.current_version.outputs.version }}**" >> $GITHUB_STEP_SUMMARY

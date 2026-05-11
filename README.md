@@ -100,6 +100,22 @@ Detailed documentation lives in [README-EXT.md](README-EXT.md):
 - [Documentation Index](README-EXT.md#documentation-index) — links to all docs
 - [iOS Screenshots](README-EXT.md#ios-screenshots)
 
+### Contributing
+
+When creating an issue or pull request, utilize the templates provided by this repository.
+
+When creating a pull request, make sure that the commit message contains one of the accepted prefixes:
+
+| Prefix | Type | Release |
+| ---- | ---- | ---- |
+| `major` | **MAJOR** | Runs _after_ approval |
+| `feat:` / `feature:` / `fix:` | **MINOR (FIX/FEATURE)** | Runs _without_ approval |
+| `patch:` | **PATCH (FIX)** | Runs _without_ approval |
+| `bump:` / `maint:` / `refactor:` / `a11y:` | **PATCH:** | Runs _without_ approval |
+| `docs:` | - | No release |
+
+> **MAJOR** version bumps require approval from code owners.
+
 ---
 
 ## Changelog

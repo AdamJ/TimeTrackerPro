@@ -398,8 +398,18 @@ refactor/area-name
 # Format: <type>: <description>
 git commit -m "feat: add billable category option"
 git commit -m "fix: resolve data recovery issue"
-# Types: feat, fix, refactor, docs, style, test, chore
+git commit -m "refactor: split localStorageService into modules"
 ```
+
+**Release-triggering prefixes** (used in PR titles — determines CI version bump):
+
+| Prefix | Bump | Approval required? |
+| --- | --- | --- |
+| `major:` | Major | Yes (code owner via `major-release` environment) |
+| `feat:` / `feature:` / `fix:` | Minor | No |
+| `patch:` | Patch | No |
+| `bump:` / `maint:` / `refactor:` / `a11y:` | Patch | No |
+| `docs:` / `chore:` / others | None | — |
 
 **Pull Requests:** Title format `[Timetraked] Descriptive Title`. See [agents/pull_requests.md](agents/pull_requests.md) for full guidelines.
 

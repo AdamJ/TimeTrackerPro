@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Contributing guidelines section in README with commit prefix table and approval requirements
+  — `README.md` (documents `major`/`feat`/`fix`/`patch`/`bump`/`maint`/`refactor`/`a11y`/`docs` prefixes and which trigger releases)
 - Persistent report summaries — generated summaries are auto-saved to localStorage
   keyed by week + tone (`ttp_report_{weekKey}_{tone}`); a banner prompts users to
   restore a prior summary when returning to a week/tone combo they've already generated
@@ -19,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced export actions — Download .txt (slugified filename) and Print/PDF button
   alongside existing Copy; print mode scopes output to summary region only
   — `src/components/SummaryOutput.tsx`, `public/print.css`
+
+### Changed
+
+- Refactored release CI workflow into three separate jobs: `detect`, `approve-major`, `release`
+  — `.github/workflows/release.yml` (bump type detection runs in its own job and passes output via `needs`; major releases require approval via the `major-release` GitHub environment; changelog generation switched from raw git commits to `gh pr list` to include PR titles and descriptions)
+- Added `major` bump prefix and `a11y` patch prefix to release detection; removed `chore` as a release trigger
+  — `.github/workflows/release.yml`
 
 ### Fixed
 
