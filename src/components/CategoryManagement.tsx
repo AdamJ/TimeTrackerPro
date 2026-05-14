@@ -163,9 +163,12 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 							<CardContent>
 								<form onSubmit={handleSubmit} className="space-y-4">
 									<div>
-										<Label htmlFor="name">Category Name *</Label>
+										<Label htmlFor="name">
+											Category Name <span className="text-destructive" aria-hidden="true">*</span>
+										</Label>
 										<Input
 											id="name"
+											aria-required="true"
 											value={formData.name}
 											onChange={(e) =>
 												setFormData((prev) => ({
