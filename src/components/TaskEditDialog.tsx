@@ -352,7 +352,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                                     )?.name
                                   }
                                 </span>
-                                <span className="text-sm text-gray-500">
+                                <span className="text-sm text-muted-foreground">
                                   {
                                     projects.find(
                                       p => p.id === formData.project
@@ -371,7 +371,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                             <SelectItem key={project.id} value={project.id}>
                               <div className="flex flex-col">
                                 <span>{project.name}</span>
-                                <span className="text-sm text-gray-500">
+                                <span className="text-sm text-muted-foreground">
                                   {project.client}
                                 </span>
                               </div>
@@ -389,13 +389,13 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Time Adjustment</CardTitle>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Times are automatically rounded to the nearest 15-minute
                     interval
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="text-sm text-gray-600 mb-4">
+                  <div className="text-sm text-muted-foreground mb-4">
                     <p>Date: {formatDate(task.startTime)}</p>
                   </div>
 

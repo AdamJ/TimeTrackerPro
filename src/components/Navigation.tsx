@@ -51,10 +51,10 @@ const SiteNavigationMenu = () => {
       <NavigationMenu className="relative bg-gradient-to-br from-gray-50 to-blue-50 print:hidden block">
         <List className="flex items-center justify-between px-4 py-2 md:px-8 md:py-4 m-0 list-none rounded-md bg-white p-1 shadow-sm">
           <Item className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900 flex">
+            <h1 className="text-2xl font-bold text-foreground flex">
               <Link
                 to="/"
-                className="flex items-center text-gray-900 hover:text-blue-700"
+                className="flex items-center text-foreground hover:text-blue-700"
               >
                 <img
                   src="icon.png"
@@ -65,8 +65,8 @@ const SiteNavigationMenu = () => {
               </Link>
             </h1>
             {isDayStarted && tasks.length > 0 && (
-              <span className="ml-4 text-lg text-gray-900 font-bold inline-flex">
-                <CalendarClock className="mr-1 text-gray-900" />
+              <span className="ml-4 text-lg text-foreground font-bold inline-flex">
+                <CalendarClock className="mr-1 text-foreground" />
                 {formatDuration(runningTime)}
               </span>
             )}

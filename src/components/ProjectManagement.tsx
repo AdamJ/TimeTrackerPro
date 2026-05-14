@@ -229,7 +229,7 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 														}
 														className="w-16 h-10"
 													/>
-													<span className="text-sm text-gray-500">
+													<span className="text-sm text-muted-foreground">
 														{formData.color}
 													</span>
 												</div>

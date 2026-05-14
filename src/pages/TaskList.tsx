@@ -106,7 +106,7 @@ const TaskList = () => {
 					</div>
 				) : (
 					<div className="space-y-4">
-						<h2 className="flex justify-between text-lg font-semibold text-foreground">
+						<h2 className="flex justify-between text-lg font-semibold text-foreground" aria-live="polite" aria-atomic="true">
 							Tasks ({tasks.length})
 							{dayStartTime && (
 								<p className="text-sm text-muted-foreground">

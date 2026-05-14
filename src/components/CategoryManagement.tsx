@@ -210,7 +210,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 													}
 													className="w-16 h-10"
 												/>
-												<span className="text-sm text-gray-500">
+												<span className="text-sm text-muted-foreground">
 													{formData.color}
 												</span>
 												<div
@@ -221,7 +221,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 
 											{/* Predefined Colors */}
 											<div className="flex flex-wrap gap-2">
-												<span className="text-sm text-gray-600 w-full">
+												<span className="text-sm text-muted-foreground w-full">
 													Quick colors:
 												</span>
 												{predefinedColors.map((color) => (
@@ -257,7 +257,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 										<Label htmlFor="billable" className="text-sm font-medium">
 											Billable category
 										</Label>
-										<span className="text-xs text-gray-500">
+										<span className="text-xs text-muted-foreground">
 											(Tasks in this category can generate revenue)
 										</span>
 									</div>
@@ -286,8 +286,8 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 						{categories.length === 0 ? (
 							<Card>
 								<CardContent className="text-center py-8">
-									<Tag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-									<p className="text-gray-600">
+									<Tag className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+									<p className="text-muted-foreground">
 										No categories yet. Add your first category to get started!
 									</p>
 								</CardContent>
@@ -310,19 +310,19 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 														/>
 														<div>
 															<div className="flex items-center space-x-2">
-																<h4 className="font-semibold text-gray-900">
+																<h4 className="font-semibold text-foreground">
 																	{category.name}
 																</h4>
 																<span className={`px-2 py-1 text-xs rounded-full ${
 																	category.isBillable !== false
 																		? 'bg-green-100 text-green-800'
-																		: 'bg-gray-100 text-gray-800'
+																		: 'bg-muted text-muted-foreground'
 																}`}>
 																	{category.isBillable !== false ? 'Billable' : 'Non-billable'}
 																</span>
 															</div>
 															{category.description && (
-																<p className="text-sm text-gray-600 mt-1">
+																<p className="text-sm text-muted-foreground mt-1">
 																	{category.description}
 																</p>
 															)}

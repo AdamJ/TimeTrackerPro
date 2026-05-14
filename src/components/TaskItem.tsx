@@ -55,7 +55,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                     title={category.name}
                   />
                 )} */}
-                <h3 className="font-bold text-gray-900">
+                <h3 className="font-bold text-foreground">
                   {task.title}
                 </h3>
                 {isActive && (
@@ -71,7 +71,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 </div>
               )}
 
-              <div className="flex items-center flex-wrap gap-2 text-sm text-gray-600">
+              <div className="flex items-center flex-wrap gap-2 text-sm text-muted-foreground">
                 <span className="flex items-center space-x-1">
                   <ClockPlus className="w-3 h-3" />
                   <span>Started: {formatTime(task.startTime)}</span>
@@ -110,7 +110,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 size="sm"
                 variant="outline"
                 aria-label={`Delete task: ${task.title}`}
-                className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="flex items-center space-x-1 min-h-[44px] min-w-[44px] text-red-600 hover:text-red-700 hover:bg-red-50"
               >
                 <Trash2 className="w-3 h-3" />
                 <span className="hidden sm:block">Delete</span>
@@ -120,7 +120,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 size="sm"
                 variant="outline"
                 aria-label={`Edit task: ${task.title}`}
-                className="flex items-center space-x-1"
+                className="flex items-center space-x-1 min-h-[44px] min-w-[44px]"
               >
                 <Edit className="w-3 h-3" />
                 <span className="hidden sm:block">Edit</span>
