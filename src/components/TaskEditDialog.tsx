@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
+  AdaptiveDialog,
+  AdaptiveDialogContent,
+  AdaptiveDialogHeader,
+  AdaptiveDialogTitle,
+} from "@/components/ui/adaptive-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -205,14 +205,14 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
+    <AdaptiveDialog open={isOpen} onOpenChange={onClose} snapPoints={[0.85, 1]}>
+      <AdaptiveDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <AdaptiveDialogHeader>
+          <AdaptiveDialogTitle className="flex items-center space-x-2">
             <Clock className="w-5 h-5" />
             <span>Edit Task</span>
-          </DialogTitle>
-        </DialogHeader>
+          </AdaptiveDialogTitle>
+        </AdaptiveDialogHeader>
 
         <div className="space-y-6">
           <Tabs defaultValue="details" className="w-full">
@@ -468,7 +468,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </AdaptiveDialogContent>
+    </AdaptiveDialog>
   );
 };

@@ -2,10 +2,12 @@ import { memo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, Archive, Settings, PaperclipIcon, ClipboardList } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useHaptics } from "@/hooks/useHaptics";
 
 export const MobileNav = memo(function MobileNav() {
 	const location = useLocation();
 	const { isAuthenticated } = useAuth();
+	const { lightImpact } = useHaptics();
 
 	const isActive = (path: string) => {
 		return location.pathname === path;
@@ -58,6 +60,7 @@ export const MobileNav = memo(function MobileNav() {
 					<Link
 						key={path}
 						to={path}
+						onClick={lightImpact}
 						className={`flex flex-col items-center justify-center space-y-1 transition-colors touch-manipulation ${isActive(path)
 								? "text-primary"
 								: "text-muted-foreground hover:text-foreground"

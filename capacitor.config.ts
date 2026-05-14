@@ -26,7 +26,13 @@ const config: CapacitorConfig = {
   },
 
   plugins: {
-    // Placeholder — native plugin config goes here in Phase 4 (widget bridge)
+    Keyboard: {
+      // Shrink the body when the keyboard appears so fixed-bottom UI (MobileNav,
+      // bottom sheets) moves up with the keyboard automatically.
+      resize: 'body',
+      style: 'default',
+      resizeOnFullScreen: true
+    }
   }
 };
 

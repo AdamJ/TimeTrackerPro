@@ -15,6 +15,12 @@ body {
   padding-right: var(--safe-area-inset-right);
 }
 
+/* IosPageHeader consumes the safe-area-inset-top itself via paddingTop inline style.
+   Prevent double-stacking when running as a Capacitor iOS build. */
+.ios-build body {
+  padding-top: 0;
+}
+
 /* Add padding bottom for mobile nav on mobile devices */
 /* Note: iOS-specific padding is handled in the iOS section below */
 @media (max-width: 768px) {
@@ -85,23 +91,24 @@ button,
   }
 }
 
-/* Pull-to-refresh prevention (optional, can be enabled if needed) */
+/* Prevent pull-to-refresh on non-iOS browsers */
 body {
   overscroll-behavior-y: contain;
 }
 
+/* Restore native rubber-band bounce on iOS — body is fixed/overflow:hidden there
+   so this applies to #root (the actual scroll container). */
+@supports (-webkit-touch-callout: none) {
+  #root {
+    overscroll-behavior-y: auto;
+  }
+}
+
 /* Improve button touch targets on mobile */
 @media (max-width: 768px) {
-  /* button:not(.icon-only) { */
-  /* min-height: 44px; */
-  /* min-width: 44px; */
-  /* padding: 0.75rem 1rem; */
-  /* } */
-
-  /* Larger tap targets for icon buttons */
-  button.icon-only {
-    min-width: 44px;
+  button:not([aria-hidden="true"]) {
     min-height: 44px;
+    min-width: 44px;
   }
 }
 
@@ -136,6 +143,15 @@ body {
   font-weight: 500;
   z-index: 9999;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure focused inputs scroll into view above the keyboard with enough clearance */
+@supports (-webkit-touch-callout: none) {
+  input:focus,
+  textarea:focus,
+  select:focus {
+    scroll-margin-bottom: 24px;
+  }
 }
 
 /* iOS specific fixes */
@@ -194,6 +210,30 @@ body {
 
     #root {
       padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
+}
+
+/* Prevent scroll from leaking through open bottom sheets to the page beneath */
+[data-vaul-drawer] {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+/* iOS page transition: subtle slide-in from the right on route change */
+@supports (-webkit-touch-callout: none) {
+  .page-transition-enter {
+    animation: iosSlideIn 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  }
+
+  @keyframes iosSlideIn {
+    from {
+      transform: translateX(30px);
+      opacity: 0.8;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
     }
   }
 }
