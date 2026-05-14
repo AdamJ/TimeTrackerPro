@@ -154,7 +154,7 @@ const TimeTrackerContent = () => {
 										)}
 										<p className="text-foreground">
 											{tasks.length === 0
-												? "No tasks tracked yet."
+												? "No tasks tracked yet — go to Tasks to start your first task."
 												: `${tasks.length} task${tasks.length === 1 ? "" : "s"} tracked today.`}
 										</p>
 										<Button asChild className="w-full">
