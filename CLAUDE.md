@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Codebase Guide
 
-**Last Updated:** 2026-04-26
-**Version:** 2.2.0
+**Last Updated:** 2026-05-14
+**Version:** 2.3.0
 
 Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and consultants, with dual storage (localStorage guest mode and optional Supabase cloud sync). A native iOS app is also available via Capacitor.
 
@@ -31,7 +31,7 @@ After implementing changes, run lint and tests before considering a task complet
 | Forms        | React Hook Form + Zod                       |
 | Backend      | Supabase (optional) or localStorage         |
 | PWA          | Vite PWA Plugin + Workbox                   |
-| Native iOS   | Capacitor 8 (@capacitor/core + @capacitor/ios) |
+| Native iOS   | Capacitor 8 (@capacitor/core + @capacitor/ios + @capacitor/app + @capacitor/haptics + @capacitor/status-bar + @capacitor/keyboard) |
 | Testing      | Vitest + React Testing Library + Playwright |
 
 ---
@@ -70,8 +70,15 @@ export const MyComponent = () => {
 | `src/lib/supabase.ts`                  | Supabase client configuration and caching        |
 | `src/config/categories.ts`             | Default category definitions                     |
 | `src/config/projects.ts`               | Default project definitions                      |
-| `src/components/PageLayout.tsx`        | Shared page chrome (title + optional actions slot) |
-| `capacitor.config.ts`                  | Capacitor iOS configuration                      |
+| `src/components/PageLayout.tsx`        | Shared page chrome (title + optional actions slot); renders `IosPageHeader` on iOS |
+| `src/components/IosPageHeader.tsx`     | iOS-only sticky nav bar with safe-area-inset-top, back chevron, and action slot |
+| `src/components/ui/adaptive-dialog.tsx` | Renders vaul `Drawer` on iOS, Radix `Dialog` on web |
+| `src/hooks/useHaptics.ts`             | `@capacitor/haptics` wrapper (light/medium/heavy, success/error) |
+| `src/hooks/useStatusBar.ts`           | `@capacitor/status-bar` wrapper — syncs bar style with dark/light mode |
+| `src/hooks/useAppLifecycle.ts`        | `@capacitor/app` appStateChange hook for reliable background persistence |
+| `src/hooks/useKeyboardHeight.ts`      | `@capacitor/keyboard` reactive height for bottom-sheet form padding |
+| `src/hooks/useLongPress.ts`           | 500 ms hold detector for context menu trigger on touch |
+| `capacitor.config.ts`                  | Capacitor iOS configuration (Keyboard resize plugin configured here) |
 | `.env.ios`                             | iOS build env (VITE_IOS_BUILD=true, no Supabase) |
 
 ---
@@ -92,6 +99,23 @@ The app ships as both a PWA and a native iOS app via Capacitor 8.
 - Routing uses `HashRouter` (required — Capacitor loads from filesystem, not a server)
 - CSP includes `capacitor://localhost` for WKWebView asset loading
 - Data storage is localStorage-only (no Supabase keys in `.env.ios`)
+- Desktop `SiteNavigationMenu` is hidden; `IosPageHeader` renders instead (sticky, safe-area-aware, back chevron)
+- All edit/confirm dialogs (`TaskEditDialog`, `StartDayDialog`, `ArchiveEditDialog`, `DeleteConfirmationDialog`) become bottom sheets via `AdaptiveDialog`; on web the existing Radix Dialog renders unchanged
+- Haptic feedback fires on every meaningful interaction via `useHaptics`
+- `@capacitor/app` `appStateChange` event used for emergency data persistence (more reliable than `visibilitychange`)
+- `@capacitor/status-bar` syncs status bar text colour with system dark/light mode
+- `@capacitor/keyboard` configured with `resize: body`; `useKeyboardHeight` lifts bottom-sheet content above the keyboard
+- Long-press on task cards opens a context menu (Edit / Delete); on-card action buttons are hidden
+
+**Installed Capacitor plugins** (all v8.x):
+
+| Package | Purpose |
+| ------- | ------- |
+| `@capacitor/core` + `@capacitor/ios` | Core bridge (pre-existing) |
+| `@capacitor/app` | Native app lifecycle events (pause/resume) |
+| `@capacitor/haptics` | Tactile feedback |
+| `@capacitor/status-bar` | Status bar style control |
+| `@capacitor/keyboard` | Keyboard height events and viewport resize |
 
 **iOS npm scripts:**
 
@@ -114,6 +138,9 @@ When working on iOS/Capacitor projects, remember that `cap sync` overwrites Pack
 - Gate any web-only UI (PWA install, auth, sync) behind `import.meta.env.VITE_IOS_BUILD !== "true"`
 - Avoid `window.location.reload()` in iOS paths — use `window.location.replace()` to avoid interrupting the Capacitor JS bridge
 - Test localStorage-only flow (no Supabase) before marking iOS features complete
+- For new dialogs/modals: use `AdaptiveDialog` (`src/components/ui/adaptive-dialog.tsx`) instead of `Dialog` directly — it automatically renders a bottom sheet on iOS
+- Add haptic feedback for new interactions via `useHaptics` (`src/hooks/useHaptics.ts`): `lightImpact` for navigation/selection, `mediumImpact` for intent to delete, `heavyImpact` for confirmed destructive actions, `successNotify`/`errorNotify` for outcomes
+- All new Capacitor plugin calls should be gated with `Capacitor.isNativePlatform()` or imported dynamically (see existing hooks for the pattern) so the web build never fails at runtime on missing native APIs
 
 ---
 

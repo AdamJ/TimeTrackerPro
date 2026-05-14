@@ -163,6 +163,21 @@ Task descriptions support **GitHub Flavored Markdown (GFM)**:
 
 **Native-Like Experience:** Standalone window, app icon, splash screen on launch.
 
+### iOS Native App (Capacitor)
+
+The Capacitor build (`VITE_IOS_BUILD=true`) includes additional Apple HIG enhancements that are inactive in the PWA:
+
+| Feature | Detail |
+| ------- | ------- |
+| **Bottom sheets** | All edit/confirm dialogs slide up as swipe-to-dismiss sheets instead of centered overlays |
+| **Haptic feedback** | Light impact on navigation taps, medium on destructive intent, success/error notifications on outcomes |
+| **Status bar theming** | Status bar text colour tracks light/dark mode; content extends behind the status bar via `black-translucent` |
+| **iOS navigation header** | Sticky 17 px title bar with safe-area-inset-top padding and back chevron replaces the desktop nav bar |
+| **Keyboard avoidance** | Viewport shrinks above the software keyboard; bottom sheet forms scroll above it automatically |
+| **Long-press context menus** | Hold a task card to reveal Edit / Delete without on-card buttons cluttering the layout |
+| **Page transitions** | Subtle 280 ms slide-in animation on route changes, matching the iOS push-navigation idiom |
+| **Rubber-band bounce** | Native scroll bounce restored on the main scroll container |
+
 ---
 
 ## Authentication & Storage
@@ -180,7 +195,7 @@ Timetraked uses an **action-triggered save** approach optimized for single-devic
 
 1. **In-Memory First** — changes update React state immediately.
 2. **Action Saves** — every task mutation (start, update, delete) and day lifecycle event (start day, end day) triggers an immediate `saveCurrentDay()` call with the freshly computed state, keeping localStorage and Supabase in sync without a debounce delay.
-3. **Emergency Backups** — `visibilitychange` (iOS app backgrounding) and `beforeunload` (browser close) write a synchronous localStorage snapshot as a last-resort fallback before JavaScript execution is suspended.
+3. **Emergency Backups** — on iOS, `@capacitor/app`'s `appStateChange` event fires at the Swift layer before WKWebView freezes, giving a reliable save window; on web, `visibilitychange` and `beforeunload` write a synchronous localStorage snapshot as a last-resort fallback before JavaScript execution is suspended.
 4. **Manual Sync** — the sync button in the navigation saves all data types (tasks, projects, categories, archived days, todos) in one batch, useful after recovering from an error.
 
 When you sign in, your `localStorage` data automatically migrates to Supabase (timestamps compared to prevent overwriting newer data, no data loss). When you sign out, Supabase data syncs back to `localStorage`.
