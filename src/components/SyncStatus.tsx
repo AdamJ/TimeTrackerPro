@@ -39,7 +39,7 @@ export const SyncStatus = memo(function SyncStatus({
 
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-500">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>

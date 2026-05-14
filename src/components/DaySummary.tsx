@@ -29,7 +29,7 @@ export const DaySummary: React.FC<DaySummaryProps> = ({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               <p>{formatDate(dayStartTime)}</p>
               <p>Started at {formatTime(dayStartTime)}</p>
             </div>
@@ -39,16 +39,16 @@ export const DaySummary: React.FC<DaySummaryProps> = ({
               <span className="text-2xl font-bold text-blue-600">
                 {formatDuration(totalDuration)}
               </span>
-              <span className="text-gray-600">total time</span>
+              <span className="text-muted-foreground">total time</span>
             </div>
 
             <div className="space-y-2">
-              <h4 className="font-medium text-gray-900">Tasks completed:</h4>
+              <h4 className="font-medium text-foreground">Tasks completed:</h4>
               <div className="space-y-1">
                 {tasks.map((task) => (
                   <div key={task.id} className="flex justify-between text-sm">
-                    <span className="text-gray-700">{task.title}</span>
-                    <span className="text-gray-600">
+                    <span className="text-foreground">{task.title}</span>
+                    <span className="text-muted-foreground">
                       {formatDuration(task.duration || 0)}
                     </span>
                   </div>
