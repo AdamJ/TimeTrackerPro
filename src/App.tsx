@@ -21,6 +21,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Categories = lazy(() => import("./pages/Categories"));
 const Report = lazy(() => import("./pages/Report"));
+const TaskList = lazy(() => import("./pages/TaskList"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -48,6 +49,7 @@ const App = () => (
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/tasks" element={<TaskList />} />
                 <Route path="/projectlist" element={<ProjectList />} />
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/archive" element={<Archive />} />
