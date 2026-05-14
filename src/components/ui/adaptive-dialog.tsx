@@ -32,9 +32,25 @@ export const AdaptiveDialog = ({
 	children,
 	snapPoints,
 }: AdaptiveDialogProps) => {
+	const [activeSnapPoint, setActiveSnapPoint] = React.useState<number | string | null>(
+		snapPoints?.[0] ?? null
+	)
+
+	React.useEffect(() => {
+		if (open) {
+			setActiveSnapPoint(snapPoints?.[0] ?? null)
+		}
+	}, [open]) // snapPoints are static per dialog instance
+
 	if (isIosBuild) {
 		return (
-			<Drawer open={open} onOpenChange={onOpenChange} snapPoints={snapPoints}>
+			<Drawer
+				open={open}
+				onOpenChange={onOpenChange}
+				snapPoints={snapPoints}
+				activeSnapPoint={activeSnapPoint}
+				setActiveSnapPoint={setActiveSnapPoint}
+			>
 				{children}
 			</Drawer>
 		)

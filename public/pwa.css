@@ -220,6 +220,13 @@ body {
   overscroll-behavior: contain;
 }
 
+/* Lift the floating action button above the mobile nav + home indicator on iOS */
+@supports (-webkit-touch-callout: none) {
+  .fab-nav-offset {
+    bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
 /* iOS page transition: subtle slide-in from the right on route change */
 @supports (-webkit-touch-callout: none) {
   .page-transition-enter {
