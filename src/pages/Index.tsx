@@ -1,216 +1,196 @@
-import { TimeTrackingProvider } from '@/contexts/TimeTrackingContext';
-import { useTimeTracking } from '@/hooks/useTimeTracking';
-import { DaySummary } from '@/components/DaySummary';
-import { NewTaskForm } from '@/components/NewTaskForm';
-import { TaskItem } from '@/components/TaskItem';
-import { StartDayDialog } from '@/components/StartDayDialog';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CirclePlay, CircleStop, Archive as Play } from 'lucide-react';
-import { DashboardIcon } from '@radix-ui/react-icons';
+import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
+import { useTimeTracking } from "@/hooks/useTimeTracking";
+import { DaySummary } from "@/components/DaySummary";
+import { StartDayDialog } from "@/components/StartDayDialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CirclePlay, CircleStop, Archive as Play, ClipboardList } from "lucide-react";
+import { DashboardIcon } from "@radix-ui/react-icons";
 import { PageLayout } from "@/components/PageLayout";
-import { TaskTrackingPanel } from '@/components/TaskTrackingPanel';
-import { useState, useMemo } from 'react';
+import { TaskTrackingPanel } from "@/components/TaskTrackingPanel";
+import { useState, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 // Stable epoch constant — avoids creating new Date(0) on every render
 const EPOCH = new Date(0);
 
 const TimeTrackerContent = () => {
-  const {
-    isDayStarted,
-    dayStartTime,
-    currentTask,
-    tasks,
-    archivedDays,
-    startDay,
-    endDay,
-    startNewTask,
-    deleteTask,
-    postDay,
-    getTotalDayDuration,
-    getCurrentTaskDuration,
-    getTotalHoursForPeriod
-  } = useTimeTracking();
+	const {
+		isDayStarted,
+		dayStartTime,
+		tasks,
+		archivedDays,
+		startDay,
+		endDay,
+		postDay,
+		getTotalDayDuration,
+		getTotalHoursForPeriod
+	} = useTimeTracking();
 
-  const [showStartDayDialog, setShowStartDayDialog] = useState(false);
-  const [autoOpenTaskForm, setAutoOpenTaskForm] = useState(false);
+	const navigate = useNavigate();
+	const [showStartDayDialog, setShowStartDayDialog] = useState(false);
 
-  const handleStartDay = () => {
-    setShowStartDayDialog(true);
-  };
+	const handleStartDay = () => {
+		setShowStartDayDialog(true);
+	};
 
-  const handleStartDayWithDateTime = (startDateTime: Date) => {
-    startDay(startDateTime);
-    setAutoOpenTaskForm(true);
-  };
+	const handleStartDayWithDateTime = (startDateTime: Date) => {
+		startDay(startDateTime);
+		navigate("/tasks");
+	};
 
-  const handleEndDay = () => {
-    endDay();
-  };
+	const handleEndDay = () => {
+		endDay();
+	};
 
-  const handleNewTask = (
-    title: string,
-    description?: string,
-    project?: string,
-    client?: string,
-    category?: string
-  ) => {
-    startNewTask(title, description, project, client, category);
-  };
+	const handlePostDay = () => {
+		postDay();
+	};
 
-  const handleTaskDelete = (taskId: string) => {
-    deleteTask(taskId);
-  };
+	const totalHours = useMemo(
+		() => archivedDays.length > 0 ? getTotalHoursForPeriod(EPOCH, new Date()) : 0,
+		[archivedDays, getTotalHoursForPeriod]
+	);
+	const sortedDays = useMemo(
+		() => [...archivedDays].sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()),
+		[archivedDays]
+	);
 
-  const handlePostDay = () => {
-    postDay();
-  };
+	// Show day summary if day has ended but not yet posted
+	if (!isDayStarted && dayStartTime && tasks.length > 0) {
+		return (
+			<PageLayout>
+				<div className="max-w-4xl mx-auto p-6 space-y-6">
+					<DaySummary
+						tasks={tasks}
+						totalDuration={getTotalDayDuration()}
+						dayStartTime={dayStartTime}
+						onPostDay={handlePostDay}
+					/>
+				</div>
+			</PageLayout>
+		);
+	}
 
-  const totalHours = useMemo(
-    () => archivedDays.length > 0 ? getTotalHoursForPeriod(EPOCH, new Date()) : 0,
-    [archivedDays, getTotalHoursForPeriod]
-  );
-  const sortedDays = useMemo(
-    () => [...archivedDays].sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()),
-    [archivedDays]
-  );
+	return (
+		<PageLayout>
+			<div className="max-w-6xl mx-auto pt-4 pb-6 px-4 md:p-6 print:p-4 space-y-6">
+				<StartDayDialog
+					isOpen={showStartDayDialog}
+					onClose={() => setShowStartDayDialog(false)}
+					onStartDay={handleStartDayWithDateTime}
+				/>
 
-  // Calculate running timer for navigation
-  const runningTime = isDayStarted ? getTotalDayDuration() : 0;
+				{/* Dashboard header */}
+				<div className="flex items-center justify-between">
+					<h1 className="md:text-2xl font-bold text-foreground flex items-center space-x-1">
+						<DashboardIcon className="w-6 h-6 mr-1" />
+						<span>Dashboard</span>
+					</h1>
+				</div>
 
-  // Show day summary if day has ended but not yet posted
-  if (!isDayStarted && dayStartTime && tasks.length > 0) {
-    return (
-      <PageLayout>
-        <div className="max-w-4xl mx-auto p-6 space-y-6">
-          <DaySummary
-            tasks={tasks}
-            totalDuration={getTotalDayDuration()}
-            dayStartTime={dayStartTime}
-            onPostDay={handlePostDay}
-          />
-        </div>
-      </PageLayout>
-    );
-  }
+				{/* Stats (always visible) */}
+				{!isDayStarted && (
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
+						<Card>
+							<CardContent className="p-4">
+								<div className="text-2xl font-bold text-primary">
+									{sortedDays.length}
+								</div>
+								<div className="text-sm text-muted-foreground">Days Tracked</div>
+							</CardContent>
+						</Card>
+						<Card>
+							<CardContent className="p-4">
+								<div className="text-2xl font-bold text-chart-2">
+									{totalHours}h
+								</div>
+								<div className="text-sm text-muted-foreground">Total Hours</div>
+							</CardContent>
+						</Card>
+					</div>
+				)}
 
-  return (
-    <PageLayout>
-      <div className="max-w-6xl mx-auto pt-4 pb-6 px-4 md:p-6 print:p-4 space-y-6">
-        <StartDayDialog
-          isOpen={showStartDayDialog}
-          onClose={() => setShowStartDayDialog(false)}
-          onStartDay={handleStartDayWithDateTime}
-        />
+				{/* Two-column layout: main content + tracking panel */}
+				<div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
+					{/* Left column: day actions */}
+					<div className="space-y-6">
+						{!isDayStarted ? (
+							<Card className="bg-muted border-border">
+								<CardHeader>
+									<CardTitle className="flex items-center space-x-2 text-primary">
+										<Play className="w-5 h-5" />
+										<span>Start Your Work Day</span>
+									</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<p className="text-foreground mb-4">
+										Click the button below to start tracking your work time for
+										today.
+									</p>
+									<Button
+										onClick={handleStartDay}
+										className="w-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center space-x-2 py-3"
+									>
+										<CirclePlay className="w-4 h-4" />
+										<span>Start Day</span>
+									</Button>
+								</CardContent>
+							</Card>
+						) : (
+							<>
+								<Card className="bg-muted border-border">
+									<CardHeader>
+										<CardTitle className="flex items-center space-x-2 text-primary">
+											<ClipboardList className="w-5 h-5" />
+											<span>Day In Progress</span>
+										</CardTitle>
+									</CardHeader>
+									<CardContent className="space-y-4">
+										{dayStartTime && (
+											<p className="text-sm text-muted-foreground">
+												Started at {dayStartTime.toLocaleTimeString()}
+											</p>
+										)}
+										<p className="text-foreground">
+											{tasks.length === 0
+												? "No tasks tracked yet."
+												: `${tasks.length} task${tasks.length === 1 ? "" : "s"} tracked today.`}
+										</p>
+										<Button asChild className="w-full">
+											<Link to="/tasks" className="flex items-center justify-center space-x-2">
+												<ClipboardList className="w-4 h-4" />
+												<span>View Tasks</span>
+											</Link>
+										</Button>
+									</CardContent>
+								</Card>
+								<Button
+									variant="outline"
+									onClick={handleEndDay}
+									className="w-full font-bold bg-destructive/10 border-destructive text-destructive hover:bg-destructive/20 hover:text-destructive"
+								>
+									<CircleStop className="w-4 h-4" />
+									End Day
+								</Button>
+							</>
+						)}
+					</div>
 
-        {/* Dashboard header + stats (day not started) */}
-        {!isDayStarted && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h1 className="md:text-2xl font-bold text-foreground flex items-center space-x-1">
-                <DashboardIcon className="w-6 h-6 mr-1" />
-                <span>Dashboard</span>
-              </h1>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-primary">
-                    {sortedDays.length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Days Tracked</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-chart-2">
-                    {totalHours}h
-                  </div>
-                  <div className="text-sm text-muted-foreground">Total Hours</div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        {/* Two-column layout: main content + tracking panel */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
-          {/* Left column: day actions + tasks */}
-          <div className="space-y-6">
-            {!isDayStarted ? (
-              <Card className="bg-muted border-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2 text-primary">
-                    <Play className="w-5 h-5" />
-                    <span>Start Your Work Day</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-foreground mb-4">
-                    Click the button below to start tracking your work time for
-                    today.
-                  </p>
-                  <Button
-                    onClick={handleStartDay}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center space-x-2 py-3"
-                  >
-                    <CirclePlay className="w-4 h-4" />
-                    <span>Start Day</span>
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <>
-                <NewTaskForm onSubmit={handleNewTask} defaultOpen={autoOpenTaskForm} />
-                {tasks.length > 0 && (
-                  <div className="space-y-4">
-                    <h2 className="flex justify-between text-lg font-semibold text-foreground">
-                      Tasks ({tasks.length})
-                      {dayStartTime && (
-                        <p className="text-sm text-muted-foreground">
-                          Day started at: {dayStartTime.toLocaleTimeString()}
-                        </p>
-                      )}
-                    </h2>
-                    {tasks.map((task) => (
-                      <TaskItem
-                        key={task.id}
-                        task={task}
-                        isActive={currentTask?.id === task.id}
-                        currentDuration={
-                          currentTask?.id === task.id ? getCurrentTaskDuration() : 0
-                        }
-                        onDelete={handleTaskDelete}
-                      />
-                    ))}
-                  </div>
-                )}
-                <Button
-                  variant="outline"
-                  onClick={handleEndDay}
-                  className="w-full font-bold bg-destructive/10 border-destructive text-destructive hover:bg-destructive/20 hover:text-destructive"
-                >
-                  <CircleStop className="w-4 h-4" />
-                  End Day
-                </Button>
-              </>
-            )}
-          </div>
-
-          {/* Right column: task tracking panel (always visible) */}
-          <div className="lg:sticky lg:top-6">
-            <TaskTrackingPanel />
-          </div>
-        </div>
-      </div>
-    </PageLayout>
-  );
+					{/* Right column: task tracking panel (always visible) */}
+					<div className="lg:sticky lg:top-6">
+						<TaskTrackingPanel />
+					</div>
+				</div>
+			</div>
+		</PageLayout>
+	);
 };
 
 const Index = () => {
-  return (
-    <TimeTrackerContent />
-  );
+	return (
+		<TimeTrackerContent />
+	);
 };
 
 export default Index;

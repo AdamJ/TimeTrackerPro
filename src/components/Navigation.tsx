@@ -12,7 +12,7 @@ import { ProjectManagement } from '@/components/ProjectManagement';
 import { UserMenu } from '@/components/UserMenu';
 import { AuthDialog } from '@/components/AuthDialog';
 import { Link } from 'react-router-dom';
-import { CogIcon, Printer, CalendarClock } from 'lucide-react';
+import { CogIcon, Printer, CalendarClock, ClipboardList } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { formatDuration } from '@/utils/timeUtil';
 import { SyncStatus } from '@/components/SyncStatus';
@@ -100,6 +100,15 @@ const SiteNavigationMenu = () => {
                 </Button>
               </Item>
             )}
+            <Item className="hidden md:flex">
+              <NavLink
+                to="/tasks"
+                className={({ isActive }) => getNavLinkClasses(isActive)}
+              >
+                <ClipboardList className="w-4 h-4" />
+                <span className="hidden lg:block">Tasks</span>
+              </NavLink>
+            </Item>
             <Item className="hidden md:flex">
               <NavLink
                 to="/settings"
