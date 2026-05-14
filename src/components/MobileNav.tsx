@@ -55,7 +55,7 @@ export const MobileNav = memo(function MobileNav() {
 				paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0px)"
 			}}
 		>
-			<div className={`grid ${gridClass} h-16`}>
+			<div className={`grid ${gridClass} h-12`}>
 				{navItems.map(({ path, icon: Icon, label }) => (
 					<Link
 						key={path}

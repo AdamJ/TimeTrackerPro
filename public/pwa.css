@@ -25,7 +25,7 @@ body {
 /* Note: iOS-specific padding is handled in the iOS section below */
 @media (max-width: 768px) {
   body:not(.ios-device) {
-    padding-bottom: calc(4rem + var(--safe-area-inset-bottom));
+    padding-bottom: calc(3rem + var(--safe-area-inset-bottom));
   }
 }
 
@@ -223,7 +223,7 @@ body {
 /* Lift the floating action button above the mobile nav + home indicator on iOS */
 @supports (-webkit-touch-callout: none) {
   .fab-nav-offset {
-    bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(4rem + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
 
