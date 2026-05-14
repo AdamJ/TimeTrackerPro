@@ -24,6 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit, Trash2, Tag } from "lucide-react";
 import { TaskCategory } from "@/config/categories";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
+import { toast } from "@/hooks/use-toast";
 
 interface CategoryManagementProps {
 	isOpen: boolean;
@@ -41,6 +42,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 	);
 	const [isAddingNew, setIsAddingNew] = useState(false);
 	const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+	const [isSaving, setIsSaving] = useState(false);
 	const [formData, setFormData] = useState({
 		name: '',
 		description: '',
@@ -61,6 +63,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		setIsSaving(true);
 
 		const categoryData = {
 			name: formData.name.trim(),
@@ -69,16 +72,23 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 			isBillable: formData.isBillable
 		};
 
-		if (editingCategory) {
-			updateCategory(editingCategory.id, categoryData);
+		const isEditing = !!editingCategory;
+		if (isEditing) {
+			updateCategory(editingCategory!.id, categoryData);
 		} else {
 			addCategory(categoryData);
 		}
 
-		// Save changes to database
 		await forceSyncToDatabase();
+		toast({
+			title: isEditing ? "Category updated" : "Category added",
+			description: isEditing
+				? `"${categoryData.name}" has been updated.`
+				: `"${categoryData.name}" has been added.`
+		});
 
 		resetForm();
+		setIsSaving(false);
 	};
 
 	const handleEdit = (category: TaskCategory) => {
@@ -94,9 +104,16 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 
 	const handleDeleteConfirm = async () => {
 		if (!deleteTargetId) return;
+		setIsSaving(true);
+		const deletedName = categories.find((c) => c.id === deleteTargetId)?.name;
 		deleteCategory(deleteTargetId);
 		await forceSyncToDatabase();
+		toast({
+			title: "Category deleted",
+			description: deletedName ? `"${deletedName}" has been removed.` : undefined
+		});
 		setDeleteTargetId(null);
+		setIsSaving(false);
 	};
 
 	const predefinedColors = [
@@ -246,10 +263,12 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 									</div>
 
 									<div className="flex space-x-2">
-										<Button type="submit">
-											{editingCategory ? 'Update' : 'Add'}
+										<Button type="submit" disabled={isSaving}>
+											{isSaving
+												? (editingCategory ? "Updating..." : "Adding...")
+												: (editingCategory ? "Update" : "Add")}
 										</Button>
-										<Button type="button" variant="outline" onClick={resetForm}>
+										<Button type="button" variant="outline" onClick={resetForm} disabled={isSaving}>
 											Cancel
 										</Button>
 									</div>
