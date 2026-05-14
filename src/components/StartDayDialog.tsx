@@ -74,7 +74,7 @@ export const StartDayDialog: React.FC<StartDayDialogProps> = ({
           </AdaptiveDialogDescription>
         </AdaptiveDialogHeader>
 
-        <div className="space-y-4 py-4 px-4">
+        <div className="space-y-4 py-4">
           <div>
             <Label>Date</Label>
             <Input
