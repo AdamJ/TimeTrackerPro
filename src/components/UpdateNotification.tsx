@@ -12,6 +12,7 @@ import { RefreshCw, X } from 'lucide-react';
 
 export const UpdateNotification = memo(function UpdateNotification() {
   const [showUpdate, setShowUpdate] = useState(false);
+  const [showOfflineReady, setShowOfflineReady] = useState(true);
 
   const {
     offlineReady: [offlineReady, setOfflineReady],
@@ -50,11 +51,18 @@ export const UpdateNotification = memo(function UpdateNotification() {
     setNeedRefresh(false);
   };
 
-  if (offlineReady && !needRefresh) {
+  if (offlineReady && !needRefresh && showOfflineReady) {
     return (
-      <div className="fixed bottom-4 left-4 z-50 animate-in slide-in-from-bottom-4">
+      <div className="fixed bottom-20 md:bottom-4 left-4 z-50 animate-in slide-in-from-bottom-4">
         <Card className="shadow-lg">
-          <CardContent className="p-4">
+          <CardContent className="p-4 pr-10 relative">
+            <button
+              onClick={() => setShowOfflineReady(false)}
+              className="absolute top-2 right-2 p-1 rounded-full hover:bg-accent transition-colors"
+              aria-label="Dismiss offline ready notification"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
             <p className="text-sm text-green-600 font-medium">
               ✓ App is ready to work offline
             </p>
