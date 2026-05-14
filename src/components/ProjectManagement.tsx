@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Edit, Trash2, Briefcase, RotateCcw } from "lucide-react";
 import { Project } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
+import { toast } from "@/hooks/use-toast";
 
 interface ProjectManagementProps {
 	isOpen: boolean;
@@ -75,8 +76,16 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 
 		if (editingProject) {
 			updateProject(editingProject.id, projectData);
+			toast({
+				title: "Project updated",
+				description: `"${projectData.name}" has been updated.`
+			});
 		} else {
 			addProject(projectData);
+			toast({
+				title: "Project added",
+				description: `"${projectData.name}" has been added.`
+			});
 		}
 
 		resetForm();
@@ -95,12 +104,18 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 
 	const handleDeleteConfirm = () => {
 		if (!deleteTargetId) return;
+		const deletedName = projects.find((p) => p.id === deleteTargetId)?.name;
 		deleteProject(deleteTargetId);
+		toast({
+			title: "Project deleted",
+			description: deletedName ? `"${deletedName}" has been removed.` : undefined
+		});
 		setDeleteTargetId(null);
 	};
 
 	const handleResetConfirm = () => {
 		resetProjectsToDefaults();
+		toast({ title: "Projects reset", description: "Projects have been restored to defaults." });
 		setShowResetDialog(false);
 	};
 

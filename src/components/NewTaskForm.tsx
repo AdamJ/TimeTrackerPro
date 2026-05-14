@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -28,6 +30,7 @@ interface NewTaskFormProps {
 export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen = false }) => {
   const { projects, categories } = useTimeTracking();
   const [title, setTitle] = useState("");
+  const [titleTouched, setTitleTouched] = useState(false);
   const [description, setDescription] = useState("");
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -40,6 +43,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setTitleTouched(true);
     if (title.trim()) {
       onSubmit(
         title.trim(),
@@ -49,12 +53,15 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
         selectedCategoryData?.id
       );
       setTitle("");
+      setTitleTouched(false);
       setDescription("");
       setSelectedProject("");
       setSelectedCategory("");
       setIsOpen(false);
     }
   };
+
+  const titleError = titleTouched && !title.trim() ? "Task title is required." : "";
 
   if (!isOpen) {
     return (
@@ -76,15 +83,28 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter task title"
-            className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-            autoFocus
-          />
+          <div className="space-y-1">
+            <Label htmlFor="new-task-title">
+              Task Title <span className="text-destructive" aria-hidden="true">*</span>
+            </Label>
+            <Input
+              id="new-task-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={() => setTitleTouched(true)}
+              placeholder="What are you working on?"
+              aria-required="true"
+              aria-invalid={!!titleError}
+              aria-describedby={titleError ? "new-task-title-error" : undefined}
+              autoFocus
+            />
+            {titleError && (
+              <p id="new-task-title-error" className="text-sm text-destructive" role="alert">
+                {titleError}
+              </p>
+            )}
+          </div>
 
           <Tabs defaultValue="edit" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
@@ -112,11 +132,13 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {categories.length > 0 && (
+              <div className="space-y-1">
+                <Label htmlFor="new-task-category">Category</Label>
               <Select
                 value={selectedCategory}
                 onValueChange={setSelectedCategory}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="new-task-category" className="w-full" aria-label="Select category">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -133,14 +155,17 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
                   ))}
                 </SelectContent>
               </Select>
+              </div>
             )}
 
             {projects.length > 0 && (
+              <div className="space-y-1">
+                <Label htmlFor="new-task-project">Project</Label>
               <Select
                 value={selectedProject}
                 onValueChange={setSelectedProject}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="new-task-project" className="w-full" aria-label="Select project">
                   <SelectValue placeholder="Select a project" />
                 </SelectTrigger>
                 <SelectContent>
@@ -148,7 +173,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
                     <SelectItem key={project.id} value={project.id}>
                       <div className="flex flex-col">
                         <span>{project.name}</span>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-muted-foreground">
                           {project.client}
                         </span>
                       </div>
@@ -156,6 +181,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
                   ))}
                 </SelectContent>
               </Select>
+              </div>
             )}
           </div>
 
@@ -165,6 +191,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
               onClick={() => {
                 setIsOpen(false);
                 setTitle("");
+                setTitleTouched(false);
                 setDescription("");
                 setSelectedProject("");
                 setSelectedCategory("");
@@ -173,7 +200,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
             >
               Cancel
             </Button>
-            <Button type="submit" variant="default" disabled={!title.trim()}>
+            <Button type="submit" variant="default">
               Start Task
             </Button>
           </div>

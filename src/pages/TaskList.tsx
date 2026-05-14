@@ -98,7 +98,13 @@ const TaskList = () => {
 		>
 			<div className="max-w-4xl mx-auto pt-4 pb-6 px-4 md:p-6 space-y-6">
 				<NewTaskForm onSubmit={handleNewTask} />
-				{tasks.length > 0 && (
+				{tasks.length === 0 ? (
+					<div className="text-center py-8 text-muted-foreground" aria-live="polite">
+						<ClipboardList className="w-10 h-10 mx-auto mb-3 opacity-40" />
+						<p className="font-medium">No tasks yet</p>
+						<p className="text-sm mt-1">Use the button above to start tracking your first task.</p>
+					</div>
+				) : (
 					<div className="space-y-4">
 						<h2 className="flex justify-between text-lg font-semibold text-foreground">
 							Tasks ({tasks.length})
