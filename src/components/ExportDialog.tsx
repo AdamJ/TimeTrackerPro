@@ -408,7 +408,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                       <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-sm text-muted-foreground mb-2">
                         Click to select a CSV file
                       </p>
                       <Button onClick={handleImport} variant="outline">

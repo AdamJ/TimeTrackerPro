@@ -230,7 +230,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="title">
-                      Task Title <span className="text-red-700">*</span>
+                      Task Title <span className="text-destructive" aria-hidden="true">*</span>
                     </Label>
                     <Input
                       id="title"
@@ -242,11 +242,15 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                         }))
                       }
                       placeholder="Enter task title"
+                      aria-required="true"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">
+                      Description{' '}
+                      <span className="text-xs font-normal text-muted-foreground">(supports Markdown)</span>
+                    </Label>
                     <Tabs defaultValue="edit" className="w-full">
                       <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="edit">Edit</TabsTrigger>

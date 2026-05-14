@@ -106,6 +106,11 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
             )}
           </div>
 
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <Label>Description</Label>
+              <span className="text-xs text-muted-foreground">Markdown supported</span>
+            </div>
           <Tabs defaultValue="edit" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="edit">Edit</TabsTrigger>
@@ -129,6 +134,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
               </div>
             </TabsContent>
           </Tabs>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {categories.length > 0 && (

@@ -166,7 +166,9 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 									<form onSubmit={handleSubmit} className="space-y-4">
 										<div className="grid grid-cols-2 gap-4">
 											<div>
-												<Label htmlFor="name">Project Name *</Label>
+												<Label htmlFor="name">
+													Project Name <span className="text-destructive" aria-hidden="true">*</span>
+												</Label>
 												<Input
 													id="name"
 													value={formData.name}
@@ -177,11 +179,14 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 														}))
 													}
 													placeholder="Enter project name"
+													aria-required="true"
 													required
 												/>
 											</div>
 											<div>
-												<Label htmlFor="client">Client Name *</Label>
+												<Label htmlFor="client">
+													Client Name <span className="text-destructive" aria-hidden="true">*</span>
+												</Label>
 												<Input
 													id="client"
 													value={formData.client}
@@ -192,6 +197,7 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 														}))
 													}
 													placeholder="Enter client name"
+													aria-required="true"
 													required
 												/>
 											</div>
