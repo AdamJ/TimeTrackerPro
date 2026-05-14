@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Dedicated Tasks page (`/tasks`) — task list, NewTaskForm, and End Day button moved out of the dashboard column into a standalone page; starting a day auto-navigates to `/tasks`; day summary displayed on the Tasks page after ending the day; dashboard shows a compact "Day In Progress" card with task count and a "View Tasks" link while a day is active
+  — `src/pages/TaskList.tsx` (new), `src/pages/Index.tsx`, `src/App.tsx`
+- Tasks navigation item added to desktop top nav and mobile bottom nav; mobile nav grid updated to support up to five items for authenticated users
+  — `src/components/Navigation.tsx`, `src/components/MobileNav.tsx`
+
 - Contributing guidelines section in README with commit prefix table and approval requirements
   — `README.md` (documents `major`/`feat`/`fix`/`patch`/`bump`/`maint`/`refactor`/`a11y`/`docs` prefixes and which trigger releases)
 - Persistent report summaries — generated summaries are auto-saved to localStorage

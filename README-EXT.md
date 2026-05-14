@@ -44,11 +44,11 @@ For the main overview, see [README.md](README.md).
 
 **Morning:**
 
-1. Click "Start Day" to begin tracking. The timer starts automatically.
+1. Click "Start Day" on the dashboard to begin tracking. The app navigates to the **Tasks** page automatically.
 
 **Throughout the Day:**
 
-1. Click "New Task" to create a task.
+1. Click "New Task" on the Tasks page to create a task.
 2. Fill in task details:
    - **Title** (required) — brief description of the work
    - **Description** (optional) — detailed notes with markdown support
@@ -59,7 +59,7 @@ For the main overview, see [README.md](README.md).
 
 **Evening:**
 
-1. Click "End Day" when finished.
+1. Click "End Day" on the Tasks page (or the Dashboard) when finished.
 2. Review your day summary (total time, revenue, task breakdown).
 3. Click "Post Time to Archive" to save permanently.
 
@@ -347,7 +347,8 @@ src/
 │   ├── supabase.ts           # Supabase client
 │   └── utils.ts              # Helper functions
 ├── pages/
-│   ├── Index.tsx             # Home / time tracker
+│   ├── Index.tsx             # Dashboard (start/end day, stats)
+│   ├── TaskList.tsx          # Active task list and NewTaskForm
 │   ├── Archive.tsx           # Archived days
 │   ├── ProjectList.tsx       # Project management
 │   ├── Categories.tsx        # Category management
