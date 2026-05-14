@@ -24,6 +24,7 @@ import { Clock, Save } from 'lucide-react';
 import { Task } from '@/contexts/TimeTrackingContext';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { formatTime, formatDate } from '@/utils/timeUtil';
+import { toast } from '@/hooks/use-toast';
 
 interface TaskEditDialogProps {
   task: Task;
@@ -150,7 +151,11 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
   const handleSave = () => {
     // Validate required fields
     if (!formData.title.trim()) {
-      alert('Task title is required');
+      toast({
+        title: 'Title required',
+        description: 'Please enter a task title before saving.',
+        variant: 'destructive'
+      });
       return;
     }
 

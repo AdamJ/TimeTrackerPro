@@ -4,6 +4,7 @@ import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TaskEditDialog } from "@/components/TaskEditDialog";
+import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import {
   Edit,
@@ -30,6 +31,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 }) => {
   const { categories } = useTimeTracking();
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const duration = task.duration || (isActive ? currentDuration : 0);
   const category = categories.find((c) => c.id === task.category);
@@ -104,9 +106,10 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
             <div className="flex space-x-2 ml-4">
               <Button
-                onClick={() => onDelete(task.id)}
+                onClick={() => setShowDeleteDialog(true)}
                 size="sm"
                 variant="outline"
+                aria-label={`Delete task: ${task.title}`}
                 className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50"
               >
                 <Trash2 className="w-3 h-3" />
@@ -116,6 +119,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 onClick={() => setShowEditDialog(true)}
                 size="sm"
                 variant="outline"
+                aria-label={`Edit task: ${task.title}`}
                 className="flex items-center space-x-1"
               >
                 <Edit className="w-3 h-3" />
@@ -130,6 +134,16 @@ export const TaskItem: React.FC<TaskItemProps> = ({
         task={task}
         isOpen={showEditDialog}
         onClose={() => setShowEditDialog(false)}
+      />
+
+      <DeleteConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={() => {
+          onDelete(task.id);
+          setShowDeleteDialog(false);
+        }}
+        taskTitle={task.title}
       />
     </>
   );
