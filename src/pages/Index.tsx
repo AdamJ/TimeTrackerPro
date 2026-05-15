@@ -2,6 +2,7 @@ import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { DaySummary } from "@/components/DaySummary";
 import { StartDayDialog } from "@/components/StartDayDialog";
 import { TaskItem } from "@/components/TaskItem";
+import { NewTaskForm } from "@/components/NewTaskForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CirclePlay, CircleStop, Archive as Play, ClipboardList } from "lucide-react";
@@ -25,6 +26,7 @@ const TimeTrackerContent = () => {
 		endDay,
 		postDay,
 		deleteTask,
+		startNewTask,
 		getTotalDayDuration,
 		getTotalHoursForPeriod,
 		getCurrentTaskDuration,
@@ -48,6 +50,16 @@ const TimeTrackerContent = () => {
 
 	const handlePostDay = () => {
 		postDay();
+	};
+
+	const handleNewTask = (
+		title: string,
+		description?: string,
+		project?: string,
+		client?: string,
+		category?: string
+	) => {
+		startNewTask(title, description, project, client, category);
 	};
 
 	const totalHours = useMemo(
@@ -167,11 +179,7 @@ const TimeTrackerContent = () => {
 								</Card>
 
 								{tasks.length === 0 ? (
-									<div className="text-center py-8 text-muted-foreground">
-										<ClipboardList className="w-10 h-10 mx-auto mb-3 opacity-40" />
-										<p className="font-medium">No tasks yet</p>
-										<p className="text-sm mt-1">Use the button above to start tracking your first task.</p>
-									</div>
+									<NewTaskForm onSubmit={handleNewTask} defaultOpen={true} />
 								) : (
 									<div className="space-y-3">
 										{tasks.map((task) => (
