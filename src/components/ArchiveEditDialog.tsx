@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+	AdaptiveDialog,
+	AdaptiveDialogContent,
+	AdaptiveDialogHeader,
+	AdaptiveDialogTitle,
+} from "@/components/ui/adaptive-dialog";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -260,16 +260,16 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 	};
 
 	return (
-		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className="max-w-[90dvw] max-h-[90dvh] overflow-y-auto">
-				<DialogHeader>
+		<AdaptiveDialog open={isOpen} onOpenChange={onClose} snapPoints={[0.85, 1]}>
+			<AdaptiveDialogContent className="max-w-[90dvw] max-h-[90dvh] overflow-y-auto">
+				<AdaptiveDialogHeader>
 					<div className="flex items-center justify-between">
-						<DialogTitle className="flex items-center space-x-2">
+						<AdaptiveDialogTitle className="flex items-center space-x-2">
 							<Calendar className="w-5 h-5 text-blue-600" />
 							<span>{formatDate(day.startTime)}</span>
-						</DialogTitle>
+						</AdaptiveDialogTitle>
 					</div>
-				</DialogHeader>
+				</AdaptiveDialogHeader>
 
 				<div className="space-y-6 overflow-x-hidden">
 					<div className="flex flex-wrap justify-center sm:justify-end items-center gap-3 my-4">
@@ -621,7 +621,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 						</AlertDialogFooter>
 					</AlertDialogContent>
 				</AlertDialog>
-			</DialogContent>
-		</Dialog>
+			</AdaptiveDialogContent>
+		</AdaptiveDialog>
 	);
 };

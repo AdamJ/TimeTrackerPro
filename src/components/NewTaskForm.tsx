@@ -68,7 +68,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
       <Button
         variant="default"
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 md:bottom-6 right-6 w-16 h-16 rounded-full text-white text-md shadow-2xl hover:shadow-3xl transition-all duration-200 flex items-center justify-center z-50 hover:scale-110"
+        className="fixed bottom-16 fab-nav-offset md:bottom-6 right-6 w-16 h-16 rounded-full text-white text-md shadow-2xl hover:shadow-3xl transition-all duration-200 flex items-center justify-center z-50 hover:scale-110"
         aria-label="New Task"
       >
         <Plus style={{ fontSize: "1.5rem", width: "1.5rem", height: "1.5rem" }} />

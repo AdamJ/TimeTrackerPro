@@ -9,8 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Dedicated Tasks page (`/tasks`) — task list, NewTaskForm, and End Day button moved out of the dashboard column into a standalone page; starting a day auto-navigates to `/tasks`; day summary displayed on the Tasks page after ending the day; dashboard shows a compact "Day In Progress" card with task count and a "View Tasks" link while a day is active
-  — `src/pages/TaskList.tsx` (new), `src/pages/Index.tsx`, `src/App.tsx`
+- Apple HIG compliance pass for the native iOS app
+  - **Bottom sheets** — `TaskEditDialog`, `StartDayDialog`, `ArchiveEditDialog`, and `DeleteConfirmationDialog` now render as swipe-to-dismiss vaul `Drawer` sheets on iOS (snap points tuned per dialog complexity) and fall back to the existing centered Radix `Dialog` on web. `DeleteConfirmationDialog` reverses button order on iOS (destructive action above Cancel) per UIAlertController convention.
+    — `src/components/ui/adaptive-dialog.tsx` (new), `src/components/ui/drawer.tsx`, `src/components/TaskEditDialog.tsx`, `src/components/StartDayDialog.tsx`, `src/components/ArchiveEditDialog.tsx`, `src/components/DeleteConfirmationDialog.tsx`
+  - **Haptic feedback** — `useHaptics` wraps `@capacitor/haptics`; light impact on tab switches and Edit, medium on Delete, heavy on destructive confirm, success notification on task creation and day archive, error notification on sync failure. No-op on web.
+    — `src/hooks/useHaptics.ts` (new), `src/components/MobileNav.tsx`, `src/components/TaskItem.tsx`, `src/components/DeleteConfirmationDialog.tsx`, `src/contexts/TimeTrackingContext.tsx`
+  - **App lifecycle persistence** — `useAppLifecycle` uses `@capacitor/app`'s `appStateChange` event (fires at the Swift layer before WKWebView freezes) instead of `visibilitychange` for the emergency localStorage backup, eliminating the race condition on rapid app backgrounding. Falls back to `visibilitychange` on web.
+    — `src/hooks/useAppLifecycle.ts` (new), `src/contexts/TimeTrackingContext.tsx`
+  - **Status bar theming** — `useStatusBar` syncs the iOS status bar text colour (white in dark mode, black in light mode) via `@capacitor/status-bar`; `apple-mobile-web-app-status-bar-style` updated to `black-translucent` so the web view extends behind the status bar region. No-op on web.
+    — `src/hooks/useStatusBar.ts` (new), `src/App.tsx`, `index.html`
+  - **iOS navigation header** — desktop `SiteNavigationMenu` is hidden on iOS builds and replaced with `IosPageHeader`: a sticky 17px SF-style title bar with safe-area-inset-top padding, back chevron, and right-side action slot. `ios-build` class added to `<body>` on iOS to prevent double-stacking of safe-area padding.
+    — `src/components/IosPageHeader.tsx` (new), `src/components/PageLayout.tsx`, `src/main.tsx`, `public/pwa.css`
+  - **Keyboard avoidance** — `@capacitor/keyboard` configured with `resize: body` so the viewport shrinks above the keyboard. `useKeyboardHeight` hook tracks keyboard height and applies it as `paddingBottom` on `DrawerContent` so form fields inside bottom sheets remain accessible. `scroll-margin-bottom: 24px` added for native scroll-into-view on input focus.
+    — `src/hooks/useKeyboardHeight.ts` (new), `capacitor.config.ts`, `src/components/ui/drawer.tsx`, `public/pwa.css`
+  - **Long-press context menus** — `useLongPress` fires a 500 ms hold callback; `TaskItem` wraps cards in a Radix `ContextMenu` (right-click on desktop, long-press on iOS) with Edit and Delete actions. Action buttons hidden on iOS builds where context menus serve as the primary affordance.
+    — `src/hooks/useLongPress.ts` (new), `src/components/TaskItem.tsx`
+  - **Page transition animations** — route changes in the iOS build play a subtle 280 ms slide-in from the right (`cubic-bezier(0.25, 0.46, 0.45, 0.94)`), scoped to `@supports (-webkit-touch-callout: none)` so the animation never runs on web.
+    — `src/App.tsx` (`AnimatedRoutes` component), `public/pwa.css`
+  - **New Capacitor plugins** installed: `@capacitor/app`, `@capacitor/haptics`, `@capacitor/status-bar`, `@capacitor/keyboard` (all v8.x, matching the existing core/ios versions).
+
+### Changed
+
+- **Touch targets** — `Button` `size="sm"` raised from `h-9` (36 px) to `h-10` (40 px); mobile CSS now enforces `min-height: 44px` on all non-hidden buttons at ≤768 px (previously commented out).
+  — `src/components/ui/button.tsx`, `public/pwa.css`
+- **Rubber-band scroll bounce** — `overscroll-behavior-y` restored to `auto` on `#root` inside the iOS `@supports` block so the native bounce animation works again (was `contain` globally which suppressed it). vaul drawer elements gain `overscroll-behavior: contain` + `touch-action: pan-y` to prevent scroll bleed through open sheets.
+  — `public/pwa.css`
+
+
 - Tasks navigation item added to desktop top nav and mobile bottom nav; mobile nav grid updated to support up to five items for authenticated users
   — `src/components/Navigation.tsx`, `src/components/MobileNav.tsx`
 

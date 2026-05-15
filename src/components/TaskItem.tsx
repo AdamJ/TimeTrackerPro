@@ -1,7 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Task } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { Button } from "@/components/ui/button";
+import { useHaptics } from "@/hooks/useHaptics";
+import { useLongPress } from "@/hooks/useLongPress";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { Card, CardContent } from "@/components/ui/card";
 import { TaskEditDialog } from "@/components/TaskEditDialog";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
@@ -32,12 +41,29 @@ export const TaskItem: React.FC<TaskItemProps> = ({
   const { categories } = useTimeTracking();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { lightImpact, mediumImpact } = useHaptics();
+  const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
+
+  const longPressHandlers = useLongPress(() => {
+    mediumImpact();
+    // Simulate a right-click to open the Radix context menu programmatically
+    if (contextMenuTriggerRef.current) {
+      contextMenuTriggerRef.current.dispatchEvent(
+        new MouseEvent("contextmenu", { bubbles: true, cancelable: true })
+      );
+    }
+  });
 
   const duration = task.duration || (isActive ? currentDuration : 0);
   const category = categories.find((c) => c.id === task.category);
 
+  const isIosBuild = import.meta.env.VITE_IOS_BUILD === "true";
+
   return (
     <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div ref={contextMenuTriggerRef} {...longPressHandlers}>
       <Card
         className={`transition-all duration-200 ${
           isActive ? "ring-2 ring-blue-500 hover:shadow-md hover:shadow-blue-300 bg-white" : "hover:shadow-md"
@@ -104,31 +130,52 @@ export const TaskItem: React.FC<TaskItemProps> = ({
               </div>
             </div>
 
-            <div className="flex space-x-2 ml-4">
-              <Button
-                onClick={() => setShowDeleteDialog(true)}
-                size="sm"
-                variant="outline"
-                aria-label={`Delete task: ${task.title}`}
-                className="flex items-center space-x-1 min-h-[44px] min-w-[44px] text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <Trash2 className="w-3 h-3" />
-                <span className="hidden sm:block">Delete</span>
-              </Button>
-              <Button
-                onClick={() => setShowEditDialog(true)}
-                size="sm"
-                variant="outline"
-                aria-label={`Edit task: ${task.title}`}
-                className="flex items-center space-x-1 min-h-[44px] min-w-[44px]"
-              >
-                <Edit className="w-3 h-3" />
-                <span className="hidden sm:block">Edit</span>
-              </Button>
-            </div>
+            {!isIosBuild && (
+              <div className="flex space-x-2 ml-4">
+                <Button
+                  onClick={() => { mediumImpact(); setShowDeleteDialog(true); }}
+                  size="sm"
+                  variant="outline"
+                  aria-label={`Delete task: ${task.title}`}
+                  className="flex items-center space-x-1 min-h-[44px] min-w-[44px] text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span className="hidden sm:block">Delete</span>
+                </Button>
+                <Button
+                  onClick={() => { lightImpact(); setShowEditDialog(true); }}
+                  size="sm"
+                  variant="outline"
+                  aria-label={`Edit task: ${task.title}`}
+                  className="flex items-center space-x-1 min-h-[44px] min-w-[44px]"
+                >
+                  <Edit className="w-3 h-3" />
+                  <span className="hidden sm:block">Edit</span>
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem
+            onClick={() => { lightImpact(); setShowEditDialog(true); }}
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Task
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem
+            onClick={() => { mediumImpact(); setShowDeleteDialog(true); }}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete Task
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
 
       <TaskEditDialog
         task={task}

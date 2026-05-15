@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from '@/components/ui/dialog';
+  AdaptiveDialog,
+  AdaptiveDialogContent,
+  AdaptiveDialogHeader,
+  AdaptiveDialogTitle,
+  AdaptiveDialogDescription,
+  AdaptiveDialogFooter,
+} from "@/components/ui/adaptive-dialog";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,17 +62,17 @@ export const StartDayDialog: React.FC<StartDayDialogProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
+    <AdaptiveDialog open={isOpen} onOpenChange={onClose} snapPoints={[0.5, 1]}>
+      <AdaptiveDialogContent className="max-w-md">
+        <AdaptiveDialogHeader>
+          <AdaptiveDialogTitle className="flex items-center space-x-2">
             <Calendar className="w-5 h-5 text-blue-600" />
             <span>Start Your Work Day</span>
-          </DialogTitle>
-          <DialogDescription>
+          </AdaptiveDialogTitle>
+          <AdaptiveDialogDescription>
             Choose the date and time when you started working today.
-          </DialogDescription>
-        </DialogHeader>
+          </AdaptiveDialogDescription>
+        </AdaptiveDialogHeader>
 
         <div className="space-y-4 py-4">
           <div>
@@ -96,7 +96,7 @@ export const StartDayDialog: React.FC<StartDayDialogProps> = ({
           </div>
         </div>
 
-        <DialogFooter>
+        <AdaptiveDialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
@@ -107,8 +107,8 @@ export const StartDayDialog: React.FC<StartDayDialogProps> = ({
             <Clock className="w-4 h-4 mr-2" />
             Start Day
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </AdaptiveDialogFooter>
+      </AdaptiveDialogContent>
+    </AdaptiveDialog>
   );
 };

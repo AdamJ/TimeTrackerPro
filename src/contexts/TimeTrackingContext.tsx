@@ -27,6 +27,8 @@ import {
 } from '@/utils/exportUtils';
 import { parseTaskChecklist } from '@/utils/checklistUtils';
 import { SCHEMA_VERSION } from '@/services/localStorageService';
+import { useAppLifecycle } from '@/hooks/useAppLifecycle';
+import { useHaptics } from '@/hooks/useHaptics';
 
 export interface Task {
   id: string;
@@ -229,6 +231,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  const { successNotify, errorNotify } = useHaptics();
+
   // Debounce refs to manage timeouts
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentTaskTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -425,6 +429,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           "❌ Manual sync partially failed:",
           failed.map((f) => (f as PromiseRejectedResult).reason)
         );
+        errorNotify();
         // Do not mark sync as successful when any save failed
         return;
       }
@@ -433,10 +438,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       setHasUnsavedChanges(false);
     } catch (error) {
       console.error('❌ Manual sync failed:', error);
+      errorNotify();
     } finally {
       setIsSyncing(false);
     }
-  }, [dataService, stableSaveCurrentDay, projects, categories, archivedDays, todoItems]);
+  }, [dataService, stableSaveCurrentDay, projects, categories, archivedDays, todoItems, errorNotify]);
 
   // Load current day data (for periodic sync)
   const loadCurrentDay = useCallback(async () => {
@@ -480,26 +486,22 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [dataService, isDayStarted, tasks, currentTask, dayStartTime]);
 
-  // iOS/Capacitor apps don't reliably fire beforeunload when backgrounded or killed.
-  // visibilitychange fires when the app is suspended, giving us a last chance to
-  // write a synchronous backup before JavaScript execution is frozen.
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState !== "hidden") return;
-      if (!isDayStarted && tasks.length === 0) return;
-      try {
-        localStorage.setItem(
-          STORAGE_KEYS.CURRENT_DAY,
-          JSON.stringify({ isDayStarted, dayStartTime, tasks, currentTask, _v: SCHEMA_VERSION })
-        );
-      } catch {
-        // best effort
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  // On iOS/Capacitor, useAppLifecycle fires at the Swift layer (appStateChange)
+  // before WKWebView is frozen — more reliable than beforeunload or visibilitychange.
+  // On web, it falls back to visibilitychange automatically.
+  const handleBackground = useCallback(() => {
+    if (!isDayStarted && tasks.length === 0) return;
+    try {
+      localStorage.setItem(
+        STORAGE_KEYS.CURRENT_DAY,
+        JSON.stringify({ isDayStarted, dayStartTime, tasks, currentTask, _v: SCHEMA_VERSION })
+      );
+    } catch {
+      // best effort
+    }
   }, [isDayStarted, dayStartTime, tasks, currentTask]);
+
+  useAppLifecycle(handleBackground);
 
   // Sync to backend when coming back online
   useEffect(() => {
@@ -610,6 +612,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setTasks(updatedTasks);
     setCurrentTask(newTask);
     setHasUnsavedChanges(true);
+    successNotify();
     // Save with freshly computed state to avoid reading from stale latestStateRef
     if (dataService) {
       dataService.saveCurrentDay({ isDayStarted, dayStartTime, currentTask: newTask, tasks: updatedTasks })
@@ -714,6 +717,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         }
 
         setHasUnsavedChanges(false);
+        successNotify();
 
         // Show success notification to user
         toast({

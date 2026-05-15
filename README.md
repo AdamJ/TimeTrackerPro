@@ -20,7 +20,7 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 - **CSV Import** — bring in existing time data from other tools
 - **Weekly Report** — AI-generated work summaries (standup, client, or retrospective tone)
 - **No Account Required** — full functionality with local storage; optional cloud sync via Supabase
-- **PWA + Native iOS** — installable on desktop/mobile; distributed as a native iOS app via Capacitor 8
+- **PWA + Native iOS** — installable on desktop/mobile; distributed as a native iOS app via Capacitor 8 with Apple HIG-compliant bottom sheets, haptic feedback, status bar theming, keyboard avoidance, and native page transitions
 
 ---
 

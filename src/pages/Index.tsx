@@ -87,21 +87,13 @@ const TimeTrackerContent = () => {
 	}
 
 	return (
-		<PageLayout>
+		<PageLayout title="Dashboard" icon={<DashboardIcon className="w-6 h-6" />}>
 			<div className="max-w-6xl mx-auto pt-4 pb-6 px-4 md:p-6 print:p-4 space-y-6">
 				<StartDayDialog
 					isOpen={showStartDayDialog}
 					onClose={() => setShowStartDayDialog(false)}
 					onStartDay={handleStartDayWithDateTime}
 				/>
-
-				{/* Dashboard header */}
-				<div className="flex items-center justify-between">
-					<h1 className="md:text-2xl font-bold text-foreground flex items-center space-x-1">
-						<DashboardIcon className="w-6 h-6 mr-1" />
-						<span>Dashboard</span>
-					</h1>
-				</div>
 
 				{/* Stats (always visible) */}
 				{!isDayStarted && (
