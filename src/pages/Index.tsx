@@ -10,7 +10,7 @@ import { DashboardIcon } from "@radix-ui/react-icons";
 import { PageLayout } from "@/components/PageLayout";
 import { TaskTrackingPanel } from "@/components/TaskTrackingPanel";
 import { useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 // Stable epoch constant — avoids creating new Date(0) on every render
 const EPOCH = new Date(0);
@@ -32,7 +32,6 @@ const TimeTrackerContent = () => {
 		getCurrentTaskDuration,
 	} = useTimeTracking();
 
-	const navigate = useNavigate();
 	const [showStartDayDialog, setShowStartDayDialog] = useState(false);
 
 	const handleStartDay = () => {
@@ -41,7 +40,6 @@ const TimeTrackerContent = () => {
 
 	const handleStartDayWithDateTime = (startDateTime: Date) => {
 		startDay(startDateTime);
-		navigate("/tasks");
 	};
 
 	const handleEndDay = () => {
