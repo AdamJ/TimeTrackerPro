@@ -10,7 +10,6 @@ import { DashboardIcon } from "@radix-ui/react-icons";
 import { PageLayout } from "@/components/PageLayout";
 import { TaskTrackingPanel } from "@/components/TaskTrackingPanel";
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
 
 // Stable epoch constant — avoids creating new Date(0) on every render
 const EPOCH = new Date(0);
@@ -33,6 +32,7 @@ const TimeTrackerContent = () => {
 	} = useTimeTracking();
 
 	const [showStartDayDialog, setShowStartDayDialog] = useState(false);
+	const [showAddTaskForm, setShowAddTaskForm] = useState(false);
 
 	const handleStartDay = () => {
 		setShowStartDayDialog(true);
@@ -58,6 +58,7 @@ const TimeTrackerContent = () => {
 		category?: string
 	) => {
 		startNewTask(title, description, project, client, category);
+		setShowAddTaskForm(false);
 	};
 
 	const totalHours = useMemo(
@@ -167,18 +168,22 @@ const TimeTrackerContent = () => {
 										</CardTitle>
 									</CardHeader>
 									<CardContent>
-										<Button asChild className="w-full">
-											<Link to="/tasks" className="flex items-center justify-center space-x-2">
-												<ClipboardList className="w-4 h-4" />
-												<span>Add Task</span>
-											</Link>
+										<Button
+											className="w-full"
+											onClick={() => setShowAddTaskForm(true)}
+											disabled={showAddTaskForm}
+										>
+											<ClipboardList className="w-4 h-4" />
+											Add Task
 										</Button>
 									</CardContent>
 								</Card>
 
-								{tasks.length === 0 ? (
+								{(tasks.length === 0 || showAddTaskForm) && (
 									<NewTaskForm onSubmit={handleNewTask} defaultOpen={true} />
-								) : (
+								)}
+
+								{tasks.length > 0 && (
 									<div className="space-y-3">
 										{tasks.map((task) => (
 											<TaskItem
