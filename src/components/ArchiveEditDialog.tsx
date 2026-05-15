@@ -191,34 +191,39 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 		newEndTime.setMonth(selectedDate.getMonth());
 		newEndTime.setDate(selectedDate.getDate());
 
-		// Update all task timestamps to use the new date
-		const updatedTasks = tasks.map(task => {
-			const newTaskStartTime = new Date(task.startTime);
-			newTaskStartTime.setFullYear(selectedDate.getFullYear());
-			newTaskStartTime.setMonth(selectedDate.getMonth());
-			newTaskStartTime.setDate(selectedDate.getDate());
+		// Determine whether tasks need to be included in the update payload.
+		// A date change shifts every task's timestamps, so always send tasks then.
+		// Otherwise only send tasks if the user explicitly edited them.
+		const dateChanged = dayData.date !== formatDateForInput(day.startTime);
+		const tasksContentChanged = JSON.stringify(tasks) !== JSON.stringify(day.tasks);
+		const needsTaskUpdate = dateChanged || tasksContentChanged;
 
-			const newTaskEndTime = task.endTime ? new Date(task.endTime) : undefined;
-			if (newTaskEndTime) {
-				newTaskEndTime.setFullYear(selectedDate.getFullYear());
-				newTaskEndTime.setMonth(selectedDate.getMonth());
-				newTaskEndTime.setDate(selectedDate.getDate());
-			}
+		// Re-stamp task timestamps only when necessary
+		const updatedTasks = needsTaskUpdate
+			? tasks.map(task => {
+				const newTaskStartTime = new Date(task.startTime);
+				newTaskStartTime.setFullYear(selectedDate.getFullYear());
+				newTaskStartTime.setMonth(selectedDate.getMonth());
+				newTaskStartTime.setDate(selectedDate.getDate());
 
-			return {
-				...task,
-				startTime: newTaskStartTime,
-				endTime: newTaskEndTime,
-			};
-		});
+				const newTaskEndTime = task.endTime ? new Date(task.endTime) : undefined;
+				if (newTaskEndTime) {
+					newTaskEndTime.setFullYear(selectedDate.getFullYear());
+					newTaskEndTime.setMonth(selectedDate.getMonth());
+					newTaskEndTime.setDate(selectedDate.getDate());
+				}
+
+				return { ...task, startTime: newTaskStartTime, endTime: newTaskEndTime };
+			})
+			: tasks;
 
 		const updatedDay: Partial<DayRecord> = {
 			date: newStartTime.toDateString(),
 			startTime: newStartTime,
 			endTime: newEndTime,
 			notes: dayData.notes || undefined,
-			tasks: updatedTasks,
 			totalDuration: calculateTotalDuration(updatedTasks),
+			...(needsTaskUpdate ? { tasks: updatedTasks } : {}),
 		};
 
 		setIsSaving(true);

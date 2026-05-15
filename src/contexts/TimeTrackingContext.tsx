@@ -801,8 +801,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   ) => {
     if (!dataService) return;
 
-    try {
+    // Capture original for targeted rollback on error
+    const originalDay = archivedDays.find(d => d.id === dayId);
 
+    try {
       // Optimistic update - update local state immediately for responsive UI
       setArchivedDays(prev =>
         prev.map(day => (day.id === dayId ? { ...day, ...updates } : day))
@@ -814,9 +816,15 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       console.error('❌ Error updating archived day:', error);
 
-      // On error, refresh from database to restore consistent state
-      const refreshedDays = await dataService.getArchivedDays();
-      setArchivedDays(refreshedDays);
+      // Roll back only the affected day rather than re-fetching the entire archive
+      if (originalDay) {
+        setArchivedDays(prev =>
+          prev.map(day => (day.id === dayId ? originalDay : day))
+        );
+      } else {
+        const refreshedDays = await dataService.getArchivedDays();
+        setArchivedDays(refreshedDays);
+      }
 
       throw error; // Re-throw so the UI can handle it
     }
