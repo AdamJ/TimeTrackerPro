@@ -1,7 +1,8 @@
-import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { DaySummary } from "@/components/DaySummary";
 import { StartDayDialog } from "@/components/StartDayDialog";
+import { TaskItem } from "@/components/TaskItem";
+import { NewTaskForm } from "@/components/NewTaskForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CirclePlay, CircleStop, Archive as Play, ClipboardList } from "lucide-react";
@@ -9,7 +10,6 @@ import { DashboardIcon } from "@radix-ui/react-icons";
 import { PageLayout } from "@/components/PageLayout";
 import { TaskTrackingPanel } from "@/components/TaskTrackingPanel";
 import { useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
 
 // Stable epoch constant — avoids creating new Date(0) on every render
 const EPOCH = new Date(0);
@@ -18,17 +18,21 @@ const TimeTrackerContent = () => {
 	const {
 		isDayStarted,
 		dayStartTime,
+		currentTask,
 		tasks,
 		archivedDays,
 		startDay,
 		endDay,
 		postDay,
+		deleteTask,
+		startNewTask,
 		getTotalDayDuration,
-		getTotalHoursForPeriod
+		getTotalHoursForPeriod,
+		getCurrentTaskDuration,
 	} = useTimeTracking();
 
-	const navigate = useNavigate();
 	const [showStartDayDialog, setShowStartDayDialog] = useState(false);
+	const [showAddTaskForm, setShowAddTaskForm] = useState(false);
 
 	const handleStartDay = () => {
 		setShowStartDayDialog(true);
@@ -36,7 +40,6 @@ const TimeTrackerContent = () => {
 
 	const handleStartDayWithDateTime = (startDateTime: Date) => {
 		startDay(startDateTime);
-		navigate("/tasks");
 	};
 
 	const handleEndDay = () => {
@@ -45,6 +48,17 @@ const TimeTrackerContent = () => {
 
 	const handlePostDay = () => {
 		postDay();
+	};
+
+	const handleNewTask = (
+		title: string,
+		description?: string,
+		project?: string,
+		client?: string,
+		category?: string
+	) => {
+		startNewTask(title, description, project, client, category);
+		setShowAddTaskForm(false);
 	};
 
 	const totalHours = useMemo(
@@ -141,30 +155,48 @@ const TimeTrackerContent = () => {
 							<>
 								<Card className="bg-muted border-border">
 									<CardHeader>
-										<CardTitle className="flex items-center space-x-2 text-primary">
-											<ClipboardList className="w-5 h-5" />
-											<span>Day In Progress</span>
+										<CardTitle className="flex items-center justify-between text-primary">
+											<span className="flex items-center space-x-2">
+												<ClipboardList className="w-5 h-5" />
+												<span>Day In Progress</span>
+											</span>
+											{dayStartTime && (
+												<span className="text-sm font-normal text-muted-foreground">
+													Started at {dayStartTime.toLocaleTimeString()}
+												</span>
+											)}
 										</CardTitle>
 									</CardHeader>
-									<CardContent className="space-y-4">
-										{dayStartTime && (
-											<p className="text-sm text-muted-foreground">
-												Started at {dayStartTime.toLocaleTimeString()}
-											</p>
-										)}
-										<p className="text-foreground">
-											{tasks.length === 0
-												? "No tasks tracked yet — go to Tasks to start your first task."
-												: `${tasks.length} task${tasks.length === 1 ? "" : "s"} tracked today.`}
-										</p>
-										<Button asChild className="w-full">
-											<Link to="/tasks" className="flex items-center justify-center space-x-2">
-												<ClipboardList className="w-4 h-4" />
-												<span>View Tasks</span>
-											</Link>
+									<CardContent>
+										<Button
+											className="w-full"
+											onClick={() => setShowAddTaskForm(true)}
+											disabled={showAddTaskForm}
+										>
+											<ClipboardList className="w-4 h-4" />
+											Add Task
 										</Button>
 									</CardContent>
 								</Card>
+
+								{(tasks.length === 0 || showAddTaskForm) && (
+									<NewTaskForm onSubmit={handleNewTask} defaultOpen={true} />
+								)}
+
+								{tasks.length > 0 && (
+									<div className="space-y-3">
+										{tasks.map((task) => (
+											<TaskItem
+												key={task.id}
+												task={task}
+												isActive={currentTask?.id === task.id}
+												currentDuration={currentTask?.id === task.id ? getCurrentTaskDuration() : 0}
+												onDelete={deleteTask}
+											/>
+										))}
+									</div>
+								)}
+
 								<Button
 									variant="outline"
 									onClick={handleEndDay}
