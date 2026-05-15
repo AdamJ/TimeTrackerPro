@@ -37,6 +37,7 @@ import {
 	Calendar,
 	Clock,
 	Save,
+	Loader2,
 	Trash2,
 	Edit,
 	AlertTriangle,
@@ -103,6 +104,8 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 	} = useTimeTracking();
 	const { toast } = useToast();
 	const [isEditing, setIsEditing] = useState(false);
+	const [isSaving, setIsSaving] = useState(false);
+	const [hasChanges, setHasChanges] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [showRestoreDialog, setShowRestoreDialog] = useState(false);
 	const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -127,10 +130,28 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 			});
 			setTasks([...day.tasks]);
 			setIsEditing(false);
+			setHasChanges(false);
 			setEditingTask(null);
 			setShowDeleteConfirm(false);
 		}
 	}, [day, isOpen]);
+
+	// Track whether the form differs from the saved day
+	useEffect(() => {
+		if (!isEditing || !day) {
+			setHasChanges(false);
+			return;
+		}
+		const initialData = {
+			date: formatDateForInput(day.startTime),
+			startTime: formatTimeForInput(day.startTime),
+			endTime: formatTimeForInput(day.endTime),
+			notes: day.notes || "",
+		};
+		const dayDataChanged = JSON.stringify(dayData) !== JSON.stringify(initialData);
+		const tasksChanged = JSON.stringify(tasks) !== JSON.stringify(day.tasks);
+		setHasChanges(dayDataChanged || tasksChanged);
+	}, [dayData, tasks, isEditing, day]);
 
 	const parseTimeInput = (timeStr: string, baseDate: Date): Date => {
 		if (!timeStr || !timeStr.includes(":")) {
@@ -200,12 +221,15 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 			totalDuration: calculateTotalDuration(updatedTasks),
 		};
 
+		setIsSaving(true);
 		try {
 			await updateArchivedDay(day.id, updatedDay);
 			setIsEditing(false);
 		} catch (error) {
 			console.error("Failed to save archived day:", error);
 			toast({ title: "Save failed", description: "Failed to save changes. Please try again.", variant: "destructive" });
+		} finally {
+			setIsSaving(false);
 		}
 	};
 
@@ -309,9 +333,17 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 								<Button onClick={handleCancel} variant="outline" size="sm">
 									Cancel
 								</Button>
-								<Button onClick={handleSaveDay} size="sm">
-									<Save className="w-4 h-4 mr-2" />
-									Save
+								<Button
+									onClick={handleSaveDay}
+									size="sm"
+									disabled={!hasChanges || isSaving}
+								>
+									{isSaving ? (
+										<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+									) : (
+										<Save className="w-4 h-4 mr-2" />
+									)}
+									{isSaving ? "Saving..." : hasChanges ? "Save Changes" : "No Changes"}
 								</Button>
 							</>
 						)}
