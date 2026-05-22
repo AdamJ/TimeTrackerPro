@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- iOS navigation bar redesigned as a floating pill — rounded-full shape, frosted-glass background (`rgba(255,255,255,0.80)`), drop shadow, and `mb-2 mx-2` margins replacing the full-width border-top bar
+  — `src/components/MobileNav.tsx`
+- Page title heading hidden on non-iOS web builds (`hidden` class added to title `div` in `PageLayout`)
+  — `src/components/PageLayout.tsx`
+- Homepage stats grid changed from single-column to two-column on mobile (`grid-cols-2`)
+  — `src/pages/Index.tsx`
+- Todo list item alignment in `TaskTrackingPanel` changed from `items-start` to `items-center`
+  — `src/components/TaskTrackingPanel.tsx`
+- Theme accent color changed from `orange` to `blue`
+  — `src/main.tsx`
+
 ### Added
 
 - Apple HIG compliance pass for the native iOS app

@@ -31,7 +31,7 @@ export const PageLayout = ({
 				<SiteNavigationMenu />
 			)}
 			{!isIosBuild && title !== undefined && (
-				<div className="max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
+				<div className="hidden max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
 					<div className="flex items-center justify-between">
 						<h1 className="md:text-2xl font-bold text-foreground flex items-center gap-2">
 							{icon}

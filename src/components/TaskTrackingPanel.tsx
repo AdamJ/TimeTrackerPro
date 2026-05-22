@@ -87,7 +87,7 @@ export function TaskTrackingPanel() {
 				{activeTodos.length > 0 && (
 					<ul className="space-y-2">
 						{activeTodos.map((item) => (
-							<li key={item.id} className="flex items-start gap-2 group">
+							<li key={item.id} className="flex items-center gap-2 group">
 								<Checkbox
 									id={`todo-${item.id}`}
 									checked={false}
