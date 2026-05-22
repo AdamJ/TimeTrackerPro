@@ -1,17 +1,14 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { HashRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OfflineProvider } from "@/contexts/OfflineContext";
 import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
 import { useAuth } from "@/hooks/useAuth";
-import { Suspense, lazy, useState, useEffect } from "react";
+import { Suspense, lazy } from "react";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { UpdateNotification } from "@/components/UpdateNotification";
-import { useStatusBar } from "@/hooks/useStatusBar";
-
-const isIosBuild = import.meta.env.VITE_IOS_BUILD === "true";
 import { MobileNav } from "@/components/MobileNav";
 
 // Lazy load pages for code splitting
@@ -39,55 +36,31 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const AppShell = () => {
-  const [isDark, setIsDark] = useState(
-    () => window.matchMedia("(prefers-color-scheme: dark)").matches
-  );
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  useStatusBar(isDark);
-  return null;
-};
-
-const AnimatedRoutes = () => {
-  const location = useLocation();
-  return (
-    <div key={location.pathname} className={isIosBuild ? "page-transition-enter" : ""}>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/tasks" element={<TaskList />} />
-        <Route path="/projectlist" element={<ProjectList />} />
-        <Route path="/categories" element={<Categories />} />
-        <Route path="/archive" element={<Archive />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </div>
-  );
-};
-
 const App = () => (
   <OfflineProvider>
     <AuthProvider>
       <TimeTrackingProvider>
         <TooltipProvider>
-          <AppShell />
           <Toaster />
           <Sonner />
-          <HashRouter>
+          <BrowserRouter>
             <Suspense fallback={<PageLoader />}>
-              <AnimatedRoutes />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/tasks" element={<TaskList />} />
+                <Route path="/projectlist" element={<ProjectList />} />
+                <Route path="/categories" element={<Categories />} />
+                <Route path="/archive" element={<Archive />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
               <MobileNav />
             </Suspense>
-          </HashRouter>
-          {!isIosBuild && <InstallPrompt />}
-          {!isIosBuild && <UpdateNotification />}
+          </BrowserRouter>
+          <InstallPrompt />
+          <UpdateNotification />
         </TooltipProvider>
       </TimeTrackingProvider>
     </AuthProvider>

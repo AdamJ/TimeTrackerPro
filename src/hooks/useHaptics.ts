@@ -1,51 +1,13 @@
-import { Capacitor } from "@capacitor/core";
-
-let hapticsModule: typeof import("@capacitor/haptics") | null = null;
-
-async function getHaptics() {
-	if (!Capacitor.isNativePlatform()) return null;
-	if (!hapticsModule) {
-		hapticsModule = await import("@capacitor/haptics");
-	}
-	return hapticsModule;
-}
-
 export function useHaptics() {
-	const lightImpact = () => {
-		getHaptics().then((h) => {
-			if (h) h.Haptics.impact({ style: h.ImpactStyle.Light });
-		});
+	const vibrate = (pattern: number | number[]) => {
+		navigator.vibrate?.(pattern);
 	};
-
-	const mediumImpact = () => {
-		getHaptics().then((h) => {
-			if (h) h.Haptics.impact({ style: h.ImpactStyle.Medium });
-		});
+	return {
+		lightImpact: () => vibrate(10),
+		mediumImpact: () => vibrate(20),
+		heavyImpact: () => vibrate(50),
+		successNotify: () => vibrate([10, 50, 10]),
+		errorNotify: () => vibrate([50, 50, 50]),
+		warnNotify: () => vibrate(30),
 	};
-
-	const heavyImpact = () => {
-		getHaptics().then((h) => {
-			if (h) h.Haptics.impact({ style: h.ImpactStyle.Heavy });
-		});
-	};
-
-	const successNotify = () => {
-		getHaptics().then((h) => {
-			if (h) h.Haptics.notification({ type: h.NotificationType.Success });
-		});
-	};
-
-	const errorNotify = () => {
-		getHaptics().then((h) => {
-			if (h) h.Haptics.notification({ type: h.NotificationType.Error });
-		});
-	};
-
-	const warnNotify = () => {
-		getHaptics().then((h) => {
-			if (h) h.Haptics.notification({ type: h.NotificationType.Warning });
-		});
-	};
-
-	return { lightImpact, mediumImpact, heavyImpact, successNotify, errorNotify, warnNotify };
 }

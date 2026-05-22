@@ -46,7 +46,6 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
   const longPressHandlers = useLongPress(() => {
     mediumImpact();
-    // Simulate a right-click to open the Radix context menu programmatically
     if (contextMenuTriggerRef.current) {
       contextMenuTriggerRef.current.dispatchEvent(
         new MouseEvent("contextmenu", { bubbles: true, cancelable: true })
@@ -56,8 +55,6 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
   const duration = task.duration || (isActive ? currentDuration : 0);
   const category = categories.find((c) => c.id === task.category);
-
-  const isIosBuild = import.meta.env.VITE_IOS_BUILD === "true";
 
   return (
     <>
@@ -73,14 +70,6 @@ export const TaskItem: React.FC<TaskItemProps> = ({
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-2">
-                {/* Should I remove this section? */}
-                {/* {category && (
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: category.color }}
-                    title={category.name}
-                  />
-                )} */}
                 <h3 className="font-bold text-foreground">
                   {task.title}
                 </h3>
@@ -130,30 +119,28 @@ export const TaskItem: React.FC<TaskItemProps> = ({
               </div>
             </div>
 
-            {!isIosBuild && (
-              <div className="flex space-x-2 ml-4">
-                <Button
-                  onClick={() => { mediumImpact(); setShowDeleteDialog(true); }}
-                  size="sm"
-                  variant="outline"
-                  aria-label={`Delete task: ${task.title}`}
-                  className="flex items-center space-x-1 min-h-[44px] min-w-[44px] text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  <span className="hidden sm:block">Delete</span>
-                </Button>
-                <Button
-                  onClick={() => { lightImpact(); setShowEditDialog(true); }}
-                  size="sm"
-                  variant="outline"
-                  aria-label={`Edit task: ${task.title}`}
-                  className="flex items-center space-x-1 min-h-[44px] min-w-[44px]"
-                >
-                  <Edit className="w-3 h-3" />
-                  <span className="hidden sm:block">Edit</span>
-                </Button>
-              </div>
-            )}
+            <div className="flex space-x-2 ml-4">
+              <Button
+                onClick={() => { mediumImpact(); setShowDeleteDialog(true); }}
+                size="sm"
+                variant="outline"
+                aria-label={`Delete task: ${task.title}`}
+                className="flex items-center space-x-1 min-h-[44px] min-w-[44px] text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="w-3 h-3" />
+                <span className="hidden sm:block">Delete</span>
+              </Button>
+              <Button
+                onClick={() => { lightImpact(); setShowEditDialog(true); }}
+                size="sm"
+                variant="outline"
+                aria-label={`Edit task: ${task.title}`}
+                className="flex items-center space-x-1 min-h-[44px] min-w-[44px]"
+              >
+                <Edit className="w-3 h-3" />
+                <span className="hidden sm:block">Edit</span>
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

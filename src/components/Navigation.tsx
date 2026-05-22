@@ -18,8 +18,6 @@ import { formatDuration } from '@/utils/timeUtil';
 import { SyncStatus } from '@/components/SyncStatus';
 import { useAuth } from '@/hooks/useAuth';
 
-const isIosBuild = import.meta.env.VITE_IOS_BUILD === "true";
-
 const getNavLinkClasses = (isActive: boolean) =>
 	`transition-all duration-200 flex items-center space-x-2 px-4 rounded-md h-10 border border-gray-200 hover:border-input ${isActive ? "bg-accent hover:bg-accent/80 hover:text-accent-foreground" : "bg-white hover:bg-accent hover:text-accent-foreground"}`;
 
@@ -41,7 +39,7 @@ const SiteNavigationMenu = () => {
     isSyncing,
     lastSyncTime,
     hasUnsavedChanges,
-    forceSyncToDatabase // Use manual sync instead of refresh
+    forceSyncToDatabase
   } = useTimeTracking();
 
   const runningTime = isDayStarted ? getTotalDayDuration() : 0;
@@ -72,34 +70,30 @@ const SiteNavigationMenu = () => {
             )}
           </Item>
           <div className="flex space-x-4">
-            {!isIosBuild && (
-              <Item>
-                <SyncStatus
-                  isAuthenticated={isAuthenticated}
-                  lastSyncTime={lastSyncTime}
-                  isSyncing={isSyncing}
-                  hasUnsavedChanges={hasUnsavedChanges}
-                  onRefresh={forceSyncToDatabase}
-                />
-              </Item>
-            )}
-            {!isIosBuild && isAuthenticated && (
+            <Item>
+              <SyncStatus
+                isAuthenticated={isAuthenticated}
+                lastSyncTime={lastSyncTime}
+                isSyncing={isSyncing}
+                hasUnsavedChanges={hasUnsavedChanges}
+                onRefresh={forceSyncToDatabase}
+              />
+            </Item>
+            {isAuthenticated && (
               <Item className="hidden md:flex">
                 <NavLink to="/report" className={({ isActive }) => getNavLinkClasses(isActive)}>Report</NavLink>
               </Item>
             )}
-            {!isIosBuild && (
-              <Item className="hidden md:flex">
-                <Button
-                  onClick={handlePrint}
-                  variant="outline"
-                  className="flex items-center space-x-2"
-                >
-                  <Printer className="w-4 h-4" />
-                  <span className="hidden lg:block">Print</span>
-                </Button>
-              </Item>
-            )}
+            <Item className="hidden md:flex">
+              <Button
+                onClick={handlePrint}
+                variant="outline"
+                className="flex items-center space-x-2"
+              >
+                <Printer className="w-4 h-4" />
+                <span className="hidden lg:block">Print</span>
+              </Button>
+            </Item>
             <Item className="hidden md:flex">
               <NavLink
                 to="/tasks"
@@ -118,13 +112,11 @@ const SiteNavigationMenu = () => {
                 <span className="hidden lg:block">Settings</span>
               </NavLink>
             </Item>
-            {!isIosBuild && (
-              <Item>
-                <div className="flex">
-                  <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
-                </div>
-              </Item>
-            )}
+            <Item>
+              <div className="flex">
+                <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
+              </div>
+            </Item>
           </div>
         </List>
 
@@ -133,12 +125,10 @@ const SiteNavigationMenu = () => {
         </div>
       </NavigationMenu>
 
-      {!isIosBuild && (
-        <AuthDialog
-          isOpen={showAuthDialog}
-          onClose={() => setShowAuthDialog(false)}
-        />
-      )}
+      <AuthDialog
+        isOpen={showAuthDialog}
+        onClose={() => setShowAuthDialog(false)}
+      />
 
       <ExportDialog
         isOpen={showExportDialog}
