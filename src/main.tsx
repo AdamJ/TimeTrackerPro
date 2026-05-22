@@ -9,7 +9,7 @@ if (import.meta.env.VITE_IOS_BUILD === "true") {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <Theme accentColor="orange" grayColor="slate" radius="full">
+  <Theme accentColor="blue" grayColor="slate" radius="full">
     <App />
     {/* <ThemePanel /> */}
   </Theme>

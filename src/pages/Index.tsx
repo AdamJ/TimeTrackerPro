@@ -97,7 +97,7 @@ const TimeTrackerContent = () => {
 
 				{/* Stats (always visible) */}
 				{!isDayStarted && (
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
+					<div className="grid grid-cols-2 md:grid-cols-3 gap-4 print:hidden">
 						<Card>
 							<CardContent className="p-4">
 								<div className="text-2xl font-bold text-primary">

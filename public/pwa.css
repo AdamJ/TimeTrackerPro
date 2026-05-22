@@ -44,7 +44,7 @@ html {
 /* Prevent text selection on buttons in PWA */
 button,
 .button,
-[role="button"] {
+[role='button'] {
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -57,7 +57,6 @@ button,
 
 /* Landscape mode optimizations */
 @media (orientation: landscape) and (max-height: 500px) {
-
   /* Compact header for landscape mobile */
   header {
     height: 48px;
@@ -72,10 +71,9 @@ button,
 
 /* Standalone mode specific styles (when app is installed) */
 @media (display-mode: standalone) {
-
   /* Add subtle indication that app is installed */
   body::before {
-    content: "";
+    content: '';
     position: fixed;
     top: 0;
     left: 0;
@@ -106,7 +104,21 @@ body {
 
 /* Improve button touch targets on mobile */
 @media (max-width: 768px) {
-  button:not([aria-hidden="true"]) {
+  button:not([aria-hidden='true']) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  button[role='checkbox'] {
+    min-height: 24px;
+    min-width: 24px;
+  }
+}
+
+/* Improve input targets on mobile */
+@media (max-width: 768px) {
+  input:not([aria-hidden='true']),
+  textarea:not([aria-hidden='true']),
+  select:not([aria-hidden='true']) {
     min-height: 44px;
     min-width: 44px;
   }
@@ -118,7 +130,6 @@ body {
 }
 
 @keyframes pulse {
-
   0%,
   100% {
     opacity: 1;
@@ -156,7 +167,6 @@ body {
 
 /* iOS specific fixes */
 @supports (-webkit-touch-callout: none) {
-
   /* Fix iOS safari bounce */
   body {
     position: fixed;
@@ -172,10 +182,10 @@ body {
   }
 
   /* Fix iOS input zoom */
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="number"],
+  input[type='text'],
+  input[type='email'],
+  input[type='password'],
+  input[type='number'],
   select,
   textarea {
     font-size: 16px !important;
@@ -247,7 +257,6 @@ body {
 
 /* Android specific fixes */
 @media (max-width: 768px) {
-
   /* Prevent address bar from covering content */
   .mobile-viewport {
     min-height: 100vh;
