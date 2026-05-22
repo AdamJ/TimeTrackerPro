@@ -131,6 +131,7 @@ interface TimeTrackingContextType {
   // Actions
   startDay: (startDateTime?: Date) => void;
   endDay: () => void;
+  discardDay: () => void;
   startNewTask: (
     title: string,
     description?: string,
@@ -569,6 +570,18 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
             duration: 7000
           });
         });
+    }
+  };
+
+  const discardDay = () => {
+    setIsDayStarted(false);
+    setDayStartTime(null);
+    setCurrentTask(null);
+    setTasks([]);
+    setHasUnsavedChanges(true);
+    if (dataService) {
+      dataService.saveCurrentDay({ isDayStarted: false, dayStartTime: null, currentTask: null, tasks: [] })
+        .catch(error => console.error("❌ Error saving state after discarding day:", error));
     }
   };
 
@@ -1081,6 +1094,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         categories,
         startDay,
         endDay,
+        discardDay,
         startNewTask,
         updateTask,
         deleteTask,

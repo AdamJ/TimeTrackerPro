@@ -10,13 +10,15 @@ interface DaySummaryProps {
   totalDuration: number;
   dayStartTime: Date;
   onPostDay: () => void;
+  onDiscardDay: () => void;
 }
 
 export const DaySummary: React.FC<DaySummaryProps> = ({
   tasks,
   totalDuration,
   dayStartTime,
-  onPostDay
+  onPostDay,
+  onDiscardDay
 }) => {
   return (
     <div className="space-y-6">
@@ -61,6 +63,13 @@ export const DaySummary: React.FC<DaySummaryProps> = ({
               className="w-full bg-green-600 hover:bg-green-700 text-white"
             >
               Post Time to Archive
+            </Button>
+            <Button
+              variant="outline"
+              onClick={onDiscardDay}
+              className="w-full border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              Discard Day
             </Button>
           </div>
         </CardContent>
