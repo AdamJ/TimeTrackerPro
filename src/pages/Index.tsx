@@ -23,6 +23,7 @@ const TimeTrackerContent = () => {
 		archivedDays,
 		startDay,
 		endDay,
+		discardDay,
 		postDay,
 		deleteTask,
 		startNewTask,
@@ -48,6 +49,10 @@ const TimeTrackerContent = () => {
 
 	const handlePostDay = () => {
 		postDay();
+	};
+
+	const handleDiscardDay = () => {
+		discardDay();
 	};
 
 	const handleNewTask = (
@@ -80,6 +85,7 @@ const TimeTrackerContent = () => {
 						totalDuration={getTotalDayDuration()}
 						dayStartTime={dayStartTime}
 						onPostDay={handlePostDay}
+						onDiscardDay={handleDiscardDay}
 					/>
 				</div>
 			</PageLayout>
