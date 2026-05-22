@@ -115,6 +115,20 @@ body {
     min-height: 44px;
     min-width: 44px;
   }
+  button[role="checkbox"] {
+    min-height: 24px;
+    min-width: 24px;
+  }
+}
+
+/* Improve input targets on mobile */
+@media (max-width: 768px) {
+  input:not([aria-hidden="true"]),
+  textarea:not([aria-hidden="true"]),
+  select:not([aria-hidden="true"]) {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 
 /* Loading states for PWA */
