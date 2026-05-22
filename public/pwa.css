@@ -1,6 +1,6 @@
 /* PWA-specific styles */
 
-/* Safe area insets for notched devices (iOS) */
+/* Safe area insets for notched devices */
 :root {
   --safe-area-inset-top: env(safe-area-inset-top);
   --safe-area-inset-right: env(safe-area-inset-right);
@@ -15,16 +15,9 @@ body {
   padding-right: var(--safe-area-inset-right);
 }
 
-/* IosPageHeader consumes the safe-area-inset-top itself via paddingTop inline style.
-   Prevent double-stacking when running as a Capacitor iOS build. */
-.ios-build body {
-  padding-top: 0;
-}
-
 /* Add padding bottom for mobile nav on mobile devices */
-/* Note: iOS-specific padding is handled in the iOS section below */
 @media (max-width: 768px) {
-  body:not(.ios-device) {
+  body {
     padding-bottom: calc(3rem + var(--safe-area-inset-bottom));
   }
 }
@@ -197,11 +190,8 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    /* Ensure navigation is always visible above content */
     z-index: 9999;
-    /* Use safe area insets for iOS notch/home indicator */
     padding-bottom: env(safe-area-inset-bottom);
-    /* Add backdrop for better visibility */
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     background-color: rgba(255, 255, 255, 0.95);
@@ -230,28 +220,32 @@ body {
   overscroll-behavior: contain;
 }
 
-/* Lift the floating action button above the mobile nav + home indicator on iOS */
+/* Lift the floating action button above the mobile nav + home indicator */
 @supports (-webkit-touch-callout: none) {
   .fab-nav-offset {
     bottom: calc(4rem + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
 
-/* iOS page transition: subtle slide-in from the right on route change */
-@supports (-webkit-touch-callout: none) {
-  .page-transition-enter {
-    animation: iosSlideIn 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+/* Page transitions via CSS View Transitions API */
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(30px);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@supports (view-transition-name: none) {
+  ::view-transition-new(root) {
+    animation: slideInFromRight 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
   }
 
-  @keyframes iosSlideIn {
-    from {
-      transform: translateX(30px);
-      opacity: 0.8;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
+  ::view-transition-old(root) {
+    animation: none;
   }
 }
 

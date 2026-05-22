@@ -16,13 +16,24 @@ import {
 	DrawerFooter,
 } from "@/components/ui/drawer"
 
-const isIosBuild = import.meta.env.VITE_IOS_BUILD === "true"
+function useIsMobile() {
+	const [isMobile, setIsMobile] = React.useState(
+		() => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches
+	)
+	React.useEffect(() => {
+		const mq = window.matchMedia("(max-width: 767px)")
+		const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+		mq.addEventListener("change", handler)
+		return () => mq.removeEventListener("change", handler)
+	}, [])
+	return isMobile
+}
 
 interface AdaptiveDialogProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	children: React.ReactNode
-	/** vaul snap points, iOS only */
+	/** vaul snap points, mobile only */
 	snapPoints?: (number | string)[]
 }
 
@@ -32,6 +43,7 @@ export const AdaptiveDialog = ({
 	children,
 	snapPoints,
 }: AdaptiveDialogProps) => {
+	const isMobile = useIsMobile()
 	const [activeSnapPoint, setActiveSnapPoint] = React.useState<number | string | null>(
 		snapPoints?.[0] ?? null
 	)
@@ -42,7 +54,7 @@ export const AdaptiveDialog = ({
 		}
 	}, [open]) // snapPoints are static per dialog instance
 
-	if (isIosBuild) {
+	if (isMobile) {
 		return (
 			<Drawer
 				open={open}
@@ -71,7 +83,8 @@ export const AdaptiveDialogContent = ({
 	children,
 	className,
 }: AdaptiveDialogContentProps) => {
-	if (isIosBuild) {
+	const isMobile = useIsMobile()
+	if (isMobile) {
 		return (
 			<DrawerContent className={className}>
 				{children}
@@ -92,7 +105,8 @@ export const AdaptiveDialogHeader = ({
 	children: React.ReactNode
 	className?: string
 }) => {
-	if (isIosBuild) {
+	const isMobile = useIsMobile()
+	if (isMobile) {
 		return <DrawerHeader className={className}>{children}</DrawerHeader>
 	}
 	return <DialogHeader className={className}>{children}</DialogHeader>
@@ -102,7 +116,8 @@ export const AdaptiveDialogTitle = React.forwardRef<
 	HTMLHeadingElement,
 	React.HTMLAttributes<HTMLHeadingElement>
 >(({ children, className, ...props }, ref) => {
-	if (isIosBuild) {
+	const isMobile = useIsMobile()
+	if (isMobile) {
 		return (
 			<DrawerTitle ref={ref} className={className} {...props}>
 				{children}
@@ -121,7 +136,8 @@ export const AdaptiveDialogDescription = React.forwardRef<
 	HTMLParagraphElement,
 	React.HTMLAttributes<HTMLParagraphElement>
 >(({ children, className, ...props }, ref) => {
-	if (isIosBuild) {
+	const isMobile = useIsMobile()
+	if (isMobile) {
 		return (
 			<DrawerDescription ref={ref} className={className} {...props}>
 				{children}
@@ -143,7 +159,8 @@ export const AdaptiveDialogFooter = ({
 	children: React.ReactNode
 	className?: string
 }) => {
-	if (isIosBuild) {
+	const isMobile = useIsMobile()
+	if (isMobile) {
 		return (
 			<DrawerFooter className={className}>
 				{children}

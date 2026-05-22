@@ -1,14 +1,10 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd());
-  const isIosBuild = env.VITE_IOS_BUILD === "true";
-
-  return {
+export default defineConfig({
   server: {
     host: "::",
     port: 8080
@@ -16,7 +12,6 @@ export default defineConfig(({ mode }) => {
   plugins: [
     react(),
     VitePWA({
-      disable: isIosBuild,
       registerType: "autoUpdate",
       includeAssets: [
         "favicon.svg",
@@ -90,7 +85,7 @@ export default defineConfig(({ mode }) => {
         type: "module"
       }
     })
-  ].filter(Boolean),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src")
@@ -100,16 +95,15 @@ export default defineConfig(({ mode }) => {
     globals: true,
     environment: "jsdom",
     setupFiles: ["./src/test-setup.ts"],
-    include: ["src/**/*.test.{ts,tsx}"], // Only include test files in src directory
+    include: ["src/**/*.test.{ts,tsx}"],
     exclude: [
       "**/node_modules/**",
       "**/dist/**",
       "**/cypress/**",
       "**/.{idea,git,cache,output,temp}/**",
       "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
-      "**/*.spec.ts" // Exclude Playwright test files (use .test.ts for Vitest)
+      "**/*.spec.ts"
     ],
-    passWithNoTests: true // Don't fail when no test files are found
+    passWithNoTests: true
   }
-  };
 });

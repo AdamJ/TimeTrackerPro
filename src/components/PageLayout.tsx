@@ -1,8 +1,5 @@
 import type { ReactNode } from "react";
 import SiteNavigationMenu from "@/components/Navigation";
-import { IosPageHeader } from "@/components/IosPageHeader";
-
-const isIosBuild = import.meta.env.VITE_IOS_BUILD === "true";
 
 interface PageLayoutProps {
 	/** Page title. When provided, renders the full header section (icon, title, actions, description). */
@@ -25,13 +22,9 @@ export const PageLayout = ({
 }: PageLayoutProps) => {
 	return (
 		<div className="min-h-screen bg-background">
-			{isIosBuild ? (
-				<IosPageHeader title={title} actions={actions} />
-			) : (
-				<SiteNavigationMenu />
-			)}
-			{!isIosBuild && title !== undefined && (
-				<div className="hidden max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
+			<SiteNavigationMenu />
+			{title !== undefined && (
+				<div className="max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
 					<div className="flex items-center justify-between">
 						<h1 className="md:text-2xl font-bold text-foreground flex items-center gap-2">
 							{icon}
@@ -43,9 +36,6 @@ export const PageLayout = ({
 						<p className="text-sm text-muted-foreground mt-1">{description}</p>
 					)}
 				</div>
-			)}
-			{isIosBuild && description && (
-				<p className="text-sm text-muted-foreground px-4 pt-2">{description}</p>
 			)}
 			{children}
 		</div>
