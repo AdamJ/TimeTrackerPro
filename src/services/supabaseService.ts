@@ -9,7 +9,7 @@ import {
 	clearDataCaches,
 	trackAuthCall
 } from "@/lib/supabase";
-import { Task, DayRecord, Project, TodoItem } from "@/contexts/TimeTrackingContext";
+import { Task, DayRecord, Project, TodoItem, PlannedTask } from "@/contexts/TimeTrackingContext";
 import { TaskCategory } from "@/config/categories";
 import { DataService, CurrentDayData } from "@/services/dataService";
 import { LocalStorageService } from "@/services/localStorageService";
@@ -876,6 +876,99 @@ export class SupabaseService implements DataService {
 		}));
 	}
 
+	async savePlannedTasks(tasks: PlannedTask[]): Promise<void> {
+		const user = await this.requireUser();
+
+		if (tasks.length === 0) {
+			await supabase.from("planned_tasks").delete().eq("user_id", user.id);
+			trackDbCall("delete", "planned_tasks");
+			return;
+		}
+
+		const { data: existingRows } = await supabase
+			.from("planned_tasks")
+			.select("id")
+			.eq("user_id", user.id);
+		trackDbCall("select", "planned_tasks");
+
+		const existingIds = new Set(existingRows?.map((r: { id: string }) => r.id) || []);
+		const newIds = new Set(tasks.map((t) => t.id));
+
+		const toDelete = Array.from(existingIds).filter((id) => !newIds.has(id));
+		if (toDelete.length > 0) {
+			const { error: deleteError } = await supabase
+				.from("planned_tasks")
+				.delete()
+				.eq("user_id", user.id)
+				.in("id", toDelete);
+			trackDbCall("delete", "planned_tasks");
+			if (deleteError) throw deleteError;
+		}
+
+		const toUpsert = tasks.map((t) => ({
+			id: t.id,
+			user_id: user.id,
+			title: t.title,
+			description: t.description ?? null,
+			status: t.status,
+			project_name: t.project ?? null,
+			client: t.client ?? null,
+			category_id: t.category ?? null,
+			priority: t.priority,
+			linked_task_id: t.linkedTaskId ?? null,
+			created_at: t.createdAt
+		}));
+
+		const { error } = await supabase
+			.from("planned_tasks")
+			.upsert(toUpsert, { onConflict: "id" });
+		trackDbCall("upsert", "planned_tasks");
+		if (error) throw error;
+	}
+
+	async getPlannedTasks(): Promise<PlannedTask[]> {
+		const user = await this.requireUser();
+
+		const { data, error } = await supabase
+			.from("planned_tasks")
+			.select("*")
+			.eq("user_id", user.id)
+			.order("priority", { ascending: true })
+			.order("created_at", { ascending: true });
+		trackDbCall("select", "planned_tasks");
+
+		if (error) {
+			console.error("❌ Error loading planned tasks:", error);
+			throw error;
+		}
+
+		return (data || []).map((row: {
+			id: string;
+			title: string;
+			description: string | null;
+			status: string;
+			project_name: string | null;
+			client: string | null;
+			category_id: string | null;
+			priority: number;
+			linked_task_id: string | null;
+			created_at: string;
+			updated_at: string;
+		}) => ({
+			id: row.id,
+			title: row.title,
+			description: row.description ?? undefined,
+			status: row.status as PlannedTask["status"],
+			project: row.project_name ?? undefined,
+			client: row.client ?? undefined,
+			category: row.category_id ?? undefined,
+			priority: row.priority,
+			linkedTaskId: row.linked_task_id ?? undefined,
+			createdAt: row.created_at,
+			updatedAt: row.updated_at
+		}));
+	}
+
 	async migrateFromLocalStorage(): Promise<void> {
 		try {
 			const localService = new LocalStorageService();
@@ -885,6 +978,7 @@ export class SupabaseService implements DataService {
 			const currentDay = await localService.getCurrentDay();
 			const archivedDays = await localService.getArchivedDays();
 			const todos = await localService.getTodos();
+			const plannedTasks = await localService.getPlannedTasks();
 
 			const hasProjects = projects.length > 0;
 			const hasCategories = categories.length > 0;
@@ -892,8 +986,9 @@ export class SupabaseService implements DataService {
 				currentDay && (currentDay.tasks.length > 0 || currentDay.isDayStarted);
 			const hasArchivedDays = archivedDays.length > 0;
 			const hasTodos = todos.length > 0;
+			const hasPlannedTasks = plannedTasks.length > 0;
 
-			if (!hasProjects && !hasCategories && !hasCurrentDay && !hasArchivedDays && !hasTodos) {
+			if (!hasProjects && !hasCategories && !hasCurrentDay && !hasArchivedDays && !hasTodos && !hasPlannedTasks) {
 				return;
 			}
 
@@ -941,6 +1036,10 @@ export class SupabaseService implements DataService {
 				if (hasTodos) {
 					await this.saveTodos(todos);
 				}
+
+				if (hasPlannedTasks) {
+					await this.savePlannedTasks(plannedTasks);
+				}
 			} else {
 
 				if (hasProjects) await this.saveProjects(projects);
@@ -948,6 +1047,7 @@ export class SupabaseService implements DataService {
 				if (hasCurrentDay) await this.saveCurrentDay(currentDay);
 				if (hasArchivedDays) await this.saveArchivedDays(archivedDays);
 				if (hasTodos) await this.saveTodos(todos);
+				if (hasPlannedTasks) await this.savePlannedTasks(plannedTasks);
 			}
 
 		} catch (error) {
@@ -964,6 +1064,7 @@ export class SupabaseService implements DataService {
 			const projects = await this.getProjects();
 			const categories = await this.getCategories();
 			const todos = await this.getTodos();
+			const plannedTasks = await this.getPlannedTasks();
 
 			if (currentDay) {
 				await localService.saveCurrentDay(currentDay);
@@ -983,6 +1084,10 @@ export class SupabaseService implements DataService {
 
 			if (todos.length > 0) {
 				await localService.saveTodos(todos);
+			}
+
+			if (plannedTasks.length > 0) {
+				await localService.savePlannedTasks(plannedTasks);
 			}
 
 		} catch (error) {

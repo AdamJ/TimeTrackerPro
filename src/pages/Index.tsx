@@ -1,6 +1,7 @@
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { DaySummary } from "@/components/DaySummary";
 import { StartDayDialog } from "@/components/StartDayDialog";
+import { StaleDayDialog } from "@/components/StaleDayDialog";
 import { TaskItem } from "@/components/TaskItem";
 import { NewTaskForm } from "@/components/NewTaskForm";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ const EPOCH = new Date(0);
 const TimeTrackerContent = () => {
 	const {
 		isDayStarted,
+		isDayStale,
 		dayStartTime,
 		currentTask,
 		tasks,
@@ -96,10 +98,11 @@ const TimeTrackerContent = () => {
 		<PageLayout title="Dashboard" icon={<DashboardIcon className="w-6 h-6" />}>
 			<div className="max-w-6xl mx-auto pt-4 pb-6 px-4 md:p-6 print:p-4 space-y-6">
 				<StartDayDialog
-					isOpen={showStartDayDialog}
+					isOpen={showStartDayDialog && !isDayStale}
 					onClose={() => setShowStartDayDialog(false)}
 					onStartDay={handleStartDayWithDateTime}
 				/>
+				<StaleDayDialog />
 
 				{/* Stats (always visible) */}
 				{!isDayStarted && (

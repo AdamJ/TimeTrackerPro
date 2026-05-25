@@ -73,6 +73,22 @@ export interface TodoItem {
   completedAt?: string; // ISO string — set when toggled to done, cleared when toggled back
 }
 
+export type PlannedTaskStatus = "todo" | "in_progress" | "done" | "blocked";
+
+export interface PlannedTask {
+  id: string;
+  title: string;
+  description?: string;
+  status: PlannedTaskStatus;
+  project?: string;
+  client?: string;
+  category?: string;
+  priority: number;        // integer sort order within column; lower = higher; default 0
+  linkedTaskId?: string;   // id of the timed Task created via "Pull to Day" (display only)
+  createdAt: string;       // ISO string
+  updatedAt: string;       // ISO string
+}
+
 export interface TimeEntry {
   id: string;
   date: string;
@@ -128,9 +144,12 @@ interface TimeTrackingContextType {
   // Categories
   categories: TaskCategory[];
 
+  // Stale day detection
+  isDayStale: boolean;
+
   // Actions
   startDay: (startDateTime?: Date) => void;
-  endDay: () => void;
+  endDay: (endDateTime?: Date) => void;
   discardDay: () => void;
   startNewTask: (
     title: string,
@@ -138,7 +157,7 @@ interface TimeTrackingContextType {
     project?: string,
     client?: string,
     category?: string
-  ) => void;
+  ) => string;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
   deleteTask: (taskId: string) => void;
   postDay: (notes?: string) => void;
@@ -173,6 +192,14 @@ interface TimeTrackingContextType {
     csvContent: string
   ) => Promise<{ success: boolean; message: string; importedCount: number }>;
   // generateInvoiceData: (clientName: string, startDate: Date, endDate: Date) => any;
+
+  // Planned tasks (kanban board)
+  plannedTasks: PlannedTask[];
+  addPlannedTask: (data: Omit<PlannedTask, "id" | "createdAt" | "updatedAt" | "status">) => void;
+  updatePlannedTask: (id: string, updates: Partial<PlannedTask>) => void;
+  deletePlannedTask: (id: string) => void;
+  movePlannedTask: (id: string, status: PlannedTaskStatus) => void;
+  pullPlannedTaskToDay: (id: string) => void;
 
   // Calculated values
   getTotalDayDuration: () => number;
@@ -231,8 +258,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [dayEndTime, setDayEndTime] = useState<Date | null>(null);
+  const [plannedTasks, setPlannedTasks] = useState<PlannedTask[]>([]);
 
-  const { successNotify, errorNotify } = useHaptics();
+  const { successNotify, errorNotify, lightImpact, mediumImpact } = useHaptics();
 
   // Debounce refs to manage timeouts
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -245,6 +274,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const dataServiceRef = useRef<DataService | null>(null);
   // Guards against saving todos during the initial data load.
   const todoLoadedRef = useRef(false);
+  const plannedLoadedRef = useRef(false);
 
   // Initialize data service when auth state changes
   useEffect(() => {
@@ -336,13 +366,18 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         const loadedTodos = await dataService.getTodos();
         setTodoItems(loadedTodos);
 
+        // Load planned tasks
+        const loadedPlannedTasks = await dataService.getPlannedTasks();
+        setPlannedTasks(loadedPlannedTasks);
+
         // If switching from localStorage to Supabase, migrate data
         if (currentAuthStateRef.current && dataService) {
           await dataService.migrateFromLocalStorage();
         }
 
-        // Allow todo save effect to fire for user-initiated changes going forward
+        // Allow todo/planned-task save effects to fire for user-initiated changes
         todoLoadedRef.current = true;
+        plannedLoadedRef.current = true;
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -421,7 +456,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         dataService.saveProjects(projects),
         dataService.saveCategories(categories),
         dataService.saveArchivedDays(archivedDays),
-        dataService.saveTodos(todoItems)
+        dataService.saveTodos(todoItems),
+        dataService.savePlannedTasks(plannedTasks)
       ]);
 
       const failed = results.filter((r) => r.status === "rejected");
@@ -443,7 +479,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setIsSyncing(false);
     }
-  }, [dataService, stableSaveCurrentDay, projects, categories, archivedDays, todoItems, errorNotify]);
+  }, [dataService, stableSaveCurrentDay, projects, categories, archivedDays, todoItems, plannedTasks, errorNotify]);
 
   // Load current day data (for periodic sync)
   const loadCurrentDay = useCallback(async () => {
@@ -529,6 +565,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => clearInterval(timer);
   }, []);
 
+  const isDayStale =
+    isDayStarted &&
+    !!dayStartTime &&
+    dayStartTime.toDateString() !== new Date().toDateString();
+
   const startDay = (startDateTime?: Date) => {
     const now = startDateTime || new Date();
 
@@ -549,18 +590,20 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const endDay = () => {
+  const endDay = (endDateTime?: Date) => {
+    const effectiveEndTime = endDateTime ?? new Date();
     let finalTasks = tasks;
     if (currentTask) {
       const endedTask = {
         ...currentTask,
-        endTime: new Date(),
-        duration: new Date().getTime() - currentTask.startTime.getTime()
+        endTime: effectiveEndTime,
+        duration: effectiveEndTime.getTime() - currentTask.startTime.getTime()
       };
       finalTasks = tasks.map(t => (t.id === currentTask.id ? endedTask : t));
       setTasks(finalTasks);
       setCurrentTask(null);
     }
+    setDayEndTime(effectiveEndTime);
     setIsDayStarted(false);
     setHasUnsavedChanges(true);
     // Save with freshly computed state to avoid reading from stale latestStateRef
@@ -597,7 +640,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     project?: string,
     client?: string,
     category?: string
-  ) => {
+  ): string => {
     const now = new Date();
 
     // End current task if exists and compute the updated task list synchronously
@@ -638,6 +681,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         .then(() => setLastSyncTime(new Date()))
         .catch(error => console.error("❌ Error saving after starting task:", error));
     }
+    return newTask.id;
   };
 
   const updateTask = (taskId: string, updates: Partial<Task>) => {
@@ -694,7 +738,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       tasks: tasks,
       totalDuration: getTotalDayDuration(),
       startTime: dayStartTime,
-      endTime: new Date(),
+      endTime: dayEndTime ?? new Date(),
       notes
     };
 
@@ -712,6 +756,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Clear current day data
     setDayStartTime(null);
+    setDayEndTime(null);
     setCurrentTask(null);
     setTasks([]);
     setIsDayStarted(false);
@@ -1014,6 +1059,12 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     dataServiceRef.current.saveTodos(todoItems);
   }, [todoItems]);
 
+  // Persist planned tasks whenever plannedTasks changes due to a user action.
+  useEffect(() => {
+    if (!plannedLoadedRef.current || !dataServiceRef.current) return;
+    dataServiceRef.current.savePlannedTasks(plannedTasks);
+  }, [plannedTasks]);
+
   // Stable callbacks — no todoItems in deps. Functional updates ensure each
   // callback always operates on the latest state without closing over it.
   const addTodoItem = useCallback((text: string) => {
@@ -1043,6 +1094,57 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const clearCompletedTodos = useCallback(() => {
     setTodoItems(prev => prev.filter(item => !item.completed));
   }, []);
+
+  // === PLANNED TASKS ===
+
+  const addPlannedTask = useCallback((data: Omit<PlannedTask, "id" | "createdAt" | "updatedAt" | "status">) => {
+    const now = new Date().toISOString();
+    const newTask: PlannedTask = {
+      ...data,
+      id: `planned-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      status: "todo",
+      createdAt: now,
+      updatedAt: now
+    };
+    setPlannedTasks(prev => [...prev, newTask]);
+    successNotify();
+  }, [successNotify]);
+
+  const updatePlannedTask = useCallback((id: string, updates: Partial<PlannedTask>) => {
+    setPlannedTasks(prev => prev.map(t =>
+      t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t
+    ));
+  }, []);
+
+  const deletePlannedTask = useCallback((id: string) => {
+    setPlannedTasks(prev => prev.filter(t => t.id !== id));
+    mediumImpact();
+  }, [mediumImpact]);
+
+  const movePlannedTask = useCallback((id: string, status: PlannedTaskStatus) => {
+    setPlannedTasks(prev => prev.map(t =>
+      t.id === id ? { ...t, status, updatedAt: new Date().toISOString() } : t
+    ));
+    lightImpact();
+  }, [lightImpact]);
+
+  const pullPlannedTaskToDay = (id: string) => {
+    if (!isDayStarted) {
+      toast({ title: "Start your work day first", description: "Go to the Dashboard and start your day before pulling tasks." });
+      return;
+    }
+    if (isDayStale) {
+      toast({ title: "Resolve your previous day first", description: "Your previous work day is still open. Please end or discard it." });
+      return;
+    }
+    const task = plannedTasks.find(t => t.id === id);
+    if (!task) return;
+    const newTaskId = startNewTask(task.title, task.description, task.project, task.client, task.category);
+    setPlannedTasks(prev => prev.map(t =>
+      t.id === id ? { ...t, status: "in_progress" as PlannedTaskStatus, linkedTaskId: newTaskId, updatedAt: new Date().toISOString() } : t
+    ));
+    toast({ title: `Task started: ${task.title}` });
+  };
 
   const importFromCSV = async (
     csvContent: string
@@ -1085,6 +1187,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     <TimeTrackingContext.Provider
       value={{
         isDayStarted,
+        isDayStale,
         dayStartTime,
         currentTask,
         tasks,
@@ -1109,6 +1212,12 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         updateTask,
         deleteTask,
         postDay,
+        plannedTasks,
+        addPlannedTask,
+        updatePlannedTask,
+        deletePlannedTask,
+        movePlannedTask,
+        pullPlannedTaskToDay,
         addProject,
         updateProject,
         deleteProject,
