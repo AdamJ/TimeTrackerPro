@@ -502,17 +502,21 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [dataService, loading]);
 
-  // Save on window close to prevent data loss
+  // Save on window close to prevent data loss.
+  // Uses latestStateRef to avoid stale-closure races (e.g. hard-refresh immediately
+  // after archiving, before React re-renders and re-registers this handler).
   useEffect(() => {
     const handleBeforeUnload = (_event: BeforeUnloadEvent) => {
-      if (!dataService || (!isDayStarted && tasks.length === 0)) return;
+      if (!dataService) return;
+      const state = latestStateRef.current;
+      if (!state.isDayStarted && state.tasks.length === 0) return;
       // Async saves cannot be reliably awaited during beforeunload, so write the
       // current state synchronously to localStorage as a guaranteed crash backup.
       // Supabase-mode users will have this local copy available for recovery on next load.
       try {
         localStorage.setItem(
           STORAGE_KEYS.CURRENT_DAY,
-          JSON.stringify({ isDayStarted, dayStartTime, tasks, currentTask, _v: SCHEMA_VERSION })
+          JSON.stringify({ ...state, _v: SCHEMA_VERSION })
         );
       } catch {
         // localStorage unavailable (quota exceeded, private mode); best effort only.
@@ -521,22 +525,24 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [dataService, isDayStarted, tasks, currentTask, dayStartTime]);
+  }, [dataService]);
 
   // On iOS/Capacitor, useAppLifecycle fires at the Swift layer (appStateChange)
   // before WKWebView is frozen — more reliable than beforeunload or visibilitychange.
   // On web, it falls back to visibilitychange automatically.
+  // Uses latestStateRef to avoid the same stale-closure race as beforeunload.
   const handleBackground = useCallback(() => {
-    if (!isDayStarted && tasks.length === 0) return;
+    const state = latestStateRef.current;
+    if (!state.isDayStarted && state.tasks.length === 0) return;
     try {
       localStorage.setItem(
         STORAGE_KEYS.CURRENT_DAY,
-        JSON.stringify({ isDayStarted, dayStartTime, tasks, currentTask, _v: SCHEMA_VERSION })
+        JSON.stringify({ ...state, _v: SCHEMA_VERSION })
       );
     } catch {
       // best effort
     }
-  }, [isDayStarted, dayStartTime, tasks, currentTask]);
+  }, []);
 
   useAppLifecycle(handleBackground);
 
@@ -754,6 +760,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setCurrentTask(null);
     setTasks([]);
     setIsDayStarted(false);
+
+    // Immediately sync the ref so beforeunload/handleBackground can't race and
+    // overwrite localStorage with the old (pre-archive) state before React re-renders.
+    latestStateRef.current = { isDayStarted: false, dayStartTime: null, currentTask: null, tasks: [] };
 
     // Save immediately since this is a critical action
     if (dataService) {

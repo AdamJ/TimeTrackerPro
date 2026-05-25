@@ -1,6 +1,7 @@
 .worktrees
 node_modules
 dist
+dev-dist
 .env
 .env.local
 .env.development.local
