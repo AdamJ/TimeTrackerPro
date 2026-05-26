@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Codebase Guide
 
-**Last Updated:** 2026-05-14
-**Version:** 2.3.0
+**Last Updated:** 2026-05-26
+**Version:** 2.4.0
 
 Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and consultants, with dual storage (localStorage guest mode and optional Supabase cloud sync). A native iOS app is also available via Capacitor.
 
@@ -23,7 +23,7 @@ After implementing changes, run lint and tests before considering a task complet
 
 | Layer        | Technology                                  |
 | ------------ | ------------------------------------------- |
-| UI Framework | React 18 + TypeScript 5.8                   |
+| UI Framework | React 18 + TypeScript 5.9                   |
 | Build        | Vite 5 + SWC                                |
 | Routing      | React Router 6                              |
 | Styling      | Tailwind CSS 3 + Radix UI + shadcn/ui       |
@@ -64,8 +64,10 @@ export const MyComponent = () => {
 
 | File                                   | Purpose                                          |
 | -------------------------------------- | ------------------------------------------------ |
-| `src/contexts/TimeTrackingContext.tsx` | Main application state and logic (1400+ lines)   |
-| `src/services/dataService.ts`          | Data persistence abstraction layer (1100+ lines) |
+| `src/contexts/TimeTrackingContext.tsx` | Main application state and logic (1200+ lines)   |
+| `src/services/dataService.ts`          | Data persistence factory — returns `LocalStorageService` or `SupabaseService` |
+| `src/services/supabaseService.ts`      | Supabase data persistence implementation (1100+ lines) |
+| `src/services/localStorageService/`    | localStorage data persistence implementation (split into per-entity modules) |
 | `src/contexts/AuthContext.tsx`         | Authentication state management                  |
 | `src/lib/supabase.ts`                  | Supabase client configuration and caching        |
 | `src/config/categories.ts`             | Default category definitions                     |
@@ -74,9 +76,7 @@ export const MyComponent = () => {
 | `src/components/IosPageHeader.tsx`     | iOS-only sticky nav bar with safe-area-inset-top, back chevron, and action slot |
 | `src/components/ui/adaptive-dialog.tsx` | Renders vaul `Drawer` on iOS, Radix `Dialog` on web |
 | `src/hooks/useHaptics.ts`             | `@capacitor/haptics` wrapper (light/medium/heavy, success/error) |
-| `src/hooks/useStatusBar.ts`           | `@capacitor/status-bar` wrapper — syncs bar style with dark/light mode |
 | `src/hooks/useAppLifecycle.ts`        | `@capacitor/app` appStateChange hook for reliable background persistence |
-| `src/hooks/useKeyboardHeight.ts`      | `@capacitor/keyboard` reactive height for bottom-sheet form padding |
 | `src/hooks/useLongPress.ts`           | 500 ms hold detector for context menu trigger on touch |
 | `capacitor.config.ts`                  | Capacitor iOS configuration (Keyboard resize plugin configured here) |
 | `.env.ios`                             | iOS build env (VITE_IOS_BUILD=true, no Supabase) |
@@ -104,7 +104,7 @@ The app ships as both a PWA and a native iOS app via Capacitor 8.
 - Haptic feedback fires on every meaningful interaction via `useHaptics`
 - `@capacitor/app` `appStateChange` event used for emergency data persistence (more reliable than `visibilitychange`)
 - `@capacitor/status-bar` syncs status bar text colour with system dark/light mode
-- `@capacitor/keyboard` configured with `resize: body`; `useKeyboardHeight` lifts bottom-sheet content above the keyboard
+- `@capacitor/keyboard` configured with `resize: body`; viewport shrinks above the keyboard so bottom-sheet form fields stay accessible
 - Long-press on task cards opens a context menu (Edit / Delete); on-card action buttons are hidden
 
 **Installed Capacitor plugins** (all v8.x):
