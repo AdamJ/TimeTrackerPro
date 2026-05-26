@@ -34,7 +34,9 @@ describe("PageLayout", () => {
 				<p>x</p>
 			</PageLayout>
 		);
-		expect(screen.getByRole("button", { name: "Add" })).toBeInTheDocument();
+		// Actions render in both the desktop header and the mobile strip
+		const buttons = screen.getAllByRole("button", { name: "Add" });
+		expect(buttons.length).toBeGreaterThan(0);
 	});
 
 	it("renders description when title is provided", () => {
