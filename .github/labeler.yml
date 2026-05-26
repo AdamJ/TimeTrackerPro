@@ -1,0 +1,20 @@
+actions:
+  - .github/**
+dependencies:
+  - package-lock.json
+documentation:
+  - docs/**
+  - agents/**
+  - CHANGELOG.md
+  - Integration.md
+  - README-EXT.md
+  - README.md
+ios:
+  - ios/**
+automation:
+  - .github/**
+  - .claude/**
+  - CLAUDE.md
+  - AGENTS.md
+  - agents/**
+
