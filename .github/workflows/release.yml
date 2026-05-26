@@ -159,13 +159,13 @@ jobs:
           echo "Found $PR_COUNT pull request(s)"
 
           # Build the changelog file
-          echo "## What's Changed in v${{ steps.new_version.outputs.version }}" > /tmp/changelog.md
+          echo "## What's Changed" > /tmp/changelog.md
           echo "" >> /tmp/changelog.md
 
           if [ "$PR_COUNT" -eq 0 ]; then
             echo "_No pull requests found since the last release._" >> /tmp/changelog.md
           else
-            echo "$PRS" | jq -r '.[] | "### [#\(.number)] \(.title)\n\n**Author:** @\(.author.login)\n\n---\n"' \
+            echo "$PRS" | jq -r '.[] | "[#\(.number)] \(.title)\n\n**Author:** @\(.author.login)\n\n"' \
               >> /tmp/changelog.md
 
             # Append unique contributors section
