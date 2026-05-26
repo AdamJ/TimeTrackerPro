@@ -24,18 +24,25 @@ export const PageLayout = ({
 		<div className="min-h-screen bg-background">
 			<SiteNavigationMenu />
 			{title !== undefined && (
-				<div className="hidden max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
-					<div className="flex items-center justify-between">
-						<h1 className="md:text-2xl font-bold text-foreground flex items-center gap-2">
-							{icon}
-							{title}
-						</h1>
-						{actions && <div className="print:hidden">{actions}</div>}
+				<>
+					<div className="hidden md:block max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
+						<div className="flex items-center justify-between">
+							<h1 className="md:text-2xl font-bold text-foreground flex items-center gap-2">
+								{icon}
+								{title}
+							</h1>
+							{actions && <div className="print:hidden">{actions}</div>}
+						</div>
+						{description && (
+							<p className="text-sm text-muted-foreground mt-1">{description}</p>
+						)}
 					</div>
-					{description && (
-						<p className="text-sm text-muted-foreground mt-1">{description}</p>
+					{actions && (
+						<div className="md:hidden flex justify-end px-4 py-2 border-b border-border print:hidden">
+							{actions}
+						</div>
 					)}
-				</div>
+				</>
 			)}
 			{children}
 		</div>
