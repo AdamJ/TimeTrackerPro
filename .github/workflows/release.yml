@@ -151,8 +151,8 @@ jobs:
           PRS=$(gh pr list \
             --state merged \
             --base main \
-            --limit 200 \
-            --json number,title,body,mergedAt,author \
+            --limit 20 \
+            --json number,title,mergedAt,author \
             --jq "sort_by(.mergedAt) | [.[] | select(.mergedAt > \"$SINCE_DATE\")]")
 
           PR_COUNT=$(echo "$PRS" | jq 'length')
@@ -165,7 +165,7 @@ jobs:
           if [ "$PR_COUNT" -eq 0 ]; then
             echo "_No pull requests found since the last release._" >> /tmp/changelog.md
           else
-            echo "$PRS" | jq -r '.[] | "### [#\(.number)] \(.title)\n\n**Author:** @\(.author.login)\n\n\(if .body and (.body | length) > 0 then .body else "_No description provided._" end)\n\n---\n"' \
+            echo "$PRS" | jq -r '.[] | "### [#\(.number)] \(.title)\n\n**Author:** @\(.author.login)\n\n---\n"' \
               >> /tmp/changelog.md
 
             # Append unique contributors section
