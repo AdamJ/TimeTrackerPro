@@ -41,6 +41,8 @@ export interface DataService {
 	// Planned tasks operations
 	savePlannedTasks: (tasks: PlannedTask[]) => Promise<void>;
 	getPlannedTasks: () => Promise<PlannedTask[]>;
+	upsertPlannedTask: (task: PlannedTask) => Promise<void>;
+	deletePlannedTask: (id: string) => Promise<void>;
 
 	// Migration operations
 	migrateFromLocalStorage: () => Promise<void>;
