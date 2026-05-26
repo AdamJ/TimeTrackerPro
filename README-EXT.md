@@ -246,7 +246,7 @@ See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) and [docs/SECURITY.md](docs
 
 | Category     | Technology                                  |
 | ------------ | ------------------------------------------- |
-| UI Framework | React 18 + TypeScript 5.8                   |
+| UI Framework | React 18 + TypeScript 5.9                   |
 | Build        | Vite 5 + SWC                                |
 | Routing      | React Router 6                              |
 | Styling      | Tailwind CSS 3 + Radix UI + shadcn/ui       |
@@ -287,8 +287,12 @@ const service = createDataService(isAuthenticated);
 #### 3. Custom Hooks Pattern
 
 - `useAuth()` — authentication state and methods
-- `useTimeTracking()` — time tracking operations
-- `useOffline()` — offline queue management
+- `useTimeTracking()` — time tracking state and operations
+- `useHaptics()` — Capacitor haptic feedback (no-op on web)
+- `useAppLifecycle()` — Capacitor app background/foreground events
+- `useLongPress()` — 500 ms hold detector for touch context menus
+- `useReportStorage()` — persists and restores generated AI report summaries
+- `useReportSummary()` — calls Gemini API to generate weekly summaries
 
 ### Data Flow
 
@@ -325,7 +329,7 @@ Precache:      App shell (HTML, CSS, JS, icons)
 ```text
 src/
 ├── components/
-│   ├── ui/                   # Base components (49 files)
+│   ├── ui/                       # Base components (49+ files, including adaptive-dialog)
 │   ├── ArchiveEditDialog.tsx
 │   ├── ArchiveFilter.tsx
 │   ├── ArchiveItem.tsx
@@ -335,46 +339,65 @@ src/
 │   ├── DeleteConfirmationDialog.tsx
 │   ├── ExportDialog.tsx
 │   ├── InstallPrompt.tsx
+│   ├── IosPageHeader.tsx          # iOS-only sticky nav bar
+│   ├── KanbanBoard.tsx            # Kanban planning board
+│   ├── KanbanColumn.tsx
 │   ├── MarkdownDisplay.tsx
 │   ├── MobileNav.tsx
 │   ├── Navigation.tsx
 │   ├── NewTaskForm.tsx
+│   ├── PageLayout.tsx             # Shared page chrome
+│   ├── PlannedTaskCard.tsx
+│   ├── PlannedTaskDialog.tsx
 │   ├── ProjectManagement.tsx
+│   ├── StaleDayDialog.tsx
 │   ├── StartDayDialog.tsx
+│   ├── SummaryOutput.tsx
 │   ├── SyncStatus.tsx
 │   ├── TaskEditDialog.tsx
 │   ├── TaskItem.tsx
+│   ├── TaskTrackingPanel.tsx
 │   ├── UpdateNotification.tsx
 │   └── UserMenu.tsx
 ├── config/
-│   ├── categories.ts         # Default categories
-│   └── projects.ts           # Default projects
+│   ├── categories.ts             # Default categories
+│   └── projects.ts               # Default projects
 ├── contexts/
 │   ├── AuthContext.tsx
-│   ├── TimeTrackingContext.tsx
-│   └── OfflineContext.tsx
+│   ├── OfflineContext.tsx         # Online/offline detection and toasts
+│   └── TimeTrackingContext.tsx
 ├── hooks/
+│   ├── use-mobile.tsx
+│   ├── use-toast.tsx
+│   ├── useAppLifecycle.ts        # @capacitor/app background persistence
 │   ├── useAuth.tsx
-│   ├── useTimeTracking.tsx
-│   ├── useOffline.tsx
-│   └── use-toast.tsx
+│   ├── useHaptics.ts             # @capacitor/haptics wrapper
+│   ├── useLongPress.ts           # 500 ms hold detector
+│   ├── useReportStorage.ts       # Persist generated report summaries
+│   ├── useReportSummary.ts       # Gemini AI summary generation
+│   └── useTimeTracking.tsx
 ├── lib/
-│   ├── supabase.ts           # Supabase client
-│   └── utils.ts              # Helper functions
+│   ├── supabase.ts               # Supabase client and call telemetry
+│   └── utils.ts                  # Helper functions
 ├── pages/
-│   ├── Index.tsx             # Dashboard (start/end day, stats)
-│   ├── TaskList.tsx          # Active task list and NewTaskForm
-│   ├── Archive.tsx           # Archived days
-│   ├── ProjectList.tsx       # Project management
-│   ├── Categories.tsx        # Category management
-│   ├── Report.tsx            # AI weekly summary
-│   ├── Settings.tsx          # App settings
-│   └── NotFound.tsx          # 404 page
+│   ├── Archive.tsx               # Archived days
+│   ├── Categories.tsx            # Category management
+│   ├── Index.tsx                 # Dashboard (start/end day, stats)
+│   ├── NotFound.tsx              # 404 page
+│   ├── ProjectList.tsx           # Project management
+│   ├── Report.tsx                # AI weekly summary
+│   ├── Settings.tsx              # App settings
+│   └── TaskList.tsx              # Active task list and NewTaskForm
 ├── services/
-│   └── dataService.ts        # Persistence abstraction
+│   ├── dataService.ts            # Factory — returns LocalStorage or Supabase impl
+│   ├── localStorageService/      # localStorage implementation (per-entity modules)
+│   └── supabaseService.ts        # Supabase implementation (1100+ lines)
 ├── utils/
-│   ├── timeUtil.ts           # Time formatting
-│   └── reportUtils.ts        # Report grouping and formatting
+│   ├── calculationUtils.ts       # Revenue and hours calculations
+│   ├── checklistUtils.ts         # GFM checklist extraction
+│   ├── exportUtils.ts            # CSV import/export
+│   ├── reportUtils.ts            # Report grouping and formatting
+│   └── timeUtil.ts               # Time formatting
 ├── App.tsx
 └── main.tsx
 ```

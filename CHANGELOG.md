@@ -209,5 +209,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Links
 
-- [Unreleased Changes](https://github.com/AdamJ/TimeTrackerPro/compare/v0.21.1...HEAD)
+- [Unreleased Changes](https://github.com/AdamJ/TimeTrackerPro/compare/v0.54.0...HEAD)
+- [Version 0.54.0](https://github.com/AdamJ/TimeTrackerPro/releases/tag/v0.54.0)
 - [Version 0.21.1](https://github.com/AdamJ/TimeTrackerPro/releases/tag/v0.21.1)

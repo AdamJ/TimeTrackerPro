@@ -119,10 +119,11 @@ See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 
 **Recent highlights:**
 
-- `PageLayout` shared component standardizes page chrome across all pages
-- Incomplete checklist items carry over as todo tasks when archiving a day
+- **Kanban planning board** — drag-and-drop task planning view (`KanbanBoard`, `KanbanColumn`, `PlannedTaskCard`)
+- Apple HIG pass for native iOS: bottom sheets, haptic feedback, status bar theming, page transitions, and long-press context menus
+- Persistent report summaries saved to localStorage; markdown preview/export in the report output panel
 - Weekly Report distinguishes Gemini API failure modes (rate limit, quota, overload, key issues)
-- Fixed Weekly Report for authenticated users (data sourced from Supabase)
+- `PageLayout` shared component standardizes page chrome across all pages
 
 ---
 
