@@ -4,7 +4,7 @@
 
 A Progressive Web App (PWA) for time tracking built with React, TypeScript, and Tailwind CSS. Installable on desktop and mobile with full offline support. Built for freelancers, consultants, and professionals who need to track time, manage projects, and generate invoices.
 
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white) ![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white) ![Capacitor](https://img.shields.io/badge/Capacitor-119EFF?style=for-the-badge&logo=capacitor&logoColor=white)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white) ![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
 
 ---
 
@@ -20,8 +20,7 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 - **CSV Import** — bring in existing time data from other tools
 - **Weekly Report** — AI-generated work summaries (standup, client, or retrospective tone)
 - **No Account Required** — full functionality with local storage; optional cloud sync via Supabase
-- **PWA + Native iOS** — installable on desktop/mobile; distributed as a native iOS app via Capacitor 8 with Apple HIG-compliant bottom sheets, haptic feedback, status bar theming, keyboard avoidance, and native page transitions
-
+- **PWA** — installable on desktop/mobile
 ---
 
 ## Quick Start
@@ -52,10 +51,6 @@ npm run preview          # Preview production build
 # Code Quality
 npm run lint             # ESLint
 npm run test             # Vitest unit tests
-
-# iOS / Capacitor
-npm run build:ios        # Vite build for iOS (no PWA/auth UI)
-npm run sync:ios         # build:ios + cap sync ios
 
 # PWA Screenshots
 npm run screenshots:install   # Install Playwright (first time)
@@ -124,7 +119,6 @@ See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 
 **Recent highlights:**
 
-- Native iOS app via Capacitor 8 with iOS-specific build mode (`build:ios` / `sync:ios`)
 - `PageLayout` shared component standardizes page chrome across all pages
 - Incomplete checklist items carry over as todo tasks when archiving a day
 - Weekly Report distinguishes Gemini API failure modes (rate limit, quota, overload, key issues)
