@@ -272,9 +272,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   // Ref-based access to dataService for todo save effect (avoids adding dataService
   // to todo callback deps, which would invalidate them on every auth change).
   const dataServiceRef = useRef<DataService | null>(null);
-  // Guards against saving todos during the initial data load.
+  // Guards against saving todos/planned tasks during the initial data load.
   const todoLoadedRef = useRef(false);
   const plannedLoadedRef = useRef(false);
+  // Tracks current plannedTasks for use in callbacks without closing over state.
+  const plannedTasksRef = useRef<PlannedTask[]>([]);
 
   // Initialize data service when auth state changes
   useEffect(() => {
@@ -1059,10 +1061,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     dataServiceRef.current.saveTodos(todoItems);
   }, [todoItems]);
 
-  // Persist planned tasks whenever plannedTasks changes due to a user action.
+  // Keep ref in sync so planned task callbacks can read current state without closing over it.
   useEffect(() => {
-    if (!plannedLoadedRef.current || !dataServiceRef.current) return;
-    dataServiceRef.current.savePlannedTasks(plannedTasks);
+    plannedTasksRef.current = plannedTasks;
   }, [plannedTasks]);
 
   // Stable callbacks — no todoItems in deps. Functional updates ensure each
@@ -1107,24 +1108,32 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       updatedAt: now
     };
     setPlannedTasks(prev => [...prev, newTask]);
+    if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(newTask);
     successNotify();
   }, [successNotify]);
 
   const updatePlannedTask = useCallback((id: string, updates: Partial<PlannedTask>) => {
-    setPlannedTasks(prev => prev.map(t =>
-      t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t
-    ));
+    const now = new Date().toISOString();
+    setPlannedTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates, updatedAt: now } : t));
+    if (plannedLoadedRef.current) {
+      const current = plannedTasksRef.current.find(t => t.id === id);
+      if (current) void dataServiceRef.current?.upsertPlannedTask({ ...current, ...updates, updatedAt: now });
+    }
   }, []);
 
   const deletePlannedTask = useCallback((id: string) => {
     setPlannedTasks(prev => prev.filter(t => t.id !== id));
+    if (plannedLoadedRef.current) void dataServiceRef.current?.deletePlannedTask(id);
     mediumImpact();
   }, [mediumImpact]);
 
   const movePlannedTask = useCallback((id: string, status: PlannedTaskStatus) => {
-    setPlannedTasks(prev => prev.map(t =>
-      t.id === id ? { ...t, status, updatedAt: new Date().toISOString() } : t
-    ));
+    const now = new Date().toISOString();
+    setPlannedTasks(prev => prev.map(t => t.id === id ? { ...t, status, updatedAt: now } : t));
+    if (plannedLoadedRef.current) {
+      const current = plannedTasksRef.current.find(t => t.id === id);
+      if (current) void dataServiceRef.current?.upsertPlannedTask({ ...current, status, updatedAt: now });
+    }
     lightImpact();
   }, [lightImpact]);
 
@@ -1137,12 +1146,13 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       toast({ title: "Resolve your previous day first", description: "Your previous work day is still open. Please end or discard it." });
       return;
     }
-    const task = plannedTasks.find(t => t.id === id);
+    const task = plannedTasksRef.current.find(t => t.id === id);
     if (!task) return;
     const newTaskId = startNewTask(task.title, task.description, task.project, task.client, task.category);
-    setPlannedTasks(prev => prev.map(t =>
-      t.id === id ? { ...t, status: "in_progress" as PlannedTaskStatus, linkedTaskId: newTaskId, updatedAt: new Date().toISOString() } : t
-    ));
+    const now = new Date().toISOString();
+    const updated: PlannedTask = { ...task, status: "in_progress" as PlannedTaskStatus, linkedTaskId: newTaskId, updatedAt: now };
+    setPlannedTasks(prev => prev.map(t => t.id === id ? updated : t));
+    if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(updated);
     toast({ title: `Task started: ${task.title}` });
   };
 

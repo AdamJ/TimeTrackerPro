@@ -926,6 +926,36 @@ export class SupabaseService implements DataService {
 		if (error) throw error;
 	}
 
+	async upsertPlannedTask(task: PlannedTask): Promise<void> {
+		const user = await this.requireUser();
+		const { error } = await supabase.from("planned_tasks").upsert({
+			id: task.id,
+			user_id: user.id,
+			title: task.title,
+			description: task.description ?? null,
+			status: task.status,
+			project_name: task.project ?? null,
+			client: task.client ?? null,
+			category_id: task.category ?? null,
+			priority: task.priority,
+			linked_task_id: task.linkedTaskId ?? null,
+			created_at: task.createdAt
+		}, { onConflict: "id" });
+		trackDbCall("upsert", "planned_tasks");
+		if (error) throw error;
+	}
+
+	async deletePlannedTask(id: string): Promise<void> {
+		const user = await this.requireUser();
+		const { error } = await supabase
+			.from("planned_tasks")
+			.delete()
+			.eq("user_id", user.id)
+			.eq("id", id);
+		trackDbCall("delete", "planned_tasks");
+		if (error) throw error;
+	}
+
 	async getPlannedTasks(): Promise<PlannedTask[]> {
 		const user = await this.requireUser();
 

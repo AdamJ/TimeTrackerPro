@@ -11,7 +11,7 @@ import {
 import { saveProjects, getProjects } from "./projects";
 import { saveCategories, getCategories } from "./categories";
 import { saveTodos, getTodos } from "./todos";
-import { savePlannedTasks, getPlannedTasks } from "./plannedTasks";
+import { savePlannedTasks, getPlannedTasks, upsertPlannedTask, deletePlannedTask } from "./plannedTasks";
 
 export { STORAGE_KEYS, SCHEMA_VERSION } from "./constants";
 
@@ -70,6 +70,14 @@ export class LocalStorageService implements DataService {
 
 	getPlannedTasks(): Promise<PlannedTask[]> {
 		return getPlannedTasks();
+	}
+
+	upsertPlannedTask(task: PlannedTask): Promise<void> {
+		return upsertPlannedTask(task);
+	}
+
+	deletePlannedTask(id: string): Promise<void> {
+		return deletePlannedTask(id);
 	}
 
 	async migrateFromLocalStorage(): Promise<void> {
