@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Backdated entry creation — "Add Past Entry" button on the Archive page opens a multi-step dialog to log a full past workday (date picker, day-level start/end times, per-task time pickers with category/project selectors, markdown description support, live duration preview). Persists via `addBackdatedDay` which calls `dataService.saveArchivedDays` with optimistic rollback on failure.
+  — `src/components/BackdatedEntryDialog.tsx` (new), `src/contexts/TimeTrackingContext.tsx` (`addBackdatedDay` method), `src/pages/Archive.tsx` (CirclePlus "Add Past Entry" action button)
+
+### Fixed
+
+- `BackdatedEntryDialog` imported `useTimeTracking` from `@/contexts/TimeTrackingContext` (not exported there) — corrected to import the hook from `@/hooks/useTimeTracking` and types (`DayRecord`, `Task`) from the context
+  — `src/components/BackdatedEntryDialog.tsx`
+
 ### Changed
 
 - iOS navigation bar redesigned as a floating pill — rounded-full shape, frosted-glass background (`rgba(255,255,255,0.80)`), drop shadow, and `mb-2 mx-2` margins replacing the full-width border-top bar

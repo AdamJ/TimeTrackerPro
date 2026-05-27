@@ -17,6 +17,7 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 - **Custom Categories** — color-coded, billable/non-billable categorization
 - **Rich Text Notes** — GitHub Flavored Markdown in task descriptions
 - **Archive & Export** — permanent record with CSV, JSON, and invoice export formats
+- **Backdated Entry Creation** — log work for past days directly from the Archive page via "Add Past Entry"
 - **CSV Import** — bring in existing time data from other tools
 - **Weekly Report** — AI-generated work summaries (standup, client, or retrospective tone)
 - **No Account Required** — full functionality with local storage; optional cloud sync via Supabase
@@ -119,6 +120,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 
 **Recent highlights:**
 
+- **Backdated entry creation** — "Add Past Entry" button on Archive page opens a multi-step dialog to log tasks for any past date
 - **Kanban planning board** — drag-and-drop task planning view (`KanbanBoard`, `KanbanColumn`, `PlannedTaskCard`)
 - Apple HIG pass for native iOS: bottom sheets, haptic feedback, status bar theming, page transitions, and long-press context menus
 - Persistent report summaries saved to localStorage; markdown preview/export in the report output panel
