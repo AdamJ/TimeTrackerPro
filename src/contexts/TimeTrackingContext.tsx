@@ -184,6 +184,7 @@ interface TimeTrackingContextType {
   updateArchivedDay: (dayId: string, updates: Partial<DayRecord>) => void;
   deleteArchivedDay: (dayId: string) => void;
   restoreArchivedDay: (dayId: string) => void;
+  addBackdatedDay: (day: DayRecord) => Promise<void>;
 
   // Export functions
   exportToCSV: (startDate?: Date, endDate?: Date) => string;
@@ -936,6 +937,34 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setHasUnsavedChanges(true);
   };
 
+  const addBackdatedDay = async (day: DayRecord) => {
+    const updatedDays = [...archivedDays, day];
+    setArchivedDays(updatedDays);
+
+    if (dataService) {
+      try {
+        await dataService.saveArchivedDays(updatedDays);
+        setHasUnsavedChanges(false);
+        successNotify();
+        toast({
+          title: "Entry Added",
+          description: `${day.tasks.length} task(s) saved for ${day.date}`,
+          duration: 5000
+        });
+      } catch (error) {
+        setArchivedDays(prev => prev.filter(d => d.id !== day.id));
+        errorNotify();
+        toast({
+          title: "Save Failed",
+          description: "Could not save the backdated entry. Please try again.",
+          variant: "destructive",
+          duration: 7000
+        });
+        throw error;
+      }
+    }
+  };
+
   // Category management functions - NO AUTOMATIC SAVING
   const addCategory = (category: Omit<TaskCategory, 'id'>) => {
     const newCategory: TaskCategory = {
@@ -1238,6 +1267,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         updateArchivedDay,
         deleteArchivedDay,
         restoreArchivedDay,
+        addBackdatedDay,
         adjustTaskTime,
         exportToCSV,
         exportToJSON,

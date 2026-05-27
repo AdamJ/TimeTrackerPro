@@ -75,6 +75,7 @@ export const MyComponent = () => {
 | `src/components/PageLayout.tsx`        | Shared page chrome (title + optional actions slot); renders `IosPageHeader` on iOS |
 | `src/components/IosPageHeader.tsx`     | iOS-only sticky nav bar with safe-area-inset-top, back chevron, and action slot |
 | `src/components/ui/adaptive-dialog.tsx` | Renders vaul `Drawer` on iOS, Radix `Dialog` on web |
+| `src/components/BackdatedEntryDialog.tsx` | Multi-step dialog for logging past workdays; uses `addBackdatedDay` from context |
 | `src/hooks/useHaptics.ts`             | `@capacitor/haptics` wrapper (light/medium/heavy, success/error) |
 | `src/hooks/useAppLifecycle.ts`        | `@capacitor/app` appStateChange hook for reliable background persistence |
 | `src/hooks/useLongPress.ts`           | 500 ms hold detector for context menu trigger on touch |

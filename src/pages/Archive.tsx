@@ -7,6 +7,7 @@ import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { getDayStats } from '@/utils/calculationUtils';
 import { ArchiveItem } from '@/components/ArchiveItem';
 import { ArchiveEditDialog } from '@/components/ArchiveEditDialog';
+import { BackdatedEntryDialog } from '@/components/BackdatedEntryDialog';
 import { ExportDialog } from '@/components/ExportDialog';
 import { ProjectManagement } from '@/components/ProjectManagement';
 import { ArchiveFilter, ArchiveFilterState } from '@/components/ArchiveFilter';
@@ -14,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Flex } from '@radix-ui/themes';
 import { Badge } from '@/components/ui/badge';
-import { Archive as ArchiveIcon, Database } from 'lucide-react';
+import { Archive as ArchiveIcon, Database, CirclePlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { PageLayout } from "@/components/PageLayout";
@@ -28,6 +29,7 @@ const ArchiveContent: React.FC = () => {
   const [editingDay, setEditingDay] = useState<DayRecord | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showProjectManagement, setShowProjectManagement] = useState(false);
+  const [showBackdatedEntry, setShowBackdatedEntry] = useState(false);
   const [filters, setFilters] = useState<ArchiveFilterState>({
     startDate: '',
     endDate: '',
@@ -121,6 +123,16 @@ const ArchiveContent: React.FC = () => {
         </>
       }
       icon={<ArchiveIcon className="w-6 h-6" />}
+      actions={
+        <Button
+          onClick={() => setShowBackdatedEntry(true)}
+          size="sm"
+          variant="outline"
+        >
+          <CirclePlus className="w-4 h-4 mr-2" />
+          Add Past Entry
+        </Button>
+      }
     >
       <div className="max-w-6xl mx-auto p-6 print:p-2">
         {filteredDays.length === 0 && archivedDays.length === 0 ? (
@@ -255,6 +267,11 @@ const ArchiveContent: React.FC = () => {
       </div>
 
       {/* Dialogs */}
+      <BackdatedEntryDialog
+        isOpen={showBackdatedEntry}
+        onClose={() => setShowBackdatedEntry(false)}
+      />
+
       {editingDay && (
         <ArchiveEditDialog
           day={editingDay}
