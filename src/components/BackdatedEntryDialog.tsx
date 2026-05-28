@@ -27,7 +27,7 @@ import { DayRecord, Task } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { useHaptics } from "@/hooks/useHaptics";
 import { formatDuration } from "@/utils/timeUtil";
-import { Calendar, Plus, Trash2, Loader2 } from "lucide-react";
+import { Calendar, Plus, Trash2, Loader2, Copy } from "lucide-react";
 
 interface BackdatedEntryDialogProps {
 	isOpen: boolean;
@@ -218,13 +218,29 @@ export const BackdatedEntryDialog: React.FC<BackdatedEntryDialogProps> = ({
 		setTasks(prev => prev.filter(t => t.id !== id));
 	};
 
+	const duplicateTask = (id: string) => {
+		setTasks(prev => {
+			const idx = prev.findIndex(t => t.id === id);
+			if (idx === -1) return prev;
+			const src = prev[idx];
+			const copy: BackdatedTask = {
+				...src,
+				id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+				title: src.title ? `${src.title} (copy)` : "",
+			};
+			const next = [...prev];
+			next.splice(idx + 1, 0, copy);
+			return next;
+		});
+	};
+
 	const updateTask = (id: string, field: keyof BackdatedTask, value: string) => {
 		setTasks(prev =>
 			prev.map(t => (t.id === id ? { ...t, [field]: value } : t))
 		);
 	};
 
-	const isValid = errors.length === 0 || true;
+	const isValid = errors.length === 0;
 
 	return (
 		<AdaptiveDialog open={isOpen} onOpenChange={onClose} snapPoints={[0.85, 1]}>
@@ -362,6 +378,16 @@ export const BackdatedEntryDialog: React.FC<BackdatedEntryDialogProps> = ({
 														{formatDuration(taskDuration)}
 													</Badge>
 												)}
+												<Button
+													type="button"
+													onClick={() => duplicateTask(task.id)}
+													size="sm"
+													variant="ghost"
+													className="h-7 w-7 p-0"
+													aria-label={`Duplicate task ${index + 1}`}
+												>
+													<Copy className="w-3.5 h-3.5" />
+												</Button>
 												{tasks.length > 1 && (
 													<Button
 														type="button"
