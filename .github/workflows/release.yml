@@ -1,56 +1,111 @@
 name: Release
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
     branches:
       - main
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   detect:
-    # Only run if PR was merged
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     outputs:
       bump_type: ${{ steps.bump_type.outputs.type }}
+      source_text: ${{ steps.bump_type.outputs.source_text }}
+      should_release: ${{ steps.bump_type.outputs.should_release }}
+
+    permissions:
+      contents: read
+      pull-requests: read
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Determine version bump type
         id: bump_type
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
         run: |
-          # Determine source of commit/PR title. For merged PRs prefer the PR title.
-          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            COMMIT_MSG=$(node -e "const e=require(process.env.GITHUB_EVENT_PATH); console.log((e && e.pull_request && e.pull_request.title) || '');")
-          else
-            COMMIT_MSG=$(git log -1 --pretty=%B)
-          fi
-          echo "Commit message / PR title: $COMMIT_MSG"
+          set -euo pipefail
 
-          # Determine bump type based on conventional commit prefix (support optional scope)
-          if echo "$COMMIT_MSG" | grep -qiE "^(major)(\([^)]*\))?:"; then
-            echo "type=major" >> $GITHUB_OUTPUT
+          BEFORE_SHA="${{ github.event.before }}"
+          AFTER_SHA="${{ github.sha }}"
+          HEAD_SUBJECT=$(git log -1 --format=%s "$AFTER_SHA")
+
+          echo "Push range: $BEFORE_SHA..$AFTER_SHA"
+          echo "Head commit subject: $HEAD_SUBJECT"
+
+          # Skip the workflow's own version-bump commit to avoid release loops.
+          if printf '%s\n' "$HEAD_SUBJECT" | grep -qiE '^chore: bump version to .+ \[CI Skip\]$'; then
+            echo "Detected workflow-generated version bump commit; skipping release."
+            echo "type=none" >> "$GITHUB_OUTPUT"
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            {
+              echo 'source_text<<EOF'
+              printf '%s\n' "$HEAD_SUBJECT"
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            RANGE="$AFTER_SHA"
+          else
+            RANGE="$BEFORE_SHA..$AFTER_SHA"
+          fi
+
+          # Prefer PR titles because they remain meaningful across merge commit,
+          # squash merge, and rebase merge strategies.
+          PR_TITLES=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${{ github.repository }}/commits/$AFTER_SHA/pulls" \
+            --jq '.[].title' 2>/dev/null || true)
+
+          if [ -n "$PR_TITLES" ]; then
+            SOURCE_TEXT="$PR_TITLES"
+            echo "Using merged PR title(s) associated with $AFTER_SHA"
+          else
+            SOURCE_TEXT=$(git log --format=%s $RANGE)
+            echo "Using commit subject(s) from push range"
+          fi
+
+          echo "Source text for version detection:"
+          printf '%s\n' "$SOURCE_TEXT"
+
+          if printf '%s\n' "$SOURCE_TEXT" | grep -qiE '(^|[[:space:]])major(\([^)]*\))?:'; then
+            echo "type=major" >> "$GITHUB_OUTPUT"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
             echo "Version bump: MAJOR"
-          elif echo "$COMMIT_MSG" | grep -qiE "^(feat|feature|fix)(\([^)]*\))?:"; then
-            echo "type=minor" >> $GITHUB_OUTPUT
-            echo "Version bump: MINOR (feat/feature)"
-          elif echo "$COMMIT_MSG" | grep -qiE "^patch(\([^)]*\))?:"; then
-            echo "type=patch" >> $GITHUB_OUTPUT
-            echo "Version bump: PATCH (fix)"
-          elif echo "$COMMIT_MSG" | grep -qiE "^(bump|maint|refactor|a11y)(\([^)]*\))?:"; then
-            echo "type=patch" >> $GITHUB_OUTPUT
+          elif printf '%s\n' "$SOURCE_TEXT" | grep -qiE '(^|[[:space:]])(feat|feature)(\([^)]*\))?:'; then
+            echo "type=minor" >> "$GITHUB_OUTPUT"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            echo "Version bump: MINOR"
+          elif printf '%s\n' "$SOURCE_TEXT" | grep -qiE '(^|[[:space:]])(fix|patch|bump|maint|refactor|a11y)(\([^)]*\))?:'; then
+            echo "type=patch" >> "$GITHUB_OUTPUT"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
             echo "Version bump: PATCH"
           else
-            echo "type=none" >> $GITHUB_OUTPUT
-            echo "No version bump (commit doesn't match versioning patterns)"
+            echo "type=none" >> "$GITHUB_OUTPUT"
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "No version bump (no matching commit or PR title found)"
           fi
 
-  # This job only exists for major bumps and targets the protected environment.
-  # GitHub will pause here and send an approval request to the required reviewers
-  # configured on the "major-release" environment in Settings → Environments.
+          {
+            echo 'source_text<<EOF'
+            printf '%s\n' "$SOURCE_TEXT"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
   approve-major:
     needs: detect
-    if: needs.detect.outputs.bump_type == 'major'
+    if: needs.detect.outputs.bump_type == 'major' && needs.detect.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     environment: major-release
     steps:
@@ -59,11 +114,10 @@ jobs:
 
   release:
     needs: [detect, approve-major]
-    # Run when: bump type is non-major and non-none, OR when approve-major succeeded.
-    # needs.approve-major.result is 'skipped' for non-major runs, so we allow that through.
     if: |
       always() &&
       needs.detect.result == 'success' &&
+      needs.detect.outputs.should_release == 'true' &&
       needs.detect.outputs.bump_type != 'none' &&
       (needs.approve-major.result == 'success' || needs.approve-major.result == 'skipped')
     runs-on: ubuntu-latest
@@ -81,32 +135,38 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
+          cache: npm
 
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Get current version
         id: current_version
         run: |
           CURRENT_VERSION=$(node -p "require('./package.json').version")
-          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
           echo "Current version: $CURRENT_VERSION"
+
+      - name: Get previous tag
+        id: previous_tag
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "tag=$PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
+          echo "Previous tag: $PREVIOUS_TAG"
 
       - name: Bump version
         id: new_version
         run: |
-          BUMP_TYPE=${{ needs.detect.outputs.bump_type }}
-
-          # Bump the version
-          npm version $BUMP_TYPE --no-git-tag-version
-
-          # Get the new version
+          BUMP_TYPE='${{ needs.detect.outputs.bump_type }}'
+          npm version "$BUMP_TYPE" --no-git-tag-version
           NEW_VERSION=$(node -p "require('./package.json').version")
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "New version: $NEW_VERSION"
 
       - name: Commit version bump
@@ -116,28 +176,20 @@ jobs:
             echo "No version changes to commit"
           else
             git commit -m "chore: bump version to ${{ steps.new_version.outputs.version }} [CI Skip]"
-            git push
+            git push origin HEAD:main
           fi
-
-      - name: Get previous tag
-        id: previous_tag
-        run: |
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          echo "tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
-          echo "Previous tag: $PREVIOUS_TAG"
 
       - name: Create Git tag
         run: |
           git tag "v${{ steps.new_version.outputs.version }}"
-          git push --tags
+          git push origin "v${{ steps.new_version.outputs.version }}"
 
       - name: Generate changelog
         id: changelog
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Use the previous tag captured before the new tag was created
-          PREVIOUS_TAG="${{ steps.previous_tag.outputs.tag }}"
+          PREVIOUS_TAG='${{ steps.previous_tag.outputs.tag }}'
 
           if [ -z "$PREVIOUS_TAG" ]; then
             SINCE_DATE="2000-01-01T00:00:00Z"
@@ -147,41 +199,38 @@ jobs:
 
           echo "Fetching PRs merged into main since: $SINCE_DATE"
 
-          # Fetch merged PRs since the previous tag, ordered oldest-first
           PRS=$(gh pr list \
             --state merged \
             --base main \
-            --limit 20 \
+            --limit 100 \
             --json number,title,mergedAt,author \
             --jq "sort_by(.mergedAt) | [.[] | select(.mergedAt > \"$SINCE_DATE\")]")
 
           PR_COUNT=$(echo "$PRS" | jq 'length')
           echo "Found $PR_COUNT pull request(s)"
 
-          # Build the changelog file
           echo "## What's Changed" > /tmp/changelog.md
           echo "" >> /tmp/changelog.md
 
           if [ "$PR_COUNT" -eq 0 ]; then
             echo "_No pull requests found since the last release._" >> /tmp/changelog.md
           else
-            echo "$PRS" | jq -r '.[] | "[#\(.number)] \(.title)\n\n**Author:** @\(.author.login)\n\n"' \
-              >> /tmp/changelog.md
+            echo "$PRS" | jq -r '.[] | "[#\(.number)] \(.title)\n\n**Author:** @\(.author.login)\n\n"' >> /tmp/changelog.md
 
-            # Append unique contributors section
             echo "" >> /tmp/changelog.md
             echo "## Contributors" >> /tmp/changelog.md
             echo "" >> /tmp/changelog.md
             echo "$PRS" | jq -r '[.[].author.login] | unique | sort | .[] | "- @\(.)"' >> /tmp/changelog.md
           fi
 
-          # Save to output (multiline)
-          echo "content<<EOF" >> $GITHUB_OUTPUT
-          cat /tmp/changelog.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          {
+            echo 'content<<EOF'
+            cat /tmp/changelog.md
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.new_version.outputs.version }}
           name: v${{ steps.new_version.outputs.version }}
@@ -192,12 +241,17 @@ jobs:
 
       - name: Summary
         run: |
-          echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Previous Version:** ${{ steps.current_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **New Version:** ${{ steps.new_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Bump Type:** ${{ needs.detect.outputs.bump_type }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tag:** v${{ steps.new_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Changelog" >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.changelog.outputs.content }}" >> $GITHUB_STEP_SUMMARY
+          echo "## Release Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Previous Version:** ${{ steps.current_version.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **New Version:** ${{ steps.new_version.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Bump Type:** ${{ needs.detect.outputs.bump_type }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Tag:** v${{ steps.new_version.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Version Detection Source" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          printf '%s\n' '${{ needs.detect.outputs.source_text }}' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Changelog" >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.changelog.outputs.content }}" >> "$GITHUB_STEP_SUMMARY"
