@@ -74,7 +74,8 @@ export const MyComponent = () => {
 | `src/config/projects.ts`               | Default project definitions                      |
 | `src/components/ClientManagement.tsx`  | Client list UI: add, archive (with active-project guard), and restore clients |
 | `src/pages/Clients.tsx`                | Thin page wrapper around `ClientManagement` (route `/clients`) |
-| `src/services/localStorageService/clients.ts` | Client persistence module (versioned localStorage blob); reused by `SupabaseService` to avoid a schema migration |
+| `src/services/localStorageService/clients.ts` | Client persistence module for guest mode (versioned localStorage blob) |
+| `supabase/migrations/20260530_clients.sql` | `clients` table + RLS + one-time backfill from distinct project clients |
 | `src/components/PageLayout.tsx`        | Shared page chrome (title + optional actions slot); renders `IosPageHeader` on iOS |
 | `src/components/IosPageHeader.tsx`     | iOS-only sticky nav bar with safe-area-inset-top, back chevron, and action slot |
 | `src/components/ui/adaptive-dialog.tsx` | Renders vaul `Drawer` on iOS, Radix `Dialog` on web |
@@ -98,7 +99,7 @@ Before making any changes to iOS-related code or configs, run the **ios-health-c
 Clients are a managed entity (added in the client-management feature) that backs the project form's client dropdown.
 
 - **`Client` type** (`src/contexts/TimeTrackingContext.tsx`): `{ id: string; name: string; archived: boolean; createdAt: string }`. Exported alongside `Project` and consumed by `dataService.ts`.
-- **`STORAGE_KEYS.CLIENTS`** (`"timetracker_clients"`): added in both `localStorageService/constants.ts` and the context's local key map. Persisted via `getClients()` / `saveClients()` on `DataService`. `SupabaseService` deliberately stores the client list as a JSON blob in localStorage (reusing `localStorageService/clients.ts`) to avoid a Supabase schema migration.
+- **`STORAGE_KEYS.CLIENTS`** (`"timetracker_clients"`): added in both `localStorageService/constants.ts` and the context's local key map. Persisted via `getClients()` / `saveClients()` on `DataService`. Guest mode uses the localStorage blob (`localStorageService/clients.ts`); authenticated mode uses a dedicated Supabase `clients` table (`supabase/migrations/20260530_clients.sql`) so clients sync across devices. The migration backfills the table once from each user's distinct project client names.
 - **Seeding/reconcile guard**: on every load the context init block reconciles the client list against the unique `client` name strings on `projects` — any project client name not already present (active or archived) is appended as an active client and the list is saved. Idempotent; covers both first run and clients introduced later (e.g. CSV import). Silent, runs in-app only.
 - **`archived` on `Project`**: optional field, normalized at load time with `project.archived ?? false` so legacy projects need no migration. Project archiving was introduced **as part of this feature to support the client archive guard** (a client cannot be archived while it still owns active projects) rather than as a standalone feature.
 - **New context methods**: `clients`, `addClient(name)`, `archiveClient(id) → string | null` (returns an error message naming blocking active projects, or `null` on success), `restoreClient(id)`, `archiveProject(id)`, `restoreProject(id)`. None auto-save — consumers call `forceSyncToDatabase()` (same pattern as `addProject`).
