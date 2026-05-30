@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
 import { Badge } from "@radix-ui/themes";
+import { toast } from "@/hooks/use-toast";
 
 const ProjectContent: React.FC = () => {
 	const {
@@ -78,13 +79,23 @@ const ProjectContent: React.FC = () => {
 	};
 
 	const handleArchiveProject = async (projectId: string) => {
+		const archivedName = projects.find((project) => project.id === projectId)?.name;
 		archiveProject(projectId);
 		await forceSyncToDatabase();
+		toast({
+			title: "Project archived",
+			description: archivedName ? `"${archivedName}" has been archived.` : undefined
+		});
 	};
 
 	const handleRestoreProject = async (projectId: string) => {
+		const restoredName = projects.find((project) => project.id === projectId)?.name;
 		restoreProject(projectId);
 		await forceSyncToDatabase();
+		toast({
+			title: "Project restored",
+			description: restoredName ? `"${restoredName}" has been restored.` : undefined
+		});
 	};
 
 	const resetForm = () => {
