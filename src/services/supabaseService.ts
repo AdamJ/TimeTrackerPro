@@ -804,6 +804,38 @@ export class SupabaseService implements DataService {
 		return result;
 	}
 
+	// Single-row write for the common add/edit-one case. Skips the
+	// select-then-delete reconcile that saveClients does, so it costs exactly
+	// one Supabase call instead of two. The read-cache is updated in place to
+	// stay coherent without an extra fetch.
+	async upsertClient(client: Client): Promise<void> {
+		const user = await this.requireUser();
+
+		const { error } = await supabase
+			.from("clients")
+			.upsert({
+				id: client.id,
+				user_id: user.id,
+				name: client.name,
+				archived: client.archived === true,
+				created_at: client.createdAt
+			}, { onConflict: "id" });
+		trackDbCall("upsert", "clients");
+
+		if (error) {
+			console.error("❌ Error upserting client:", error);
+			throw error;
+		}
+
+		const cached = getCachedClients();
+		if (cached) {
+			const merged = cached.some(c => c.id === client.id)
+				? cached.map(c => (c.id === client.id ? client : c))
+				: [...cached, client];
+			setCachedClients(merged);
+		}
+	}
+
 	async saveCategories(categories: TaskCategory[]): Promise<void> {
 
 		const user = await this.requireUser();

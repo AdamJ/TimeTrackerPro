@@ -33,6 +33,7 @@ export interface DataService {
 	// Clients operations
 	saveClients: (clients: Client[]) => Promise<void>;
 	getClients: () => Promise<Client[]>;
+	upsertClient: (client: Client) => Promise<void>;
 
 	// Categories operations
 	saveCategories: (categories: TaskCategory[]) => Promise<void>;

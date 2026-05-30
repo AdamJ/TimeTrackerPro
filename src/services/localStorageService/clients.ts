@@ -21,3 +21,14 @@ export async function getClients(): Promise<Client[]> {
 		return [];
 	}
 }
+
+// Replace-or-append a single client by id, then persist the whole blob.
+// localStorage has no per-call cost, so this just keeps parity with the
+// DataService interface used by the Supabase implementation.
+export async function upsertClient(client: Client): Promise<void> {
+	const clients = await getClients();
+	const next = clients.some(c => c.id === client.id)
+		? clients.map(c => (c.id === client.id ? client : c))
+		: [...clients, client];
+	await saveClients(next);
+}

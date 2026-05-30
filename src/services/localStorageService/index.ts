@@ -9,7 +9,7 @@ import {
 	deleteArchivedDay
 } from "./archivedDays";
 import { saveProjects, getProjects } from "./projects";
-import { saveClients, getClients } from "./clients";
+import { saveClients, getClients, upsertClient } from "./clients";
 import { saveCategories, getCategories } from "./categories";
 import { saveTodos, getTodos } from "./todos";
 import { savePlannedTasks, getPlannedTasks, upsertPlannedTask, deletePlannedTask } from "./plannedTasks";
@@ -55,6 +55,10 @@ export class LocalStorageService implements DataService {
 
 	getClients(): Promise<Client[]> {
 		return getClients();
+	}
+
+	upsertClient(client: Client): Promise<void> {
+		return upsertClient(client);
 	}
 
 	saveCategories(categories: TaskCategory[]): Promise<void> {

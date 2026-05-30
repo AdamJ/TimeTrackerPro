@@ -44,7 +44,7 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 		projects,
 		clients,
 		addClient,
-		persistClients,
+		persistClient,
 		addProject,
 		updateProject,
 		deleteProject,
@@ -68,8 +68,8 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 	const handleAddClientInline = async () => {
 		const trimmed = newClientName.trim();
 		if (!trimmed) return;
-		addClient(trimmed);
-		await persistClients();
+		const created = addClient(trimmed);
+		if (created) await persistClient(created);
 		setFormData((prev) => ({ ...prev, client: trimmed }));
 		setNewClientName("");
 		setIsAddingClient(false);

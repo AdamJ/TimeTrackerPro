@@ -18,7 +18,7 @@ import { PageLayout } from "@/components/PageLayout";
 import { toast } from "@/hooks/use-toast";
 
 export const ClientManagement: React.FC = () => {
-	const { clients, addClient, archiveClient, restoreClient, persistClients } =
+	const { clients, addClient, archiveClient, restoreClient, persistClients, persistClient } =
 		useTimeTracking();
 	const [isAddingNew, setIsAddingNew] = useState(false);
 	const [name, setName] = useState("");
@@ -37,8 +37,8 @@ export const ClientManagement: React.FC = () => {
 		e.preventDefault();
 		const trimmed = name.trim();
 		if (!trimmed) return;
-		addClient(trimmed);
-		await persistClients();
+		const created = addClient(trimmed);
+		if (created) await persistClient(created);
 		toast({
 			title: "Client added",
 			description: `"${trimmed}" has been added.`

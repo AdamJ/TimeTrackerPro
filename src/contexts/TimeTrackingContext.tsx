@@ -180,10 +180,11 @@ interface TimeTrackingContextType {
   restoreProject: (projectId: string) => void;
 
   // Client management
-  addClient: (name: string) => void;
+  addClient: (name: string) => Client | null;
   archiveClient: (clientId: string) => string | null;
   restoreClient: (clientId: string) => void;
   persistClients: () => Promise<void>;
+  persistClient: (client: Client) => Promise<void>;
 
   // Category management
   addCategory: (category: Omit<TaskCategory, 'id'>) => void;
@@ -963,9 +964,23 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  const addClient = (name: string) => {
+  // Persists a single client via a one-row upsert (1 Supabase call) instead
+  // of the full-list reconcile persistClients() does (2 calls). Used by the
+  // add path, where nothing is ever removed.
+  const persistClient = useCallback(async (client: Client) => {
+    if (!dataServiceRef.current) return;
+    try {
+      await dataServiceRef.current.upsertClient(client);
+    } catch (error) {
+      console.error("❌ Error saving client:", error);
+    }
+  }, []);
+
+  // Returns the created client (or null if the name was blank) so the caller
+  // can persist just that row via persistClient.
+  const addClient = (name: string): Client | null => {
     const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!trimmed) return null;
     const newClient: Client = {
       id: Date.now().toString(),
       name: trimmed,
@@ -976,6 +991,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     clientsRef.current = next;
     setClients(next);
     setHasUnsavedChanges(true);
+    return newClient;
   };
 
   // Returns null on success, or an error message naming the active projects
@@ -1418,6 +1434,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         archiveClient,
         restoreClient,
         persistClients,
+        persistClient,
         addCategory,
         updateCategory,
         deleteCategory,
