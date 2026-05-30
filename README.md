@@ -12,7 +12,8 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 
 - **Daily Time Tracking** — start/stop your workday with clear daily boundaries
 - **Task Management** — create, edit, and delete tasks with real-time duration tracking
-- **Projects & Clients** — organize work by project with per-project hourly rates
+- **Projects & Clients** — organize work by project with per-project hourly rates; projects and clients can be archived and restored
+- **Client Management** — maintain a managed client list, pick clients from a dropdown when creating projects, and archive clients (blocked while they still have active projects)
 - **Revenue Tracking** — automatic earnings calculation based on hourly rates
 - **Custom Categories** — color-coded, billable/non-billable categorization
 - **Rich Text Notes** — GitHub Flavored Markdown in task descriptions

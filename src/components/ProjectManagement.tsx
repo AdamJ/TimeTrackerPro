@@ -19,6 +19,13 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Plus, Edit, Trash2, Briefcase, RotateCcw } from "lucide-react";
 import { Project } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
@@ -35,6 +42,9 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 }) => {
 	const {
 		projects,
+		clients,
+		addClient,
+		persistClient,
 		addProject,
 		updateProject,
 		deleteProject,
@@ -48,8 +58,22 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 		hourlyRate: "",
 		color: "#3B82F6",
 	});
+	const [isAddingClient, setIsAddingClient] = useState(false);
+	const [newClientName, setNewClientName] = useState("");
 	const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 	const [showResetDialog, setShowResetDialog] = useState(false);
+
+	const activeClients = clients.filter((c) => !c.archived);
+
+	const handleAddClientInline = async () => {
+		const trimmed = newClientName.trim();
+		if (!trimmed) return;
+		const created = addClient(trimmed);
+		if (created) await persistClient(created);
+		setFormData((prev) => ({ ...prev, client: trimmed }));
+		setNewClientName("");
+		setIsAddingClient(false);
+	};
 
 	const resetForm = () => {
 		setFormData({
@@ -60,6 +84,8 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 		});
 		setEditingProject(null);
 		setIsAddingNew(false);
+		setIsAddingClient(false);
+		setNewClientName("");
 	};
 
 	const handleSubmit = (e: React.FormEvent) => {
@@ -187,19 +213,69 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 												<Label htmlFor="client">
 													Client Name <span className="text-destructive" aria-hidden="true">*</span>
 												</Label>
-												<Input
-													id="client"
-													value={formData.client}
-													onChange={(e) =>
-														setFormData((prev) => ({
-															...prev,
-															client: e.target.value,
-														}))
-													}
-													placeholder="Enter client name"
-													aria-required="true"
-													required
-												/>
+												{isAddingClient ? (
+													<div className="flex items-center space-x-2">
+														<Input
+															id="client"
+															autoFocus
+															value={newClientName}
+															onChange={(e) => setNewClientName(e.target.value)}
+															placeholder="New client name"
+														/>
+														<Button
+															type="button"
+															size="sm"
+															onClick={handleAddClientInline}
+														>
+															Add
+														</Button>
+														<Button
+															type="button"
+															size="sm"
+															variant="ghost"
+															onClick={() => {
+																setIsAddingClient(false);
+																setNewClientName("");
+															}}
+														>
+															Cancel
+														</Button>
+													</div>
+												) : (
+													<Select
+														value={formData.client}
+														onValueChange={(value) => {
+															if (value === "__add_new__") {
+																setIsAddingClient(true);
+																return;
+															}
+															setFormData((prev) => ({ ...prev, client: value }));
+														}}
+													>
+														<SelectTrigger id="client">
+															<SelectValue placeholder="Select a client" />
+														</SelectTrigger>
+														<SelectContent>
+															{activeClients.map((client) => (
+																<SelectItem key={client.id} value={client.name}>
+																	{client.name}
+																</SelectItem>
+															))}
+															{/* Legacy/unmanaged client values stay visible but flagged */}
+															{formData.client &&
+																!clients.some(
+																	(client) => client.name === formData.client
+																) && (
+																	<SelectItem value={formData.client} disabled>
+																		{formData.client} (unmanaged)
+																	</SelectItem>
+																)}
+															<SelectItem value="__add_new__">
+																+ Add new client
+															</SelectItem>
+														</SelectContent>
+													</Select>
+												)}
 											</div>
 										</div>
 

@@ -1,6 +1,6 @@
 # CLAUDE.md - AI Assistant Codebase Guide
 
-**Last Updated:** 2026-05-26
+**Last Updated:** 2026-05-30
 **Version:** 2.4.0
 
 Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and consultants, with dual storage (localStorage guest mode and optional Supabase cloud sync). A native iOS app is also available via Capacitor.
@@ -72,6 +72,10 @@ export const MyComponent = () => {
 | `src/lib/supabase.ts`                  | Supabase client configuration and caching        |
 | `src/config/categories.ts`             | Default category definitions                     |
 | `src/config/projects.ts`               | Default project definitions                      |
+| `src/components/ClientManagement.tsx`  | Client list UI: add, archive (with active-project guard), and restore clients |
+| `src/pages/Clients.tsx`                | Thin page wrapper around `ClientManagement` (route `/clients`) |
+| `src/services/localStorageService/clients.ts` | Client persistence module for guest mode (versioned localStorage blob) |
+| `supabase/migrations/20260530_clients.sql` | `clients` table + RLS + one-time backfill from distinct project clients |
 | `src/components/PageLayout.tsx`        | Shared page chrome (title + optional actions slot); renders `IosPageHeader` on iOS |
 | `src/components/IosPageHeader.tsx`     | iOS-only sticky nav bar with safe-area-inset-top, back chevron, and action slot |
 | `src/components/ui/adaptive-dialog.tsx` | Renders vaul `Drawer` on iOS, Radix `Dialog` on web |
@@ -87,6 +91,22 @@ export const MyComponent = () => {
 ## iOS Environment Health Check
 
 Before making any changes to iOS-related code or configs, run the **ios-health-check** skill (`.claude/skills/ios-health-check/SKILL.md`). It runs five checks, auto-fixes any failures, and reports results before proceeding with the actual task.
+
+---
+
+## Client Management
+
+Clients are a managed entity (added in the client-management feature) that backs the project form's client dropdown.
+
+- **`Client` type** (`src/contexts/TimeTrackingContext.tsx`): `{ id: string; name: string; archived: boolean; createdAt: string }`. Exported alongside `Project` and consumed by `dataService.ts`.
+- **`STORAGE_KEYS.CLIENTS`** (`"timetracker_clients"`): added in both `localStorageService/constants.ts` and the context's local key map. Persisted via `getClients()` / `saveClients()` on `DataService`. Guest mode uses the localStorage blob (`localStorageService/clients.ts`); authenticated mode uses a dedicated Supabase `clients` table (`supabase/migrations/20260530_clients.sql`) so clients sync across devices. The migration backfills the table once from each user's distinct project client names.
+- **Seeding/reconcile guard**: on every load the context init block reconciles the client list against the unique `client` name strings on `projects` — any project client name not already present (active or archived) is appended as an active client and the list is saved. Idempotent; covers both first run and clients introduced later (e.g. CSV import). Silent, runs in-app only.
+- **`archived` on `Project`**: optional field, normalized at load time with `project.archived ?? false` so legacy projects need no migration. Project archiving was introduced **as part of this feature to support the client archive guard** (a client cannot be archived while it still owns active projects) rather than as a standalone feature.
+- **New context methods**: `clients`, `addClient(name)`, `archiveClient(id) → string | null` (returns an error message naming blocking active projects, or `null` on success), `restoreClient(id)`, `archiveProject(id)`, `restoreProject(id)`. Project methods don't auto-save — consumers call `forceSyncToDatabase()` (same pattern as `addProject`).
+- **Client persistence**: to minimize Supabase calls, clients are **not** part of `forceSyncToDatabase`'s bulk save. The three client mutations keep a `clientsRef` in sync synchronously, and consumers persist explicitly:
+  - **Add** uses `persistClient(client)` → `dataService.upsertClient` — a single-row upsert (**1** Supabase call), since adding never removes a row. `addClient(name)` returns the created `Client` (or `null` if blank) for this.
+  - **Archive/restore** use `persistClients()` → `dataService.saveClients` — the full-list reconcile (select-missing + upsert = **2** calls).
+  - `SupabaseService.getClients`/`saveClients`/`upsertClient` share the read-cache (`getCachedClients`/`setCachedClients` in `src/lib/supabase.ts`), so a load is one read on cache miss and free thereafter; `upsertClient` updates the cache in place.
 
 ---
 

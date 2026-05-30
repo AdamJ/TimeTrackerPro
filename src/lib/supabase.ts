@@ -66,10 +66,19 @@ interface Project {
   color?: string;
 }
 
+interface Client {
+  id: string;
+  name: string;
+  archived: boolean;
+  createdAt: string;
+}
+
 let cachedProjects: Project[] | null = null;
 let cachedCategories: TaskCategory[] | null = null;
+let cachedClients: Client[] | null = null;
 let lastProjectsCheck: Date | null = null;
 let lastCategoriesCheck: Date | null = null;
+let lastClientsCheck: Date | null = null;
 const DATA_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export const getCachedProjects = (): Project[] | null => {
@@ -98,11 +107,26 @@ export const setCachedCategories = (categories: TaskCategory[]) => {
   lastCategoriesCheck = new Date();
 };
 
+export const getCachedClients = (): Client[] | null => {
+  if (cachedClients && lastClientsCheck &&
+      (Date.now() - lastClientsCheck.getTime()) < DATA_CACHE_DURATION) {
+    return cachedClients;
+  }
+  return null;
+};
+
+export const setCachedClients = (clients: Client[]) => {
+  cachedClients = clients;
+  lastClientsCheck = new Date();
+};
+
 export const clearDataCaches = () => {
   cachedProjects = null;
   cachedCategories = null;
+  cachedClients = null;
   lastProjectsCheck = null;
   lastCategoriesCheck = null;
+  lastClientsCheck = null;
 };
 
 // Database call monitoring with enhanced tracking

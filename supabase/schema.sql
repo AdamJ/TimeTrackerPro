@@ -29,6 +29,16 @@ CREATE TABLE IF NOT EXISTS categories (
 
 CREATE INDEX IF NOT EXISTS idx_categories_user_id ON categories(user_id);
 
+CREATE TABLE IF NOT EXISTS clients (
+  id text PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  archived boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);
+
 -- Create tasks table
 CREATE TABLE IF NOT EXISTS tasks (
   id text PRIMARY KEY,
@@ -124,6 +134,7 @@ EXECUTE PROCEDURE update_updated_at_column();
 -- Row Level Security (RLS) policies
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE archived_days ENABLE ROW LEVEL SECURITY;
 ALTER TABLE current_day ENABLE ROW LEVEL SECURITY;
@@ -152,6 +163,19 @@ CREATE POLICY "Users can update their own categories" ON categories
   FOR UPDATE USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete their own categories" ON categories
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- RLS Policies for clients
+CREATE POLICY "Users can view their own clients" ON clients
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own clients" ON clients
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own clients" ON clients
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own clients" ON clients
   FOR DELETE USING (auth.uid() = user_id);
 
 -- RLS Policies for tasks

@@ -15,6 +15,7 @@ import { ExportDialog } from '@/components/ExportDialog';
 import {
   Briefcase,
   Tag,
+  Users,
   Download,
   Database,
   Trash2,
@@ -87,6 +88,28 @@ const SettingsContent: React.FC = () => {
                   <Button variant="outline" className="w-full">
                     <Briefcase className="w-4 h-4 mr-2" />
                     Manage Projects
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+            {/* Client Management */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Users className="w-5 h-5" />
+                  <span>Client Management</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Manage the clients you assign to projects. Archive clients you
+                  no longer work with — archiving is blocked while a client
+                  still has active projects.
+                </p>
+                <Link to="/clients">
+                  <Button variant="outline" className="w-full">
+                    <Users className="w-4 h-4 mr-2" />
+                    Manage Clients
                   </Button>
                 </Link>
               </CardContent>
