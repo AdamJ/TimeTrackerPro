@@ -13,7 +13,6 @@ import { Task, DayRecord, Project, Client, TodoItem, PlannedTask } from "@/conte
 import { TaskCategory } from "@/config/categories";
 import { DataService, CurrentDayData } from "@/services/dataService";
 import { LocalStorageService } from "@/services/localStorageService";
-import { getClients as getClientsBlob, saveClients as saveClientsBlob } from "@/services/localStorageService/clients";
 
 export class SupabaseService implements DataService {
 	// Schema detection with permanent caching
@@ -712,14 +711,84 @@ export class SupabaseService implements DataService {
 		return result;
 	}
 
-	// Clients are persisted as a JSON blob in localStorage rather than a
-	// dedicated table, intentionally avoiding a Supabase schema migration.
+	// Clients live in a dedicated `clients` table so they sync across devices
+	// (see supabase/migrations/20260530_clients.sql). Mirrors saveProjects:
+	// delete rows that no longer exist, then upsert the rest by id.
 	async saveClients(clients: Client[]): Promise<void> {
-		return saveClientsBlob(clients);
+		const user = await this.requireUser();
+
+		if (clients.length === 0) {
+			await supabase.from("clients").delete().eq("user_id", user.id);
+			trackDbCall("delete", "clients");
+			return;
+		}
+
+		const { data: existingClients } = await supabase
+			.from("clients")
+			.select("id")
+			.eq("user_id", user.id);
+		trackDbCall("select", "clients");
+
+		const existingClientIds = new Set(existingClients?.map(c => c.id) || []);
+		const newClientIds = new Set(clients.map(c => c.id));
+
+		const clientsToDelete = Array.from(existingClientIds).filter(
+			id => !newClientIds.has(id)
+		);
+		if (clientsToDelete.length > 0) {
+			const { error: deleteError } = await supabase
+				.from("clients")
+				.delete()
+				.eq("user_id", user.id)
+				.in("id", clientsToDelete);
+			trackDbCall("delete", "clients");
+
+			if (deleteError) {
+				console.error("❌ Error deleting obsolete clients:", deleteError);
+				throw deleteError;
+			}
+		}
+
+		const clientsToUpsert = clients.map((client) => ({
+			id: client.id,
+			user_id: user.id,
+			name: client.name,
+			archived: client.archived === true,
+			created_at: client.createdAt
+		}));
+
+		const { error } = await supabase
+			.from("clients")
+			.upsert(clientsToUpsert, { onConflict: "id" });
+		trackDbCall("upsert", "clients");
+
+		if (error) {
+			console.error("❌ Error upserting clients:", error);
+			throw error;
+		}
 	}
 
 	async getClients(): Promise<Client[]> {
-		return getClientsBlob();
+		const user = await this.requireUser();
+
+		const { data, error } = await supabase
+			.from("clients")
+			.select("*")
+			.eq("user_id", user.id)
+			.order("name", { ascending: true });
+		trackDbCall("select", "clients");
+
+		if (error) {
+			console.error("❌ Error loading clients:", error);
+			throw error;
+		}
+
+		return (data || []).map((client) => ({
+			id: client.id,
+			name: client.name,
+			archived: client.archived === true,
+			createdAt: client.created_at
+		}));
 	}
 
 	async saveCategories(categories: TaskCategory[]): Promise<void> {

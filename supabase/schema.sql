@@ -29,6 +29,16 @@ CREATE TABLE IF NOT EXISTS categories (
 
 CREATE INDEX IF NOT EXISTS idx_categories_user_id ON categories(user_id);
 
+CREATE TABLE IF NOT EXISTS clients (
+  id text PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  archived boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);
+
 -- Create tasks table
 CREATE TABLE IF NOT EXISTS tasks (
   id text PRIMARY KEY,
