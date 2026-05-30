@@ -298,6 +298,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const plannedLoadedRef = useRef(false);
   // Tracks current plannedTasks for use in callbacks without closing over state.
   const plannedTasksRef = useRef<PlannedTask[]>([]);
+  // Mirrors the latest projects list so forceSyncToDatabase() saves fresh data
+  // even when called immediately after a mutation (before React re-renders).
+  const projectsRef = useRef<Project[]>(convertDefaultProjects(DEFAULT_PROJECTS));
   // Mirrors the latest clients list so persistClients() saves fresh data
   // without depending on render-time closures. Updated synchronously by every
   // client mutation (and at load) so a save fired immediately after a mutation
@@ -362,18 +365,21 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         const loadedProjects = await dataService.getProjects();
         let resolvedProjects: Project[];
         if (loadedProjects.length > 0) {
-          // Merge default projects with saved projects, avoiding duplicates
+          // Merge: start from defaults so missing defaults always appear, but
+          // prefer the saved version when name+client matches a default (so
+          // user edits to hourly rate, color, etc. survive reloads).
           const defaultProjects = convertDefaultProjects(DEFAULT_PROJECTS);
           const mergedProjects = [...defaultProjects];
 
-          // Add saved projects that don't conflict with default ones
           loadedProjects.forEach((savedProject: Project) => {
-            const existsInDefaults = defaultProjects.some(
+            const defaultIndex = mergedProjects.findIndex(
               defaultProject =>
                 defaultProject.name === savedProject.name &&
                 defaultProject.client === savedProject.client
             );
-            if (!existsInDefaults) {
+            if (defaultIndex !== -1) {
+              mergedProjects[defaultIndex] = savedProject;
+            } else {
               mergedProjects.push(savedProject);
             }
           });
@@ -389,6 +395,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           ...project,
           archived: project.archived ?? false
         }));
+        projectsRef.current = resolvedProjects;
         setProjects(resolvedProjects);
 
         // Load clients, then reconcile against the client name strings
@@ -522,7 +529,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       // doesn't silently leave other saves in an unknown state.
       const results = await Promise.allSettled([
         stableSaveCurrentDay(),
-        dataService.saveProjects(projects),
+        dataService.saveProjects(projectsRef.current),
         dataService.saveCategories(categories),
         dataService.saveArchivedDays(archivedDays),
         dataService.saveTodos(todoItems),
@@ -548,7 +555,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setIsSyncing(false);
     }
-  }, [dataService, stableSaveCurrentDay, projects, categories, archivedDays, todoItems, plannedTasks, errorNotify]);
+  }, [dataService, stableSaveCurrentDay, categories, archivedDays, todoItems, plannedTasks, errorNotify]);
 
   // Load current day data (for periodic sync)
   const loadCurrentDay = useCallback(async () => {
@@ -902,50 +909,57 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // Project management functions - NO AUTOMATIC SAVING
+  // projectsRef is updated synchronously so forceSyncToDatabase() always reads
+  // the latest list even when called immediately after a mutation.
   const addProject = (project: Omit<Project, 'id'>) => {
     const newProject: Project = {
       ...project,
       id: Date.now().toString()
     };
-    setProjects(prev => [...prev, newProject]);
+    const next = [...projectsRef.current, newProject];
+    projectsRef.current = next;
+    setProjects(next);
     setHasUnsavedChanges(true);
   };
 
   const updateProject = (projectId: string, updates: Partial<Project>) => {
-    setProjects(prev =>
-      prev.map(project =>
-        project.id === projectId ? { ...project, ...updates } : project
-      )
+    const next = projectsRef.current.map(project =>
+      project.id === projectId ? { ...project, ...updates } : project
     );
+    projectsRef.current = next;
+    setProjects(next);
     setHasUnsavedChanges(true);
   };
 
   const deleteProject = (projectId: string) => {
-    setProjects(prev => prev.filter(project => project.id !== projectId));
+    const next = projectsRef.current.filter(project => project.id !== projectId);
+    projectsRef.current = next;
+    setProjects(next);
     setHasUnsavedChanges(true);
   };
 
   const resetProjectsToDefaults = () => {
     const defaultProjects = convertDefaultProjects(DEFAULT_PROJECTS);
+    projectsRef.current = defaultProjects;
     setProjects(defaultProjects);
     setHasUnsavedChanges(true);
   };
 
   const archiveProject = (projectId: string) => {
-    setProjects(prev =>
-      prev.map(project =>
-        project.id === projectId ? { ...project, archived: true } : project
-      )
+    const next = projectsRef.current.map(project =>
+      project.id === projectId ? { ...project, archived: true } : project
     );
+    projectsRef.current = next;
+    setProjects(next);
     setHasUnsavedChanges(true);
   };
 
   const restoreProject = (projectId: string) => {
-    setProjects(prev =>
-      prev.map(project =>
-        project.id === projectId ? { ...project, archived: false } : project
-      )
+    const next = projectsRef.current.map(project =>
+      project.id === projectId ? { ...project, archived: false } : project
     );
+    projectsRef.current = next;
+    setProjects(next);
     setHasUnsavedChanges(true);
   };
 
@@ -990,7 +1004,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     const next = [...clientsRef.current, newClient];
     clientsRef.current = next;
     setClients(next);
-    setHasUnsavedChanges(true);
     return newClient;
   };
 
@@ -1018,7 +1031,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     );
     clientsRef.current = next;
     setClients(next);
-    setHasUnsavedChanges(true);
     return null;
   };
 
@@ -1028,7 +1040,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     );
     clientsRef.current = next;
     setClients(next);
-    setHasUnsavedChanges(true);
   };
 
   // Archive management functions
