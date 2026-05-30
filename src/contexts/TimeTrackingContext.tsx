@@ -63,6 +63,14 @@ export interface Project {
   hourlyRate?: number;
   color?: string;
   isBillable?: boolean;
+  archived?: boolean;
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  archived: boolean;
+  createdAt: string; // ISO string
 }
 
 export interface TodoItem {
@@ -140,6 +148,7 @@ interface TimeTrackingContextType {
 
   // Projects and clients
   projects: Project[];
+  clients: Client[];
 
   // Categories
   categories: TaskCategory[];
@@ -167,6 +176,13 @@ interface TimeTrackingContextType {
   updateProject: (projectId: string, updates: Partial<Project>) => void;
   deleteProject: (projectId: string) => void;
   resetProjectsToDefaults: () => void;
+  archiveProject: (projectId: string) => void;
+  restoreProject: (projectId: string) => void;
+
+  // Client management
+  addClient: (name: string) => void;
+  archiveClient: (clientId: string) => string | null;
+  restoreClient: (clientId: string) => void;
 
   // Category management
   addCategory: (category: Omit<TaskCategory, 'id'>) => void;
@@ -223,7 +239,8 @@ const STORAGE_KEYS = {
   CURRENT_DAY: 'timetracker_current_day',
   ARCHIVED_DAYS: 'timetracker_archived_days',
   PROJECTS: 'timetracker_projects',
-  CATEGORIES: 'timetracker_categories'
+  CATEGORIES: 'timetracker_categories',
+  CLIENTS: 'timetracker_clients'
 };
 
 // Convert ProjectCategory to Project by adding an id
@@ -253,6 +270,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const [projects, setProjects] = useState<Project[]>(
     convertDefaultProjects(DEFAULT_PROJECTS)
   );
+  const [clients, setClients] = useState<Client[]>([]);
   const [categories, setCategories] = useState<TaskCategory[]>([]);
   const [todoItems, setTodoItems] = useState<TodoItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -335,6 +353,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Load projects
         const loadedProjects = await dataService.getProjects();
+        let resolvedProjects: Project[];
         if (loadedProjects.length > 0) {
           // Merge default projects with saved projects, avoiding duplicates
           const defaultProjects = convertDefaultProjects(DEFAULT_PROJECTS);
@@ -352,9 +371,41 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
             }
           });
 
-          setProjects(mergedProjects);
+          resolvedProjects = mergedProjects;
         } else {
-          setProjects(convertDefaultProjects(DEFAULT_PROJECTS));
+          resolvedProjects = convertDefaultProjects(DEFAULT_PROJECTS);
+        }
+
+        // Normalize the archived flag for projects saved before it existed.
+        // Keeps legacy data working without a storage migration.
+        resolvedProjects = resolvedProjects.map(project => ({
+          ...project,
+          archived: project.archived ?? false
+        }));
+        setProjects(resolvedProjects);
+
+        // Load clients. On first run (empty), seed from the unique client
+        // name strings already referenced by projects so existing data stays
+        // visible. This shim runs once and persists silently.
+        const loadedClients = await dataService.getClients();
+        if (loadedClients.length > 0) {
+          setClients(loadedClients);
+        } else {
+          const uniqueNames = Array.from(
+            new Set(
+              resolvedProjects
+                .map(project => project.client?.trim())
+                .filter((name): name is string => !!name)
+            )
+          );
+          const seededClients: Client[] = uniqueNames.map((name, index) => ({
+            id: `seed-${index}-${Date.now()}`,
+            name,
+            archived: false,
+            createdAt: new Date().toISOString()
+          }));
+          setClients(seededClients);
+          await dataService.saveClients(seededClients);
         }
 
         // Load categories
@@ -457,6 +508,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       const results = await Promise.allSettled([
         stableSaveCurrentDay(),
         dataService.saveProjects(projects),
+        dataService.saveClients(clients),
         dataService.saveCategories(categories),
         dataService.saveArchivedDays(archivedDays),
         dataService.saveTodos(todoItems),
@@ -482,7 +534,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setIsSyncing(false);
     }
-  }, [dataService, stableSaveCurrentDay, projects, categories, archivedDays, todoItems, plannedTasks, errorNotify]);
+  }, [dataService, stableSaveCurrentDay, projects, clients, categories, archivedDays, todoItems, plannedTasks, errorNotify]);
 
   // Load current day data (for periodic sync)
   const loadCurrentDay = useCallback(async () => {
@@ -865,6 +917,71 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setHasUnsavedChanges(true);
   };
 
+  const archiveProject = (projectId: string) => {
+    setProjects(prev =>
+      prev.map(project =>
+        project.id === projectId ? { ...project, archived: true } : project
+      )
+    );
+    setHasUnsavedChanges(true);
+  };
+
+  const restoreProject = (projectId: string) => {
+    setProjects(prev =>
+      prev.map(project =>
+        project.id === projectId ? { ...project, archived: false } : project
+      )
+    );
+    setHasUnsavedChanges(true);
+  };
+
+  // Client management functions - NO AUTOMATIC SAVING
+  const addClient = (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const newClient: Client = {
+      id: Date.now().toString(),
+      name: trimmed,
+      archived: false,
+      createdAt: new Date().toISOString()
+    };
+    setClients(prev => [...prev, newClient]);
+    setHasUnsavedChanges(true);
+  };
+
+  // Returns null on success, or an error message naming the active projects
+  // that block archiving (a client cannot be archived while it still owns
+  // non-archived projects).
+  const archiveClient = (clientId: string): string | null => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return "Client not found.";
+
+    const blockingProjects = projects.filter(
+      project => project.client === client.name && project.archived !== true
+    );
+
+    if (blockingProjects.length > 0) {
+      const names = blockingProjects.map(project => project.name).join(", ");
+      const count = blockingProjects.length;
+      const noun = count === 1 ? "project" : "projects";
+      const action = count === 1 ? "that project" : "those projects";
+      return `${client.name} has ${count} active ${noun}: ${names}. Archive ${action} before archiving this client.`;
+    }
+
+    setClients(prev =>
+      prev.map(c => (c.id === clientId ? { ...c, archived: true } : c))
+    );
+    setHasUnsavedChanges(true);
+    return null;
+  };
+
+  const restoreClient = (clientId: string) => {
+    setClients(prev =>
+      prev.map(c => (c.id === clientId ? { ...c, archived: false } : c))
+    );
+    setHasUnsavedChanges(true);
+  };
+
   // Archive management functions
   const updateArchivedDay = async (
     dayId: string,
@@ -1243,6 +1360,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         deleteTodoItem,
         clearCompletedTodos,
         projects,
+        clients,
         categories,
         startDay,
         endDay,
@@ -1261,6 +1379,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         updateProject,
         deleteProject,
         resetProjectsToDefaults,
+        archiveProject,
+        restoreProject,
+        addClient,
+        archiveClient,
+        restoreClient,
         addCategory,
         updateCategory,
         deleteCategory,

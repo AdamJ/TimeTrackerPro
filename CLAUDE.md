@@ -1,6 +1,6 @@
 # CLAUDE.md - AI Assistant Codebase Guide
 
-**Last Updated:** 2026-05-26
+**Last Updated:** 2026-05-30
 **Version:** 2.4.0
 
 Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and consultants, with dual storage (localStorage guest mode and optional Supabase cloud sync). A native iOS app is also available via Capacitor.
@@ -72,6 +72,9 @@ export const MyComponent = () => {
 | `src/lib/supabase.ts`                  | Supabase client configuration and caching        |
 | `src/config/categories.ts`             | Default category definitions                     |
 | `src/config/projects.ts`               | Default project definitions                      |
+| `src/components/ClientManagement.tsx`  | Client list UI: add, archive (with active-project guard), and restore clients |
+| `src/pages/Clients.tsx`                | Thin page wrapper around `ClientManagement` (route `/clients`) |
+| `src/services/localStorageService/clients.ts` | Client persistence module (versioned localStorage blob); reused by `SupabaseService` to avoid a schema migration |
 | `src/components/PageLayout.tsx`        | Shared page chrome (title + optional actions slot); renders `IosPageHeader` on iOS |
 | `src/components/IosPageHeader.tsx`     | iOS-only sticky nav bar with safe-area-inset-top, back chevron, and action slot |
 | `src/components/ui/adaptive-dialog.tsx` | Renders vaul `Drawer` on iOS, Radix `Dialog` on web |
@@ -87,6 +90,18 @@ export const MyComponent = () => {
 ## iOS Environment Health Check
 
 Before making any changes to iOS-related code or configs, run the **ios-health-check** skill (`.claude/skills/ios-health-check/SKILL.md`). It runs five checks, auto-fixes any failures, and reports results before proceeding with the actual task.
+
+---
+
+## Client Management
+
+Clients are a managed entity (added in the client-management feature) that backs the project form's client dropdown.
+
+- **`Client` type** (`src/contexts/TimeTrackingContext.tsx`): `{ id: string; name: string; archived: boolean; createdAt: string }`. Exported alongside `Project` and consumed by `dataService.ts`.
+- **`STORAGE_KEYS.CLIENTS`** (`"timetracker_clients"`): added in both `localStorageService/constants.ts` and the context's local key map. Persisted via `getClients()` / `saveClients()` on `DataService`. `SupabaseService` deliberately stores the client list as a JSON blob in localStorage (reusing `localStorageService/clients.ts`) to avoid a Supabase schema migration.
+- **Seeding shim**: on first `getClients()` returning `[]`, the context init block seeds the client list from the unique `client` name strings already on `projects`, then saves it once. Silent, runs in-app only.
+- **`archived` on `Project`**: optional field, normalized at load time with `project.archived ?? false` so legacy projects need no migration. Project archiving was introduced **as part of this feature to support the client archive guard** (a client cannot be archived while it still owns active projects) rather than as a standalone feature.
+- **New context methods**: `clients`, `addClient(name)`, `archiveClient(id) → string | null` (returns an error message naming blocking active projects, or `null` on success), `restoreClient(id)`, `archiveProject(id)`, `restoreProject(id)`. None auto-save — consumers call `forceSyncToDatabase()` (same pattern as `addProject`).
 
 ---
 

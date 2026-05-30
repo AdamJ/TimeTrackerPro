@@ -1,4 +1,4 @@
-import { DayRecord, Project, TodoItem, PlannedTask } from "@/contexts/TimeTrackingContext";
+import { DayRecord, Project, Client, TodoItem, PlannedTask } from "@/contexts/TimeTrackingContext";
 import { Task } from "@/contexts/TimeTrackingContext";
 import { TaskCategory } from "@/config/categories";
 import { LocalStorageService } from "@/services/localStorageService";
@@ -29,6 +29,10 @@ export interface DataService {
 	// Projects operations
 	saveProjects: (projects: Project[]) => Promise<void>;
 	getProjects: () => Promise<Project[]>;
+
+	// Clients operations
+	saveClients: (clients: Client[]) => Promise<void>;
+	getClients: () => Promise<Client[]>;
 
 	// Categories operations
 	saveCategories: (categories: TaskCategory[]) => Promise<void>;

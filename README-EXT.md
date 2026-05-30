@@ -10,6 +10,7 @@ For the main overview, see [README.md](README.md).
 - [How to Use](#how-to-use)
   - [Daily Workflow](#daily-workflow)
   - [Project Management](#project-management)
+  - [Client Management](#client-management)
   - [Category Management](#category-management)
   - [Data Export & Import](#data-export--import)
   - [Markdown in Task Descriptions](#markdown-in-task-descriptions)
@@ -72,14 +73,25 @@ For the main overview, see [README.md](README.md).
 
 ### Project Management
 
-1. Navigate to **Archive → Projects**.
+1. Navigate to **Settings → Manage Projects** (or **Archive → Projects**).
 2. Click **Add Project** and enter:
-   - Project name and client name
+   - Project name
+   - **Client** — choose an existing client from the dropdown, or pick **+ Add new client** to create one inline without leaving the form. Projects whose client was set before client management existed show their client as a disabled "(unmanaged)" entry so the legacy value stays visible.
    - Hourly rate
    - Billable / non-billable flag
 3. Assign projects to tasks when creating or editing them.
+4. **Archive / Restore** — use the archive action on a project row to move it into the collapsed **Archived** section; restore it from there at any time. Archiving keeps historical data intact while hiding the project from the active list.
 
 Projects enable automatic revenue calculation, per-client invoice exports, and archive filtering.
+
+### Client Management
+
+1. Navigate to **Settings → Manage Clients**.
+2. Click **Add Client** to create a client (name only).
+3. **Archive / Restore** — archive clients you no longer work with from the active list; restore them from the collapsed **Archived** section.
+4. A client cannot be archived while it still owns active (non-archived) projects. Attempting to do so shows an inline warning naming the blocking projects — archive those projects first.
+
+Clients populate the project form's client dropdown. On first run the client list is seeded automatically from the client names already referenced by existing projects.
 
 ### Category Management
 

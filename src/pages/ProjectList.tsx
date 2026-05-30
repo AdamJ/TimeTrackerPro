@@ -7,6 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import {
 	AlertDialog,
 	AlertDialogAction,
 	AlertDialogCancel,
@@ -16,17 +23,30 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Edit, Briefcase, Trash2, RotateCcw, Plus } from "lucide-react";
+import {
+	Edit,
+	Briefcase,
+	Trash2,
+	RotateCcw,
+	Plus,
+	Archive,
+	ChevronDown,
+	ChevronRight,
+} from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
 import { Badge } from "@radix-ui/themes";
 
 const ProjectContent: React.FC = () => {
 	const {
 		projects,
+		clients,
+		addClient,
 		addProject,
 		updateProject,
 		deleteProject,
 		resetProjectsToDefaults,
+		archiveProject,
+		restoreProject,
 		forceSyncToDatabase,
 	} = useTimeTracking();
 	const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -38,8 +58,34 @@ const ProjectContent: React.FC = () => {
 		color: "#3B82F6",
 		isBillable: true,
 	});
+	const [isAddingClient, setIsAddingClient] = useState(false);
+	const [newClientName, setNewClientName] = useState("");
 	const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 	const [showResetDialog, setShowResetDialog] = useState(false);
+	const [showArchived, setShowArchived] = useState(false);
+
+	const activeClients = clients.filter((client) => !client.archived);
+	const activeProjects = projects.filter((project) => !project.archived);
+	const archivedProjects = projects.filter((project) => project.archived);
+
+	const handleAddClientInline = () => {
+		const trimmed = newClientName.trim();
+		if (!trimmed) return;
+		addClient(trimmed);
+		setFormData((prev) => ({ ...prev, client: trimmed }));
+		setNewClientName("");
+		setIsAddingClient(false);
+	};
+
+	const handleArchiveProject = async (projectId: string) => {
+		archiveProject(projectId);
+		await forceSyncToDatabase();
+	};
+
+	const handleRestoreProject = async (projectId: string) => {
+		restoreProject(projectId);
+		await forceSyncToDatabase();
+	};
 
 	const resetForm = () => {
 		setFormData({
@@ -51,6 +97,8 @@ const ProjectContent: React.FC = () => {
 		});
 		setEditingProject(null);
 		setIsAddingNew(false);
+		setIsAddingClient(false);
+		setNewClientName("");
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -104,7 +152,7 @@ const ProjectContent: React.FC = () => {
 
 	return (
 		<PageLayout
-			title={<>Project List <span>({projects.length})</span></>}
+			title={<>Project List <span>({activeProjects.length})</span></>}
 			icon={<Briefcase className="w-6 h-6" />}
 			actions={
 				!isAddingNew ? (
@@ -157,18 +205,69 @@ const ProjectContent: React.FC = () => {
 										<Label htmlFor="client">
 											Client Name <span className="text-destructive">*</span>
 										</Label>
-										<Input
-											id="client"
-											value={formData.client}
-											onChange={(e) =>
-												setFormData((prev) => ({
-													...prev,
-													client: e.target.value,
-												}))
-											}
-											placeholder="Enter client name"
-											required
-										/>
+										{isAddingClient ? (
+											<div className="flex items-center space-x-2">
+												<Input
+													id="client"
+													autoFocus
+													value={newClientName}
+													onChange={(e) => setNewClientName(e.target.value)}
+													placeholder="New client name"
+												/>
+												<Button
+													type="button"
+													size="sm"
+													onClick={handleAddClientInline}
+												>
+													Add
+												</Button>
+												<Button
+													type="button"
+													size="sm"
+													variant="ghost"
+													onClick={() => {
+														setIsAddingClient(false);
+														setNewClientName("");
+													}}
+												>
+													Cancel
+												</Button>
+											</div>
+										) : (
+											<Select
+												value={formData.client}
+												onValueChange={(value) => {
+													if (value === "__add_new__") {
+														setIsAddingClient(true);
+														return;
+													}
+													setFormData((prev) => ({ ...prev, client: value }));
+												}}
+											>
+												<SelectTrigger id="client">
+													<SelectValue placeholder="Select a client" />
+												</SelectTrigger>
+												<SelectContent>
+													{activeClients.map((client) => (
+														<SelectItem key={client.id} value={client.name}>
+															{client.name}
+														</SelectItem>
+													))}
+													{/* Legacy/unmanaged client values stay visible but flagged */}
+													{formData.client &&
+														!clients.some(
+															(client) => client.name === formData.client
+														) && (
+															<SelectItem value={formData.client} disabled>
+																{formData.client} (unmanaged)
+															</SelectItem>
+														)}
+													<SelectItem value="__add_new__">
+														+ Add new client
+													</SelectItem>
+												</SelectContent>
+											</Select>
+										)}
 									</div>
 								</div>
 								<div className="grid grid-cols-2 gap-4">
@@ -245,7 +344,7 @@ const ProjectContent: React.FC = () => {
 			<div className="max-w-6xl mx-auto p-6 print:p-4">
 				{/* Projects List */}
 				<div className="space-y-6">
-					{projects.length === 0 ? (
+					{activeProjects.length === 0 ? (
 						<Card>
 							<CardContent className="text-center py-8">
 								<Briefcase className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -256,7 +355,7 @@ const ProjectContent: React.FC = () => {
 						</Card>
 					) : (
 						<div className="grid gap-4">
-							{projects.map((project) => (
+							{activeProjects.map((project) => (
 								<Card
 									key={project.id}
 									className="border-l-4"
@@ -312,6 +411,14 @@ const ProjectContent: React.FC = () => {
 												<Button
 													size="sm"
 													variant="outline"
+													aria-label="Archive project"
+													onClick={() => handleArchiveProject(project.id)}
+												>
+													<Archive className="w-3 h-3" />
+												</Button>
+												<Button
+													size="sm"
+													variant="outline"
 													onClick={() => setDeleteTargetId(project.id)}
 													className="text-destructive hover:text-destructive/80"
 												>
@@ -322,6 +429,57 @@ const ProjectContent: React.FC = () => {
 									</CardContent>
 								</Card>
 							))}
+						</div>
+					)}
+
+					{/* Archived Projects (collapsed by default) */}
+					{archivedProjects.length > 0 && (
+						<div className="space-y-4">
+							<Button
+								variant="ghost"
+								onClick={() => setShowArchived((prev) => !prev)}
+								className="px-0 hover:bg-transparent"
+							>
+								{showArchived ? (
+									<ChevronDown className="w-4 h-4 mr-2" />
+								) : (
+									<ChevronRight className="w-4 h-4 mr-2" />
+								)}
+								Archived ({archivedProjects.length})
+							</Button>
+							{showArchived && (
+								<div className="grid gap-4">
+									{archivedProjects.map((project) => (
+										<Card
+											key={project.id}
+											className="border-l-4 opacity-70"
+											style={{ borderLeftColor: project.color }}
+										>
+											<CardContent className="p-4">
+												<div className="flex items-center justify-between">
+													<div className="flex-1">
+														<h4 className="font-semibold text-muted-foreground">
+															{project.name}
+														</h4>
+														<p className="text-sm text-muted-foreground">
+															{project.client}
+														</p>
+													</div>
+													<Button
+														size="sm"
+														variant="outline"
+														aria-label="Restore project"
+														onClick={() => handleRestoreProject(project.id)}
+													>
+														<RotateCcw className="w-3 h-3 sm:mr-2" />
+														<span className="hidden sm:block">Restore</span>
+													</Button>
+												</div>
+											</CardContent>
+										</Card>
+									))}
+								</div>
+							)}
 						</div>
 					)}
 				</div>

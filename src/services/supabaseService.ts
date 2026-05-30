@@ -9,10 +9,11 @@ import {
 	clearDataCaches,
 	trackAuthCall
 } from "@/lib/supabase";
-import { Task, DayRecord, Project, TodoItem, PlannedTask } from "@/contexts/TimeTrackingContext";
+import { Task, DayRecord, Project, Client, TodoItem, PlannedTask } from "@/contexts/TimeTrackingContext";
 import { TaskCategory } from "@/config/categories";
 import { DataService, CurrentDayData } from "@/services/dataService";
 import { LocalStorageService } from "@/services/localStorageService";
+import { getClients as getClientsBlob, saveClients as saveClientsBlob } from "@/services/localStorageService/clients";
 
 export class SupabaseService implements DataService {
 	// Schema detection with permanent caching
@@ -709,6 +710,16 @@ export class SupabaseService implements DataService {
 
 		setCachedProjects(result);
 		return result;
+	}
+
+	// Clients are persisted as a JSON blob in localStorage rather than a
+	// dedicated table, intentionally avoiding a Supabase schema migration.
+	async saveClients(clients: Client[]): Promise<void> {
+		return saveClientsBlob(clients);
+	}
+
+	async getClients(): Promise<Client[]> {
+		return getClientsBlob();
 	}
 
 	async saveCategories(categories: TaskCategory[]): Promise<void> {

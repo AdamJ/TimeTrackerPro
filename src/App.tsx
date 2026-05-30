@@ -18,6 +18,7 @@ const ProjectList = lazy(() => import("./pages/ProjectList"));
 const Settings = lazy(() => import("./pages/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Categories = lazy(() => import("./pages/Categories"));
+const Clients = lazy(() => import("./pages/Clients"));
 const Report = lazy(() => import("./pages/Report"));
 const TaskList = lazy(() => import("./pages/TaskList"));
 
@@ -50,6 +51,7 @@ const App = () => (
                 <Route path="/tasks" element={<TaskList />} />
                 <Route path="/projectlist" element={<ProjectList />} />
                 <Route path="/categories" element={<Categories />} />
+                <Route path="/clients" element={<Clients />} />
                 <Route path="/archive" element={<Archive />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
