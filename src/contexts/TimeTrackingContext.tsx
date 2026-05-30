@@ -183,6 +183,7 @@ interface TimeTrackingContextType {
   addClient: (name: string) => void;
   archiveClient: (clientId: string) => string | null;
   restoreClient: (clientId: string) => void;
+  persistClients: () => Promise<void>;
 
   // Category management
   addCategory: (category: Omit<TaskCategory, 'id'>) => void;
@@ -296,6 +297,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const plannedLoadedRef = useRef(false);
   // Tracks current plannedTasks for use in callbacks without closing over state.
   const plannedTasksRef = useRef<PlannedTask[]>([]);
+  // Mirrors the latest clients list so persistClients() saves fresh data
+  // without depending on render-time closures. Updated synchronously by every
+  // client mutation (and at load) so a save fired immediately after a mutation
+  // still sees the change.
+  const clientsRef = useRef<Client[]>([]);
 
   // Initialize data service when auth state changes
   useEffect(() => {
@@ -409,9 +415,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           }));
           const reconciledClients = [...loadedClients, ...seededClients];
           setClients(reconciledClients);
+          clientsRef.current = reconciledClients;
           await dataService.saveClients(reconciledClients);
         } else {
           setClients(loadedClients);
+          clientsRef.current = loadedClients;
         }
 
         // Load categories
@@ -514,7 +522,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       const results = await Promise.allSettled([
         stableSaveCurrentDay(),
         dataService.saveProjects(projects),
-        dataService.saveClients(clients),
         dataService.saveCategories(categories),
         dataService.saveArchivedDays(archivedDays),
         dataService.saveTodos(todoItems),
@@ -540,7 +547,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setIsSyncing(false);
     }
-  }, [dataService, stableSaveCurrentDay, projects, clients, categories, archivedDays, todoItems, plannedTasks, errorNotify]);
+  }, [dataService, stableSaveCurrentDay, projects, categories, archivedDays, todoItems, plannedTasks, errorNotify]);
 
   // Load current day data (for periodic sync)
   const loadCurrentDay = useCallback(async () => {
@@ -942,6 +949,20 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // Client management functions - NO AUTOMATIC SAVING
+  // Persists the current client list to the data service. Reads from
+  // clientsRef (kept in sync by every mutation) rather than the `clients`
+  // closure, so a save fired immediately after a mutation sees the change.
+  // Clients are no longer part of forceSyncToDatabase's bulk save — they are
+  // saved here only when a client actually changes, minimizing Supabase calls.
+  const persistClients = useCallback(async () => {
+    if (!dataServiceRef.current) return;
+    try {
+      await dataServiceRef.current.saveClients(clientsRef.current);
+    } catch (error) {
+      console.error("❌ Error saving clients:", error);
+    }
+  }, []);
+
   const addClient = (name: string) => {
     const trimmed = name.trim();
     if (!trimmed) return;
@@ -951,7 +972,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       archived: false,
       createdAt: new Date().toISOString()
     };
-    setClients(prev => [...prev, newClient]);
+    const next = [...clientsRef.current, newClient];
+    clientsRef.current = next;
+    setClients(next);
     setHasUnsavedChanges(true);
   };
 
@@ -959,7 +982,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   // that block archiving (a client cannot be archived while it still owns
   // non-archived projects).
   const archiveClient = (clientId: string): string | null => {
-    const client = clients.find(c => c.id === clientId);
+    const client = clientsRef.current.find(c => c.id === clientId);
     if (!client) return "Client not found.";
 
     const blockingProjects = projects.filter(
@@ -974,17 +997,21 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       return `${client.name} has ${count} active ${noun}: ${names}. Archive ${action} before archiving this client.`;
     }
 
-    setClients(prev =>
-      prev.map(c => (c.id === clientId ? { ...c, archived: true } : c))
+    const next = clientsRef.current.map(c =>
+      c.id === clientId ? { ...c, archived: true } : c
     );
+    clientsRef.current = next;
+    setClients(next);
     setHasUnsavedChanges(true);
     return null;
   };
 
   const restoreClient = (clientId: string) => {
-    setClients(prev =>
-      prev.map(c => (c.id === clientId ? { ...c, archived: false } : c))
+    const next = clientsRef.current.map(c =>
+      c.id === clientId ? { ...c, archived: false } : c
     );
+    clientsRef.current = next;
+    setClients(next);
     setHasUnsavedChanges(true);
   };
 
@@ -1390,6 +1417,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         addClient,
         archiveClient,
         restoreClient,
+        persistClients,
         addCategory,
         updateCategory,
         deleteCategory,

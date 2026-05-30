@@ -6,6 +6,8 @@ import {
 	setCachedProjects,
 	getCachedCategories,
 	setCachedCategories,
+	getCachedClients,
+	setCachedClients,
 	clearDataCaches,
 	trackAuthCall
 } from "@/lib/supabase";
@@ -720,6 +722,7 @@ export class SupabaseService implements DataService {
 		if (clients.length === 0) {
 			await supabase.from("clients").delete().eq("user_id", user.id);
 			trackDbCall("delete", "clients");
+			setCachedClients([]);
 			return;
 		}
 
@@ -766,9 +769,16 @@ export class SupabaseService implements DataService {
 			console.error("❌ Error upserting clients:", error);
 			throw error;
 		}
+
+		setCachedClients(clients);
 	}
 
 	async getClients(): Promise<Client[]> {
+		const cachedResult = getCachedClients();
+		if (cachedResult) {
+			return cachedResult;
+		}
+
 		const user = await this.requireUser();
 
 		const { data, error } = await supabase
@@ -783,12 +793,15 @@ export class SupabaseService implements DataService {
 			throw error;
 		}
 
-		return (data || []).map((client) => ({
+		const result = (data || []).map((client) => ({
 			id: client.id,
 			name: client.name,
 			archived: client.archived === true,
 			createdAt: client.created_at
 		}));
+
+		setCachedClients(result);
+		return result;
 	}
 
 	async saveCategories(categories: TaskCategory[]): Promise<void> {

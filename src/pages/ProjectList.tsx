@@ -42,6 +42,7 @@ const ProjectContent: React.FC = () => {
 		projects,
 		clients,
 		addClient,
+		persistClients,
 		addProject,
 		updateProject,
 		deleteProject,
@@ -69,10 +70,11 @@ const ProjectContent: React.FC = () => {
 	const activeProjects = projects.filter((project) => !project.archived);
 	const archivedProjects = projects.filter((project) => project.archived);
 
-	const handleAddClientInline = () => {
+	const handleAddClientInline = async () => {
 		const trimmed = newClientName.trim();
 		if (!trimmed) return;
 		addClient(trimmed);
+		await persistClients();
 		setFormData((prev) => ({ ...prev, client: trimmed }));
 		setNewClientName("");
 		setIsAddingClient(false);

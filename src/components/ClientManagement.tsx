@@ -18,7 +18,7 @@ import { PageLayout } from "@/components/PageLayout";
 import { toast } from "@/hooks/use-toast";
 
 export const ClientManagement: React.FC = () => {
-	const { clients, addClient, archiveClient, restoreClient, forceSyncToDatabase } =
+	const { clients, addClient, archiveClient, restoreClient, persistClients } =
 		useTimeTracking();
 	const [isAddingNew, setIsAddingNew] = useState(false);
 	const [name, setName] = useState("");
@@ -38,7 +38,7 @@ export const ClientManagement: React.FC = () => {
 		const trimmed = name.trim();
 		if (!trimmed) return;
 		addClient(trimmed);
-		await forceSyncToDatabase();
+		await persistClients();
 		toast({
 			title: "Client added",
 			description: `"${trimmed}" has been added.`
@@ -53,7 +53,7 @@ export const ClientManagement: React.FC = () => {
 			setArchiveError(error);
 			return;
 		}
-		await forceSyncToDatabase();
+		await persistClients();
 		const archivedName = clients.find(client => client.id === clientId)?.name;
 		toast({
 			title: "Client archived",
@@ -64,7 +64,7 @@ export const ClientManagement: React.FC = () => {
 	const handleRestore = async (clientId: string) => {
 		setArchiveError(null);
 		restoreClient(clientId);
-		await forceSyncToDatabase();
+		await persistClients();
 		const restoredName = clients.find(client => client.id === clientId)?.name;
 		toast({
 			title: "Client restored",
