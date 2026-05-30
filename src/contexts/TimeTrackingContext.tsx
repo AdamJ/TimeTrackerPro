@@ -384,28 +384,34 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         }));
         setProjects(resolvedProjects);
 
-        // Load clients. On first run (empty), seed from the unique client
-        // name strings already referenced by projects so existing data stays
-        // visible. This shim runs once and persists silently.
+        // Load clients, then reconcile against the client name strings
+        // referenced by projects so every project's client is represented as a
+        // managed record. Names already present (active OR archived) are left
+        // untouched — only genuinely missing names are appended as active
+        // clients. This runs on every load and is idempotent, covering both
+        // first run and clients introduced later (e.g. via CSV import).
         const loadedClients = await dataService.getClients();
-        if (loadedClients.length > 0) {
-          setClients(loadedClients);
-        } else {
-          const uniqueNames = Array.from(
-            new Set(
-              resolvedProjects
-                .map(project => project.client?.trim())
-                .filter((name): name is string => !!name)
-            )
-          );
-          const seededClients: Client[] = uniqueNames.map((name, index) => ({
+        const existingNames = new Set(loadedClients.map(client => client.name));
+        const missingNames = Array.from(
+          new Set(
+            resolvedProjects
+              .map(project => project.client?.trim())
+              .filter((name): name is string => !!name)
+          )
+        ).filter(name => !existingNames.has(name));
+
+        if (missingNames.length > 0) {
+          const seededClients: Client[] = missingNames.map((name, index) => ({
             id: `seed-${index}-${Date.now()}`,
             name,
             archived: false,
             createdAt: new Date().toISOString()
           }));
-          setClients(seededClients);
-          await dataService.saveClients(seededClients);
+          const reconciledClients = [...loadedClients, ...seededClients];
+          setClients(reconciledClients);
+          await dataService.saveClients(reconciledClients);
+        } else {
+          setClients(loadedClients);
         }
 
         // Load categories
