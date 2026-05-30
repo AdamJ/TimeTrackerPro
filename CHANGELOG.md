@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `forceSyncToDatabase` used the `projects` closure variable, which is stale when called immediately after a project mutation (before React re-renders). Project add, edit, delete, archive, and restore via `ProjectList` all called `forceSyncToDatabase` right after the mutation, causing the pre-mutation project list to be written to storage while the icon incorrectly turned green. Added `projectsRef` (mirroring `clientsRef`) updated synchronously by every project mutation and at load; `forceSyncToDatabase` now reads `projectsRef.current` so the correct list is always saved.
+  — `src/contexts/TimeTrackingContext.tsx`
+- `addClient`, `archiveClient`, and `restoreClient` called `setHasUnsavedChanges(true)` even though callers immediately persist the change via `persistClient` / `persistClients`. Since clients are excluded from `forceSyncToDatabase`'s bulk save, the only path to clear the flag was unrelated to the client write, leaving the save icon orange after every client operation despite the data being safely written. Removed the `setHasUnsavedChanges(true)` calls from all three client mutators.
+  — `src/contexts/TimeTrackingContext.tsx`
+- The project load merge always started from hardcoded defaults and only appended saved projects whose name+client did not match any default. Any edit to a default project (hourly rate, color, `isBillable`) was silently discarded on reload and replaced by the hardcoded default values. Changed the merge to replace the default entry with the saved version when name+client match, so user edits to default projects survive page reloads.
+  — `src/contexts/TimeTrackingContext.tsx`
 - `BackdatedEntryDialog` imported `useTimeTracking` from `@/contexts/TimeTrackingContext` (not exported there) — corrected to import the hook from `@/hooks/useTimeTracking` and types (`DayRecord`, `Task`) from the context
   — `src/components/BackdatedEntryDialog.tsx`
 
