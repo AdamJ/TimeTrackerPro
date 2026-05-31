@@ -19,6 +19,13 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -27,6 +34,7 @@ import {
   groupByCalendarWeek,
   groupByDateRange,
   getMostRecentCompleteWeek,
+  filterWeekByProject,
   formatDuration,
   serializeWeekForPrompt,
   weekKey,
@@ -368,6 +376,8 @@ function SavedSummaryBanner({
 // Main Page
 // ---------------------------------------------------------------------------
 
+const ALL_PROJECTS_VALUE = "all-projects";
+
 export default function Report() {
   const { archivedDays: rawArchivedDays, todoItems } = useTimeTracking();
   const archivedDays = useMemo(
@@ -383,14 +393,23 @@ export default function Report() {
   const [isCustomRange, setIsCustomRange] = useState(false);
   const [calendarIndex, setCalendarIndex] = useState(0);
   const [tone, setTone] = useState<ReportTone>('standup');
+  const [selectedProject, setSelectedProject] = useState<string>('');
+
+  const filteredWeek = useMemo(
+    () => selectedWeek ? filterWeekByProject(selectedWeek, selectedProject) : null,
+    [selectedWeek, selectedProject]
+  );
 
   const { summary, state, error, generate, load, updateSummary, reset } =
     useReportSummary();
 
-  // Derive the localStorage key for the current week+tone
+  // Derive the localStorage key for the current week+tone+project.
   // Empty string when no week is selected yet; useReportStorage will return null
-  // for this key and save() is gated behind the generate button (requires selectedWeek)
-  const currentWeekKey = selectedWeek ? weekKey(selectedWeek.weekStart) : "";
+  // for this key and save() is gated behind the generate button (requires selectedWeek).
+  // Including the project keeps project-filtered summaries separate from full-week summaries.
+  const currentWeekKey = selectedWeek
+    ? `${weekKey(selectedWeek.weekStart)}${selectedProject ? `_${selectedProject}` : ""}`
+    : "";
   const {
     saved: savedSummary,
     save: saveSummary,
@@ -399,13 +418,13 @@ export default function Report() {
 
   // Auto-save whenever generation succeeds or the user edits the summary
   useEffect(() => {
-    if (state !== "success" || !summary || !selectedWeek) return;
+    if (state !== "success" || !summary || !filteredWeek) return;
     // Debounce saves to avoid write-on-every-keystroke (important for iOS WebView)
     const timer = setTimeout(() => {
-      saveSummary(summary, selectedWeek.label);
+      saveSummary(summary, filteredWeek.label);
     }, 300);
     return () => clearTimeout(timer);
-  }, [state, summary, selectedWeek, saveSummary]);
+  }, [state, summary, filteredWeek, saveSummary]);
 
   useEffect(() => {
     const initial = getMostRecentCompleteWeek(calendarWeeks);
@@ -417,6 +436,7 @@ export default function Report() {
     if (next < calendarWeeks.length) {
       setCalendarIndex(next);
       setSelectedWeek(calendarWeeks[next]);
+      setSelectedProject('');
       setIsCustomRange(false);
       reset();
     }
@@ -427,6 +447,7 @@ export default function Report() {
     if (next >= 0) {
       setCalendarIndex(next);
       setSelectedWeek(calendarWeeks[next]);
+      setSelectedProject('');
       setIsCustomRange(false);
       reset();
     }
@@ -435,6 +456,7 @@ export default function Report() {
   function handleCustomRange(from: Date, to: Date) {
     const group = groupByDateRange(archivedDays, from, to);
     setSelectedWeek(group);
+    setSelectedProject('');
     setIsCustomRange(true);
     reset();
   }
@@ -444,9 +466,14 @@ export default function Report() {
     reset();
   }
 
+  function handleProjectChange(v: string) {
+    setSelectedProject(v);
+    reset();
+  }
+
   function handleGenerate() {
-    if (!selectedWeek) return;
-    generate(selectedWeek, tone, todoItems);
+    if (!filteredWeek) return;
+    generate(filteredWeek, tone, todoItems);
   }
 
   function handleSummaryUpdate(v: string) {
@@ -463,7 +490,7 @@ export default function Report() {
 
   const canGoPrev = !isCustomRange && calendarIndex < calendarWeeks.length - 1;
   const canGoNext = !isCustomRange && calendarIndex > 0;
-  const hasNoData = selectedWeek?.days.length === 0;
+  const hasNoData = filteredWeek?.days.length === 0;
 
   // Empty state — no archived data at all
   if (archivedDays.length === 0) {
@@ -546,6 +573,7 @@ export default function Report() {
                     onClick={() => {
                       setIsCustomRange(false);
                       setSelectedWeek(calendarWeeks[calendarIndex]);
+                      setSelectedProject('');
                       reset();
                     }}
                   >
@@ -555,16 +583,43 @@ export default function Report() {
               )}
             </div>
 
+            {/* Project filter */}
+            {selectedWeek && selectedWeek.projects.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Project
+                </Label>
+                <Select
+                  value={selectedProject || ALL_PROJECTS_VALUE}
+                  onValueChange={v =>
+                    handleProjectChange(v === ALL_PROJECTS_VALUE ? '' : v)
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_PROJECTS_VALUE}>All projects</SelectItem>
+                    {selectedWeek.projects.map(p => (
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             {/* Week preview */}
-            {selectedWeek && <WeekPreview week={selectedWeek} />}
+            {filteredWeek && <WeekPreview week={filteredWeek} />}
 
             {/* Tone selector */}
-            {selectedWeek && !hasNoData && (
+            {filteredWeek && !hasNoData && (
               <ToneSelector value={tone} onChange={handleToneChange} />
             )}
 
             {/* Generate button */}
-            {selectedWeek && !hasNoData && state !== 'loading' && (
+            {filteredWeek && !hasNoData && state !== 'loading' && (
               <Button className="w-full" onClick={handleGenerate}>
                 {state === 'success'
                   ? 'Regenerate summary'
@@ -573,13 +628,13 @@ export default function Report() {
             )}
 
             {/* Dev-only prompt preview */}
-            {import.meta.env.DEV && selectedWeek && (
+            {import.meta.env.DEV && filteredWeek && (
               <details className="text-xs text-muted-foreground border rounded-md overflow-hidden">
                 <summary className="cursor-pointer select-none px-3 py-2 bg-muted/30 hover:bg-muted/50 transition-colors">
                   Prompt preview (dev only)
                 </summary>
                 <pre className="px-3 py-3 whitespace-pre-wrap text-[11px] leading-relaxed overflow-x-auto bg-muted/10">
-                  {serializeWeekForPrompt(selectedWeek)}
+                  {serializeWeekForPrompt(filteredWeek)}
                 </pre>
               </details>
             )}
@@ -618,18 +673,18 @@ export default function Report() {
               </div>
             )}
 
-            {state === 'loading' && selectedWeek && (
-              <GeneratingState weekLabel={selectedWeek.label} />
+            {state === 'loading' && filteredWeek && (
+              <GeneratingState weekLabel={filteredWeek.label} />
             )}
 
             {state === 'error' && error && (
               <ErrorState message={error} onRetry={handleGenerate} />
             )}
 
-            {state === 'success' && summary && selectedWeek && (
+            {state === 'success' && summary && filteredWeek && (
               <SummaryOutput
                 summary={summary}
-                weekLabel={selectedWeek.label}
+                weekLabel={filteredWeek.label}
                 onUpdate={handleSummaryUpdate}
                 onRegenerate={handleGenerate}
               />
