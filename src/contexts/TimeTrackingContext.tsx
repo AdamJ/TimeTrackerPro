@@ -372,10 +372,15 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           const mergedProjects = [...defaultProjects];
 
           loadedProjects.forEach((savedProject: Project) => {
+            // Match on id first: a renamed default keeps its original derived
+            // id, so a name+client comparison alone would miss it and push a
+            // duplicate-id row (Postgres upsert then fails with 21000). Fall
+            // back to name+client for projects that predate stable ids.
             const defaultIndex = mergedProjects.findIndex(
               defaultProject =>
-                defaultProject.name === savedProject.name &&
-                defaultProject.client === savedProject.client
+                defaultProject.id === savedProject.id ||
+                (defaultProject.name === savedProject.name &&
+                  defaultProject.client === savedProject.client)
             );
             if (defaultIndex !== -1) {
               mergedProjects[defaultIndex] = savedProject;

@@ -657,7 +657,14 @@ export class SupabaseService implements DataService {
 			}
 		}
 
-		const projectsToUpsert = projects.map((project) => ({
+		// Dedup by id before upserting: a single upsert batch cannot contain two
+		// rows with the same conflict key or Postgres throws 21000 ("ON CONFLICT
+		// DO UPDATE command cannot affect row a second time"). Last write wins.
+		const dedupedById = Array.from(
+			new Map(projects.map((project) => [project.id, project])).values()
+		);
+
+		const projectsToUpsert = dedupedById.map((project) => ({
 			id: project.id,
 			user_id: user.id,
 			name: project.name,
