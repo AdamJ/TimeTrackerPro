@@ -398,3 +398,31 @@ export function getMostRecentCompleteWeek(
   const complete = weeks.find(w => w.weekEnd < now);
   return complete ?? weeks[0];
 }
+
+/**
+ * Returns a new WeekGroup containing only tasks matching the given project name.
+ * Days with no matching tasks are excluded and totalDuration is recomputed.
+ * Pass an empty string to return the original week unchanged.
+ */
+export function filterWeekByProject(week: WeekGroup, project: string): WeekGroup {
+  if (!project) return week;
+
+  const filteredDays = week.days
+    .map(day => ({
+      ...day,
+      tasks: day.tasks.filter(t => t.project === project)
+    }))
+    .filter(day => day.tasks.length > 0);
+
+  const totalDuration = filteredDays.reduce(
+    (sum, day) => sum + day.tasks.reduce((s, t) => s + t.duration, 0),
+    0
+  );
+
+  return {
+    ...week,
+    days: filteredDays,
+    totalDuration,
+    projects: [project]
+  };
+}
