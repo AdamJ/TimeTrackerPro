@@ -473,4 +473,42 @@ describe("TimeTrackingContext", () => {
 			});
 		});
 	});
+
+	describe("Project merge on load", () => {
+		it("should not produce duplicate project ids when a default project was renamed", async () => {
+			// A default project keeps its derived id when renamed (updateProject
+			// only changes the name). Seed localStorage with such a renamed default.
+			localStorage.setItem(
+				"timetracker_projects",
+				JSON.stringify({
+					data: [
+						{
+							id: "default-0-product-and-design",
+							name: "Product and Design — Renamed",
+							client: "CAS",
+							hourlyRate: 100,
+							color: "#3B82F6",
+							isBillable: true
+						}
+					],
+					_v: 1
+				})
+			);
+
+			const { result } = renderHook(() => useTimeTracking(), { wrapper });
+
+			await waitFor(() => {
+				expect(result.current.projects.length).toBeGreaterThan(0);
+			});
+
+			const ids = result.current.projects.map(project => project.id);
+			expect(new Set(ids).size).toBe(ids.length);
+
+			// The renamed version (not a stale default) should be the one kept.
+			const merged = result.current.projects.find(
+				project => project.id === "default-0-product-and-design"
+			);
+			expect(merged?.name).toBe("Product and Design — Renamed");
+		});
+	});
 });
