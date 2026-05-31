@@ -223,9 +223,11 @@ describe("getMostRecentCompleteWeek", () => {
 	});
 
 	it("returns a past week as the most recent complete week", () => {
-		const days = [
-			makeDay("2026-01-15", [{ project: "A", duration: 3600000 }]),
-		];
+		// Use a date guaranteed to be in the past regardless of when CI runs
+		const pastDate = new Date(Date.now() - 365 * 86400000)
+			.toISOString()
+			.slice(0, 10);
+		const days = [makeDay(pastDate, [{ project: "A", duration: 3600000 }])];
 		const weeks = groupByCalendarWeek(days);
 		const result = getMostRecentCompleteWeek(weeks);
 		expect(result).not.toBeNull();
