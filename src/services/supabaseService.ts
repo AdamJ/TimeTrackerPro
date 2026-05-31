@@ -1141,6 +1141,7 @@ export class SupabaseService implements DataService {
 			const archivedDays = await localService.getArchivedDays();
 			const todos = await localService.getTodos();
 			const plannedTasks = await localService.getPlannedTasks();
+			const clients = await localService.getClients();
 
 			const hasProjects = projects.length > 0;
 			const hasCategories = categories.length > 0;
@@ -1149,8 +1150,9 @@ export class SupabaseService implements DataService {
 			const hasArchivedDays = archivedDays.length > 0;
 			const hasTodos = todos.length > 0;
 			const hasPlannedTasks = plannedTasks.length > 0;
+			const hasClients = clients.length > 0;
 
-			if (!hasProjects && !hasCategories && !hasCurrentDay && !hasArchivedDays && !hasTodos && !hasPlannedTasks) {
+			if (!hasProjects && !hasCategories && !hasCurrentDay && !hasArchivedDays && !hasTodos && !hasPlannedTasks && !hasClients) {
 				return;
 			}
 
@@ -1212,6 +1214,19 @@ export class SupabaseService implements DataService {
 				if (hasPlannedTasks) await this.savePlannedTasks(plannedTasks);
 			}
 
+			// Migrate clients last, non-destructively: upsert only the guest
+			// clients whose name isn't already on the account, so clients synced
+			// from another device are never deleted. Matches the by-name reconcile
+			// the context performs against project client strings on load.
+			if (hasClients) {
+				const existingClients = await this.getClients();
+				const existingNames = new Set(existingClients.map(client => client.name));
+				const newClients = clients.filter(client => !existingNames.has(client.name));
+				for (const client of newClients) {
+					await this.upsertClient(client);
+				}
+			}
+
 		} catch (error) {
 			console.error("❌ Error migrating data from localStorage:", error);
 		}
@@ -1227,6 +1242,7 @@ export class SupabaseService implements DataService {
 			const categories = await this.getCategories();
 			const todos = await this.getTodos();
 			const plannedTasks = await this.getPlannedTasks();
+			const clients = await this.getClients();
 
 			if (currentDay) {
 				await localService.saveCurrentDay(currentDay);
@@ -1250,6 +1266,10 @@ export class SupabaseService implements DataService {
 
 			if (plannedTasks.length > 0) {
 				await localService.savePlannedTasks(plannedTasks);
+			}
+
+			if (clients.length > 0) {
+				await localService.saveClients(clients);
 			}
 
 		} catch (error) {

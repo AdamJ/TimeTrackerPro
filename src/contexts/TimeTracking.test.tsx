@@ -497,18 +497,18 @@ describe("TimeTrackingContext", () => {
 
 			const { result } = renderHook(() => useTimeTracking(), { wrapper });
 
+			// Wait until the async load has replaced the in-memory defaults with
+			// the saved data. projects.length > 0 resolves immediately against the
+			// initial defaults, so we poll on the renamed name instead.
 			await waitFor(() => {
-				expect(result.current.projects.length).toBeGreaterThan(0);
+				const merged = result.current.projects.find(
+					project => project.id === "default-0-product-and-design"
+				);
+				expect(merged?.name).toBe("Product and Design — Renamed");
 			});
 
 			const ids = result.current.projects.map(project => project.id);
 			expect(new Set(ids).size).toBe(ids.length);
-
-			// The renamed version (not a stale default) should be the one kept.
-			const merged = result.current.projects.find(
-				project => project.id === "default-0-product-and-design"
-			);
-			expect(merged?.name).toBe("Product and Design — Renamed");
 		});
 	});
 });
