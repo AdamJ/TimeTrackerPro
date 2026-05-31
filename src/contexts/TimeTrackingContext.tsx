@@ -449,6 +449,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Load planned tasks
         const loadedPlannedTasks = await dataService.getPlannedTasks();
+        plannedTasksRef.current = loadedPlannedTasks;
         setPlannedTasks(loadedPlannedTasks);
 
         // If switching from localStorage to Supabase, migrate data
@@ -538,7 +539,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         dataService.saveCategories(categories),
         dataService.saveArchivedDays(archivedDays),
         dataService.saveTodos(todoItems),
-        dataService.savePlannedTasks(plannedTasks)
+        dataService.savePlannedTasks(plannedTasksRef.current)
       ]);
 
       const failed = results.filter((r) => r.status === "rejected");
@@ -560,7 +561,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setIsSyncing(false);
     }
-  }, [dataService, stableSaveCurrentDay, categories, archivedDays, todoItems, plannedTasks, errorNotify]);
+  }, [dataService, stableSaveCurrentDay, categories, archivedDays, todoItems, errorNotify]);
 
   // Load current day data (for periodic sync)
   const loadCurrentDay = useCallback(async () => {
@@ -1318,32 +1319,40 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       createdAt: now,
       updatedAt: now
     };
-    setPlannedTasks(prev => [...prev, newTask]);
+    const next = [...plannedTasksRef.current, newTask];
+    plannedTasksRef.current = next;
+    setPlannedTasks(next);
     if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(newTask);
     successNotify();
   }, [successNotify]);
 
   const updatePlannedTask = useCallback((id: string, updates: Partial<PlannedTask>) => {
     const now = new Date().toISOString();
-    setPlannedTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates, updatedAt: now } : t));
+    const next = plannedTasksRef.current.map(t => t.id === id ? { ...t, ...updates, updatedAt: now } : t);
+    plannedTasksRef.current = next;
+    setPlannedTasks(next);
     if (plannedLoadedRef.current) {
-      const current = plannedTasksRef.current.find(t => t.id === id);
-      if (current) void dataServiceRef.current?.upsertPlannedTask({ ...current, ...updates, updatedAt: now });
+      const updated = next.find(t => t.id === id);
+      if (updated) void dataServiceRef.current?.upsertPlannedTask(updated);
     }
   }, []);
 
   const deletePlannedTask = useCallback((id: string) => {
-    setPlannedTasks(prev => prev.filter(t => t.id !== id));
+    const next = plannedTasksRef.current.filter(t => t.id !== id);
+    plannedTasksRef.current = next;
+    setPlannedTasks(next);
     if (plannedLoadedRef.current) void dataServiceRef.current?.deletePlannedTask(id);
     mediumImpact();
   }, [mediumImpact]);
 
   const movePlannedTask = useCallback((id: string, status: PlannedTaskStatus) => {
     const now = new Date().toISOString();
-    setPlannedTasks(prev => prev.map(t => t.id === id ? { ...t, status, updatedAt: now } : t));
+    const next = plannedTasksRef.current.map(t => t.id === id ? { ...t, status, updatedAt: now } : t);
+    plannedTasksRef.current = next;
+    setPlannedTasks(next);
     if (plannedLoadedRef.current) {
-      const current = plannedTasksRef.current.find(t => t.id === id);
-      if (current) void dataServiceRef.current?.upsertPlannedTask({ ...current, status, updatedAt: now });
+      const updated = next.find(t => t.id === id);
+      if (updated) void dataServiceRef.current?.upsertPlannedTask(updated);
     }
     lightImpact();
   }, [lightImpact]);
@@ -1362,7 +1371,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     const newTaskId = startNewTask(task.title, task.description, task.project, task.client, task.category);
     const now = new Date().toISOString();
     const updated: PlannedTask = { ...task, status: "in_progress" as PlannedTaskStatus, linkedTaskId: newTaskId, updatedAt: now };
-    setPlannedTasks(prev => prev.map(t => t.id === id ? updated : t));
+    const next = plannedTasksRef.current.map(t => t.id === id ? updated : t);
+    plannedTasksRef.current = next;
+    setPlannedTasks(next);
     if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(updated);
     toast({ title: `Task started: ${task.title}` });
   };
