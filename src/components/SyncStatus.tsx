@@ -43,7 +43,7 @@ export const SyncStatus = memo(function SyncStatus({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="inline-flex size-[35px] items-center justify-center rounded-full bg-white text-violet11 shadow-[0_2px_10px] shadow-violet-200 focus:shadow-[0_0_0_2px] p-0">
+              <button className="inline-flex size-[35px] items-center justify-center rounded-full bg-white text-violet11 p-0">
                 <CloudOff className="h-4 w-4 text-violet-900" />
               </button>
             </TooltipTrigger>

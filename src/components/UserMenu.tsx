@@ -30,7 +30,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onSignInClick }) => {
         className="flex items-center gap-2"
       >
         <UserLock className="h-4 w-4" />
-        <span className="hidden sm:block">Sign In</span>
+        {/* <span className="hidden sm:block">Sign In</span> */}
       </Button>
     );
   }
