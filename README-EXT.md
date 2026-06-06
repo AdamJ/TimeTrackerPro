@@ -179,16 +179,16 @@ Task descriptions support **GitHub Flavored Markdown (GFM)**:
 
 The Capacitor build (`VITE_IOS_BUILD=true`) includes additional Apple HIG enhancements that are inactive in the PWA:
 
-| Feature | Detail |
-| ------- | ------- |
-| **Bottom sheets** | All edit/confirm dialogs slide up as swipe-to-dismiss sheets instead of centered overlays |
-| **Haptic feedback** | Light impact on navigation taps, medium on destructive intent, success/error notifications on outcomes |
-| **Status bar theming** | Status bar text colour tracks light/dark mode; content extends behind the status bar via `black-translucent` |
-| **iOS navigation header** | Sticky 17 px title bar with safe-area-inset-top padding and back chevron replaces the desktop nav bar |
-| **Keyboard avoidance** | Viewport shrinks above the software keyboard; bottom sheet forms scroll above it automatically |
-| **Long-press context menus** | Hold a task card to reveal Edit / Delete without on-card buttons cluttering the layout |
-| **Page transitions** | Subtle 280 ms slide-in animation on route changes, matching the iOS push-navigation idiom |
-| **Rubber-band bounce** | Native scroll bounce restored on the main scroll container |
+| Feature                      | Detail                                                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Bottom sheets**            | All edit/confirm dialogs slide up as swipe-to-dismiss sheets instead of centered overlays                    |
+| **Haptic feedback**          | Light impact on navigation taps, medium on destructive intent, success/error notifications on outcomes       |
+| **Status bar theming**       | Status bar text colour tracks light/dark mode; content extends behind the status bar via `black-translucent` |
+| **iOS navigation header**    | Sticky 17 px title bar with safe-area-inset-top padding and back chevron replaces the desktop nav bar        |
+| **Keyboard avoidance**       | Viewport shrinks above the software keyboard; bottom sheet forms scroll above it automatically               |
+| **Long-press context menus** | Hold a task card to reveal Edit / Delete without on-card buttons cluttering the layout                       |
+| **Page transitions**         | Subtle 280 ms slide-in animation on route changes, matching the iOS push-navigation idiom                    |
+| **Rubber-band bounce**       | Native scroll bounce restored on the main scroll container                                                   |
 
 ---
 
@@ -454,13 +454,13 @@ git commit -m "refactor: split localStorageService into modules"
 
 **Release-triggering prefixes** (used in PR titles — determines CI version bump):
 
-| Prefix | Bump | Approval required? |
-| --- | --- | --- |
-| `major:` | Major | Yes (code owner via `major-release` environment) |
-| `feat:` / `feature:` / `fix:` | Minor | No |
-| `patch:` | Patch | No |
-| `bump:` / `maint:` / `refactor:` / `a11y:` | Patch | No |
-| `docs:` / `chore:` / others | None | — |
+| Prefix                                     | Bump  | Approval required?                               |
+| ------------------------------------------ | ----- | ------------------------------------------------ |
+| `major:`                                   | Major | Yes (code owner via `major-release` environment) |
+| `feat:` / `feature:` / `fix:`              | Minor | No                                               |
+| `patch:`                                   | Patch | No                                               |
+| `bump:` / `maint:` / `refactor:` / `a11y:` | Patch | No                                               |
+| `docs:` / `chore:` / others                | None  | —                                                |
 
 **Pull Requests:** Title format `[Timetraked] Descriptive Title`. See [agents/pull_requests.md](agents/pull_requests.md) for full guidelines.
 
@@ -501,7 +501,7 @@ npm run screenshots          # Capture PWA screenshots
 ```typescript
 // Create in src/components/
 // Use shadcn/ui components; import via @/ alias
-import { MyFeature } from '@/components/MyFeature';
+import { MyFeature } from "@/components/MyFeature";
 ```
 
 **New page:**
@@ -578,8 +578,8 @@ typography: {
 
 ## iOS Screenshots
 
-| View                  | Image                                                              |
-| --------------------- | ------------------------------------------------------------------ |
+| View                  | Image                                                                                          |
+| --------------------- | ---------------------------------------------------------------------------------------------- |
 | Dashboard             | <img src="screenshots/iOS/01Timetraked-iOS.png" width="200" alt="Timetracker screenshot 01" /> |
 | Time Entry — Markdown | <img src="screenshots/iOS/02Timetraked-iOS.png" width="200" alt="Timetracker screenshot 02" /> |
 | Time Entry — Preview  | <img src="screenshots/iOS/03Timetraked-iOS.png" width="200" alt="Timetracker screenshot 03" /> |

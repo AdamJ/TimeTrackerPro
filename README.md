@@ -4,7 +4,12 @@
 
 A Progressive Web App (PWA) for time tracking built with React, TypeScript, and Tailwind CSS. Installable on desktop and mobile with full offline support. Built for freelancers, consultants, and professionals who need to track time, manage projects, and generate invoices.
 
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white) ![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+
+![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white) ![Electron](https://img.shields.io/badge/Electron-Enabled-393?style=for-the-badge&logo=electron&logoColor=white)
+
+![GitHub Release](https://img.shields.io/github/v/release/AdamJ/TimeTrackerPro?style=for-the-badge) ![GitHub Release Date](https://img.shields.io/github/release-date/AdamJ/TimeTrackerPro?style=for-the-badge) ![W3C Validation](https://img.shields.io/w3c-validation/default?targetUrl=https%3A%2F%2Ftimetrackerpro.adamjolicoeur.me&style=for-the-badge)
+
 
 ---
 
@@ -23,6 +28,7 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 - **Weekly Report** — AI-generated work summaries (standup, client, or retrospective tone)
 - **No Account Required** — full functionality with local storage; optional cloud sync via Supabase
 - **PWA** — installable on desktop/mobile
+
 ---
 
 ## Quick Start
@@ -103,13 +109,13 @@ When creating an issue or pull request, utilize the templates provided by this r
 
 When creating a pull request, make sure that the commit message contains one of the accepted prefixes:
 
-| Prefix | Type | Release |
-| ---- | ---- | ---- |
-| `major` | **MAJOR** | Runs _after_ approval |
-| `feat:` / `feature:` / `fix:` | **MINOR (FIX/FEATURE)** | Runs _without_ approval |
-| `patch:` | **PATCH (FIX)** | Runs _without_ approval |
-| `bump:` / `maint:` / `refactor:` / `a11y:` | **PATCH:** | Runs _without_ approval |
-| `docs:` | - | No release |
+| Prefix                                     | Type                    | Release                 |
+| ------------------------------------------ | ----------------------- | ----------------------- |
+| `major`                                    | **MAJOR**               | Runs _after_ approval   |
+| `feat:` / `feature:` / `fix:`              | **MINOR (FIX/FEATURE)** | Runs _without_ approval |
+| `patch:`                                   | **PATCH (FIX)**         | Runs _without_ approval |
+| `bump:` / `maint:` / `refactor:` / `a11y:` | **PATCH:**              | Runs _without_ approval |
+| `docs:`                                    | -                       | No release              |
 
 > **MAJOR** version bumps require approval from code owners.
 
