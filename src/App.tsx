@@ -8,7 +8,7 @@ import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Suspense, lazy } from "react";
 import { InstallPrompt } from "@/components/InstallPrompt";
-import { UpdateNotification } from "@/components/UpdateNotification";
+import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
 import { MobileNav } from "@/components/MobileNav";
 
 // Lazy load pages for code splitting
@@ -62,7 +62,7 @@ const App = () => (
             </Suspense>
           </BrowserRouter>
           <InstallPrompt />
-          <UpdateNotification />
+          <PwaUpdatePrompt />
         </TooltipProvider>
       </TimeTrackingProvider>
     </AuthProvider>
