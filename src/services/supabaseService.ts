@@ -764,7 +764,15 @@ export class SupabaseService implements DataService {
 			user_id: user.id,
 			name: client.name,
 			archived: client.archived === true,
-			created_at: client.createdAt
+			created_at: client.createdAt,
+			address_street: client.addressStreet ?? null,
+			address_city: client.addressCity ?? null,
+			address_state: client.addressState ?? null,
+			address_zip: client.addressZip ?? null,
+			address_country: client.addressCountry ?? null,
+			contact_name: client.contactName ?? null,
+			contact_email: client.contactEmail ?? null,
+			contact_website: client.contactWebsite ?? null,
 		}));
 
 		const { error } = await supabase
@@ -804,7 +812,15 @@ export class SupabaseService implements DataService {
 			id: client.id,
 			name: client.name,
 			archived: client.archived === true,
-			createdAt: client.created_at
+			createdAt: client.created_at,
+			addressStreet: client.address_street ?? undefined,
+			addressCity: client.address_city ?? undefined,
+			addressState: client.address_state ?? undefined,
+			addressZip: client.address_zip ?? undefined,
+			addressCountry: client.address_country ?? undefined,
+			contactName: client.contact_name ?? undefined,
+			contactEmail: client.contact_email ?? undefined,
+			contactWebsite: client.contact_website ?? undefined,
 		}));
 
 		setCachedClients(result);
@@ -825,7 +841,15 @@ export class SupabaseService implements DataService {
 				user_id: user.id,
 				name: client.name,
 				archived: client.archived === true,
-				created_at: client.createdAt
+				created_at: client.createdAt,
+				address_street: client.addressStreet ?? null,
+				address_city: client.addressCity ?? null,
+				address_state: client.addressState ?? null,
+				address_zip: client.addressZip ?? null,
+				address_country: client.addressCountry ?? null,
+				contact_name: client.contactName ?? null,
+				contact_email: client.contactEmail ?? null,
+				contact_website: client.contactWebsite ?? null,
 			}, { onConflict: "id" });
 		trackDbCall("upsert", "clients");
 

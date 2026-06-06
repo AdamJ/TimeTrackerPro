@@ -1,23 +1,22 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from "react";
 import {
   TimeTrackingProvider,
   DayRecord
-} from '@/contexts/TimeTrackingContext';
-import { useTimeTracking } from '@/hooks/useTimeTracking';
-import { getDayStats } from '@/utils/calculationUtils';
-import { ArchiveItem } from '@/components/ArchiveItem';
-import { ArchiveEditDialog } from '@/components/ArchiveEditDialog';
-import { BackdatedEntryDialog } from '@/components/BackdatedEntryDialog';
-import { ExportDialog } from '@/components/ExportDialog';
-import { ProjectManagement } from '@/components/ProjectManagement';
-import { ArchiveFilter, ArchiveFilterState } from '@/components/ArchiveFilter';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardTitle } from '@/components/ui/card';
-import { Flex } from '@radix-ui/themes';
-import { Badge } from '@/components/ui/badge';
-import { Archive as ArchiveIcon, Database, CirclePlus } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+} from "@/contexts/TimeTrackingContext";
+import { useTimeTracking } from "@/hooks/useTimeTracking";
+import { getDayStats } from "@/utils/calculationUtils";
+import { ArchiveItem } from "@/components/ArchiveItem";
+import { ArchiveEditDialog } from "@/components/ArchiveEditDialog";
+import { BackdatedEntryDialog } from "@/components/BackdatedEntryDialog";
+import { ExportDialog } from "@/components/ExportDialog";
+import { ProjectManagement } from "@/components/ProjectManagement";
+import { ArchiveFilter, ArchiveFilterState } from "@/components/ArchiveFilter";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Archive as ArchiveIcon, Database, CirclePlus } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { PageLayout } from "@/components/PageLayout";
 
 const ArchiveContent: React.FC = () => {
@@ -31,17 +30,15 @@ const ArchiveContent: React.FC = () => {
   const [showProjectManagement, setShowProjectManagement] = useState(false);
   const [showBackdatedEntry, setShowBackdatedEntry] = useState(false);
   const [filters, setFilters] = useState<ArchiveFilterState>({
-    startDate: '',
-    endDate: '',
-    project: '',
-    category: ''
+    startDate: "",
+    endDate: "",
+    project: "",
+    category: ""
   });
 
-  // Filter and sort archived days
   const filteredDays = useMemo(() => {
     let filtered = [...archivedDays];
 
-    // Apply date range filter
     if (filters.startDate) {
       const startDate = new Date(filters.startDate);
       startDate.setHours(0, 0, 0, 0);
@@ -61,28 +58,24 @@ const ArchiveContent: React.FC = () => {
       });
     }
 
-    // Apply project filter
     if (filters.project) {
       filtered = filtered.filter(day =>
         day.tasks.some(task => task.project === filters.project)
       );
     }
 
-    // Apply category filter
     if (filters.category) {
       filtered = filtered.filter(day =>
         day.tasks.some(task => task.category === filters.category)
       );
     }
 
-    // Sort from newest to oldest
     return filtered.sort(
       (a, b) =>
         new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
     );
   }, [archivedDays, filters]);
 
-  // Calculate summary stats in a single pass — builds maps once and iterates filteredDays once.
   const { totalHoursWorked, totalBillableHours, totalNonBillableHours, totalRevenue } = useMemo(() => {
     const projectMap = new Map(projects.map(p => [p.name, p]));
     const categoryMap = new Map(categories.map(c => [c.id, c]));
@@ -110,29 +103,27 @@ const ArchiveContent: React.FC = () => {
 
   const { user, isAuthenticated } = useAuth();
 
+  const pageTitle = useMemo(() => <span>Archive</span>, []);
+  const pageBadge = useMemo(
+    () => <Badge variant="outline">{archivedDays.length}</Badge>,
+    [archivedDays.length]
+  );
+  const openBackdatedEntry = useCallback(() => setShowBackdatedEntry(true), []);
+  const pageActions = useMemo(
+    () => (
+      <Button onClick={openBackdatedEntry} size="sm" variant="outline">
+        <CirclePlus className="w-4 h-4 mr-2" />
+        Add Past Entry
+      </Button>
+    ),
+    [openBackdatedEntry]
+  );
+
   return (
     <PageLayout
-      title={
-        <>
-          <span>Archive</span>
-          {isAuthenticated && user?.email && (
-            <span className="hidden md:block text-base font-normal text-muted-foreground">
-              for {user.email}
-            </span>
-          )}
-        </>
-      }
-      icon={<ArchiveIcon className="w-6 h-6" />}
-      actions={
-        <Button
-          onClick={() => setShowBackdatedEntry(true)}
-          size="sm"
-          variant="outline"
-        >
-          <CirclePlus className="w-4 h-4 mr-2" />
-          Add Past Entry
-        </Button>
-      }
+      title={pageTitle}
+      badge={pageBadge}
+      actions={pageActions}
     >
       <div className="max-w-6xl mx-auto p-6 print:p-2">
         {filteredDays.length === 0 && archivedDays.length === 0 ? (
@@ -150,7 +141,6 @@ const ArchiveContent: React.FC = () => {
           </Card>
         ) : (
           <div className="space-y-4 md:space-y-6 print:space-y-0">
-            {/* Filter Component */}
             <ArchiveFilter
               filters={filters}
               onFilterChange={setFilters}
@@ -169,10 +159,10 @@ const ArchiveContent: React.FC = () => {
                   <Button
                     onClick={() =>
                       setFilters({
-                        startDate: '',
-                        endDate: '',
-                        project: '',
-                        category: ''
+                        startDate: "",
+                        endDate: "",
+                        project: "",
+                        category: ""
                       })
                     }
                   >
@@ -182,9 +172,8 @@ const ArchiveContent: React.FC = () => {
               </Card>
             ) : (
               <>
-                {/* Summary Stats */}
-                <div className="d-flex md:hidden">
-                  <Flex gap="2" wrap="wrap" justify="between">
+                <div className="flex md:hidden">
+                  <div className="flex gap-2 flex-wrap justify-between">
                     <Badge variant="secondary" color="indigo">
                       {filteredDays.length} days
                     </Badge>
@@ -197,7 +186,7 @@ const ArchiveContent: React.FC = () => {
                     <Badge variant="default" color="purple">
                       ${totalRevenue.toFixed(2)} revenue
                     </Badge>
-                  </Flex>
+                  </div>
                 </div>
                 <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 print:hidden">
                   <Card>
@@ -245,7 +234,7 @@ const ArchiveContent: React.FC = () => {
                         $
                         {totalBillableHours > 0
                           ? (totalRevenue / totalBillableHours).toFixed(2)
-                          : '0.00'}
+                          : "0.00"}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         Avg Billable Rate
@@ -254,7 +243,6 @@ const ArchiveContent: React.FC = () => {
                   </Card>
                 </div>
 
-                {/* Archived Days */}
                 <div className="space-y-4">
                   {filteredDays.map(day => (
                     <ArchiveItem key={day.id} day={day} onEdit={handleEdit} />
@@ -266,7 +254,6 @@ const ArchiveContent: React.FC = () => {
         )}
       </div>
 
-      {/* Dialogs */}
       <BackdatedEntryDialog
         isOpen={showBackdatedEntry}
         onClose={() => setShowBackdatedEntry(false)}

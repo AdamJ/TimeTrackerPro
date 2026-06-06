@@ -22,6 +22,49 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
+### Test File Inventory (187 tests across 14 files)
+
+| File | Coverage |
+|---|---|
+| `src/utils/calculationUtils.test.ts` | `getDayStats`, hours/revenue/billable per-day and per-period |
+| `src/utils/checklistUtils.test.ts` | `parseTaskChecklist`, `toggleDescriptionChecklistItem` |
+| `src/utils/exportUtils.test.ts` | `exportToCSV`, `exportToJSON`, `generateInvoiceData`, `parseCSVImport` |
+| `src/utils/reportUtils.test.ts` | Report generation utilities |
+| `src/utils/timeUtil.test.ts` | Time formatting utilities |
+| `src/contexts/TimeTracking.test.tsx` | Full context: day/task/archive management, todos, planned tasks, project CRUD, category CRUD, `discardDay`, `adjustTaskTime`, `addBackdatedDay`, client archive/restore |
+| `src/services/dataService.test.ts` | `LocalStorageService` save/load round-trips |
+| `src/hooks/useReportStorage.test.ts` | Report storage hook |
+| `src/hooks/useReportSummary.test.ts` | Report summary hook |
+| `src/components/PageLayout.test.tsx` | `PageLayout` renders children, delegates title/actions to context |
+| `src/components/SummaryOutput.test.tsx` | Summary output rendering |
+| `src/components/NewTaskForm.test.tsx` | Form render, submit, validation, cancel, FAB toggle |
+| `src/components/TaskItem.test.tsx` | Badge render, delete confirm, edit dialog |
+| `src/components/dateParsing.test.ts` | Date parsing utilities |
+
+### Context Test Pattern
+
+Context integration tests must gate on `loading` before running mutations — the async `loadData()` call can overwrite state set before it completes:
+
+```tsx
+const { result } = renderHook(() => useTimeTracking(), { wrapper });
+await waitFor(() => expect(result.current.loading).toBe(false));
+// now safe to call mutations
+```
+
+### Component Test Mocking Pattern
+
+For components that use `useTimeTracking`, `useHaptics`, `useLongPress`, or dialogs:
+
+```tsx
+vi.mock("@/hooks/useTimeTracking", () => ({
+  useTimeTracking: () => ({ projects: [], categories: [] })
+}));
+vi.mock("@/hooks/useHaptics", () => ({
+  useHaptics: () => ({ lightImpact: vi.fn(), mediumImpact: vi.fn() })
+}));
+vi.mock("@/hooks/useLongPress", () => ({ useLongPress: () => ({}) }));
+```
+
 ## Investigation Discipline
 
 - When a query returns unexpected results (e.g., $0, empty rows), check BOTH semantic mappings AND data shape constraints (column truncation, row limits, type coercion) before declaring a fix complete.
@@ -43,7 +86,7 @@ After implementing changes, run lint and tests before considering a task complet
 | UI Framework | React 18 + TypeScript 5.9                                                                                                          |
 | Build        | Vite 5 + SWC                                                                                                                       |
 | Routing      | React Router 6                                                                                                                     |
-| Styling      | Tailwind CSS 3 + Radix UI + shadcn/ui                                                                                              |
+| Styling      | Tailwind CSS 4 + Radix UI + shadcn/ui                                                                                              |
 | Icons        | Radix Icons (primary), Lucide (fallback)                                                                                           |
 | Forms        | React Hook Form + Zod                                                                                                              |
 | Backend      | Supabase (optional) or localStorage                                                                                                |
@@ -56,10 +99,10 @@ After implementing changes, run lint and tests before considering a task complet
 
 ⚠️ **These are hard project requirements enforced by the linter. Violating them causes build failures.**
 
-- **Indentation**: Tabs (not spaces), tab width = 2
+- **Indentation**: Spaces (not tabs), width = 2
 - **Quotes**: Always double quotes (`""`) — never single quotes (`''`)
 - **Imports**: Always use `@/` alias — never relative paths like `../../`
-- **Colors**: Always use Radix/theme variables — never custom Tailwind colors like `bg-blue-500`
+- **Colors**: Prefer semantic tokens (`bg-primary`, `bg-muted`, etc.) for theming. Radix scale classes (`bg-mauve-3`, `text-blue-11`, `border-violet-6`) are allowed for explicit color needs — use steps 1-2 for backgrounds, 3-5 for component fills, 6-8 for borders, 9-10 for solid fills, 11-12 for text. Never use arbitrary Tailwind palette colors like `bg-blue-500`.
 - **Components**: Always use shadcn/ui components — never raw HTML with custom styles
 
 ```typescript
@@ -68,7 +111,7 @@ export const MyComponent = () => {
   return <div className="bg-primary text-primary-foreground">Hello</div>;
 };
 
-// ❌ WRONG — spaces, single quotes, custom color
+// ❌ WRONG — spaces, single quotes, arbitrary Tailwind color (use bg-blue-9 instead)
 export const MyComponent = () => {
   return <div className='bg-blue-500'>Hello</div>;
 };
@@ -88,11 +131,18 @@ export const MyComponent = () => {
 | `src/lib/supabase.ts`                         | Supabase client configuration and caching                                          |
 | `src/config/categories.ts`                    | Default category definitions                                                       |
 | `src/config/projects.ts`                      | Default project definitions                                                        |
-| `src/components/ClientManagement.tsx`         | Client list UI: add, archive (with active-project guard), and restore clients      |
+| `src/components/ClientManagement.tsx`         | Client list UI: add, edit, archive (with active-project guard), and restore clients |
+| `src/components/ClientSheet.tsx`              | Shared Sheet (drawer) for add and edit client forms; handles both modes via `mode` prop |
+| `src/components/ProjectSheet.tsx`             | Shared Sheet (drawer) for add and edit project forms; handles both modes via `mode` prop |
+| `src/components/CategorySheet.tsx`            | Shared Sheet (drawer) for add and edit category forms; handles both modes via `mode` prop |
 | `src/pages/Clients.tsx`                       | Thin page wrapper around `ClientManagement` (route `/clients`)                     |
 | `src/services/localStorageService/clients.ts` | Client persistence module for guest mode (versioned localStorage blob)             |
 | `supabase/migrations/20260530_clients.sql`    | `clients` table + RLS + one-time backfill from distinct project clients            |
-| `src/components/PageLayout.tsx`               | Shared page chrome (title + optional actions slot); renders `IosPageHeader` on iOS |
+| `src/components/AppSidebar.tsx`               | Collapsible sidebar nav (Planning/Manage/Reports groups); reads page title/actions from `PageTitleContext`; footer has sync, auth, export |
+| `src/contexts/PageTitleContext.tsx`           | `PageTitleProvider` — holds title, badge, actions state for the sidebar header     |
+| `src/contexts/page-title-context.ts`          | Context object + default value + `PageTitleContextType` interface                  |
+| `src/hooks/usePageTitle.ts`                   | `usePageTitle()` hook — consumed by `PageLayout` (write) and sidebar header (read) |
+| `src/components/PageLayout.tsx`               | Thin page wrapper — delegates title/badge/actions to `PageTitleContext` via `usePageTitle`; renders `IosPageHeader` on iOS |
 | `src/components/IosPageHeader.tsx`            | iOS-only sticky nav bar with safe-area-inset-top, back chevron, and action slot    |
 | `src/components/ui/adaptive-dialog.tsx`       | Renders vaul `Drawer` on iOS, Radix `Dialog` on web                                |
 | `src/components/BackdatedEntryDialog.tsx`     | Multi-step dialog for logging past workdays; uses `addBackdatedDay` from context   |
@@ -106,19 +156,19 @@ export const MyComponent = () => {
 
 Clients are a managed entity (added in the client-management feature) that backs the project form's client dropdown.
 
-- **`Client` type** (`src/contexts/TimeTrackingContext.tsx`): `{ id: string; name: string; archived: boolean; createdAt: string }`. Exported alongside `Project` and consumed by `dataService.ts`.
+- **`Client` type** (`src/contexts/TimeTrackingContext.tsx`): `{ id: string; name: string; archived: boolean; createdAt: string; addressStreet?: string; addressCity?: string; addressState?: string; addressZip?: string; addressCountry?: string; contactName?: string; contactEmail?: string; contactWebsite?: string }`. Exported alongside `Project` and consumed by `dataService.ts`.
 - **`STORAGE_KEYS.CLIENTS`** (`"timetracker_clients"`): added in both `localStorageService/constants.ts` and the context's local key map. Persisted via `getClients()` / `saveClients()` on `DataService`. Guest mode uses the localStorage blob (`localStorageService/clients.ts`); authenticated mode uses a dedicated Supabase `clients` table (`supabase/migrations/20260530_clients.sql`) so clients sync across devices. The migration backfills the table once from each user's distinct project client names.
 - **Seeding/reconcile guard**: on every load the context init block reconciles the client list against the unique `client` name strings on `projects` — any project client name not already present (active or archived) is appended as an active client and the list is saved. Idempotent; covers both first run and clients introduced later (e.g. CSV import). Silent, runs in-app only.
 - **`archived` on `Project`**: optional field, normalized at load time with `project.archived ?? false` so legacy projects need no migration. Project archiving was introduced **as part of this feature to support the client archive guard** (a client cannot be archived while it still owns active projects) rather than as a standalone feature.
-- **New context methods**: `clients`, `addClient(name)`, `archiveClient(id) → string | null` (returns an error message naming blocking active projects, or `null` on success), `restoreClient(id)`, `archiveProject(id)`, `restoreProject(id)`. Project methods don't auto-save — consumers call `forceSyncToDatabase()` (same pattern as `addProject`).
+- **Context methods**: `clients`, `addClient(data)`, `updateClient(id, data) → Client | null`, `archiveClient(id) → string | null` (returns an error message naming blocking active projects, or `null` on success), `restoreClient(id)`, `archiveProject(id)`, `restoreProject(id)`. Project methods don't auto-save — consumers call `forceSyncToDatabase()` (same pattern as `addProject`).
+- **Edit flow**: `updateClient(id, data)` merges partial data into the existing client (preserves `id`, `createdAt`, `archived`), updates `clientsRef.current` + `setClients`, returns the updated `Client`. Caller then calls `persistClient(updated)` — same single-row upsert path as add (**1** Supabase call).
 - **Client persistence**: to minimize Supabase calls, clients are **not** part of `forceSyncToDatabase`'s bulk save. The three client mutations keep a `clientsRef` in sync synchronously, and consumers persist explicitly:
-  - **Add** uses `persistClient(client)` → `dataService.upsertClient` — a single-row upsert (**1** Supabase call), since adding never removes a row. `addClient(name)` returns the created `Client` (or `null` if blank) for this.
+  - **Add/Edit** both use `persistClient(client)` → `dataService.upsertClient` — a single-row upsert (**1** Supabase call). `addClient(data)` returns the created `Client` (or `null` if name blank); `updateClient(id, data)` returns the updated `Client` (or `null` if not found).
   - **Archive/restore** use `persistClients()` → `dataService.saveClients` — the full-list reconcile (select-missing + upsert = **2** calls).
   - `SupabaseService.getClients`/`saveClients`/`upsertClient` share the read-cache (`getCachedClients`/`setCachedClients` in `src/lib/supabase.ts`), so a load is one read on cache miss and free thereafter; `upsertClient` updates the cache in place.
 
 ---
 
-<<<<<<< HEAD
 ## Capacitor iOS Build
 
 The app ships as both a PWA and a native iOS app via Capacitor 8.
@@ -211,12 +261,10 @@ pnpm run electron:build        # full production build + package via electron-bu
 
 ---
 
-=======
->>>>>>> 481fa6e (chore: update CLAUDE config)
 ## Pre-Commit Checklist
 
-1. `npm run lint` — fix all errors
-2. `npm run build` — ensure no type errors
+1. `pnpm lint` — fix all errors
+2. `pnpm build` — ensure no type errors
 3. Test changed functionality manually
 4. Verify tabs (not spaces) and double quotes throughout
 

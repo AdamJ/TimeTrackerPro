@@ -131,6 +131,56 @@ describe('DataService', () => {
     });
   });
 
+  describe('clients', () => {
+    it('should round-trip a client with address and contact fields', async () => {
+      const service = createDataService(false);
+      const client: import('@/contexts/TimeTrackingContext').Client = {
+        id: 'test-1',
+        name: 'Acme Corp',
+        archived: false,
+        createdAt: '2026-06-09T00:00:00.000Z',
+        addressStreet: '123 Main St',
+        addressCity: 'Springfield',
+        addressState: 'IL',
+        addressZip: '62701',
+        addressCountry: 'USA',
+        contactName: 'Jane Doe',
+        contactEmail: 'jane@acme.com',
+        contactWebsite: 'https://acme.com',
+      };
+
+      await service.saveClients([client]);
+      const loaded = await service.getClients();
+
+      expect(loaded).toHaveLength(1);
+      expect(loaded[0].addressStreet).toBe('123 Main St');
+      expect(loaded[0].addressCity).toBe('Springfield');
+      expect(loaded[0].addressState).toBe('IL');
+      expect(loaded[0].addressZip).toBe('62701');
+      expect(loaded[0].addressCountry).toBe('USA');
+      expect(loaded[0].contactName).toBe('Jane Doe');
+      expect(loaded[0].contactEmail).toBe('jane@acme.com');
+      expect(loaded[0].contactWebsite).toBe('https://acme.com');
+    });
+
+    it('should round-trip a client with only name (all new fields undefined)', async () => {
+      const service = createDataService(false);
+      const client: import('@/contexts/TimeTrackingContext').Client = {
+        id: 'test-2',
+        name: 'Solo Client',
+        archived: false,
+        createdAt: '2026-06-09T00:00:00.000Z',
+      };
+
+      await service.saveClients([client]);
+      const loaded = await service.getClients();
+
+      expect(loaded).toHaveLength(1);
+      expect(loaded[0].addressStreet).toBeUndefined();
+      expect(loaded[0].contactEmail).toBeUndefined();
+    });
+  });
+
   describe('createDataService', () => {
     it('should create service for guest mode', () => {
       const service = createDataService(false);

@@ -9,6 +9,20 @@ The following rules govern style choices for UI and visual design.
 ## Colors
 
 - Follow the color usage guidelines under [Radix Colors](https://www.radix-ui.com/colors/docs/overview/usage).
+- All 31 Radix color scales are available as Tailwind utilities (`bg-mauve-1` through `bg-mauve-12`, etc.).
+- Prefer semantic tokens (`bg-primary`, `bg-muted`, `text-foreground`) for theming and dark mode.
+- Use Radix scale classes for explicit color needs. Step semantics:
+
+| Steps | Use for |
+|---|---|
+| 1–2 | App and page backgrounds |
+| 3–5 | Component backgrounds and subtle fills |
+| 6–8 | Borders and separators |
+| 9–10 | Solid fills, buttons, badges |
+| 11–12 | Text and high-contrast content |
+
+- Dark mode is automatic — Radix dark CSS vars activate when the `.dark` class is present on the root element.
+- Never use arbitrary Tailwind palette colors like `bg-blue-500` — use `bg-blue-9` instead.
 
 ## Components
 

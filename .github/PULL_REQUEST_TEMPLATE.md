@@ -19,9 +19,6 @@ Closes #
 
 <!-- List the specific files added or modified and what changed in each. -->
 
--
--
-
 ## Checklist
 
 > Complete all items that apply to your change. Check N/A for items that don't apply.
@@ -38,7 +35,7 @@ Closes #
 
 - [ ] Branch is up to date with `main`
 - [ ] No unrelated files included in this PR
-- [ ] Tested locally by invoking the `npm run test`, `npm run lint`, and `npm run build`
+- [ ] Tested locally by invoking the `pnpm test`, `pnpm lint`, and `pnpm build`
 
 ## Notes for Reviewers
 

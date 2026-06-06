@@ -1,50 +1,43 @@
-import type { ReactNode } from "react";
-import SiteNavigationMenu from "@/components/Navigation";
+import { useEffect, type ReactNode } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 interface PageLayoutProps {
-	/** Page title. When provided, renders the full header section (icon, title, actions, description). */
-	title?: ReactNode;
-	/** Icon displayed to the left of the title. Only renders when title is provided. */
-	icon?: ReactNode;
-	/** Action buttons displayed to the right of the title. Only renders when title is provided. */
-	actions?: ReactNode;
-	/** Subtitle text displayed below the title. Only renders when title is provided. */
-	description?: ReactNode;
-	children: ReactNode;
+  /** Page title shown in the top header bar. */
+  title?: ReactNode;
+  /** Icon displayed to the left of the title. */
+  icon?: ReactNode;
+  /** Badge displayed to the right of the title in the header. */
+  badge?: ReactNode;
+  /** Action buttons displayed to the right of the title in the header. */
+  actions?: ReactNode;
+  /** Subtitle text displayed below the title (reserved for future use). */
+  description?: ReactNode;
+  children: ReactNode;
 }
 
 export const PageLayout = ({
-	title,
-	icon,
-	actions,
-	description,
-	children,
+  title,
+  icon,
+  badge,
+  actions,
+  children,
 }: PageLayoutProps) => {
-	return (
-		<div className="min-h-screen bg-background">
-			<SiteNavigationMenu />
-			{title !== undefined && (
-				<>
-					<div className="hidden md:block max-w-6xl mx-auto pt-4 pb-2 px-4 md:p-6 print:p-4">
-						<div className="flex items-center justify-between">
-							<h1 className="md:text-2xl font-bold text-foreground flex items-center gap-2">
-								{icon}
-								{title}
-							</h1>
-							{actions && <div className="print:hidden">{actions}</div>}
-						</div>
-						{description && (
-							<p className="text-sm text-muted-foreground mt-1">{description}</p>
-						)}
-					</div>
-					{actions && (
-						<div className="md:hidden flex justify-end px-4 py-2 border-b border-border print:hidden">
-							{actions}
-						</div>
-					)}
-				</>
-			)}
-			{children}
-		</div>
-	);
+  const { setTitle, setBadge, setActions } = usePageTitle();
+
+  useEffect(() => {
+    setTitle(title ?? null);
+    setBadge(badge ?? null);
+    setActions(actions ?? null);
+    return () => {
+      setTitle(null);
+      setBadge(null);
+      setActions(null);
+    };
+  }, [title, badge, actions, setTitle, setBadge, setActions]);
+
+  return (
+    <div className="bg-background">
+      {children}
+    </div>
+  );
 };

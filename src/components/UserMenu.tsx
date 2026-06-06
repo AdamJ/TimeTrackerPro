@@ -1,15 +1,16 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { UserCheck, UserLock, LogOut } from 'lucide-react';
+import { UserLock, LogOut, EllipsisVertical, UserCircle, LockOpenIcon } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { SidebarMenuButton, useSidebar } from './ui/sidebar';
 
 interface UserMenuProps {
   onSignInClick: () => void;
@@ -17,46 +18,71 @@ interface UserMenuProps {
 
 export const UserMenu: React.FC<UserMenuProps> = ({ onSignInClick }) => {
   const { user, signOut, isAuthenticated } = useAuth();
-
+  const { isMobile } = useSidebar()
   const handleSignOut = async () => {
     await signOut();
   };
 
   if (!isAuthenticated) {
     return (
-      <Button
-        variant="outline"
+      <a
         onClick={onSignInClick}
-        className="flex items-center gap-2"
+        className="transition-all duration-200 flex items-center justify-center space-x-2 px-4 rounded-xl h-10 border border-gray-200 hover:border-input bg-white hover:bg-accent hover:text-accent-foreground hover:cursor-pointer"
       >
         <UserLock className="h-4 w-4" />
-        <span className="hidden sm:block">Sign In</span>
-      </Button>
+        <span>Sign In</span>
+      </a>
     );
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="flex items-center gap-2">
-          <UserCheck className="h-4 w-4" />
-          <span className="hidden lg:block">{user?.email}</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Account</DropdownMenuLabel>
-        <DropdownMenuItem>
-          Signed in as <br />
-          <span className="font-medium">{user?.id}</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={handleSignOut}
-          className="flex items-center gap-2"
+        <SidebarMenuButton
+          size="lg"
+          className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:cursor-pointer"
         >
-          <LogOut className="h-4 w-4" />
-          Sign Out
-        </DropdownMenuItem>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-medium">{user?.email}</span>
+            <span className="truncate text-xs text-muted-foreground">
+              {user.email}
+            </span>
+          </div>
+          <EllipsisVertical className="ml-auto size-4" />
+        </SidebarMenuButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+        side={isMobile ? "bottom" : "right"}
+        align="end"
+        sideOffset={4}
+      >
+        <DropdownMenuLabel className="p-0 font-normal">
+          <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+            <UserCircle className="size-4" />
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              {/*<span className="truncate font-medium">{user?.id}</span>*/}
+              <span className="truncate text-xs text-muted-foreground">
+                {user?.email}
+              </span>
+            </div>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem>
+            <LockOpenIcon className="size-4" />
+            <span className="truncate text-xs text-muted-foreground">{user?.id}</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={handleSignOut}
+            className="flex items-center gap-2 hover:cursor-pointer"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

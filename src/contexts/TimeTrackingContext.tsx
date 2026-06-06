@@ -71,6 +71,14 @@ export interface Client {
   name: string;
   archived: boolean;
   createdAt: string; // ISO string
+  addressStreet?: string;
+  addressCity?: string;
+  addressState?: string;
+  addressZip?: string;
+  addressCountry?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactWebsite?: string;
 }
 
 export interface TodoItem {
@@ -120,6 +128,9 @@ export interface InvoiceData {
 }
 
 interface TimeTrackingContextType {
+  // Loading state
+  loading: boolean;
+
   // Current day state
   isDayStarted: boolean;
   dayStartTime: Date | null;
@@ -180,7 +191,8 @@ interface TimeTrackingContextType {
   restoreProject: (projectId: string) => void;
 
   // Client management
-  addClient: (name: string) => Client | null;
+  addClient: (data: { name: string; addressStreet?: string; addressCity?: string; addressState?: string; addressZip?: string; addressCountry?: string; contactName?: string; contactEmail?: string; contactWebsite?: string }) => Client | null;
+  updateClient: (id: string, data: Partial<Omit<Client, "id" | "createdAt" | "archived">>) => Client | null;
   archiveClient: (clientId: string) => string | null;
   restoreClient: (clientId: string) => void;
   persistClients: () => Promise<void>;
@@ -998,14 +1010,22 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Returns the created client (or null if the name was blank) so the caller
   // can persist just that row via persistClient.
-  const addClient = (name: string): Client | null => {
-    const trimmed = name.trim();
+  const addClient = (data: { name: string; addressStreet?: string; addressCity?: string; addressState?: string; addressZip?: string; addressCountry?: string; contactName?: string; contactEmail?: string; contactWebsite?: string }): Client | null => {
+    const trimmed = data.name.trim();
     if (!trimmed) return null;
     const newClient: Client = {
       id: Date.now().toString(),
       name: trimmed,
       archived: false,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      addressStreet: data.addressStreet,
+      addressCity: data.addressCity,
+      addressState: data.addressState,
+      addressZip: data.addressZip,
+      addressCountry: data.addressCountry,
+      contactName: data.contactName,
+      contactEmail: data.contactEmail,
+      contactWebsite: data.contactWebsite,
     };
     const next = [...clientsRef.current, newClient];
     clientsRef.current = next;
@@ -1046,6 +1066,19 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     );
     clientsRef.current = next;
     setClients(next);
+  };
+
+  const updateClient = (
+    id: string,
+    data: Partial<Omit<Client, "id" | "createdAt" | "archived">>
+  ): Client | null => {
+    const existing = clientsRef.current.find(c => c.id === id);
+    if (!existing) return null;
+    const updated: Client = { ...existing, ...data };
+    const next = clientsRef.current.map(c => c.id === id ? updated : c);
+    clientsRef.current = next;
+    setClients(next);
+    return updated;
   };
 
   // Archive management functions
@@ -1418,6 +1451,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <TimeTrackingContext.Provider
       value={{
+        loading,
         isDayStarted,
         isDayStale,
         dayStartTime,
@@ -1458,6 +1492,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         archiveProject,
         restoreProject,
         addClient,
+        updateClient,
         archiveClient,
         restoreClient,
         persistClients,
