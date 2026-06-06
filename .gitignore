@@ -9,6 +9,10 @@ dev-dist
 .env.production.local
 .claude/settings.local.json
 
+# Electron build outputs
+dist-electron/
+dist-electron-build/
+
 # Playwright
 /test-results/
 /playwright-report/

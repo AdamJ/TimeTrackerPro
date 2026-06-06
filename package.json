@@ -3,6 +3,8 @@
   "private": true,
   "version": "0.56.5",
   "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "main": "dist-electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -15,7 +17,11 @@
     "test-csv-import": "cd tests && node test-csv-import.js",
     "screenshots": "playwright test screenshots.spec.ts",
     "screenshots:install": "playwright install chromium",
-    "screenshots:headed": "playwright test screenshots.spec.ts --headed"
+    "screenshots:headed": "playwright test screenshots.spec.ts --headed",
+    "electron:build:main": "vite build --config vite.electron.config.ts",
+    "electron:dev": "pnpm run electron:build:main && concurrently \"pnpm run dev\" \"wait-on http://localhost:8080 && ELECTRON_DEV=true electron dist-electron/main.cjs\"",
+    "electron:preview": "pnpm run build && pnpm run electron:build:main && electron dist-electron/main.cjs",
+    "electron:build": "pnpm run build && pnpm run electron:build:main && electron-builder"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -87,6 +93,9 @@
     "@vitejs/plugin-react-swc": "^3.11.0",
     "autoprefixer": "^10.4.21",
     "baseline-browser-mapping": "^2.9.19",
+    "concurrently": "^10.0.3",
+    "electron": "^42.3.3",
+    "electron-builder": "^26.15.0",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.26",
@@ -100,6 +109,25 @@
     "vite": "^5.4.21",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^1.6.1",
+    "wait-on": "^9.0.10",
     "workbox-window": "^7.4.0"
+  },
+  "build": {
+    "appId": "com.brimfieldlabs.timetraked",
+    "productName": "Timetraked",
+    "directories": {
+      "output": "dist-electron-build"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    }
   }
 }

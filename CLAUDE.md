@@ -165,6 +165,42 @@ When working on iOS/Capacitor projects, remember that `cap sync` overwrites Pack
 
 ---
 
+## Electron Desktop Build
+
+The app can also be packaged as a native Mac (DMG) or Windows (NSIS) desktop app via Electron.
+
+**Key files:**
+
+| File | Purpose |
+| ---- | ------- |
+| `electron/main.ts` | Electron main process — BrowserWindow, CSP header, dev/prod load logic |
+| `electron/tsconfig.json` | Compiles `electron/` to CJS in `dist-electron/` (isolated from the app tsconfig) |
+| `vite.electron.config.ts` | Dedicated Vite config for bundling only the main process (no VitePWA, no React) |
+
+**npm scripts:**
+
+```bash
+pnpm run electron:build:main   # compile electron/main.ts → dist-electron/main.cjs
+pnpm run electron:dev          # build main + start vite dev + launch Electron (waits for port 8080)
+pnpm run electron:preview      # build app + main, open in Electron without packaging
+pnpm run electron:build        # full production build + package via electron-builder (DMG/NSIS)
+```
+
+**Architecture notes:**
+
+- `"type": "module"` is in `package.json`, so the compiled main process uses the `.cjs` extension (`dist-electron/main.cjs`) — Electron's main process does not support ES modules natively
+- The app uses `BrowserRouter` (not `HashRouter`). Production loads via a registered `app://` custom protocol (using `protocol.handle`) that serves `dist/` and falls back to `index.html` for unknown paths, giving pushState routing a real origin to work against. Dev mode loads `http://localhost:8080` directly — no protocol handler needed
+- The electron-builder config lives in the `"build"` key of `package.json`; output goes to `dist-electron-build/` (gitignored)
+- `dist-electron/` (compiled main) and `dist-electron-build/` (packaged app) are both gitignored
+
+**When adding Electron-specific features:**
+
+- Gate Electron-only code on `process.env.ELECTRON_DEV` or check `app.isPackaged` in the main process
+- Do not add `nodeIntegration: true` — use `contextBridge` + `ipcRenderer` if the renderer needs Node access
+- Never modify `electron/tsconfig.json`'s `"module": "commonjs"` — it must stay CJS
+
+---
+
 ## Pre-Commit Checklist
 
 1. `npm run lint` — fix all errors
