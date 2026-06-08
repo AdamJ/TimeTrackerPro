@@ -58,7 +58,9 @@ import { Task } from '../../contexts/TimeTrackingContext';
 
 - **Follow Radix UI guidelines**: [https://www.radix-ui.com](https://www.radix-ui.com)
 - **Use Radix Colors**: [https://www.radix-ui.com/colors](https://www.radix-ui.com/colors)
-- **Avoid custom colors** — Use theme variables instead
+- **Prefer semantic tokens** (`bg-primary`, `bg-muted`, etc.) for theming
+- **Radix scale classes allowed** for explicit color: `bg-mauve-3`, `text-blue-11`, `border-violet-6` (steps 1-12)
+- **Never** use arbitrary Tailwind palette numbers like `bg-blue-500`
 
 ### Icons
 
