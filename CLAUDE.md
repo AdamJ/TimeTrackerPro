@@ -59,7 +59,7 @@ After implementing changes, run lint and tests before considering a task complet
 - **Indentation**: Tabs (not spaces), tab width = 2
 - **Quotes**: Always double quotes (`""`) — never single quotes (`''`)
 - **Imports**: Always use `@/` alias — never relative paths like `../../`
-- **Colors**: Always use Radix/theme variables — never custom Tailwind colors like `bg-blue-500`
+- **Colors**: Prefer semantic tokens (`bg-primary`, `bg-muted`, etc.) for theming. Radix scale classes (`bg-mauve-3`, `text-blue-11`, `border-violet-6`) are allowed for explicit color needs — use steps 1-2 for backgrounds, 3-5 for component fills, 6-8 for borders, 9-10 for solid fills, 11-12 for text. Never use arbitrary Tailwind palette colors like `bg-blue-500`.
 - **Components**: Always use shadcn/ui components — never raw HTML with custom styles
 
 ```typescript
@@ -68,7 +68,7 @@ export const MyComponent = () => {
   return <div className="bg-primary text-primary-foreground">Hello</div>;
 };
 
-// ❌ WRONG — spaces, single quotes, custom color
+// ❌ WRONG — spaces, single quotes, arbitrary Tailwind color (use bg-blue-9 instead)
 export const MyComponent = () => {
   return <div className='bg-blue-500'>Hello</div>;
 };
