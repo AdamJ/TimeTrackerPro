@@ -103,7 +103,7 @@ const SiteNavigationMenu = () => {
             <Item className="hidden md:flex">
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger>
+                  <TooltipTrigger asChild>
                     <Button
                       onClick={handlePrint}
                       variant="outline"
@@ -159,9 +159,7 @@ const SiteNavigationMenu = () => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger>
-                    <div className="flex">
-                      <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
-                    </div>
+                    <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
                   </TooltipTrigger>
                   <TooltipContent>
                     User Information

@@ -6,6 +6,13 @@ import { PlannedTaskDialog } from "@/components/PlannedTaskDialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+
 const COLUMNS: { status: PlannedTaskStatus; title: string }[] = [
   { status: "todo", title: "To Do" },
   { status: "in_progress", title: "In Progress" },
@@ -15,7 +22,7 @@ const COLUMNS: { status: PlannedTaskStatus; title: string }[] = [
 
 export const KanbanBoard: React.FC = () => {
   const { plannedTasks, isDayStarted, isDayStale } = useTimeTracking();
-  const [showNewTaskDialog, setShowNewTaskDialog] = useState(false);
+  const [showNewTaskSheet, setShowNewTaskSheet] = useState(false);
 
   const tasksByStatus = (status: PlannedTaskStatus) =>
     [...plannedTasks]
@@ -28,7 +35,7 @@ export const KanbanBoard: React.FC = () => {
   return (
     <>
       <div className="flex justify-end mb-4">
-        <Button onClick={() => setShowNewTaskDialog(true)}>
+        <Button onClick={() => setShowNewTaskSheet(true)}>
           <Plus className="w-4 h-4 mr-1" />
           New Task
         </Button>
@@ -47,10 +54,17 @@ export const KanbanBoard: React.FC = () => {
         ))}
       </div>
 
-      <PlannedTaskDialog
-        isOpen={showNewTaskDialog}
-        onClose={() => setShowNewTaskDialog(false)}
-      />
+      <Sheet open={showNewTaskSheet} onOpenChange={setShowNewTaskSheet}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>New Task</SheetTitle>
+          </SheetHeader>
+          <PlannedTaskDialog
+            isOpen={showNewTaskSheet}
+            onClose={() => setShowNewTaskSheet(false)}
+          />
+        </SheetContent>
+      </Sheet>
     </>
   );
 };

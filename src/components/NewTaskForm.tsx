@@ -24,10 +24,11 @@ interface NewTaskFormProps {
     client?: string,
     category?: string
   ) => void;
+  onCancel?: () => void;
   defaultOpen?: boolean;
 }
 
-export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen = false }) => {
+export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, onCancel, defaultOpen = false }) => {
   const { projects, categories } = useTimeTracking();
   const [title, setTitle] = useState("");
   const [titleTouched, setTitleTouched] = useState(false);
@@ -77,7 +78,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
   }
 
   return (
-    <Card className="border-blue-200 bg-blue-50">
+    <Card className="border-border bg-muted/50">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg">Start New Task</CardTitle>
       </CardHeader>
@@ -194,6 +195,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
           <div className="flex space-x-2">
             <Button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => {
                 setIsOpen(false);
                 setTitle("");
@@ -201,6 +203,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, defaultOpen 
                 setDescription("");
                 setSelectedProject("");
                 setSelectedCategory("");
+                onCancel?.();
               }}
               variant="ghost"
             >

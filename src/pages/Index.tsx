@@ -5,13 +5,26 @@ import { StaleDayDialog } from "@/components/StaleDayDialog";
 import { TaskItem } from "@/components/TaskItem";
 import { NewTaskForm } from "@/components/NewTaskForm";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CirclePlay, CircleStop, Archive as Play, ClipboardList } from "lucide-react";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  CirclePlay,
+  CircleStop,
+  Archive as Play,
+  ClipboardList,
+  PanelRight,
+} from "lucide-react";
 import { DashboardIcon } from "@radix-ui/react-icons";
 import { PageLayout } from "@/components/PageLayout";
 import { TaskTrackingPanel } from "@/components/TaskTrackingPanel";
 import { useState, useMemo } from "react";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 // Stable epoch constant — avoids creating new Date(0) on every render
 const EPOCH = new Date(0);
@@ -63,19 +76,24 @@ const TimeTrackerContent = () => {
     description?: string,
     project?: string,
     client?: string,
-    category?: string
+    category?: string,
   ) => {
     startNewTask(title, description, project, client, category);
     setShowAddTaskForm(false);
   };
 
   const totalHours = useMemo(
-    () => archivedDays.length > 0 ? getTotalHoursForPeriod(EPOCH, new Date()) : 0,
-    [archivedDays, getTotalHoursForPeriod]
+    () =>
+      archivedDays.length > 0 ? getTotalHoursForPeriod(EPOCH, new Date()) : 0,
+    [archivedDays, getTotalHoursForPeriod],
   );
   const sortedDays = useMemo(
-    () => [...archivedDays].sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()),
-    [archivedDays]
+    () =>
+      [...archivedDays].sort(
+        (a, b) =>
+          new Date(b.startTime).getTime() - new Date(a.startTime).getTime(),
+      ),
+    [archivedDays],
   );
 
   // Show day summary if day has ended but not yet posted
@@ -112,38 +130,52 @@ const TimeTrackerContent = () => {
               <CardHeader>
                 <CardTitle>Days Tracked</CardTitle>
               </CardHeader>
-              <CardContent>
-                {sortedDays.length}
-              </CardContent>
+              <CardContent>{sortedDays.length}</CardContent>
             </Card>
             <Card className="bg-muted border-border">
               <CardHeader>
                 <CardTitle>Total Hours</CardTitle>
               </CardHeader>
-              <CardContent>
-                {totalHours}h
-              </CardContent>
+              <CardContent>{totalHours}h</CardContent>
             </Card>
           </div>
         )}
 
         {/* Two-column layout: main content + tracking panel */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 items-start">
+        <div>
           {/* Left column: day actions */}
           <div className="space-y-6">
             {!isDayStarted ? (
               <Card>
-                <CardHeader>
+                <CardHeader className="flex items-center justify-between">
                   <CardTitle className="flex items-center space-x-2 text-primary">
                     <Play className="w-5 h-5" />
                     <span>Start Your Work Day</span>
                   </CardTitle>
+                  <CardDescription>
+                    <div className="text-foreground">
+                      Click the button below to start tracking your work time for today.
+                    </div>
+                  </CardDescription>
+                  <CardAction>
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <PanelRight className="w-4 h-4" />
+                          To-Do List
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent>
+                        <SheetHeader>
+                          <SheetTitle>To-Do List</SheetTitle>
+                          <SheetDescription></SheetDescription>
+                        </SheetHeader>
+                        <TaskTrackingPanel />
+                      </SheetContent>
+                    </Sheet>
+                  </CardAction>
                 </CardHeader>
                 <CardContent>
-                  <p className="mb-4">
-                    Click the button below to start tracking your work time for
-                    today.
-                  </p>
                   <Button
                     onClick={handleStartDay}
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center space-x-2 py-3"
@@ -156,18 +188,37 @@ const TimeTrackerContent = () => {
             ) : (
               <>
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between text-primary">
-                      <span className="flex items-center space-x-2">
+                  <CardHeader className="flex items-center justify-between">
+                    <CardTitle>
+                      <div className="flex items-center space-x-2">
                         <ClipboardList className="w-5 h-5" />
                         <span>Day In Progress</span>
-                      </span>
+                        </div>
+                      </CardTitle>
+                      <CardDescription>
                       {dayStartTime && (
-                        <span className="text-sm font-normal text-muted-foreground">
+                        <div className="text-foreground">
                           Started at {dayStartTime.toLocaleTimeString()}
-                        </span>
+                        </div>
                       )}
-                    </CardTitle>
+                    </CardDescription>
+                    <CardAction>
+                      <Sheet>
+                        <SheetTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <PanelRight className="w-4 h-4" />
+                            To-Do List
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent>
+                          <SheetHeader>
+                            <SheetTitle>To-Do List</SheetTitle>
+                            <SheetDescription></SheetDescription>
+                          </SheetHeader>
+                          <TaskTrackingPanel />
+                        </SheetContent>
+                      </Sheet>
+                  </CardAction>
                   </CardHeader>
                   <CardContent>
                     <Button
@@ -178,11 +229,11 @@ const TimeTrackerContent = () => {
                       <ClipboardList className="w-4 h-4" />
                       Add Task
                     </Button>
-                  </CardContent>
+                    </CardContent>
                 </Card>
 
                 {(tasks.length === 0 || showAddTaskForm) && (
-                  <NewTaskForm onSubmit={handleNewTask} defaultOpen={true} />
+                  <NewTaskForm onSubmit={handleNewTask} onCancel={() => setShowAddTaskForm(false)} defaultOpen={true} />
                 )}
 
                 {tasks.length > 0 && (
@@ -192,7 +243,11 @@ const TimeTrackerContent = () => {
                         key={task.id}
                         task={task}
                         isActive={currentTask?.id === task.id}
-                        currentDuration={currentTask?.id === task.id ? getCurrentTaskDuration() : 0}
+                        currentDuration={
+                          currentTask?.id === task.id
+                            ? getCurrentTaskDuration()
+                            : 0
+                        }
                         onDelete={deleteTask}
                       />
                     ))}
@@ -210,22 +265,6 @@ const TimeTrackerContent = () => {
               </>
             )}
           </div>
-
-          {/* Right column: task tracking panel (always visible) */}
-          <div className="lg:sticky lg:top-6">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button>Open To-Do List</Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>To-Do List</SheetTitle>
-                  <SheetDescription></SheetDescription>
-                </SheetHeader>
-                <TaskTrackingPanel />
-              </SheetContent>
-            </Sheet>
-          </div>
         </div>
       </div>
     </PageLayout>
@@ -233,9 +272,7 @@ const TimeTrackerContent = () => {
 };
 
 const Index = () => {
-  return (
-    <TimeTrackerContent />
-  );
+  return <TimeTrackerContent />;
 };
 
 export default Index;

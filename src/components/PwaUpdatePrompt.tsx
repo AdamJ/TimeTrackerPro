@@ -1,33 +1,36 @@
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 export const PwaUpdatePrompt = () => {
-	const {
-		needRefresh: [needRefresh, setNeedRefresh],
-		updateServiceWorker,
-	} = useRegisterSW();
+  const {
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW();
 
-	if (!needRefresh) return null;
+  if (!needRefresh) return null;
 
-	return (
-		<div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between gap-4 bg-primary px-4 py-2 text-primary-foreground">
-			<p className="text-sm">A new version of Timetraked is available.</p>
-			<div className="flex shrink-0 items-center gap-3">
-				<Button
-					size="sm"
-					variant="secondary"
-					onClick={() => updateServiceWorker(true)}
-				>
-					Reload
-				</Button>
-				<button
-					onClick={() => setNeedRefresh(false)}
-					className="text-sm opacity-70 hover:opacity-100"
-					aria-label="Dismiss update notification"
-				>
-					✕
-				</button>
-			</div>
-		</div>
-	);
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around gap-4 bg-primary/90 px-4 py-2 text-primary-foreground">
+      <div className="flex items-center gap-3">
+      <p className="text-sm font-bold">A new version of Timetraked is available.</p>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => updateServiceWorker(true)}
+          aria-label="Reload"
+        >
+          Reload
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setNeedRefresh(false)}
+          aria-label="Dismiss update notification"
+        >
+          Dismiss
+        </Button>
+      </div>
+    </div>
+  );
 };

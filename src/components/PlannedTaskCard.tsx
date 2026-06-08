@@ -17,15 +17,27 @@ import {
 } from "@/components/ui/context-menu";
 import {
   DropdownMenu,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { PlannedTaskDialog } from "@/components/PlannedTaskDialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import { Badge } from "@radix-ui/themes";
-import { ArrowRight, Edit, Trash2, Play, MoveRight } from "lucide-react";
+import { ArrowRight, Edit, Trash2, Play, MoveRight, MoreVertical, PencilIcon, Briefcase, Tag, Users } from "lucide-react";
+import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 interface PlannedTaskCardProps {
   task: PlannedTask;
@@ -102,6 +114,7 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
                             color: "#fff",
                           }}
                         >
+                          <Tag className="w-2.5 h-2.5 inline mr-0.5" />
                           {category.name}
                         </Badge>
                       )}
@@ -112,11 +125,13 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
                           radius="full"
                           size="1"
                         >
+                          <Briefcase className="w-2.5 h-2.5 inline mr-0.5" />
                           {task.project}
                         </Badge>
                       )}
                       {task.client && (
                         <Badge color="cyan" radius="full" size="1">
+                          <Users className="w-2.5 h-2.5 inline mr-0.5" />
                           {task.client}
                         </Badge>
                       )}
@@ -127,78 +142,80 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
                           radius="full"
                           size="1"
                         >
-                          <ArrowRight className="w-2.5 h-2.5 inline mr-0.5" />
-                          Pulled to day
+                          <Play className="w-2.5 h-2.5 inline mr-0.5" />
+                          Active
                         </Badge>
                       )}
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-1 shrink-0">
-                    {canPull && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => pullPlannedTaskToDay(task.id)}
-                        className="h-7 px-2 text-xs"
-                        title="Pull to active day and start timing"
-                      >
-                        <Play className="w-3 h-3 mr-1" />
-                        Pull
-                      </Button>
-                    )}
-
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => lightImpact()}
-                          className="h-7 px-2 text-xs"
-                          title="Move to another column"
-                        >
-                          <MoveRight className="w-3 h-3 mr-1" />
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <MoreVertical className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {OTHER_STATUSES(task.status).map((s) => (
+                        {canPull && (
+                          <DropdownMenuGroup>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                pullPlannedTaskToDay(task.id);
+                              }}
+                            >
+                              <Play className="w-3 h-3 mr-1" />
+                              Pull to Active Day
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </DropdownMenuGroup>
+                        )}
+                        <DropdownMenuGroup>
                           <DropdownMenuItem
-                            key={s}
-                            onClick={() => movePlannedTask(task.id, s)}
+                            onClick={() => {
+                              lightImpact();
+                              setShowEditDialog(true);
+                            }}
                           >
-                            {STATUS_LABELS[s]}
+                            <PencilIcon className="w-4 h-4 mr-2" />
+                            Edit
                           </DropdownMenuItem>
-                        ))}
+                        </DropdownMenuGroup>
+                        <DropdownMenuGroup>
+                          <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                              <MoveRight className="w-4 h-4 mr-2" />
+                              Move to
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                              <DropdownMenuSubContent>
+                                {OTHER_STATUSES(task.status).map((s) => (
+                                  <DropdownMenuItem
+                                    key={s}
+                                    onClick={() => movePlannedTask(task.id, s)}
+                                  >
+                                    {STATUS_LABELS[s]}
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                          </DropdownMenuSub>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              mediumImpact();
+                              setShowDeleteDialog(true);
+                            }}
+                            variant="destructive"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Task
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
                       </DropdownMenuContent>
                     </DropdownMenu>
-
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        lightImpact();
-                        setShowEditDialog(true);
-                      }}
-                      className="h-7 px-2 text-xs"
-                      title={`Edit ${task.title}`}
-                      aria-label={`Edit: ${task.title}`}
-                    >
-                      <Edit className="w-3 h-3" />
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        mediumImpact();
-                        setShowDeleteDialog(true);
-                      }}
-                      className="h-7 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                      title={`Delete ${task.title}`}
-                      aria-label={`Delete: ${task.title}`}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -211,7 +228,7 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
             <>
               <ContextMenuItem onClick={() => pullPlannedTaskToDay(task.id)}>
                 <Play className="w-4 h-4 mr-2" />
-                Pull to Day
+                Pull to Active Day
               </ContextMenuItem>
               <ContextMenuSeparator />
             </>
@@ -255,11 +272,18 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
         </ContextMenuContent>
       </ContextMenu>
 
-      <PlannedTaskDialog
-        task={task}
-        isOpen={showEditDialog}
-        onClose={() => setShowEditDialog(false)}
-      />
+      <Sheet open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Edit Task</SheetTitle>
+          </SheetHeader>
+          <PlannedTaskDialog
+            task={task}
+            isOpen={showEditDialog}
+            onClose={() => setShowEditDialog(false)}
+          />
+        </SheetContent>
+      </Sheet>
 
       <DeleteConfirmationDialog
         isOpen={showDeleteDialog}

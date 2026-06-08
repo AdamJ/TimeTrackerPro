@@ -6,12 +6,14 @@
 import { useState, useMemo, KeyboardEvent } from "react";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { parseTaskChecklist, toggleDescriptionChecklistItem } from "@/utils/checklistUtils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { CheckboxIcon, TrashIcon, PlusIcon } from "@radix-ui/react-icons";
+import { TrashIcon, PlusIcon } from "@radix-ui/react-icons";
+import { Label } from "./ui/label";
+import { SelectSeparator } from "./ui/select";
+import { Trash } from "lucide-react";
 
 export function TaskTrackingPanel() {
   const {
@@ -57,38 +59,43 @@ export function TaskTrackingPanel() {
   return (
     <>
         {/* Add new to-do */}
-        <div className="flex gap-2">
+      <div className="flex flex-col gap-2">
+        <div>
+          <Label htmlFor="todo-input">To-Do</Label>
           <Input
-            placeholder="Add an item…"
+            id="todo-input"
+            placeholder="Enter a to-do item"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             className="h-8 text-sm"
           />
+        </div>
           <Button
             size="sm"
-            variant="outline"
+            variant="secondary"
             onClick={handleAdd}
             disabled={!inputValue.trim()}
             className="h-8 px-2 shrink-0"
           >
-            <PlusIcon className="w-4 h-4" />
+          <PlusIcon className="w-4 h-4" />
+          Add To-Do
           </Button>
         </div>
 
         {/* Active to-dos */}
         {activeTodos.length > 0 && (
           <>
-          <div className="py-4">
+          <div className="pt-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Active ({activeTodos.length})
               </span>
             </div>
           </div>
-          <ul>
+          <ul className="my-2">
             {activeTodos.map((item) => (
-              <li key={item.id} className="flex items-center gap-2 group">
+              <li key={item.id} className="flex items-center py-1 px-2 gap-2 group hover:bg-slate-100">
                 <Checkbox
                   id={`todo-${item.id}`}
                   checked={false}
@@ -103,11 +110,12 @@ export function TaskTrackingPanel() {
                 </label>
                 <Button
                   size="sm"
-                  variant="ghost"
+                  variant="link"
                   onClick={() => deleteTodoItem(item.id)}
-                  className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 shrink-0 text-muted-foreground hover:text-destructive"
+                  className="h-5 p-2 shrink-0 text-muted-foreground hover:text-destructive-foreground hover:bg-destructive"
+                  aria-label="Delete todo"
                 >
-                  <TrashIcon className="w-3 h-3" />
+                  <Trash size={16} />
                 </Button>
               </li>
             ))}
@@ -122,8 +130,10 @@ export function TaskTrackingPanel() {
         )}
 
         {/* Completed to-dos */}
-        {completedTodos.length > 0 && (
-          <div className="my-4 bg-gray-200">
+      {completedTodos.length > 0 && (
+        <>
+        <SelectSeparator className="my-4" />
+        <div>
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide pt-2">
                 Completed ({completedTodos.length})
@@ -137,9 +147,9 @@ export function TaskTrackingPanel() {
                 Clear
               </Button>
             </div>
-            <ul className="my-2 px-2">
+            <ul className="my-2">
               {completedTodos.map((item) => (
-                <li key={item.id} className="flex items-start gap-2 group">
+                <li key={item.id} className="flex items-center py-1 px-2 gap-2 group hover:bg-slate-100">
                   <Checkbox
                     id={`todo-${item.id}`}
                     checked={true}
@@ -154,16 +164,18 @@ export function TaskTrackingPanel() {
                   </label>
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant="link"
                     onClick={() => deleteTodoItem(item.id)}
-                    className="h-5 w-5 p-0 shrink-0 text-muted-foreground hover:text-destructive"
+                    className="h-5 p-2 shrink-0 text-muted-foreground hover:text-destructive-foreground hover:bg-destructive"
+                    aria-label="Clear completed todo"
                   >
-                    <TrashIcon className="w-3 h-3" />
+                    <Trash size={16} />
                   </Button>
                 </li>
               ))}
             </ul>
           </div>
+        </>
         )}
 
         {/* Checklist items from task descriptions */}
