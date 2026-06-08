@@ -2,6 +2,11 @@ import type { Config } from 'tailwindcss';
 import typography from '@tailwindcss/typography';
 import animate from 'tailwindcss-animate';
 
+const radixScale = (name: string): Record<number, string> =>
+	Object.fromEntries(
+		Array.from({ length: 12 }, (_, i) => [i + 1, `var(--${name}-${i + 1})`])
+	);
+
 export default {
   darkMode: ['class'],
   content: [
@@ -63,7 +68,39 @@ export default {
           'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))'
-        }
+        },
+        /* Radix color scales — steps 1-12 */
+        gray: radixScale("gray"),
+        mauve: radixScale("mauve"),
+        slate: radixScale("slate"),
+        sage: radixScale("sage"),
+        olive: radixScale("olive"),
+        sand: radixScale("sand"),
+        tomato: radixScale("tomato"),
+        red: radixScale("red"),
+        ruby: radixScale("ruby"),
+        crimson: radixScale("crimson"),
+        pink: radixScale("pink"),
+        plum: radixScale("plum"),
+        purple: radixScale("purple"),
+        violet: radixScale("violet"),
+        iris: radixScale("iris"),
+        indigo: radixScale("indigo"),
+        blue: radixScale("blue"),
+        cyan: radixScale("cyan"),
+        teal: radixScale("teal"),
+        jade: radixScale("jade"),
+        green: radixScale("green"),
+        grass: radixScale("grass"),
+        brown: radixScale("brown"),
+        orange: radixScale("orange"),
+        amber: radixScale("amber"),
+        yellow: radixScale("yellow"),
+        lime: radixScale("lime"),
+        mint: radixScale("mint"),
+        sky: radixScale("sky"),
+        gold: radixScale("gold"),
+        bronze: radixScale("bronze")
       },
       borderRadius: {
         lg: 'var(--radius)',
