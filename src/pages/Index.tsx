@@ -149,14 +149,8 @@ const TimeTrackerContent = () => {
               <Card>
                 <CardHeader className="flex items-center justify-between">
                   <CardTitle className="flex items-center space-x-2 text-primary">
-                    <Play className="w-5 h-5" />
-                    <span>Start Your Work Day</span>
+                    Start Your Work Day
                   </CardTitle>
-                  <CardDescription>
-                    <div className="text-foreground">
-                      Click the button below to start tracking your work time for today.
-                    </div>
-                  </CardDescription>
                   <CardAction>
                     <Sheet>
                       <SheetTrigger asChild>
@@ -176,6 +170,9 @@ const TimeTrackerContent = () => {
                   </CardAction>
                 </CardHeader>
                 <CardContent>
+                  <p className="py-4 text-foreground">
+                    Click the button below to start tracking your work time for today.
+                  </p>
                   <Button
                     onClick={handleStartDay}
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center space-x-2 py-3"
