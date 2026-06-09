@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Automated Electron desktop release CI — when the existing version-bump release workflow publishes a new GitHub Release, a new `electron-release.yml` workflow builds the Electron app for macOS (DMG) and Windows (NSIS) on `release: published` and uploads the installers as release assets via `softprops/action-gh-release`.
+  — `.github/workflows/electron-release.yml` (new)
 - Electron desktop build target — the app can now be packaged as a native Mac (DMG) or Windows (NSIS) desktop app via Electron. `electron/main.ts` creates a `BrowserWindow` (1280×800, `contextIsolation: true`, `nodeIntegration: false`) with a CSP header that allows `self`, `data:`, and `https://*.supabase.co`. Dev mode loads `http://localhost:8080`; production serves `dist/` via a custom `app://` protocol handler (required because the app uses `BrowserRouter` — `file://` + pushState breaks without a real origin). `vite.electron.config.ts` compiles the main process to CJS (`dist-electron/main.cjs`) in isolation from the app Vite config. New scripts: `electron:build:main`, `electron:dev`, `electron:preview`, `electron:build`. CI updated to use pnpm exclusively (`pnpm/action-setup@v4`, `pnpm install --frozen-lockfile`); `package-lock.json` removed in favour of `pnpm-lock.yaml` as the single lock file.
   — `electron/main.ts` (new), `electron/tsconfig.json` (new), `vite.electron.config.ts` (new), `package.json` (`packageManager`, `main`, scripts, electron-builder `build` config), `.gitignore` (`dist-electron/`, `dist-electron-build/`), `.github/workflows/test.yml` (pnpm)
 
