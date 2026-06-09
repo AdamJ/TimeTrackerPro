@@ -219,7 +219,10 @@ export const ClientManagement: React.FC = () => {
 
 			<ClientSheet
 				open={sheetOpen}
-				onOpenChange={setSheetOpen}
+				onOpenChange={(open) => {
+					setSheetOpen(open);
+					if (!open) setEditingClient(null);
+				}}
 				mode={editingClient ? "edit" : "add"}
 				client={editingClient ?? undefined}
 			/>

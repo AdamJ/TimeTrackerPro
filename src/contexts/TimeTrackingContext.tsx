@@ -1066,16 +1066,16 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const updateClient = (
-	id: string,
-	data: Partial<Omit<Client, "id" | "createdAt" | "archived">>
+    id: string,
+    data: Partial<Omit<Client, "id" | "createdAt" | "archived">>
   ): Client | null => {
-	const existing = clientsRef.current.find(c => c.id === id);
-	if (!existing) return null;
-	const updated: Client = { ...existing, ...data };
-	const next = clientsRef.current.map(c => c.id === id ? updated : c);
-	clientsRef.current = next;
-	setClients(next);
-	return updated;
+    const existing = clientsRef.current.find(c => c.id === id);
+    if (!existing) return null;
+    const updated: Client = { ...existing, ...data };
+    const next = clientsRef.current.map(c => c.id === id ? updated : c);
+    clientsRef.current = next;
+    setClients(next);
+    return updated;
   };
 
   // Archive management functions
