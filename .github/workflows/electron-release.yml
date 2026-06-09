@@ -1,0 +1,57 @@
+name: Electron Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    if: ${{ !github.event.release.prerelease && !github.event.release.draft }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            build_script: electron:build -- --mac
+          - os: windows-latest
+            build_script: electron:build -- --win
+
+    runs-on: ${{ matrix.os }}
+
+    permissions:
+      contents: write
+
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      CSC_IDENTITY_AUTO_DISCOVERY: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Electron app
+        run: pnpm run ${{ matrix.build_script }}
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: |
+            dist-electron-build/*.dmg
+            dist-electron-build/*.exe
+            dist-electron-build/*.blockmap
+          token: ${{ secrets.GITHUB_TOKEN }}
