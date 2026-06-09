@@ -564,5 +564,55 @@ describe("TimeTrackingContext", () => {
 			expect(created!.addressStreet).toBeUndefined();
 			expect(created!.contactEmail).toBeUndefined();
 		});
+
+		it("should update an existing client's fields", async () => {
+			const { result } = renderHook(() => useTimeTracking(), { wrapper });
+
+			await waitFor(() => expect(result.current.clients).toBeDefined());
+
+			let created: import("@/contexts/TimeTrackingContext").Client | null = null;
+			await act(async () => {
+				created = result.current.addClient({ name: "Acme Corp", contactEmail: "old@acme.com" });
+			});
+
+			await waitFor(() =>
+				expect(result.current.clients.some(c => c.name === "Acme Corp")).toBe(true)
+			);
+
+			let updated: import("@/contexts/TimeTrackingContext").Client | null = null;
+			await act(async () => {
+				updated = result.current.updateClient(created!.id, {
+					name: "Acme Corp Updated",
+					contactEmail: "new@acme.com",
+					addressCity: "Chicago",
+				});
+			});
+
+			expect(updated).not.toBeNull();
+			expect(updated!.name).toBe("Acme Corp Updated");
+			expect(updated!.contactEmail).toBe("new@acme.com");
+			expect(updated!.addressCity).toBe("Chicago");
+			expect(updated!.id).toBe(created!.id);
+			expect(updated!.createdAt).toBe(created!.createdAt);
+			expect(updated!.archived).toBe(false);
+
+			await waitFor(() => {
+				const found = result.current.clients.find(c => c.id === created!.id);
+				expect(found?.name).toBe("Acme Corp Updated");
+			});
+		});
+
+		it("should return null when updating a non-existent client", async () => {
+			const { result } = renderHook(() => useTimeTracking(), { wrapper });
+
+			await waitFor(() => expect(result.current.clients).toBeDefined());
+
+			let updated: import("@/contexts/TimeTrackingContext").Client | null = null;
+			await act(async () => {
+				updated = result.current.updateClient("does-not-exist", { name: "Ghost" });
+			});
+
+			expect(updated).toBeNull();
+		});
 	});
 });
