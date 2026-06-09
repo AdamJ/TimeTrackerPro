@@ -23,12 +23,14 @@ import {
   ChevronRight,
   Cog,
   Shredder,
-  DatabaseBackup
+  DatabaseBackup,
+  Building
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { PageLayout } from '@/components/PageLayout';
-import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
+import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
+import { Badge } from '@/components/ui/badge';
 
 const SettingsContent: React.FC = () => {
   const { archivedDays, projects, categories, clients } = useTimeTracking();
@@ -45,54 +47,9 @@ const SettingsContent: React.FC = () => {
     <PageLayout title="Settings" icon={<CogIcon className="w-6 h-6" />}>
       <div className="max-w-6xl mx-auto p-6">
         <div className="grid gap-6">
-          {/* Overview Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 print:hidden">
-            <Card className="bg-muted border-border">
-              <CardHeader>
-                <CardTitle>Clients</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">
-                  {clients.length}
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-muted border-border">
-              <CardHeader>
-                <CardTitle>Projects</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">
-                  {projects.length}
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-muted border-border">
-              <CardHeader>
-                <CardTitle>Categories</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">
-                  {categories.length}
-                </div>
-              </CardContent>
-            </Card>
-            {archivedDays.length > 0 && (
-              <Card className="bg-muted border-border">
-                <CardHeader>
-                  <CardTitle>Archived Days</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-primary">
-                    {archivedDays.length}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
           {/* Management Sections */}
           <h2 className="border-b font-semibold flex gap-3 pb-2">
-            <Cog className="w-5 h-5" /> Management
+            General
           </h2>
           <div className="flex w-full flex-col gap-4">
             <Item asChild
@@ -100,11 +57,13 @@ const SettingsContent: React.FC = () => {
               className="shadow-none duration-100 hover:shadow-md transition-shadow"
             >
               <a href="/projectlist">
+                <ItemMedia>
+                  <Badge variant="outline">{projects.length}</Badge>
+                </ItemMedia>
                 <ItemContent>
                   <ItemTitle>Projects</ItemTitle>
                   <ItemDescription>
-                    Manage your projects, clients, and hourly rates. Projects help
-                  organize your tasks and calculate revenue automatically.
+                    Manage your projects, clients, and hourly rates. Projects help organize your tasks and calculate revenue automatically.
                   </ItemDescription>
                 </ItemContent>
                 <ItemActions>
@@ -117,6 +76,9 @@ const SettingsContent: React.FC = () => {
               className="shadow-none duration-100 hover:shadow-md transition-shadow"
             >
               <a href="/clients">
+                <ItemMedia>
+                  <Badge variant="outline">{clients.length}</Badge>
+                </ItemMedia>
                 <ItemContent>
                   <ItemTitle>Clients</ItemTitle>
                   <ItemDescription>
@@ -133,6 +95,9 @@ const SettingsContent: React.FC = () => {
               className="shadow-none duration-100 hover:shadow-md transition-shadow"
             >
               <a href="/categories">
+                <ItemMedia>
+                  <Badge variant="outline">{categories.length}</Badge>
+                </ItemMedia>
                 <ItemContent>
                   <ItemTitle>Categories</ItemTitle>
                   <ItemDescription>
@@ -144,64 +109,77 @@ const SettingsContent: React.FC = () => {
                 </ItemActions>
               </a>
             </Item>
+            <Item asChild
+              variant="outline"
+              className="shadow-none duration-100 hover:shadow-md transition-shadow"
+            >
+              <a href="/archive">
+                <ItemMedia>
+                  <Badge variant="outline">{archivedDays.length}</Badge>
+                </ItemMedia>
+                <ItemContent>
+                  <ItemTitle>Archived Days</ItemTitle>
+                  <ItemDescription>
+                    View and manage your archived time tracking data.
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <ChevronRight className="w-4 h-4" />
+                </ItemActions>
+              </a>
+            </Item>
           </div>
           {/* Data Management */}
           <h2 className="border-b font-semibold flex gap-3 pb-2">
-            <Database className="w-5 h-5" /> Data Management
+            Data
           </h2>
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="flex h-full flex-col justify-between pb-0">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  Exports/Imports
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="h-full">
-                <p>
-                  Export your time tracking data as CSV or JSON files. Generate invoice data for specific clients and date ranges. You can also import data from CSV files.
-                </p>
-              </CardContent>
-              <CardFooter>
+          <div className="flex w-full flex-col gap-4">
+            <Item
+              variant="outline"
+              className="shadow-none duration-100 hover:shadow-md transition-shadow"
+            >
+              <ItemContent>
+                <ItemTitle>Manage</ItemTitle>
+                <ItemDescription>
+                  Manage your data by exporting your time tracking data as CSV or JSON files. Generate invoice data for specific clients and date ranges. You can also import data from CSV files.
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
                 <Button
                   onClick={() => setShowExportDialog(true)}
                   variant="outline"
                 >
                   <DatabaseBackup className="w-4 h-4 mr-1" />
-                  Manage Data
+                  Export
                 </Button>
-              </CardFooter>
-            </Card>
-            <Card className="flex h-full flex-col justify-between pb-0">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  Storage
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="h-full">
-                <p>
-                  Manage your stored data. All data is stored locally in your
-                  browser. Use export before clearing data.
-                </p>
-              </CardContent>
-              <CardFooter>
-                <div className="flex flex-row gap-4">
-                  <Link to="/archive" className="w-full">
-                    <Button variant="outline" className="w-full">
-                      <Database className="w-4 h-4 mr-2" />
-                      View Archive
-                    </Button>
-                  </Link>
-                  <Button
-                    onClick={() => setShowClearDataDialog(true)}
-                    variant="outline"
-                    className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 hover:border-destructive"
-                  >
-                    <Shredder className="w-4 h-4 mr-1" />
-                    Clear All Data
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
+              </ItemActions>
+            </Item>
+          </div>
+          <h2 className="border-b font-semibold flex gap-3 pb-2">
+            Storage
+          </h2>
+          <div className="flex w-full flex-col gap-4">
+            <Item
+              variant="outline"
+              className="shadow-none duration-100 hover:shadow-md transition-shadow"
+            >
+              <ItemContent>
+                <ItemTitle>Storage</ItemTitle>
+                <ItemDescription>
+                  Manage your stored data. All data is stored locally in your browser. Use export before clearing data.
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Button
+                  onClick={() => setShowClearDataDialog(true)}
+                  variant="outline"
+                  className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 hover:border-destructive"
+                >
+                  <Shredder className="w-4 h-4 mr-1" />
+                  Clear All Data
+                </Button>
+              </ItemActions>
+            </Item>
           </div>
           {/* Quick Tips
           <Card>

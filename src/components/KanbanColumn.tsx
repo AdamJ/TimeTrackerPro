@@ -31,14 +31,11 @@ const COLUMN_BADGE_COLORS: Record<
   blocked: "red",
 };
 
-const COLUMN_BG_COLOR: Record<
-  PlannedTaskStatus,
-  string
-> = {
-  todo: "brown-50",
-  in_progress: "blue-50",
-  done: "green-50",
-  blocked: "red-50",
+const COLUMN_BG_COLOR: Record<PlannedTaskStatus, string> = {
+  todo: "bg-brown-2",
+  in_progress: "bg-blue-2",
+  done: "bg-green-2",
+  blocked: "bg-red-2",
 };
 
 export const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -52,7 +49,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
 
   return (
     <>
-      <Card className={`flex flex-col h-full bg-slate bg-${COLUMN_BG_COLOR[status]}`}>
+      <Card className={`flex flex-col h-full ${COLUMN_BG_COLOR[status]}`}>
         <CardHeader className="pb-2 pt-3 px-3">
           <CardTitle className="flex items-center justify-between text-sm font-semibold">
             <span className="text-foreground">{title}</span>
