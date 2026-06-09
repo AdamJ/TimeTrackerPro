@@ -71,6 +71,14 @@ export interface Client {
   name: string;
   archived: boolean;
   createdAt: string; // ISO string
+  addressStreet?: string;
+  addressCity?: string;
+  addressState?: string;
+  addressZip?: string;
+  addressCountry?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactWebsite?: string;
 }
 
 export interface TodoItem {
@@ -180,7 +188,7 @@ interface TimeTrackingContextType {
   restoreProject: (projectId: string) => void;
 
   // Client management
-  addClient: (name: string) => Client | null;
+  addClient: (data: { name: string; addressStreet?: string; addressCity?: string; addressState?: string; addressZip?: string; addressCountry?: string; contactName?: string; contactEmail?: string; contactWebsite?: string }) => Client | null;
   archiveClient: (clientId: string) => string | null;
   restoreClient: (clientId: string) => void;
   persistClients: () => Promise<void>;
@@ -998,14 +1006,22 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Returns the created client (or null if the name was blank) so the caller
   // can persist just that row via persistClient.
-  const addClient = (name: string): Client | null => {
-    const trimmed = name.trim();
+  const addClient = (data: { name: string; addressStreet?: string; addressCity?: string; addressState?: string; addressZip?: string; addressCountry?: string; contactName?: string; contactEmail?: string; contactWebsite?: string }): Client | null => {
+    const trimmed = data.name.trim();
     if (!trimmed) return null;
     const newClient: Client = {
       id: Date.now().toString(),
       name: trimmed,
       archived: false,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      addressStreet: data.addressStreet,
+      addressCity: data.addressCity,
+      addressState: data.addressState,
+      addressZip: data.addressZip,
+      addressCountry: data.addressCountry,
+      contactName: data.contactName,
+      contactEmail: data.contactEmail,
+      contactWebsite: data.contactWebsite,
     };
     const next = [...clientsRef.current, newClient];
     clientsRef.current = next;

@@ -511,4 +511,58 @@ describe("TimeTrackingContext", () => {
 			expect(new Set(ids).size).toBe(ids.length);
 		});
 	});
+
+	describe("Client Management", () => {
+		it("should add a client with address and contact fields", async () => {
+			const { result } = renderHook(() => useTimeTracking(), { wrapper });
+
+			await waitFor(() => expect(result.current.clients).toBeDefined());
+
+			let created: import("@/contexts/TimeTrackingContext").Client | null = null;
+			await act(async () => {
+				created = result.current.addClient({
+					name: "Acme Corp",
+					addressStreet: "123 Main St",
+					addressCity: "Springfield",
+					addressState: "IL",
+					addressZip: "62701",
+					addressCountry: "USA",
+					contactName: "Jane Doe",
+					contactEmail: "jane@acme.com",
+					contactWebsite: "https://acme.com",
+				});
+			});
+
+			expect(created).not.toBeNull();
+			expect(created!.name).toBe("Acme Corp");
+			expect(created!.addressStreet).toBe("123 Main St");
+			expect(created!.addressCity).toBe("Springfield");
+			expect(created!.addressState).toBe("IL");
+			expect(created!.addressZip).toBe("62701");
+			expect(created!.addressCountry).toBe("USA");
+			expect(created!.contactName).toBe("Jane Doe");
+			expect(created!.contactEmail).toBe("jane@acme.com");
+			expect(created!.contactWebsite).toBe("https://acme.com");
+
+			await waitFor(() => {
+				expect(result.current.clients.some(c => c.name === "Acme Corp")).toBe(true);
+			});
+		});
+
+		it("should add a client with name only (all fields optional)", async () => {
+			const { result } = renderHook(() => useTimeTracking(), { wrapper });
+
+			await waitFor(() => expect(result.current.clients).toBeDefined());
+
+			let created: import("@/contexts/TimeTrackingContext").Client | null = null;
+			await act(async () => {
+				created = result.current.addClient({ name: "Solo Client" });
+			});
+
+			expect(created).not.toBeNull();
+			expect(created!.name).toBe("Solo Client");
+			expect(created!.addressStreet).toBeUndefined();
+			expect(created!.contactEmail).toBeUndefined();
+		});
+	});
 });
