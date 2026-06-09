@@ -56,7 +56,7 @@ After implementing changes, run lint and tests before considering a task complet
 
 ⚠️ **These are hard project requirements enforced by the linter. Violating them causes build failures.**
 
-- **Indentation**: Tabs (not spaces), tab width = 2
+- **Indentation**: Spaces (not tabs), width = 2
 - **Quotes**: Always double quotes (`""`) — never single quotes (`''`)
 - **Imports**: Always use `@/` alias — never relative paths like `../../`
 - **Colors**: Prefer semantic tokens (`bg-primary`, `bg-muted`, etc.) for theming. Radix scale classes (`bg-mauve-3`, `text-blue-11`, `border-violet-6`) are allowed for explicit color needs — use steps 1-2 for backgrounds, 3-5 for component fills, 6-8 for borders, 9-10 for solid fills, 11-12 for text. Never use arbitrary Tailwind palette colors like `bg-blue-500`.
@@ -88,7 +88,8 @@ export const MyComponent = () => {
 | `src/lib/supabase.ts`                         | Supabase client configuration and caching                                          |
 | `src/config/categories.ts`                    | Default category definitions                                                       |
 | `src/config/projects.ts`                      | Default project definitions                                                        |
-| `src/components/ClientManagement.tsx`         | Client list UI: add, archive (with active-project guard), and restore clients      |
+| `src/components/ClientManagement.tsx`         | Client list UI: add, edit, archive (with active-project guard), and restore clients |
+| `src/components/ClientSheet.tsx`              | Shared Sheet (drawer) for add and edit client forms; handles both modes via `mode` prop |
 | `src/pages/Clients.tsx`                       | Thin page wrapper around `ClientManagement` (route `/clients`)                     |
 | `src/services/localStorageService/clients.ts` | Client persistence module for guest mode (versioned localStorage blob)             |
 | `supabase/migrations/20260530_clients.sql`    | `clients` table + RLS + one-time backfill from distinct project clients            |
@@ -106,13 +107,14 @@ export const MyComponent = () => {
 
 Clients are a managed entity (added in the client-management feature) that backs the project form's client dropdown.
 
-- **`Client` type** (`src/contexts/TimeTrackingContext.tsx`): `{ id: string; name: string; archived: boolean; createdAt: string }`. Exported alongside `Project` and consumed by `dataService.ts`.
+- **`Client` type** (`src/contexts/TimeTrackingContext.tsx`): `{ id: string; name: string; archived: boolean; createdAt: string; addressStreet?: string; addressCity?: string; addressState?: string; addressZip?: string; addressCountry?: string; contactName?: string; contactEmail?: string; contactWebsite?: string }`. Exported alongside `Project` and consumed by `dataService.ts`.
 - **`STORAGE_KEYS.CLIENTS`** (`"timetracker_clients"`): added in both `localStorageService/constants.ts` and the context's local key map. Persisted via `getClients()` / `saveClients()` on `DataService`. Guest mode uses the localStorage blob (`localStorageService/clients.ts`); authenticated mode uses a dedicated Supabase `clients` table (`supabase/migrations/20260530_clients.sql`) so clients sync across devices. The migration backfills the table once from each user's distinct project client names.
 - **Seeding/reconcile guard**: on every load the context init block reconciles the client list against the unique `client` name strings on `projects` — any project client name not already present (active or archived) is appended as an active client and the list is saved. Idempotent; covers both first run and clients introduced later (e.g. CSV import). Silent, runs in-app only.
 - **`archived` on `Project`**: optional field, normalized at load time with `project.archived ?? false` so legacy projects need no migration. Project archiving was introduced **as part of this feature to support the client archive guard** (a client cannot be archived while it still owns active projects) rather than as a standalone feature.
-- **New context methods**: `clients`, `addClient(name)`, `archiveClient(id) → string | null` (returns an error message naming blocking active projects, or `null` on success), `restoreClient(id)`, `archiveProject(id)`, `restoreProject(id)`. Project methods don't auto-save — consumers call `forceSyncToDatabase()` (same pattern as `addProject`).
+- **Context methods**: `clients`, `addClient(data)`, `updateClient(id, data) → Client | null`, `archiveClient(id) → string | null` (returns an error message naming blocking active projects, or `null` on success), `restoreClient(id)`, `archiveProject(id)`, `restoreProject(id)`. Project methods don't auto-save — consumers call `forceSyncToDatabase()` (same pattern as `addProject`).
+- **Edit flow**: `updateClient(id, data)` merges partial data into the existing client (preserves `id`, `createdAt`, `archived`), updates `clientsRef.current` + `setClients`, returns the updated `Client`. Caller then calls `persistClient(updated)` — same single-row upsert path as add (**1** Supabase call).
 - **Client persistence**: to minimize Supabase calls, clients are **not** part of `forceSyncToDatabase`'s bulk save. The three client mutations keep a `clientsRef` in sync synchronously, and consumers persist explicitly:
-  - **Add** uses `persistClient(client)` → `dataService.upsertClient` — a single-row upsert (**1** Supabase call), since adding never removes a row. `addClient(name)` returns the created `Client` (or `null` if blank) for this.
+  - **Add/Edit** both use `persistClient(client)` → `dataService.upsertClient` — a single-row upsert (**1** Supabase call). `addClient(data)` returns the created `Client` (or `null` if name blank); `updateClient(id, data)` returns the updated `Client` (or `null` if not found).
   - **Archive/restore** use `persistClients()` → `dataService.saveClients` — the full-list reconcile (select-missing + upsert = **2** calls).
   - `SupabaseService.getClients`/`saveClients`/`upsertClient` share the read-cache (`getCachedClients`/`setCachedClients` in `src/lib/supabase.ts`), so a load is one read on cache miss and free thereafter; `upsertClient` updates the cache in place.
 
