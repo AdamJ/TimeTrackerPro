@@ -189,6 +189,7 @@ interface TimeTrackingContextType {
 
   // Client management
   addClient: (data: { name: string; addressStreet?: string; addressCity?: string; addressState?: string; addressZip?: string; addressCountry?: string; contactName?: string; contactEmail?: string; contactWebsite?: string }) => Client | null;
+  updateClient: (id: string, data: Partial<Omit<Client, "id" | "createdAt" | "archived">>) => Client | null;
   archiveClient: (clientId: string) => string | null;
   restoreClient: (clientId: string) => void;
   persistClients: () => Promise<void>;
@@ -1064,6 +1065,19 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setClients(next);
   };
 
+  const updateClient = (
+	id: string,
+	data: Partial<Omit<Client, "id" | "createdAt" | "archived">>
+  ): Client | null => {
+	const existing = clientsRef.current.find(c => c.id === id);
+	if (!existing) return null;
+	const updated: Client = { ...existing, ...data };
+	const next = clientsRef.current.map(c => c.id === id ? updated : c);
+	clientsRef.current = next;
+	setClients(next);
+	return updated;
+  };
+
   // Archive management functions
   const updateArchivedDay = async (
     dayId: string,
@@ -1474,6 +1488,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         archiveProject,
         restoreProject,
         addClient,
+        updateClient,
         archiveClient,
         restoreClient,
         persistClients,
