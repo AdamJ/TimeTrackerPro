@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,14 +19,19 @@ import {
   Download,
   Database,
   Trash2,
-  CogIcon
+  CogIcon,
+  ChevronRight,
+  Cog,
+  Shredder,
+  DatabaseBackup
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { PageLayout } from '@/components/PageLayout';
+import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
 
 const SettingsContent: React.FC = () => {
-  const { archivedDays, projects, categories } = useTimeTracking();
+  const { archivedDays, projects, categories, clients } = useTimeTracking();
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showClearDataDialog, setShowClearDataDialog] = useState(false);
 
@@ -41,139 +46,146 @@ const SettingsContent: React.FC = () => {
       <div className="max-w-6xl mx-auto p-6">
         <div className="grid gap-6">
           {/* Overview Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 print:hidden">
-            <Card>
-              <CardContent className="p-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 print:hidden">
+            <Card className="bg-muted border-border">
+              <CardHeader>
+                <CardTitle>Clients</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="text-2xl font-bold text-primary">
-                  {archivedDays.length}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Archived Days
+                  {clients.length}
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="p-4">
+            <Card className="bg-muted border-border">
+              <CardHeader>
+                <CardTitle>Projects</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="text-2xl font-bold text-primary">
                   {projects.length}
                 </div>
-                <div className="text-sm text-muted-foreground">Projects</div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="p-4">
+            <Card className="bg-muted border-border">
+              <CardHeader>
+                <CardTitle>Categories</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="text-2xl font-bold text-primary">
                   {categories.length}
                 </div>
-                <div className="text-sm text-muted-foreground">Categories</div>
               </CardContent>
             </Card>
+            {archivedDays.length > 0 && (
+              <Card className="bg-muted border-border">
+                <CardHeader>
+                  <CardTitle>Archived Days</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-primary">
+                    {archivedDays.length}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
           {/* Management Sections */}
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Project Management */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Briefcase className="w-5 h-5" />
-                  <span>Project Management</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Manage your projects, clients, and hourly rates. Projects help
+          <h2 className="border-b font-semibold flex gap-3 pb-2">
+            <Cog className="w-5 h-5" /> Management
+          </h2>
+          <div className="flex w-full flex-col gap-4">
+            <Item asChild
+              variant="outline"
+              className="shadow-none duration-100 hover:shadow-md transition-shadow"
+            >
+              <a href="/projectlist">
+                <ItemContent>
+                  <ItemTitle>Projects</ItemTitle>
+                  <ItemDescription>
+                    Manage your projects, clients, and hourly rates. Projects help
                   organize your tasks and calculate revenue automatically.
-                </p>
-                <Link to="/projectlist">
-                  <Button variant="outline" className="w-full">
-                    <Briefcase className="w-4 h-4 mr-2" />
-                    Manage Projects
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-            {/* Client Management */}
-            <Card>
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <ChevronRight className="w-4 h-4" />
+                </ItemActions>
+              </a>
+            </Item>
+            <Item asChild
+              variant="outline"
+              className="shadow-none duration-100 hover:shadow-md transition-shadow"
+            >
+              <a href="/clients">
+                <ItemContent>
+                  <ItemTitle>Clients</ItemTitle>
+                  <ItemDescription>
+                    Manage the clients you assign to projects. Archive clients you no longer work with — archiving is blocked while a client still has active projects.
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <ChevronRight className="w-4 h-4" />
+                </ItemActions>
+              </a>
+            </Item>
+            <Item asChild
+              variant="outline"
+              className="shadow-none duration-100 hover:shadow-md transition-shadow"
+            >
+              <a href="/categories">
+                <ItemContent>
+                  <ItemTitle>Categories</ItemTitle>
+                  <ItemDescription>
+                    Create and manage task categories like Development, Design, Meetings, etc. Categories help classify your work.
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <ChevronRight className="w-4 h-4" />
+                </ItemActions>
+              </a>
+            </Item>
+          </div>
+          {/* Data Management */}
+          <h2 className="border-b font-semibold flex gap-3 pb-2">
+            <Database className="w-5 h-5" /> Data Management
+          </h2>
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="flex h-full flex-col justify-between pb-0">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Users className="w-5 h-5" />
-                  <span>Client Management</span>
+                  Exports/Imports
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Manage the clients you assign to projects. Archive clients you
-                  no longer work with — archiving is blocked while a client
-                  still has active projects.
+              <CardContent className="h-full">
+                <p>
+                  Export your time tracking data as CSV or JSON files. Generate invoice data for specific clients and date ranges. You can also import data from CSV files.
                 </p>
-                <Link to="/clients">
-                  <Button variant="outline" className="w-full">
-                    <Users className="w-4 h-4 mr-2" />
-                    Manage Clients
-                  </Button>
-                </Link>
               </CardContent>
-            </Card>
-            {/* Category Management */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Tag className="w-5 h-5" />
-                  <span>Category Management</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Create and manage task categories like Development, Design,
-                  Meetings, etc. Categories help classify your work.
-                </p>
-                <Link to="/categories">
-                  <Button variant="outline" className="w-full">
-                    <Briefcase className="w-4 h-4 mr-2" />
-                    Manage Categories
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-            {/* Data Export */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Download className="w-5 h-5" />
-                  <span>Exports/Imports</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Export your time tracking data as CSV or JSON files. Generate
-                  invoice data for specific clients and date ranges. You can
-                  also import data from CSV files.
-                </p>
+              <CardFooter>
                 <Button
                   onClick={() => setShowExportDialog(true)}
                   variant="outline"
-                  className="w-full"
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Data Export/Import
+                  <DatabaseBackup className="w-4 h-4 mr-1" />
+                  Manage Data
                 </Button>
-              </CardContent>
+              </CardFooter>
             </Card>
-            {/* Data Management */}
-            <Card>
+            <Card className="flex h-full flex-col justify-between pb-0">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Database className="w-5 h-5" />
-                  <span>Data Management</span>
+                  Storage
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
+              <CardContent className="h-full">
+                <p>
                   Manage your stored data. All data is stored locally in your
                   browser. Use export before clearing data.
                 </p>
-                <div className="space-y-2">
-                  <Link to="/archive">
+              </CardContent>
+              <CardFooter>
+                <div className="flex flex-row gap-4">
+                  <Link to="/archive" className="w-full">
                     <Button variant="outline" className="w-full">
                       <Database className="w-4 h-4 mr-2" />
                       View Archive
@@ -182,16 +194,16 @@ const SettingsContent: React.FC = () => {
                   <Button
                     onClick={() => setShowClearDataDialog(true)}
                     variant="outline"
-                    className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+                    className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 hover:border-destructive"
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Shredder className="w-4 h-4 mr-1" />
                     Clear All Data
                   </Button>
                 </div>
-              </CardContent>
+              </CardFooter>
             </Card>
           </div>
-          {/* Quick Tips */}
+          {/* Quick Tips
           <Card>
             <CardHeader>
               <CardTitle>Quick Tips</CardTitle>
@@ -228,6 +240,7 @@ const SettingsContent: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+           */}
         </div>
       </div>
 

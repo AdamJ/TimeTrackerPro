@@ -116,6 +116,14 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --spacing: .25rem;
+    
+    --card-spacing: calc(var(--spacing) * 4);
+
+    .-mx-\(--card-spacing\) {
+        margin-inline: calc(var(--card-spacing) * -1);
+    }
   }
 
   .dark {
