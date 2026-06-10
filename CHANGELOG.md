@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Automated Electron desktop release CI — when the existing version-bump release workflow publishes a new GitHub Release, a new `electron-release.yml` workflow builds the Electron app for macOS (DMG) and Windows (NSIS) on `release: published` and uploads the installers as release assets via `softprops/action-gh-release`.
-  — `.github/workflows/electron-release.yml` (new)
+- Category add/edit forms moved to a Sheet drawer — both `CategoryManagement.tsx` (legacy dialog) and the `/categories` page's inline "Add/Edit Category" cards are replaced by a shared `CategorySheet` (mirrors `ClientSheet`/`ProjectSheet`), opened via "Add Category" or per-category Edit and pre-filled in edit mode.
+  — `src/components/CategorySheet.tsx` (new: shared add/edit Sheet form), `src/components/CategoryManagement.tsx`, `src/pages/Categories.tsx` (removed inline form cards, added sheet state)
+
 - Project add/edit forms moved to a Sheet drawer — the Project Management dialog's inline "Add/Edit Project" card is replaced by a shared `ProjectSheet` (mirrors `ClientSheet`), opened via the "Add Project" button or per-project Edit action and pre-filled in edit mode. Submitting calls `addProject`/`updateProject` followed by `forceSyncToDatabase()` (project mutations don't auto-save).
   — `src/components/ProjectSheet.tsx` (new: shared add/edit Sheet form), `src/components/ProjectManagement.tsx` (removed inline form card, added sheet state)
 
