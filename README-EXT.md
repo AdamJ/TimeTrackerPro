@@ -261,7 +261,7 @@ See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) and [docs/SECURITY.md](docs
 | UI Framework | React 18 + TypeScript 5.9                   |
 | Build        | Vite 5 + SWC                                |
 | Routing      | React Router 6                              |
-| Styling      | Tailwind CSS 3 + Radix UI + shadcn/ui       |
+| Styling      | Tailwind CSS 4 + Radix UI + shadcn/ui       |
 | Icons        | Radix Icons (primary), Lucide (fallback)    |
 | Forms        | React Hook Form + Zod                       |
 | Backend      | Supabase (optional) or localStorage         |
@@ -533,16 +533,12 @@ const MyPage = lazy(() => import("./pages/MyPage"));
 />
 ```
 
-**Global theme overrides (`tailwind.config.ts`):**
+**Global theme overrides (`src/index.css`, inside `@theme`):**
 
-```typescript
-typography: {
-  DEFAULT: {
-    css: {
-      color: "#333",
-      a: { color: "#3182ce", "&:hover": { color: "#2c5282" } }
-    }
-  }
+```css
+@theme {
+  --color-prose-body: #333;
+  --color-prose-links: #3182ce;
 }
 ```
 

@@ -43,7 +43,7 @@ After implementing changes, run lint and tests before considering a task complet
 | UI Framework | React 18 + TypeScript 5.9                                                                                                          |
 | Build        | Vite 5 + SWC                                                                                                                       |
 | Routing      | React Router 6                                                                                                                     |
-| Styling      | Tailwind CSS 3 + Radix UI + shadcn/ui                                                                                              |
+| Styling      | Tailwind CSS 4 + Radix UI + shadcn/ui                                                                                              |
 | Icons        | Radix Icons (primary), Lucide (fallback)                                                                                           |
 | Forms        | React Hook Form + Zod                                                                                                              |
 | Backend      | Supabase (optional) or localStorage                                                                                                |

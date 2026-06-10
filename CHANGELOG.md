@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Upgraded to Tailwind CSS v4 via the official `@tailwindcss/upgrade` codemod. `tailwind.config.ts` removed — theme (semantic colors, Radix scales, radius, keyframes/animations, `container`) now lives in `@theme`/`@layer base` blocks in `src/index.css`. PostCSS now uses `@tailwindcss/postcss` (replaces `tailwindcss` + `autoprefixer`). Deprecated utility renames applied across components (`outline-none` → `outline-hidden`, `shadow-sm` → `shadow-xs`, etc.). `components.json` updated to drop the now-deleted `tailwind.config.ts` reference.
+  — `src/index.css`, `postcss.config.js`, `package.json`, `components.json`, 42 component files
+
 ### Added
 
 - Category add/edit forms moved to a Sheet drawer — both `CategoryManagement.tsx` (legacy dialog) and the `/categories` page's inline "Add/Edit Category" cards are replaced by a shared `CategorySheet` (mirrors `ClientSheet`/`ProjectSheet`), opened via "Add Category" or per-category Edit and pre-filled in edit mode.
