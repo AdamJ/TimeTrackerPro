@@ -1,7 +1,7 @@
 # CLAUDE.md - AI Assistant Codebase Guide
 
-**Last Updated:** 2026-05-30
-**Version:** 2.4.0
+**Last Updated:** 2026-06-10
+**Version:** 2.4.1
 
 Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and consultants, with dual storage (localStorage guest mode and optional Supabase cloud sync). A native iOS app is also available via Capacitor.
 
@@ -192,6 +192,7 @@ pnpm run electron:build        # full production build + package via electron-bu
 - The app uses `BrowserRouter` (not `HashRouter`). Production loads via a registered `app://` custom protocol (using `protocol.handle`) that serves `dist/` and falls back to `index.html` for unknown paths, giving pushState routing a real origin to work against. Dev mode loads `http://localhost:8080` directly — no protocol handler needed
 - The electron-builder config lives in the `"build"` key of `package.json`; output goes to `dist-electron-build/` (gitignored)
 - `dist-electron/` (compiled main) and `dist-electron-build/` (packaged app) are both gitignored
+- `.github/workflows/electron-release.yml` builds macOS (DMG) and Windows (NSIS) installers and attaches them to the GitHub Release whenever `release.yml` publishes a new version-bump release
 
 **When adding Electron-specific features:**
 
