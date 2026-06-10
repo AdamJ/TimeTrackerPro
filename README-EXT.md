@@ -29,6 +29,7 @@ For the main overview, see [README.md](README.md).
   - [Data Flow](#data-flow)
   - [Project Structure](#project-structure)
   - [Code Conventions](#code-conventions)
+- [Theming](#theming)
 - [Development Workflow](#development-workflow)
   - [Git Workflow](#git-workflow)
   - [Testing](#testing)
@@ -428,6 +429,26 @@ src/
 | Styling     | Radix/theme variables — never custom Tailwind colors |
 
 See [CLAUDE.md](CLAUDE.md) for comprehensive conventions.
+
+---
+
+## Theming
+
+Tailwind CSS v4 (CSS-first config — no `tailwind.config.ts`). All theme tokens live in `src/index.css`:
+
+- **`@theme` block** — maps semantic tokens (`--color-background`, `--color-primary`, `--color-border`, etc.) and Radix color scales (`--color-gray-1`...`--color-gray-12`, etc.) to CSS custom properties so Tailwind generates utilities like `bg-background`, `text-primary`, `bg-mauve-3`.
+- **`:root` / `.dark`** (`@layer base`) — define the actual HSL values for `--background`, `--foreground`, `--primary`, `--border`, `--ring`, `--sidebar-*`, etc. Switching themes = overriding these in `.dark`.
+- **`@radix-ui/colors`** — full light/dark scale imports (`gray`, `mauve`, `slate`, `blue`, `cyan`, ...) provide the `--gray-1`...`--gray-12` etc. raw values consumed by `@theme`.
+- **`components.json`** — `"tailwind": { "config": "" }` (v4 has no JS config), `cssVariables: true`, `baseColor: "neutral"`.
+
+**Rules:**
+
+- Use semantic tokens (`bg-primary`, `bg-muted`, `text-foreground`) for theming first.
+- For explicit colors, use Radix scale classes (`bg-mauve-3`, `text-blue-11`, `border-violet-6`) — steps 1–2 backgrounds, 3–5 component fills, 6–8 borders, 9–10 solid fills, 11–12 text.
+- Never use arbitrary Tailwind palette colors (`bg-blue-500`).
+- Don't add a second design system (e.g. `@radix-ui/themes`) — its `<Theme>` wrapper sets its own `--color-background` etc. on `.radix-themes`, which collides with and overrides the shadcn `@theme` tokens above, breaking `bg-background` app-wide. Use Radix Primitives + shadcn/ui only.
+
+To add a new theme color: add the HSL value to `:root`/`.dark`, then map it in `@theme` as `--color-<name>: hsl(var(--<name>))`.
 
 ---
 
