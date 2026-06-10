@@ -438,7 +438,7 @@ Tailwind CSS v4 (CSS-first config — no `tailwind.config.ts`). All theme tokens
 
 - **`@theme` block** — maps semantic tokens (`--color-background`, `--color-primary`, `--color-border`, etc.) and Radix color scales (`--color-gray-1`...`--color-gray-12`, etc.) to CSS custom properties so Tailwind generates utilities like `bg-background`, `text-primary`, `bg-mauve-3`.
 - **`:root` / `.dark`** (`@layer base`) — define the actual HSL values for `--background`, `--foreground`, `--primary`, `--border`, `--ring`, `--sidebar-*`, etc. Switching themes = overriding these in `.dark`.
-- **`@radix-ui/colors`** — full light/dark scale imports (`gray`, `mauve`, `slate`, `blue`, `cyan`, ...) provide the `--gray-1`...`--gray-12` etc. raw values consumed by `@theme`.
+- **`@radix-ui/colors`** — light/dark scale imports for the colors actually used in the app (`gray`, `mauve`, `slate`, `red`, `purple`, `violet`, `indigo`, `blue`, `cyan`, `green`, `brown`, `orange`) provide the `--gray-1`...`--gray-12` etc. raw values consumed by `@theme`. Add a new scale's import + `@theme` mapping only when a component needs it.
 - **`components.json`** — `"tailwind": { "config": "" }` (v4 has no JS config), `cssVariables: true`, `baseColor: "neutral"`.
 
 **Rules:**

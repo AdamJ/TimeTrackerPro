@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `@radix-ui/themes` (separate design system, leftover from earlier scaffold). Its `<Theme>` wrapper applied a `.radix-themes` class that set its own `--color-background`, overriding the shadcn `--color-background` token from `@theme` and breaking `bg-background`/theming app-wide after the Tailwind v4 upgrade. `Badge`/`Flex` usages replaced with shadcn `Badge` + Radix color-scale utility classes (`bg-X-3 text-X-11 border-X-6`).
   — `src/main.tsx`, `src/components/KanbanColumn.tsx`, `src/components/PlannedTaskCard.tsx`, `src/components/TaskItem.tsx`, `src/pages/Archive.tsx`, `package.json`
 
+- Pruned unused `@radix-ui/colors` scale imports and their `@theme` mappings in `src/index.css` — kept only the 12 scales referenced by components (`gray`, `mauve`, `slate`, `red`, `purple`, `violet`, `indigo`, `blue`, `cyan`, `green`, `brown`, `orange`), removing 18 unused light/dark scale imports and ~250 lines of `--color-X-1..12` mappings. No behavior change.
+  — `src/index.css`
+
 ### Changed
 
 - Upgraded to Tailwind CSS v4 via the official `@tailwindcss/upgrade` codemod. `tailwind.config.ts` removed — theme (semantic colors, Radix scales, radius, keyframes/animations, `container`) now lives in `@theme`/`@layer base` blocks in `src/index.css`. PostCSS now uses `@tailwindcss/postcss` (replaces `tailwindcss` + `autoprefixer`). Deprecated utility renames applied across components (`outline-none` → `outline-hidden`, `shadow-sm` → `shadow-xs`, etc.). `components.json` updated to drop the now-deleted `tailwind.config.ts` reference.

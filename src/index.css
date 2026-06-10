@@ -2,67 +2,29 @@
 @import '@radix-ui/colors/gray.css' layer(base);
 @import '@radix-ui/colors/mauve.css' layer(base);
 @import '@radix-ui/colors/slate.css' layer(base);
-@import '@radix-ui/colors/sage.css' layer(base);
-@import '@radix-ui/colors/olive.css' layer(base);
-@import '@radix-ui/colors/sand.css' layer(base);
-@import '@radix-ui/colors/tomato.css' layer(base);
 @import '@radix-ui/colors/red.css' layer(base);
-@import '@radix-ui/colors/ruby.css' layer(base);
-@import '@radix-ui/colors/crimson.css' layer(base);
-@import '@radix-ui/colors/pink.css' layer(base);
-@import '@radix-ui/colors/plum.css' layer(base);
 @import '@radix-ui/colors/purple.css' layer(base);
 @import '@radix-ui/colors/violet.css' layer(base);
-@import '@radix-ui/colors/iris.css' layer(base);
 @import '@radix-ui/colors/indigo.css' layer(base);
 @import '@radix-ui/colors/blue.css' layer(base);
 @import '@radix-ui/colors/cyan.css' layer(base);
-@import '@radix-ui/colors/teal.css' layer(base);
-@import '@radix-ui/colors/jade.css' layer(base);
 @import '@radix-ui/colors/green.css' layer(base);
-@import '@radix-ui/colors/grass.css' layer(base);
 @import '@radix-ui/colors/brown.css' layer(base);
 @import '@radix-ui/colors/orange.css' layer(base);
-@import '@radix-ui/colors/amber.css' layer(base);
-@import '@radix-ui/colors/yellow.css' layer(base);
-@import '@radix-ui/colors/lime.css' layer(base);
-@import '@radix-ui/colors/mint.css' layer(base);
-@import '@radix-ui/colors/sky.css' layer(base);
-@import '@radix-ui/colors/gold.css' layer(base);
-@import '@radix-ui/colors/bronze.css' layer(base);
 
 /* Radix Colors — dark scales */
 @import '@radix-ui/colors/gray-dark.css' layer(base);
 @import '@radix-ui/colors/mauve-dark.css' layer(base);
 @import '@radix-ui/colors/slate-dark.css' layer(base);
-@import '@radix-ui/colors/sage-dark.css' layer(base);
-@import '@radix-ui/colors/olive-dark.css' layer(base);
-@import '@radix-ui/colors/sand-dark.css' layer(base);
-@import '@radix-ui/colors/tomato-dark.css' layer(base);
 @import '@radix-ui/colors/red-dark.css' layer(base);
-@import '@radix-ui/colors/ruby-dark.css' layer(base);
-@import '@radix-ui/colors/crimson-dark.css' layer(base);
-@import '@radix-ui/colors/pink-dark.css' layer(base);
-@import '@radix-ui/colors/plum-dark.css' layer(base);
 @import '@radix-ui/colors/purple-dark.css' layer(base);
 @import '@radix-ui/colors/violet-dark.css' layer(base);
-@import '@radix-ui/colors/iris-dark.css' layer(base);
 @import '@radix-ui/colors/indigo-dark.css' layer(base);
 @import '@radix-ui/colors/blue-dark.css' layer(base);
 @import '@radix-ui/colors/cyan-dark.css' layer(base);
-@import '@radix-ui/colors/teal-dark.css' layer(base);
-@import '@radix-ui/colors/jade-dark.css' layer(base);
 @import '@radix-ui/colors/green-dark.css' layer(base);
-@import '@radix-ui/colors/grass-dark.css' layer(base);
 @import '@radix-ui/colors/brown-dark.css' layer(base);
 @import '@radix-ui/colors/orange-dark.css' layer(base);
-@import '@radix-ui/colors/amber-dark.css' layer(base);
-@import '@radix-ui/colors/yellow-dark.css' layer(base);
-@import '@radix-ui/colors/lime-dark.css' layer(base);
-@import '@radix-ui/colors/mint-dark.css' layer(base);
-@import '@radix-ui/colors/sky-dark.css' layer(base);
-@import '@radix-ui/colors/gold-dark.css' layer(base);
-@import '@radix-ui/colors/bronze-dark.css' layer(base);
 
 @import 'tailwindcss';
 
@@ -158,58 +120,6 @@
   --color-slate-11: var(--slate-11);
   --color-slate-12: var(--slate-12);
 
-  --color-sage-1: var(--sage-1);
-  --color-sage-2: var(--sage-2);
-  --color-sage-3: var(--sage-3);
-  --color-sage-4: var(--sage-4);
-  --color-sage-5: var(--sage-5);
-  --color-sage-6: var(--sage-6);
-  --color-sage-7: var(--sage-7);
-  --color-sage-8: var(--sage-8);
-  --color-sage-9: var(--sage-9);
-  --color-sage-10: var(--sage-10);
-  --color-sage-11: var(--sage-11);
-  --color-sage-12: var(--sage-12);
-
-  --color-olive-1: var(--olive-1);
-  --color-olive-2: var(--olive-2);
-  --color-olive-3: var(--olive-3);
-  --color-olive-4: var(--olive-4);
-  --color-olive-5: var(--olive-5);
-  --color-olive-6: var(--olive-6);
-  --color-olive-7: var(--olive-7);
-  --color-olive-8: var(--olive-8);
-  --color-olive-9: var(--olive-9);
-  --color-olive-10: var(--olive-10);
-  --color-olive-11: var(--olive-11);
-  --color-olive-12: var(--olive-12);
-
-  --color-sand-1: var(--sand-1);
-  --color-sand-2: var(--sand-2);
-  --color-sand-3: var(--sand-3);
-  --color-sand-4: var(--sand-4);
-  --color-sand-5: var(--sand-5);
-  --color-sand-6: var(--sand-6);
-  --color-sand-7: var(--sand-7);
-  --color-sand-8: var(--sand-8);
-  --color-sand-9: var(--sand-9);
-  --color-sand-10: var(--sand-10);
-  --color-sand-11: var(--sand-11);
-  --color-sand-12: var(--sand-12);
-
-  --color-tomato-1: var(--tomato-1);
-  --color-tomato-2: var(--tomato-2);
-  --color-tomato-3: var(--tomato-3);
-  --color-tomato-4: var(--tomato-4);
-  --color-tomato-5: var(--tomato-5);
-  --color-tomato-6: var(--tomato-6);
-  --color-tomato-7: var(--tomato-7);
-  --color-tomato-8: var(--tomato-8);
-  --color-tomato-9: var(--tomato-9);
-  --color-tomato-10: var(--tomato-10);
-  --color-tomato-11: var(--tomato-11);
-  --color-tomato-12: var(--tomato-12);
-
   --color-red-1: var(--red-1);
   --color-red-2: var(--red-2);
   --color-red-3: var(--red-3);
@@ -222,58 +132,6 @@
   --color-red-10: var(--red-10);
   --color-red-11: var(--red-11);
   --color-red-12: var(--red-12);
-
-  --color-ruby-1: var(--ruby-1);
-  --color-ruby-2: var(--ruby-2);
-  --color-ruby-3: var(--ruby-3);
-  --color-ruby-4: var(--ruby-4);
-  --color-ruby-5: var(--ruby-5);
-  --color-ruby-6: var(--ruby-6);
-  --color-ruby-7: var(--ruby-7);
-  --color-ruby-8: var(--ruby-8);
-  --color-ruby-9: var(--ruby-9);
-  --color-ruby-10: var(--ruby-10);
-  --color-ruby-11: var(--ruby-11);
-  --color-ruby-12: var(--ruby-12);
-
-  --color-crimson-1: var(--crimson-1);
-  --color-crimson-2: var(--crimson-2);
-  --color-crimson-3: var(--crimson-3);
-  --color-crimson-4: var(--crimson-4);
-  --color-crimson-5: var(--crimson-5);
-  --color-crimson-6: var(--crimson-6);
-  --color-crimson-7: var(--crimson-7);
-  --color-crimson-8: var(--crimson-8);
-  --color-crimson-9: var(--crimson-9);
-  --color-crimson-10: var(--crimson-10);
-  --color-crimson-11: var(--crimson-11);
-  --color-crimson-12: var(--crimson-12);
-
-  --color-pink-1: var(--pink-1);
-  --color-pink-2: var(--pink-2);
-  --color-pink-3: var(--pink-3);
-  --color-pink-4: var(--pink-4);
-  --color-pink-5: var(--pink-5);
-  --color-pink-6: var(--pink-6);
-  --color-pink-7: var(--pink-7);
-  --color-pink-8: var(--pink-8);
-  --color-pink-9: var(--pink-9);
-  --color-pink-10: var(--pink-10);
-  --color-pink-11: var(--pink-11);
-  --color-pink-12: var(--pink-12);
-
-  --color-plum-1: var(--plum-1);
-  --color-plum-2: var(--plum-2);
-  --color-plum-3: var(--plum-3);
-  --color-plum-4: var(--plum-4);
-  --color-plum-5: var(--plum-5);
-  --color-plum-6: var(--plum-6);
-  --color-plum-7: var(--plum-7);
-  --color-plum-8: var(--plum-8);
-  --color-plum-9: var(--plum-9);
-  --color-plum-10: var(--plum-10);
-  --color-plum-11: var(--plum-11);
-  --color-plum-12: var(--plum-12);
 
   --color-purple-1: var(--purple-1);
   --color-purple-2: var(--purple-2);
@@ -300,19 +158,6 @@
   --color-violet-10: var(--violet-10);
   --color-violet-11: var(--violet-11);
   --color-violet-12: var(--violet-12);
-
-  --color-iris-1: var(--iris-1);
-  --color-iris-2: var(--iris-2);
-  --color-iris-3: var(--iris-3);
-  --color-iris-4: var(--iris-4);
-  --color-iris-5: var(--iris-5);
-  --color-iris-6: var(--iris-6);
-  --color-iris-7: var(--iris-7);
-  --color-iris-8: var(--iris-8);
-  --color-iris-9: var(--iris-9);
-  --color-iris-10: var(--iris-10);
-  --color-iris-11: var(--iris-11);
-  --color-iris-12: var(--iris-12);
 
   --color-indigo-1: var(--indigo-1);
   --color-indigo-2: var(--indigo-2);
@@ -353,32 +198,6 @@
   --color-cyan-11: var(--cyan-11);
   --color-cyan-12: var(--cyan-12);
 
-  --color-teal-1: var(--teal-1);
-  --color-teal-2: var(--teal-2);
-  --color-teal-3: var(--teal-3);
-  --color-teal-4: var(--teal-4);
-  --color-teal-5: var(--teal-5);
-  --color-teal-6: var(--teal-6);
-  --color-teal-7: var(--teal-7);
-  --color-teal-8: var(--teal-8);
-  --color-teal-9: var(--teal-9);
-  --color-teal-10: var(--teal-10);
-  --color-teal-11: var(--teal-11);
-  --color-teal-12: var(--teal-12);
-
-  --color-jade-1: var(--jade-1);
-  --color-jade-2: var(--jade-2);
-  --color-jade-3: var(--jade-3);
-  --color-jade-4: var(--jade-4);
-  --color-jade-5: var(--jade-5);
-  --color-jade-6: var(--jade-6);
-  --color-jade-7: var(--jade-7);
-  --color-jade-8: var(--jade-8);
-  --color-jade-9: var(--jade-9);
-  --color-jade-10: var(--jade-10);
-  --color-jade-11: var(--jade-11);
-  --color-jade-12: var(--jade-12);
-
   --color-green-1: var(--green-1);
   --color-green-2: var(--green-2);
   --color-green-3: var(--green-3);
@@ -391,19 +210,6 @@
   --color-green-10: var(--green-10);
   --color-green-11: var(--green-11);
   --color-green-12: var(--green-12);
-
-  --color-grass-1: var(--grass-1);
-  --color-grass-2: var(--grass-2);
-  --color-grass-3: var(--grass-3);
-  --color-grass-4: var(--grass-4);
-  --color-grass-5: var(--grass-5);
-  --color-grass-6: var(--grass-6);
-  --color-grass-7: var(--grass-7);
-  --color-grass-8: var(--grass-8);
-  --color-grass-9: var(--grass-9);
-  --color-grass-10: var(--grass-10);
-  --color-grass-11: var(--grass-11);
-  --color-grass-12: var(--grass-12);
 
   --color-brown-1: var(--brown-1);
   --color-brown-2: var(--brown-2);
@@ -430,97 +236,6 @@
   --color-orange-10: var(--orange-10);
   --color-orange-11: var(--orange-11);
   --color-orange-12: var(--orange-12);
-
-  --color-amber-1: var(--amber-1);
-  --color-amber-2: var(--amber-2);
-  --color-amber-3: var(--amber-3);
-  --color-amber-4: var(--amber-4);
-  --color-amber-5: var(--amber-5);
-  --color-amber-6: var(--amber-6);
-  --color-amber-7: var(--amber-7);
-  --color-amber-8: var(--amber-8);
-  --color-amber-9: var(--amber-9);
-  --color-amber-10: var(--amber-10);
-  --color-amber-11: var(--amber-11);
-  --color-amber-12: var(--amber-12);
-
-  --color-yellow-1: var(--yellow-1);
-  --color-yellow-2: var(--yellow-2);
-  --color-yellow-3: var(--yellow-3);
-  --color-yellow-4: var(--yellow-4);
-  --color-yellow-5: var(--yellow-5);
-  --color-yellow-6: var(--yellow-6);
-  --color-yellow-7: var(--yellow-7);
-  --color-yellow-8: var(--yellow-8);
-  --color-yellow-9: var(--yellow-9);
-  --color-yellow-10: var(--yellow-10);
-  --color-yellow-11: var(--yellow-11);
-  --color-yellow-12: var(--yellow-12);
-
-  --color-lime-1: var(--lime-1);
-  --color-lime-2: var(--lime-2);
-  --color-lime-3: var(--lime-3);
-  --color-lime-4: var(--lime-4);
-  --color-lime-5: var(--lime-5);
-  --color-lime-6: var(--lime-6);
-  --color-lime-7: var(--lime-7);
-  --color-lime-8: var(--lime-8);
-  --color-lime-9: var(--lime-9);
-  --color-lime-10: var(--lime-10);
-  --color-lime-11: var(--lime-11);
-  --color-lime-12: var(--lime-12);
-
-  --color-mint-1: var(--mint-1);
-  --color-mint-2: var(--mint-2);
-  --color-mint-3: var(--mint-3);
-  --color-mint-4: var(--mint-4);
-  --color-mint-5: var(--mint-5);
-  --color-mint-6: var(--mint-6);
-  --color-mint-7: var(--mint-7);
-  --color-mint-8: var(--mint-8);
-  --color-mint-9: var(--mint-9);
-  --color-mint-10: var(--mint-10);
-  --color-mint-11: var(--mint-11);
-  --color-mint-12: var(--mint-12);
-
-  --color-sky-1: var(--sky-1);
-  --color-sky-2: var(--sky-2);
-  --color-sky-3: var(--sky-3);
-  --color-sky-4: var(--sky-4);
-  --color-sky-5: var(--sky-5);
-  --color-sky-6: var(--sky-6);
-  --color-sky-7: var(--sky-7);
-  --color-sky-8: var(--sky-8);
-  --color-sky-9: var(--sky-9);
-  --color-sky-10: var(--sky-10);
-  --color-sky-11: var(--sky-11);
-  --color-sky-12: var(--sky-12);
-
-  --color-gold-1: var(--gold-1);
-  --color-gold-2: var(--gold-2);
-  --color-gold-3: var(--gold-3);
-  --color-gold-4: var(--gold-4);
-  --color-gold-5: var(--gold-5);
-  --color-gold-6: var(--gold-6);
-  --color-gold-7: var(--gold-7);
-  --color-gold-8: var(--gold-8);
-  --color-gold-9: var(--gold-9);
-  --color-gold-10: var(--gold-10);
-  --color-gold-11: var(--gold-11);
-  --color-gold-12: var(--gold-12);
-
-  --color-bronze-1: var(--bronze-1);
-  --color-bronze-2: var(--bronze-2);
-  --color-bronze-3: var(--bronze-3);
-  --color-bronze-4: var(--bronze-4);
-  --color-bronze-5: var(--bronze-5);
-  --color-bronze-6: var(--bronze-6);
-  --color-bronze-7: var(--bronze-7);
-  --color-bronze-8: var(--bronze-8);
-  --color-bronze-9: var(--bronze-9);
-  --color-bronze-10: var(--bronze-10);
-  --color-bronze-11: var(--bronze-11);
-  --color-bronze-12: var(--bronze-12);
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
