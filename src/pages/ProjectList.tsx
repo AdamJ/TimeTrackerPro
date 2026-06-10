@@ -134,6 +134,7 @@ const ProjectContent: React.FC = () => {
             <div className="flex w-full flex-col gap-4">
                 {activeProjects.map((project) => (
                 <Item
+                  key={project.id}
                   variant="outline"
                   className="shadow-none duration-100 hover:shadow-md transition-shadow"
                   >
@@ -164,13 +165,13 @@ const ProjectContent: React.FC = () => {
                           </span>
                       </ItemTitle>
                       <ItemDescription>
-                        <p>
+                        <span className="block">
                           <Label>Client:</Label> {project.client}
-                        </p>
+                        </span>
                         {project.hourlyRate && (
-                        <p>
+                        <span className="block">
                           <Label>Rate:</Label> ${project.hourlyRate}/hour
-                        </p>
+                        </span>
                         )}
                       </ItemDescription>
                     </ItemContent>
@@ -237,9 +238,9 @@ const ProjectContent: React.FC = () => {
                         <ItemContent className="opacity-70">
                           <ItemTitle>{project.name}</ItemTitle>
                           <ItemDescription>
-                            <p>
+                            <span className="block">
                               <Label>Client:</Label> {project.client}
-                            </p>
+                            </span>
                           </ItemDescription>
                         </ItemContent>
                         <ItemActions>
