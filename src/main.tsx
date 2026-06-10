@@ -5,8 +5,8 @@ import '@radix-ui/themes/styles.css';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
-  <Theme accentColor="blue" grayColor="slate" radius="full">
+  <Theme accentColor="blue" grayColor="sand" radius="full">
     <App />
-    {/* <ThemePanel /> */}
+    {/*<ThemePanel />*/}
   </Theme>
 );

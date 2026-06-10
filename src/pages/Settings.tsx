@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,20 +12,11 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ExportDialog } from '@/components/ExportDialog';
 import {
-  Briefcase,
-  Tag,
-  Users,
-  Download,
-  Database,
-  Trash2,
   CogIcon,
   ChevronRight,
-  Cog,
   Shredder,
-  DatabaseBackup,
-  Building
+  DatabaseBackup
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { PageLayout } from '@/components/PageLayout';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { TimeTrackingProvider, Project } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
@@ -23,9 +25,9 @@ import {
   Archive,
   ChevronDown,
   ChevronRight,
+  Trash2Icon,
 } from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
-import { Badge } from "@radix-ui/themes";
 import { toast } from "@/hooks/use-toast";
 import { Item, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemMedia } from "@/components/ui/item";
 import { ProjectSheet } from "@/components/ProjectSheet";
@@ -102,7 +104,7 @@ const ProjectContent: React.FC = () => {
     <PageLayout
       title={
         <>
-          Projects <Badge variant="outline">{activeProjects.length}</Badge>
+          Projects <Badge>{activeProjects.length}</Badge>
         </>
       }
       actions={
@@ -147,22 +149,22 @@ const ProjectContent: React.FC = () => {
                     <ItemContent>
                       <ItemTitle>
                         {project.name}
-                        <span className="hidden sm:block">
+                        <div className="hidden sm:flex flex-wrap gap-1 ml-2">
                         {project.id.startsWith("default-") && (
-                          <Badge variant="surface" color="blue">
+                          <Badge variant="outline" color="indigo">
                             Default
                           </Badge>
                         )}
                         {project.isBillable !== false ? (
-                          <Badge variant="surface" color="green">
+                          <Badge variant="outline" color="green">
                             Billable
                           </Badge>
                         ) : (
-                          <Badge variant="surface" color="gray">
+                          <Badge variant="outline" color="gray">
                             Non-billable
                           </Badge>
                           )}
-                          </span>
+                          </div>
                       </ItemTitle>
                       <ItemDescription>
                         <span className="block">
@@ -268,18 +270,22 @@ const ProjectContent: React.FC = () => {
         open={deleteTargetId !== null}
         onOpenChange={(open) => !open && setDeleteTargetId(null)}
       >
-        <AlertDialogContent>
+        <AlertDialogContent size="sm">
           <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10 text-destructive">
+              <Trash2Icon />
+            </AlertDialogMedia>
             <AlertDialogTitle>Delete this project?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel variant="outline">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              variant="destructive"
             >
               Delete
             </AlertDialogAction>

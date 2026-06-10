@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Plus,
   Users,
@@ -11,6 +11,10 @@ import {
   ChevronDown,
   ChevronRight,
   Pencil,
+  Globe,
+  Mail,
+  MapPin,
+  User,
 } from "lucide-react";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { PageLayout } from "@/components/PageLayout";
@@ -60,7 +64,7 @@ export const ClientManagement: React.FC = () => {
     toast({
       title: "Client archived",
       description: archivedName
-        ? `"${archivedName}" has been archived.`
+        ? `"${archivedName}" has been archived.`  
         : undefined,
     });
   };
@@ -82,7 +86,7 @@ export const ClientManagement: React.FC = () => {
     <PageLayout
       title={
         <>
-          Clients <Badge variant="outline">{activeClients.length}</Badge>
+          Clients <Badge>{activeClients.length}</Badge>
         </>
       }
       actions={
@@ -98,6 +102,11 @@ export const ClientManagement: React.FC = () => {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Cannot archive client</AlertTitle>
             <AlertDescription>{archiveError}</AlertDescription>
+            <AlertAction>
+              <Button size="sm" variant="outline" onClick={() => setArchiveError(null)}>
+                Dismiss
+              </Button>
+            </AlertAction>
           </Alert>
         )}
 
@@ -117,45 +126,79 @@ export const ClientManagement: React.FC = () => {
                 <Item
                   key={client.id}
                   variant="outline"
-                  className="shadow-none duration-100 hover:shadow-md transition-shadow"
+                  className="items-start shadow-none duration-100 hover:shadow-md transition-shadow"
                 >
                   <ItemContent>
                     <ItemTitle>{client.name}</ItemTitle>
-                    <ItemDescription>
+                    <ItemDescription className="flex flex-col">
                       {(client.addressStreet || client.addressCity) && (
                         <p>
-                          {[
-                            client.addressStreet,
-                            client.addressCity,
-                            client.addressState,
-                            client.addressZip,
-                            client.addressCountry,
-                          ]
-                            .filter(Boolean)
-                            .join(", ")}
+                          <Button
+                            variant="link"
+                            className="p-0"
+                          >
+                            <MapPin className="w-4 h-4" />
+                            <a href={`https://www.google.com/maps/search/?api=1&query=${[
+                              client.addressStreet,
+                              client.addressCity,
+                              client.addressState,
+                              client.addressZip,
+                              client.addressCountry,
+                            ]
+                              .filter(Boolean)
+                              .join(", ")}`} target="_blank" rel="noopener noreferrer">
+                              <address>
+                                {[
+                                  client.addressStreet,
+                                  client.addressCity,
+                                  client.addressState,
+                                  client.addressZip,
+                                  client.addressCountry,
+                                ]
+                                  .filter(Boolean)
+                                  .join(", ")}
+                              </address>
+                            </a>
+                          </Button>
                         </p>
                       )}
-                      {client.contactName && <p>{client.contactName}</p>}
+                      {client.contactName &&
+                        <p>
+                          <Button
+                            variant="link"
+                            className="p-0"
+                          >
+                            <User className="w-4 h-4" />
+                            {client.contactName}
+                          </Button>
+                        </p>}
                       {client.contactEmail && (
                         <p>
-                          <a
-                            href={`mailto:${client.contactEmail}`}
-                            className="text-primary hover:underline"
+                          <Button
+                            variant="link"
+                            className="p-0"
                           >
-                            {client.contactEmail}
-                          </a>
+                            <Mail className="w-4 h-4" />
+                            <a
+                              href={`mailto:${client.contactEmail}`}
+                            >
+                              {client.contactEmail}
+                            </a>
+                          </Button>
                         </p>
                       )}
                       {client.contactWebsite && (
                         <p>
+                          <Button variant="link" className="p-0">
+                            <Globe className="w-4 h-4" />
                           <a
                             href={client.contactWebsite}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-primary hover:underline"
                           >
                             {client.contactWebsite}
                           </a>
+                          </Button>
                         </p>
                       )}
                     </ItemDescription>

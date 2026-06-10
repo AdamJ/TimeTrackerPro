@@ -96,6 +96,12 @@ const TimeTrackerContent = () => {
     [archivedDays],
   );
 
+  const { todoItems, projects, categories, clients, archiveClient, archiveProject } = useTimeTracking();
+
+  const activeTodos = todoItems.filter((item) => !item.completed);
+  const completedTodos = todoItems.filter((item) => item.completed);
+  const archivedClients = clients.filter((client) => client.archived);
+
   // Show day summary if day has ended but not yet posted
   if (!isDayStarted && dayStartTime && tasks.length > 0) {
     return (
@@ -114,8 +120,8 @@ const TimeTrackerContent = () => {
   }
 
   return (
-    <PageLayout title="Dashboard" icon={<DashboardIcon className="w-6 h-6" />}>
-      <div className="max-w-6xl mx-auto pt-4 pb-6 px-4 md:p-6 print:p-4 space-y-6">
+    <PageLayout title="Dashboard">
+      <div className="max-w-6xl mx-auto pt-4 pb-6 px-4 print:p-4 space-y-6">
         <StartDayDialog
           isOpen={showStartDayDialog && !isDayStale}
           onClose={() => setShowStartDayDialog(false)}
@@ -123,34 +129,119 @@ const TimeTrackerContent = () => {
         />
         <StaleDayDialog />
 
-        {/* Stats (always visible) */}
+        <div className="flex flex-row justify-around">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm">
+                <PanelRight className="w-4 h-4" />
+                To-Do List
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>To-Do List</SheetTitle>
+                <SheetDescription></SheetDescription>
+              </SheetHeader>
+              <TaskTrackingPanel />
+            </SheetContent>
+          </Sheet>
+        </div>
+        
+        {/* Stats */}
         {!isDayStarted && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 print:hidden">
             <Card className="bg-muted border-border">
               <CardHeader>
                 <CardTitle>Days Tracked</CardTitle>
               </CardHeader>
-              <CardContent>{sortedDays.length}</CardContent>
+              <CardContent className="flex flex-row justify-around">
+                <p className="flex flex-col text-center">
+                  <span className="text-3xl font-semibold tabular-nums">{sortedDays.length}</span>
+                </p>
+              </CardContent>
             </Card>
             <Card className="bg-muted border-border">
               <CardHeader>
                 <CardTitle>Total Hours</CardTitle>
               </CardHeader>
-              <CardContent>{totalHours}h</CardContent>
+              <CardContent className="flex flex-row justify-around">
+                <p className="flex flex-col text-center">
+                  <span className="text-3xl font-semibold tabular-nums">{totalHours}h</span>
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="bg-muted border-border">
+              <CardHeader>
+                <CardTitle>Projects</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-row justify-around">
+                <p className="flex flex-col gap-1 text-center">
+                  <span className="underline">Active</span>
+                  <span className="text-3xl font-semibold tabular-nums">{projects.length}</span>
+                </p>
+                <p className="flex flex-col gap-1 text-center">
+                  <span className="underline">Archived</span>
+                  <span className="text-3xl font-semibold tabular-nums">{archiveProject.length}</span>
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="bg-muted border-border">
+              <CardHeader>
+                <CardTitle>Clients</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-row justify-around">
+                <p className="flex flex-col gap-1 text-center">
+                  <span className="underline">Active</span>
+                  <span className="text-3xl font-semibold tabular-nums">{clients.length}</span>
+                </p>
+                <p className="flex flex-col gap-1 text-center">
+                  <span className="underline">Archived</span>
+                  <span className="text-3xl font-semibold tabular-nums">{archiveClient.length}</span>
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="bg-muted border-border">
+              <CardHeader>
+                <CardTitle>Categories</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-1 text-center">
+                <p className="flex flex-col gap-1 text-center">
+                  <span className="underline">Total</span>
+                  <span className="text-3xl font-semibold tabular-nums">{categories.length}</span>
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="bg-muted border-border">
+              <CardHeader>
+                <CardTitle>To-Dos</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-row justify-around">
+                <p className="flex flex-col gap-1 text-center">
+                  <span className="underline">Total</span>
+                  <span className="text-3xl font-semibold tabular-nums">{todoItems.length}</span>
+                </p>
+                <p className="flex flex-col gap-1 text-center">
+                  <span className="underline">Active</span>
+                  <span className="text-3xl font-semibold tabular-nums">{activeTodos.length}</span>
+                </p>
+                <p className="flex flex-col gap-1 text-center">
+                  <span className="underline">Completed</span>
+                  <span className="text-3xl font-semibold tabular-nums">{completedTodos.length}</span>
+                </p>
+              </CardContent>
             </Card>
           </div>
         )}
 
         {/* Two-column layout: main content + tracking panel */}
         <div>
-          {/* Left column: day actions */}
           <div className="space-y-6">
             {!isDayStarted ? (
               <Card>
                 <CardHeader className="flex items-center justify-between">
-                  <CardTitle className="flex items-center space-x-2 text-primary">
+                  {/*<CardTitle className="flex items-center space-x-2 text-primary">
                     Start Your Work Day
-                  </CardTitle>
+                  </CardTitle>*/}
                   <CardAction>
                     <Sheet>
                       <SheetTrigger asChild>
@@ -169,13 +260,15 @@ const TimeTrackerContent = () => {
                     </Sheet>
                   </CardAction>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex flex-col gap-2 items-center">
+                  <span className="text-2xl font-semibold tabular-nums">Start</span>
                   <p className="py-4 text-foreground">
                     Click the button below to start tracking your work time for today.
                   </p>
                   <Button
                     onClick={handleStartDay}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center space-x-2 py-3"
+                    variant="default"
+                    className="w-1/2"
                   >
                     <CirclePlay className="w-4 h-4" />
                     <span>Start Day</span>
