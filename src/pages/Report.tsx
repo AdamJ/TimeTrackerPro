@@ -174,7 +174,7 @@ function ToneSelector({
               <TabsTrigger
                 key={tone}
                 value={tone}
-                className="py-2 h-auto text-xs capitalize data-[state=active]:shadow-sm"
+                className="py-2 h-auto text-xs capitalize data-[state=active]:shadow-xs"
               >
                 {tone}
               </TabsTrigger>

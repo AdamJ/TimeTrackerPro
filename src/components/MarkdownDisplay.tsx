@@ -14,7 +14,7 @@ export const MarkdownDisplay: React.FC<MarkdownDisplayProps> = ({ content, class
       prose-p:leading-relaxed prose-p:my-1
       prose-li:my-0.5 prose-li:marker:text-blue-500
       prose-headings:font-bold prose-headings:text-foreground
-      prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline
+      prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline prose-a:hover:underline
       prose-strong:text-foreground prose-strong:font-bold
       prose-pre:bg-muted prose-pre:text-foreground prose-pre:p-2 prose-pre:rounded-lg
       ${className}`}>

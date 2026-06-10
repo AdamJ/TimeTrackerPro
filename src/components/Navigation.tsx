@@ -53,7 +53,7 @@ const SiteNavigationMenu = () => {
           '0 4px 16px -8px rgba(0,0,0,0.10), 0 3px 12px -4px rgba(0,0,0,0.10), 0 2px 3px -2px rgba(0, 78, 194, 0.08)',
         background: 'rgba(255,255,255,0.80)'
       }}>
-        <List className="flex items-center justify-between px-4 py-2 md:px-8 md:py-4 m-0 list-none rounded-md p-1 shadow-sm">
+        <List className="flex items-center justify-between px-4 py-2 md:px-8 md:py-4 m-0 list-none rounded-md p-1 shadow-xs">
           <Item className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-foreground flex">
               <Link
@@ -171,7 +171,7 @@ const SiteNavigationMenu = () => {
         </List>
 
         <div className="perspective-[2000px] absolute left-0 top-full flex w-full justify-center">
-          <Viewport className="relative mt-2.5 h-[var(--radix-navigation-menu-viewport-height)] w-full origin-[top_center] overflow-hidden rounded-md bg-white transition-[width,_height] duration-300 data-[state=closed]:animate-scaleOut data-[state=open]:animate-scaleIn sm:w-[var(--radix-navigation-menu-viewport-width)]" />
+          <Viewport className="relative mt-2.5 h-(--radix-navigation-menu-viewport-height) w-full origin-[top_center] overflow-hidden rounded-md bg-white transition-[width,height] duration-300 data-[state=closed]:animate-scaleOut data-[state=open]:animate-scaleIn sm:w-(--radix-navigation-menu-viewport-width)" />
         </div>
       </NavigationMenu>
 
