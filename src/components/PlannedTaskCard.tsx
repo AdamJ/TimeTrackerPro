@@ -35,7 +35,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
-import { Badge } from "@radix-ui/themes";
+import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Edit, Trash2, Play, MoveRight, MoreVertical, PencilIcon, Briefcase, Tag, Users } from "lucide-react";
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
@@ -107,8 +107,8 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
                     <div className="flex flex-wrap gap-1 mt-2">
                       {category && (
                         <Badge
-                          radius="full"
-                          size="1"
+                          variant="outline"
+                          className="border-transparent"
                           style={{
                             backgroundColor: category.color,
                             color: "#fff",
@@ -120,27 +120,26 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
                       )}
                       {task.project && (
                         <Badge
-                          color="gray"
                           variant="outline"
-                          radius="full"
-                          size="1"
+                          className="border-mauve-7 text-mauve-11"
                         >
                           <Briefcase className="w-2.5 h-2.5 inline mr-0.5" />
                           {task.project}
                         </Badge>
                       )}
                       {task.client && (
-                        <Badge color="cyan" radius="full" size="1">
+                        <Badge
+                          variant="outline"
+                          className="bg-cyan-3 text-cyan-11 border-cyan-6"
+                        >
                           <Users className="w-2.5 h-2.5 inline mr-0.5" />
                           {task.client}
                         </Badge>
                       )}
                       {task.linkedTaskId && (
                         <Badge
-                          color="green"
-                          variant="soft"
-                          radius="full"
-                          size="1"
+                          variant="outline"
+                          className="bg-green-3 text-green-11 border-green-6"
                         >
                           <Play className="w-2.5 h-2.5 inline mr-0.5" />
                           Active

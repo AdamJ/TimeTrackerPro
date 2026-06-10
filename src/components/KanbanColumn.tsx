@@ -4,7 +4,7 @@ import { PlannedTaskCard } from "@/components/PlannedTaskCard";
 import { PlannedTaskDialog } from "@/components/PlannedTaskDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@radix-ui/themes";
+import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
 import {
   Sheet,
@@ -21,14 +21,11 @@ interface KanbanColumnProps {
   isDayStale: boolean;
 }
 
-const COLUMN_BADGE_COLORS: Record<
-  PlannedTaskStatus,
-  React.ComponentProps<typeof Badge>["color"]
-> = {
-  todo: "brown",
-  in_progress: "blue",
-  done: "green",
-  blocked: "red",
+const COLUMN_BADGE_COLORS: Record<PlannedTaskStatus, string> = {
+  todo: "bg-brown-3 text-brown-11 border-brown-6",
+  in_progress: "bg-blue-3 text-blue-11 border-blue-6",
+  done: "bg-green-3 text-green-11 border-green-6",
+  blocked: "bg-red-3 text-red-11 border-red-6",
 };
 
 const COLUMN_BG_COLOR: Record<PlannedTaskStatus, string> = {
@@ -54,10 +51,8 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
           <CardTitle className="flex items-center justify-between text-sm font-semibold">
             <span className="text-foreground">{title}</span>
             <Badge
-              color={COLUMN_BADGE_COLORS[status]}
-              variant="soft"
-              radius="full"
-              size="1"
+              variant="outline"
+              className={COLUMN_BADGE_COLORS[status]}
             >
               {tasks.length}
             </Badge>
