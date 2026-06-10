@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Automated Electron desktop release CI — when the existing version-bump release workflow publishes a new GitHub Release, a new `electron-release.yml` workflow builds the Electron app for macOS (DMG) and Windows (NSIS) on `release: published` and uploads the installers as release assets via `softprops/action-gh-release`.
   — `.github/workflows/electron-release.yml` (new)
+- Project add/edit forms moved to a Sheet drawer — the Project Management dialog's inline "Add/Edit Project" card is replaced by a shared `ProjectSheet` (mirrors `ClientSheet`), opened via the "Add Project" button or per-project Edit action and pre-filled in edit mode. Submitting calls `addProject`/`updateProject` followed by `forceSyncToDatabase()` (project mutations don't auto-save).
+  — `src/components/ProjectSheet.tsx` (new: shared add/edit Sheet form), `src/components/ProjectManagement.tsx` (removed inline form card, added sheet state)
+
 - Client editing — clients can now be edited after creation. An Edit button (pencil icon) appears on each active client card and opens a Sheet drawer pre-filled with the client's current name, address, and contact fields. The same Sheet is reused for "Add Client" (previously an inline card form), making both flows consistent. `updateClient(id, data)` added to `TimeTrackingContext` — merges partial data into the existing client, preserves `id`/`createdAt`/`archived`, updates `clientsRef` + state, and returns the updated `Client`; callers persist via the existing `persistClient` → `upsertClient` path (1 Supabase call). Archived clients show no Edit button (restore first).
   — `src/components/ClientSheet.tsx` (new: shared add/edit Sheet form), `src/components/ClientManagement.tsx` (removed inline form card, added edit button + sheet state), `src/contexts/TimeTrackingContext.tsx` (`updateClient` method in interface + implementation + context value)
 

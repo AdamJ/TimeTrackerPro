@@ -16,20 +16,12 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Edit, Trash2, Briefcase, RotateCcw } from "lucide-react";
 import { Project } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { toast } from "@/hooks/use-toast";
+import { ProjectSheet } from "@/components/ProjectSheet";
 
 interface ProjectManagementProps {
 	isOpen: boolean;
@@ -42,90 +34,22 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 }) => {
 	const {
 		projects,
-		clients,
-		addClient,
-		persistClient,
-		addProject,
-		updateProject,
 		deleteProject,
 		resetProjectsToDefaults,
 	} = useTimeTracking();
+	const [sheetOpen, setSheetOpen] = useState(false);
 	const [editingProject, setEditingProject] = useState<Project | null>(null);
-	const [isAddingNew, setIsAddingNew] = useState(false);
-	const [formData, setFormData] = useState({
-		name: "",
-		client: "",
-		hourlyRate: "",
-		color: "#3B82F6",
-	});
-	const [isAddingClient, setIsAddingClient] = useState(false);
-	const [newClientName, setNewClientName] = useState("");
 	const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 	const [showResetDialog, setShowResetDialog] = useState(false);
 
-	const activeClients = clients.filter((c) => !c.archived);
-
-	const handleAddClientInline = async () => {
-		const trimmed = newClientName.trim();
-		if (!trimmed) return;
-		const created = addClient(trimmed);
-		if (created) await persistClient(created);
-		setFormData((prev) => ({ ...prev, client: trimmed }));
-		setNewClientName("");
-		setIsAddingClient(false);
-	};
-
-	const resetForm = () => {
-		setFormData({
-			name: "",
-			client: "",
-			hourlyRate: "",
-			color: "#3B82F6",
-		});
+	const handleOpenAdd = () => {
 		setEditingProject(null);
-		setIsAddingNew(false);
-		setIsAddingClient(false);
-		setNewClientName("");
-	};
-
-	const handleSubmit = (e: React.FormEvent) => {
-		e.preventDefault();
-
-		const projectData = {
-			name: formData.name.trim(),
-			client: formData.client.trim(),
-			hourlyRate: formData.hourlyRate
-				? parseFloat(formData.hourlyRate)
-				: undefined,
-			color: formData.color,
-		};
-
-		if (editingProject) {
-			updateProject(editingProject.id, projectData);
-			toast({
-				title: "Project updated",
-				description: `"${projectData.name}" has been updated.`
-			});
-		} else {
-			addProject(projectData);
-			toast({
-				title: "Project added",
-				description: `"${projectData.name}" has been added.`
-			});
-		}
-
-		resetForm();
+		setSheetOpen(true);
 	};
 
 	const handleEdit = (project: Project) => {
 		setEditingProject(project);
-		setFormData({
-			name: project.name,
-			client: project.client,
-			hourlyRate: project.hourlyRate?.toString() || "",
-			color: project.color || "#3B82F6",
-		});
-		setIsAddingNew(true);
+		setSheetOpen(true);
 	};
 
 	const handleDeleteConfirm = () => {
@@ -156,181 +80,23 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 								<span>Project Management</span>
 							</DialogTitle>
 							<div className="flex items-center space-x-2 my-4">
-								{!isAddingNew && (
-									<>
-										<Button
-											onClick={() => setShowResetDialog(true)}
-											variant="outline"
-											className="w-full"
-										>
-											<RotateCcw className="w-4 h-4 mr-2" />
-											Reset to Defaults
-										</Button>
-										<Button
-											onClick={() => setIsAddingNew(true)}
-											className="w-full"
-										>
-											<Plus className="w-4 h-4 mr-2" />
-											Add Project
-										</Button>
-									</>
-								)}
+								<Button
+									onClick={() => setShowResetDialog(true)}
+									variant="outline"
+									className="w-full"
+								>
+									<RotateCcw className="w-4 h-4 mr-2" />
+									Reset to Defaults
+								</Button>
+								<Button onClick={handleOpenAdd} className="w-full">
+									<Plus className="w-4 h-4 mr-2" />
+									Add Project
+								</Button>
 							</div>
 						</div>
 					</DialogHeader>
 
 					<div className="space-y-6">
-						{/* Add/Edit Project Form */}
-						{isAddingNew && (
-							<Card>
-								<CardHeader>
-									<CardTitle>
-										{editingProject ? "Edit Project" : "Add New Project"}
-									</CardTitle>
-								</CardHeader>
-								<CardContent>
-									<form onSubmit={handleSubmit} className="space-y-4">
-										<div className="grid grid-cols-2 gap-4">
-											<div>
-												<Label htmlFor="name">
-													Project Name <span className="text-destructive" aria-hidden="true">*</span>
-												</Label>
-												<Input
-													id="name"
-													value={formData.name}
-													onChange={(e) =>
-														setFormData((prev) => ({
-															...prev,
-															name: e.target.value,
-														}))
-													}
-													placeholder="Enter project name"
-													aria-required="true"
-													required
-												/>
-											</div>
-											<div>
-												<Label htmlFor="client">
-													Client Name <span className="text-destructive" aria-hidden="true">*</span>
-												</Label>
-												{isAddingClient ? (
-													<div className="flex items-center space-x-2">
-														<Input
-															id="client"
-															autoFocus
-															value={newClientName}
-															onChange={(e) => setNewClientName(e.target.value)}
-															placeholder="New client name"
-														/>
-														<Button
-															type="button"
-															size="sm"
-															onClick={handleAddClientInline}
-														>
-															Add
-														</Button>
-														<Button
-															type="button"
-															size="sm"
-															variant="ghost"
-															onClick={() => {
-																setIsAddingClient(false);
-																setNewClientName("");
-															}}
-														>
-															Cancel
-														</Button>
-													</div>
-												) : (
-													<Select
-														value={formData.client}
-														onValueChange={(value) => {
-															if (value === "__add_new__") {
-																setIsAddingClient(true);
-																return;
-															}
-															setFormData((prev) => ({ ...prev, client: value }));
-														}}
-													>
-														<SelectTrigger id="client">
-															<SelectValue placeholder="Select a client" />
-														</SelectTrigger>
-														<SelectContent>
-															{activeClients.map((client) => (
-																<SelectItem key={client.id} value={client.name}>
-																	{client.name}
-																</SelectItem>
-															))}
-															{/* Legacy/unmanaged client values stay visible but flagged */}
-															{formData.client &&
-																!clients.some(
-																	(client) => client.name === formData.client
-																) && (
-																	<SelectItem value={formData.client} disabled>
-																		{formData.client} (unmanaged)
-																	</SelectItem>
-																)}
-															<SelectItem value="__add_new__">
-																+ Add new client
-															</SelectItem>
-														</SelectContent>
-													</Select>
-												)}
-											</div>
-										</div>
-
-										<div className="grid grid-cols-2 gap-4">
-											<div>
-												<Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
-												<Input
-													id="hourlyRate"
-													type="number"
-													step="0.01"
-													value={formData.hourlyRate}
-													onChange={(e) =>
-														setFormData((prev) => ({
-															...prev,
-															hourlyRate: e.target.value,
-														}))
-												}
-													placeholder="0.00"
-												/>
-											</div>
-											<div>
-												<Label htmlFor="color">Project Color</Label>
-												<div className="flex items-center space-x-2">
-													<Input
-														id="color"
-														type="color"
-														value={formData.color}
-														onChange={(e) =>
-															setFormData((prev) => ({
-																...prev,
-																color: e.target.value,
-															}))
-														}
-														className="w-16 h-10"
-													/>
-													<span className="text-sm text-muted-foreground">
-														{formData.color}
-													</span>
-												</div>
-											</div>
-										</div>
-
-										<div className="flex space-x-2">
-											<Button type="submit">
-												{editingProject ? "Update Project" : "Add Project"}
-											</Button>
-											<Button type="button" variant="outline" onClick={resetForm}>
-												Cancel
-											</Button>
-										</div>
-									</form>
-								</CardContent>
-							</Card>
-						)}
-
 						{/* Projects List */}
 						<div className="space-y-4">
 							<h3 className="text-lg font-semibold">
@@ -453,6 +219,16 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
+
+			<ProjectSheet
+				open={sheetOpen}
+				onOpenChange={(open) => {
+					setSheetOpen(open);
+					if (!open) setEditingProject(null);
+				}}
+				mode={editingProject ? "edit" : "add"}
+				project={editingProject ?? undefined}
+			/>
 		</>
 	);
 };

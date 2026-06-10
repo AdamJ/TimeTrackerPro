@@ -9,93 +9,103 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Client } from "@/contexts/TimeTrackingContext";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Project } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { toast } from "@/hooks/use-toast";
 
-interface ClientSheetProps {
+interface ProjectSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: "add" | "edit";
-  client?: Client;
+  project?: Project;
 }
 
-export const ClientSheet: React.FC<ClientSheetProps> = ({
+export const ProjectSheet: React.FC<ProjectSheetProps> = ({
   open,
   onOpenChange,
   mode,
-  client,
+  project,
 }) => {
-  const { addClient, updateClient, persistClient } = useTimeTracking();
+  const {
+    clients,
+    addClient,
+    persistClient,
+    addProject,
+    updateProject,
+    forceSyncToDatabase,
+  } = useTimeTracking();
 
   const [name, setName] = useState("");
-  const [addressStreet, setAddressStreet] = useState("");
-  const [addressCity, setAddressCity] = useState("");
-  const [addressState, setAddressState] = useState("");
-  const [addressZip, setAddressZip] = useState("");
-  const [addressCountry, setAddressCountry] = useState("");
-  const [contactName, setContactName] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
-  const [contactWebsite, setContactWebsite] = useState("");
+  const [client, setClient] = useState("");
+  const [hourlyRate, setHourlyRate] = useState("");
+  const [color, setColor] = useState("#3B82F6");
+  const [isAddingClient, setIsAddingClient] = useState(false);
+  const [newClientName, setNewClientName] = useState("");
+
+  const activeClients = clients.filter((c) => !c.archived);
 
   useEffect(() => {
     if (!open) return;
-    if (mode === "edit" && client) {
-      setName(client.name);
-      setAddressStreet(client.addressStreet ?? "");
-      setAddressCity(client.addressCity ?? "");
-      setAddressState(client.addressState ?? "");
-      setAddressZip(client.addressZip ?? "");
-      setAddressCountry(client.addressCountry ?? "");
-      setContactName(client.contactName ?? "");
-      setContactEmail(client.contactEmail ?? "");
-      setContactWebsite(client.contactWebsite ?? "");
+    if (mode === "edit" && project) {
+      setName(project.name);
+      setClient(project.client);
+      setHourlyRate(project.hourlyRate?.toString() ?? "");
+      setColor(project.color || "#3B82F6");
     } else {
       setName("");
-      setAddressStreet("");
-      setAddressCity("");
-      setAddressState("");
-      setAddressZip("");
-      setAddressCountry("");
-      setContactName("");
-      setContactEmail("");
-      setContactWebsite("");
+      setClient("");
+      setHourlyRate("");
+      setColor("#3B82F6");
     }
-  }, [open, mode, client]);
+    setIsAddingClient(false);
+    setNewClientName("");
+  }, [open, mode, project]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleAddClientInline = async () => {
+    const trimmed = newClientName.trim();
+    if (!trimmed) return;
+    const created = addClient(trimmed);
+    if (created) await persistClient(created);
+    setClient(trimmed);
+    setNewClientName("");
+    setIsAddingClient(false);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = name.trim();
-    if (!trimmed) return;
+    const trimmedClient = client.trim();
+    if (!trimmed || !trimmedClient) return;
 
     const data = {
       name: trimmed,
-      addressStreet: addressStreet.trim() || undefined,
-      addressCity: addressCity.trim() || undefined,
-      addressState: addressState.trim() || undefined,
-      addressZip: addressZip.trim() || undefined,
-      addressCountry: addressCountry.trim() || undefined,
-      contactName: contactName.trim() || undefined,
-      contactEmail: contactEmail.trim() || undefined,
-      contactWebsite: contactWebsite.trim() || undefined,
+      client: trimmedClient,
+      hourlyRate: hourlyRate ? parseFloat(hourlyRate) : undefined,
+      color,
     };
 
     if (mode === "add") {
-      const created = addClient(data);
-      if (created) await persistClient(created);
+      addProject(data);
       toast({
-        title: "Client added",
+        title: "Project added",
         description: `"${trimmed}" has been added.`,
       });
-    } else if (mode === "edit" && client) {
-      const updated = updateClient(client.id, data);
-      if (updated) await persistClient(updated);
+    } else if (mode === "edit" && project) {
+      updateProject(project.id, data);
       toast({
-        title: "Client saved",
-        description: `"${trimmed}" has been saved.`,
+        title: "Project updated",
+        description: `"${trimmed}" has been updated.`,
       });
     }
 
+    forceSyncToDatabase();
     onOpenChange(false);
   };
 
@@ -104,107 +114,107 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>
-            {mode === "add" ? "Add Client" : "Edit Client"}
+            {mode === "add" ? "Add Project" : "Edit Project"}
           </SheetTitle>
         </SheetHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           <div>
-            <Label htmlFor="client-name">
-              Client Name <span className="text-destructive">*</span>
+            <Label htmlFor="project-name">
+              Project Name <span className="text-destructive">*</span>
             </Label>
             <Input
-              id="client-name"
+              id="project-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter client name"
+              placeholder="Enter project name"
               required
             />
           </div>
 
-          <div className="space-y-3">
-            <p className="text-sm font-medium border-b">Address</p>
-            <div>
-              <Label htmlFor="address-street">Street</Label>
-              <Input
-                id="address-street"
-                value={addressStreet}
-                onChange={(e) => setAddressStreet(e.target.value)}
-                placeholder="123 Main St"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="address-city">City</Label>
+          <div>
+            <Label htmlFor="project-client">
+              Client Name <span className="text-destructive">*</span>
+            </Label>
+            {isAddingClient ? (
+              <div className="flex items-center space-x-2">
                 <Input
-                  id="address-city"
-                  value={addressCity}
-                  onChange={(e) => setAddressCity(e.target.value)}
-                  placeholder="Springfield"
+                  id="project-client"
+                  autoFocus
+                  value={newClientName}
+                  onChange={(e) => setNewClientName(e.target.value)}
+                  placeholder="New client name"
                 />
+                <Button type="button" size="sm" onClick={handleAddClientInline}>
+                  Add
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setIsAddingClient(false);
+                    setNewClientName("");
+                  }}
+                >
+                  Cancel
+                </Button>
               </div>
-              <div>
-                <Label htmlFor="address-state">State / Province</Label>
-                <Input
-                  id="address-state"
-                  value={addressState}
-                  onChange={(e) => setAddressState(e.target.value)}
-                  placeholder="IL"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="address-zip">ZIP / Postal Code</Label>
-                <Input
-                  id="address-zip"
-                  value={addressZip}
-                  onChange={(e) => setAddressZip(e.target.value)}
-                  placeholder="62701"
-                />
-              </div>
-              <div>
-                <Label htmlFor="address-country">Country</Label>
-                <Input
-                  id="address-country"
-                  value={addressCountry}
-                  onChange={(e) => setAddressCountry(e.target.value)}
-                  placeholder="USA"
-                />
-              </div>
-            </div>
+            ) : (
+              <Select
+                value={client}
+                onValueChange={(value) => {
+                  if (value === "__add_new__") {
+                    setIsAddingClient(true);
+                    return;
+                  }
+                  setClient(value);
+                }}
+              >
+                <SelectTrigger id="project-client">
+                  <SelectValue placeholder="Select a client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeClients.map((c) => (
+                    <SelectItem key={c.id} value={c.name}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                  {client && !clients.some((c) => c.name === client) && (
+                    <SelectItem value={client} disabled>
+                      {client} (unmanaged)
+                    </SelectItem>
+                  )}
+                  <SelectItem value="__add_new__">+ Add new client</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
-          <div className="space-y-3">
-            <p className="text-sm font-medium border-b">Contact</p>
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="contact-name">Name</Label>
+              <Label htmlFor="project-hourly-rate">Hourly Rate ($)</Label>
               <Input
-                id="contact-name"
-                value={contactName}
-                onChange={(e) => setContactName(e.target.value)}
-                placeholder="Jane Doe"
+                id="project-hourly-rate"
+                type="number"
+                step="0.01"
+                value={hourlyRate}
+                onChange={(e) => setHourlyRate(e.target.value)}
+                placeholder="0.00"
               />
             </div>
             <div>
-              <Label htmlFor="contact-email">Email</Label>
-              <Input
-                id="contact-email"
-                type="email"
-                value={contactEmail}
-                onChange={(e) => setContactEmail(e.target.value)}
-                placeholder="jane@example.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="contact-website">Website</Label>
-              <Input
-                id="contact-website"
-                type="url"
-                value={contactWebsite}
-                onChange={(e) => setContactWebsite(e.target.value)}
-                placeholder="https://example.com"
-              />
+              <Label htmlFor="project-color">Project Color</Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="project-color"
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="w-16 h-10"
+                />
+                <span className="text-sm text-muted-foreground">{color}</span>
+              </div>
             </div>
           </div>
 
