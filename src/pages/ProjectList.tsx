@@ -2,17 +2,8 @@ import React, { useState } from "react";
 import { TimeTrackingProvider, Project } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,15 +28,11 @@ import { PageLayout } from "@/components/PageLayout";
 import { Badge } from "@radix-ui/themes";
 import { toast } from "@/hooks/use-toast";
 import { Item, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemMedia } from "@/components/ui/item";
+import { ProjectSheet } from "@/components/ProjectSheet";
 
 const ProjectContent: React.FC = () => {
   const {
     projects,
-    clients,
-    addClient,
-    persistClient,
-    addProject,
-    updateProject,
     deleteProject,
     resetProjectsToDefaults,
     archiveProject,
@@ -53,33 +40,13 @@ const ProjectContent: React.FC = () => {
     forceSyncToDatabase,
   } = useTimeTracking();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [isAddingNew, setIsAddingNew] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    client: "",
-    hourlyRate: "",
-    color: "#3B82F6",
-    isBillable: true,
-  });
-  const [isAddingClient, setIsAddingClient] = useState(false);
-  const [newClientName, setNewClientName] = useState("");
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
 
-  const activeClients = clients.filter((client) => !client.archived);
   const activeProjects = projects.filter((project) => !project.archived);
   const archivedProjects = projects.filter((project) => project.archived);
-
-  const handleAddClientInline = async () => {
-    const trimmed = newClientName.trim();
-    if (!trimmed) return;
-    const created = addClient(trimmed);
-    if (created) await persistClient(created);
-    setFormData((prev) => ({ ...prev, client: trimmed }));
-    setNewClientName("");
-    setIsAddingClient(false);
-  };
 
   const handleArchiveProject = async (projectId: string) => {
     const archivedName = projects.find(
@@ -109,55 +76,14 @@ const ProjectContent: React.FC = () => {
     });
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      client: "",
-      hourlyRate: "",
-      color: "#3B82F6",
-      isBillable: true,
-    });
+  const handleOpenAdd = () => {
     setEditingProject(null);
-    setIsAddingNew(false);
-    setIsAddingClient(false);
-    setNewClientName("");
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const projectData = {
-      name: formData.name.trim(),
-      client: formData.client.trim(),
-      hourlyRate: formData.hourlyRate
-        ? parseFloat(formData.hourlyRate)
-        : undefined,
-      color: formData.color,
-      isBillable: formData.isBillable,
-    };
-
-    if (editingProject) {
-      updateProject(editingProject.id, projectData);
-    } else {
-      addProject(projectData);
-    }
-
-    // Save changes to database
-    await forceSyncToDatabase();
-
-    resetForm();
+    setSheetOpen(true);
   };
 
   const handleEdit = (project: Project) => {
     setEditingProject(project);
-    setFormData({
-      name: project.name,
-      client: project.client,
-      hourlyRate: project.hourlyRate?.toString() || "",
-      color: project.color || "#3B82F6",
-      isBillable: project.isBillable !== false, // Default to true if not specified
-    });
-    setIsAddingNew(true);
+    setSheetOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
@@ -180,189 +106,18 @@ const ProjectContent: React.FC = () => {
         </>
       }
       actions={
-        !isAddingNew ? (
-          <div className="flex space-x-2">
-            <Button onClick={() => setShowResetDialog(true)} variant="outline">
-              <RotateCcw className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:block">Reset to Defaults</span>
-            </Button>
-            <Button onClick={() => setIsAddingNew(true)}>
-              <Plus className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:block">Add Project</span>
-            </Button>
-          </div>
-        ) : undefined
+        <div className="flex space-x-2">
+          <Button onClick={() => setShowResetDialog(true)} variant="outline">
+            <RotateCcw className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:block">Reset to Defaults</span>
+          </Button>
+          <Button onClick={handleOpenAdd}>
+            <Plus className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:block">Add Project</span>
+          </Button>
+        </div>
       }
     >
-      {/* Add/Edit Project Form */}
-      {isAddingNew && (
-        <div className="max-w-6xl mx-auto p-6 print:p-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {editingProject ? "Edit Project" : "Add New Project"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">
-                      Project Name <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
-                      }
-                      placeholder="Enter project name"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="client">
-                      Client Name <span className="text-destructive">*</span>
-                    </Label>
-                    {isAddingClient ? (
-                      <div className="flex items-center space-x-2">
-                        <Input
-                          id="client"
-                          autoFocus
-                          value={newClientName}
-                          onChange={(e) => setNewClientName(e.target.value)}
-                          placeholder="New client name"
-                        />
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={handleAddClientInline}
-                        >
-                          Add
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setIsAddingClient(false);
-                            setNewClientName("");
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    ) : (
-                      <Select
-                        value={formData.client}
-                        onValueChange={(value) => {
-                          if (value === "__add_new__") {
-                            setIsAddingClient(true);
-                            return;
-                          }
-                          setFormData((prev) => ({ ...prev, client: value }));
-                        }}
-                      >
-                        <SelectTrigger id="client">
-                          <SelectValue placeholder="Select a client" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {activeClients.map((client) => (
-                            <SelectItem key={client.id} value={client.name}>
-                              {client.name}
-                            </SelectItem>
-                          ))}
-                          {/* Legacy/unmanaged client values stay visible but flagged */}
-                          {formData.client &&
-                            !clients.some(
-                              (client) => client.name === formData.client,
-                            ) && (
-                              <SelectItem value={formData.client} disabled>
-                                {formData.client} (unmanaged)
-                              </SelectItem>
-                            )}
-                          <SelectItem value="__add_new__">
-                            + Add new client
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
-                    <Input
-                      id="hourlyRate"
-                      type="number"
-                      step="01.00"
-                      value={formData.hourlyRate}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          hourlyRate: e.target.value,
-                        }))
-                      }
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="color">Project Color</Label>
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        id="color"
-                        type="color"
-                        value={formData.color}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            color: e.target.value,
-                          }))
-                        }
-                        className="w-16 h-10"
-                      />
-                      <span className="text-sm text-muted-foreground">
-                        {formData.color}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="billable"
-                    checked={formData.isBillable}
-                    onCheckedChange={(checked) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        isBillable: checked === true,
-                      }))
-                    }
-                  />
-                  <Label htmlFor="billable" className="text-sm font-medium">
-                    Billable project
-                  </Label>
-                  <span className="text-xs text-muted-foreground">
-                    (Tasks in this project can generate revenue)
-                  </span>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Button type="button" variant="ghost" onClick={resetForm}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" variant="default">
-                    {editingProject ? "Update Project" : "Add Project"}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
       <div className="max-w-6xl mx-auto p-6 print:p-4">
         {/* Projects List */}
         <div className="space-y-6">
@@ -551,6 +306,16 @@ const ProjectContent: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ProjectSheet
+        open={sheetOpen}
+        onOpenChange={(open) => {
+          setSheetOpen(open);
+          if (!open) setEditingProject(null);
+        }}
+        mode={editingProject ? "edit" : "add"}
+        project={editingProject ?? undefined}
+      />
     </PageLayout>
   );
 };

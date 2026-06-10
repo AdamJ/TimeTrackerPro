@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -46,6 +47,7 @@ export const ProjectSheet: React.FC<ProjectSheetProps> = ({
   const [client, setClient] = useState("");
   const [hourlyRate, setHourlyRate] = useState("");
   const [color, setColor] = useState("#3B82F6");
+  const [isBillable, setIsBillable] = useState(true);
   const [isAddingClient, setIsAddingClient] = useState(false);
   const [newClientName, setNewClientName] = useState("");
 
@@ -58,11 +60,13 @@ export const ProjectSheet: React.FC<ProjectSheetProps> = ({
       setClient(project.client);
       setHourlyRate(project.hourlyRate?.toString() ?? "");
       setColor(project.color || "#3B82F6");
+      setIsBillable(project.isBillable !== false);
     } else {
       setName("");
       setClient("");
       setHourlyRate("");
       setColor("#3B82F6");
+      setIsBillable(true);
     }
     setIsAddingClient(false);
     setNewClientName("");
@@ -89,6 +93,7 @@ export const ProjectSheet: React.FC<ProjectSheetProps> = ({
       client: trimmedClient,
       hourlyRate: hourlyRate ? parseFloat(hourlyRate) : undefined,
       color,
+      isBillable,
     };
 
     if (mode === "add") {
@@ -216,6 +221,20 @@ export const ProjectSheet: React.FC<ProjectSheetProps> = ({
                 <span className="text-sm text-muted-foreground">{color}</span>
               </div>
             </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="project-billable"
+              checked={isBillable}
+              onCheckedChange={(checked) => setIsBillable(checked === true)}
+            />
+            <Label htmlFor="project-billable" className="text-sm font-medium">
+              Billable project
+            </Label>
+            <span className="text-xs text-muted-foreground">
+              (Tasks in this project can generate revenue)
+            </span>
           </div>
 
           <SheetFooter className="flex gap-2 pt-2">
