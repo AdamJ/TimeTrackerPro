@@ -120,7 +120,26 @@ const TimeTrackerContent = () => {
   }
 
   return (
-    <PageLayout title="Dashboard">
+    <PageLayout
+      title="Dashboard"
+      actions={
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm">
+              <PanelRight className="w-4 h-4" />
+              To-Do List
+            </Button>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>To-Do List</SheetTitle>
+              <SheetDescription></SheetDescription>
+            </SheetHeader>
+            <TaskTrackingPanel />
+          </SheetContent>
+        </Sheet>
+      }
+    >
       <div className="max-w-6xl mx-auto pt-4 pb-6 px-4 print:p-4 space-y-6">
         <StartDayDialog
           isOpen={showStartDayDialog && !isDayStale}
@@ -128,24 +147,6 @@ const TimeTrackerContent = () => {
           onStartDay={handleStartDayWithDateTime}
         />
         <StaleDayDialog />
-
-        <div className="flex flex-row justify-around">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="sm">
-                <PanelRight className="w-4 h-4" />
-                To-Do List
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>To-Do List</SheetTitle>
-                <SheetDescription></SheetDescription>
-              </SheetHeader>
-              <TaskTrackingPanel />
-            </SheetContent>
-          </Sheet>
-        </div>
         
         {/* Stats */}
         {!isDayStarted && (
@@ -238,30 +239,8 @@ const TimeTrackerContent = () => {
           <div className="space-y-6">
             {!isDayStarted ? (
               <Card>
-                <CardHeader className="flex items-center justify-between">
-                  {/*<CardTitle className="flex items-center space-x-2 text-primary">
-                    Start Your Work Day
-                  </CardTitle>*/}
-                  <CardAction>
-                    <Sheet>
-                      <SheetTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <PanelRight className="w-4 h-4" />
-                          To-Do List
-                        </Button>
-                      </SheetTrigger>
-                      <SheetContent>
-                        <SheetHeader>
-                          <SheetTitle>To-Do List</SheetTitle>
-                          <SheetDescription></SheetDescription>
-                        </SheetHeader>
-                        <TaskTrackingPanel />
-                      </SheetContent>
-                    </Sheet>
-                  </CardAction>
-                </CardHeader>
                 <CardContent className="flex flex-col gap-2 items-center">
-                  <span className="text-2xl font-semibold tabular-nums">Start</span>
+                  <span className="text-2xl font-semibold tabular-nums">Start Your Work Day</span>
                   <p className="py-4 text-foreground">
                     Click the button below to start tracking your work time for today.
                   </p>
@@ -292,23 +271,6 @@ const TimeTrackerContent = () => {
                         </div>
                       )}
                     </CardDescription>
-                    <CardAction>
-                      <Sheet>
-                        <SheetTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <PanelRight className="w-4 h-4" />
-                            To-Do List
-                          </Button>
-                        </SheetTrigger>
-                        <SheetContent>
-                          <SheetHeader>
-                            <SheetTitle>To-Do List</SheetTitle>
-                            <SheetDescription></SheetDescription>
-                          </SheetHeader>
-                          <TaskTrackingPanel />
-                        </SheetContent>
-                      </Sheet>
-                  </CardAction>
                   </CardHeader>
                   <CardContent>
                     <Button

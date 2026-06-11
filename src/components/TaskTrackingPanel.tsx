@@ -112,7 +112,7 @@ export function TaskTrackingPanel() {
                   size="sm"
                   variant="link"
                   onClick={() => deleteTodoItem(item.id)}
-                  className="h-5 p-2 shrink-0 text-muted-foreground hover:text-destructive-foreground hover:bg-destructive"
+                  className="h-5 p-2 shrink-0 text-muted-foreground hover:text-primary-foreground hover:bg-destructive"
                   aria-label="Delete todo"
                 >
                   <Trash size={16} />
@@ -166,7 +166,7 @@ export function TaskTrackingPanel() {
                     size="sm"
                     variant="link"
                     onClick={() => deleteTodoItem(item.id)}
-                    className="h-5 p-2 shrink-0 text-muted-foreground hover:text-destructive-foreground hover:bg-destructive"
+                    className="h-5 p-2 shrink-0 text-muted-foreground hover:text-primary-foreground hover:bg-destructive"
                     aria-label="Clear completed todo"
                   >
                     <Trash size={16} />
