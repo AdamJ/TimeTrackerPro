@@ -29,6 +29,7 @@ For the main overview, see [README.md](README.md).
   - [Data Flow](#data-flow)
   - [Project Structure](#project-structure)
   - [Code Conventions](#code-conventions)
+- [Theming](#theming)
 - [Development Workflow](#development-workflow)
   - [Git Workflow](#git-workflow)
   - [Testing](#testing)
@@ -261,7 +262,7 @@ See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) and [docs/SECURITY.md](docs
 | UI Framework | React 18 + TypeScript 5.9                   |
 | Build        | Vite 5 + SWC                                |
 | Routing      | React Router 6                              |
-| Styling      | Tailwind CSS 3 + Radix UI + shadcn/ui       |
+| Styling      | Tailwind CSS 4 + Radix UI + shadcn/ui       |
 | Icons        | Radix Icons (primary), Lucide (fallback)    |
 | Forms        | React Hook Form + Zod                       |
 | Backend      | Supabase (optional) or localStorage         |
@@ -431,6 +432,26 @@ See [CLAUDE.md](CLAUDE.md) for comprehensive conventions.
 
 ---
 
+## Theming
+
+Tailwind CSS v4 (CSS-first config — no `tailwind.config.ts`). All theme tokens live in `src/index.css`:
+
+- **`@theme` block** — maps semantic tokens (`--color-background`, `--color-primary`, `--color-border`, etc.) and Radix color scales (`--color-gray-1`...`--color-gray-12`, etc.) to CSS custom properties so Tailwind generates utilities like `bg-background`, `text-primary`, `bg-mauve-3`.
+- **`:root` / `.dark`** (`@layer base`) — define the actual HSL values for `--background`, `--foreground`, `--primary`, `--border`, `--ring`, `--sidebar-*`, etc. Switching themes = overriding these in `.dark`.
+- **`@radix-ui/colors`** — light/dark scale imports for the colors actually used in the app (`gray`, `mauve`, `slate`, `red`, `purple`, `violet`, `indigo`, `blue`, `cyan`, `green`, `brown`, `orange`) provide the `--gray-1`...`--gray-12` etc. raw values consumed by `@theme`. Add a new scale's import + `@theme` mapping only when a component needs it.
+- **`components.json`** — `"tailwind": { "config": "" }` (v4 has no JS config), `cssVariables: true`, `baseColor: "neutral"`.
+
+**Rules:**
+
+- Use semantic tokens (`bg-primary`, `bg-muted`, `text-foreground`) for theming first.
+- For explicit colors, use Radix scale classes (`bg-mauve-3`, `text-blue-11`, `border-violet-6`) — steps 1–2 backgrounds, 3–5 component fills, 6–8 borders, 9–10 solid fills, 11–12 text.
+- Never use arbitrary Tailwind palette colors (`bg-blue-500`).
+- Don't add a second design system (e.g. `@radix-ui/themes`) — its `<Theme>` wrapper sets its own `--color-background` etc. on `.radix-themes`, which collides with and overrides the shadcn `@theme` tokens above, breaking `bg-background` app-wide. Use Radix Primitives + shadcn/ui only.
+
+To add a new theme color: add the HSL value to `:root`/`.dark`, then map it in `@theme` as `--color-<name>: hsl(var(--<name>))`.
+
+---
+
 ## Development Workflow
 
 ### Git Workflow
@@ -533,16 +554,12 @@ const MyPage = lazy(() => import("./pages/MyPage"));
 />
 ```
 
-**Global theme overrides (`tailwind.config.ts`):**
+**Global theme overrides (`src/index.css`, inside `@theme`):**
 
-```typescript
-typography: {
-  DEFAULT: {
-    css: {
-      color: "#333",
-      a: { color: "#3182ce", "&:hover": { color: "#2c5282" } }
-    }
-  }
+```css
+@theme {
+  --color-prose-body: #333;
+  --color-prose-links: #3182ce;
 }
 ```
 

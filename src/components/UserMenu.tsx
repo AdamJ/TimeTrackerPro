@@ -24,24 +24,22 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onSignInClick }) => {
 
   if (!isAuthenticated) {
     return (
-      <Button
-        variant="outline"
+      <a
         onClick={onSignInClick}
-        className="flex items-center gap-2"
+        className="transition-all duration-200 flex items-center space-x-2 px-4 rounded-full h-10 border border-gray-200 hover:border-input bg-white hover:bg-accent hover:text-accent-foreground"
       >
         <UserLock className="h-4 w-4" />
-        <span className="hidden sm:block">Sign In</span>
-      </Button>
+      </a>
     );
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="flex items-center gap-2">
-          <UserCheck className="h-4 w-4" />
+        <DropdownMenuItem>
+          <UserCheck className="w-4 h-4 mr-2" />
           <span className="hidden lg:block">{user?.email}</span>
-        </Button>
+        </DropdownMenuItem>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Account</DropdownMenuLabel>

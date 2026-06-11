@@ -13,7 +13,6 @@ import { ProjectManagement } from '@/components/ProjectManagement';
 import { ArchiveFilter, ArchiveFilterState } from '@/components/ArchiveFilter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
-import { Flex } from '@radix-ui/themes';
 import { Badge } from '@/components/ui/badge';
 import { Archive as ArchiveIcon, Database, CirclePlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -184,7 +183,7 @@ const ArchiveContent: React.FC = () => {
               <>
                 {/* Summary Stats */}
                 <div className="d-flex md:hidden">
-                  <Flex gap="2" wrap="wrap" justify="between">
+                  <div className="flex gap-2 flex-wrap justify-between">
                     <Badge variant="secondary" color="indigo">
                       {filteredDays.length} days
                     </Badge>
@@ -197,7 +196,7 @@ const ArchiveContent: React.FC = () => {
                     <Badge variant="default" color="purple">
                       ${totalRevenue.toFixed(2)} revenue
                     </Badge>
-                  </Flex>
+                  </div>
                 </div>
                 <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 print:hidden">
                   <Card>

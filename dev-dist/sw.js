@@ -67,10 +67,13 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-21a80088'], (function (workbox) { 'use strict';
+define(['./workbox-17772b39'], (function (workbox) { 'use strict';
 
-  self.skipWaiting();
-  workbox.clientsClaim();
+  self.addEventListener('message', event => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+      self.skipWaiting();
+    }
+  });
 
   /**
    * The precacheAndRoute() method efficiently caches and responds to
@@ -79,7 +82,7 @@ define(['./workbox-21a80088'], (function (workbox) { 'use strict';
    */
   workbox.precacheAndRoute([{
     "url": "index.html",
-    "revision": "0.febhrpu4fe"
+    "revision": "0.k68cqpgsaos"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
@@ -96,10 +99,10 @@ define(['./workbox-21a80088'], (function (workbox) { 'use strict';
   }), 'GET');
   workbox.registerRoute(/^https:\/\/.*\.supabase\.co\/.*/i, new workbox.NetworkFirst({
     "cacheName": "supabase-api-cache",
-    "networkTimeoutSeconds": 10,
+    "networkTimeoutSeconds": 3,
     plugins: [new workbox.ExpirationPlugin({
       maxEntries: 50,
-      maxAgeSeconds: 300
+      maxAgeSeconds: 60
     }), new workbox.CacheableResponsePlugin({
       statuses: [0, 200]
     })]
