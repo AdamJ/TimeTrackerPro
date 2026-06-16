@@ -270,9 +270,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { isAuthenticated, loading: authLoading, user } = useAuth();
   const [dataService, setDataService] = useState<DataService | null>(null);
-  const [previousAuthState, setPreviousAuthState] = useState<boolean | null>(
-    null
-  );
+  // Tracks previous auth state for logout detection; ref avoids triggering rerenders.
+  const prevAuthRef = useRef<boolean | null>(null);
   const [isDayStarted, setIsDayStarted] = useState(false);
   const [dayStartTime, setDayStartTime] = useState<Date | null>(null);
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
@@ -315,39 +314,38 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   // still sees the change.
   const clientsRef = useRef<Client[]>([]);
 
-  // Initialize data service when auth state changes
+  // Initialize data service when auth state changes.
+  // On logout: run migrateToLocalStorage BEFORE setDataService so that loadData()
+  // (which fires when dataService changes) reads the freshly-written localStorage
+  // snapshot instead of racing against the migration write.
   useEffect(() => {
-    if (!authLoading) {
+    if (authLoading) return;
+
+    const handleAuthChange = async () => {
+      const wasAuthenticated = prevAuthRef.current;
+
+      if (wasAuthenticated === true && !isAuthenticated) {
+        // Logout path: drain Supabase → localStorage before switching service.
+        const currentService = dataServiceRef.current;
+        if (currentService) {
+          try {
+            await currentService.migrateToLocalStorage();
+          } catch (error) {
+            console.error('❌ Error syncing data to localStorage on logout:', error);
+          }
+        }
+      }
+
+      // Switch to the appropriate service (after migration on logout).
       const service = createDataService(isAuthenticated);
       setDataService(service);
       dataServiceRef.current = service;
       currentAuthStateRef.current = isAuthenticated;
-    }
-  }, [isAuthenticated, authLoading]);
-
-  // Handle logout data sync separately
-  useEffect(() => {
-    const handleLogout = async () => {
-      // Detect logout: was authenticated, now not authenticated
-      if (previousAuthState === true && !isAuthenticated && dataService) {
-        try {
-          // Use the current (Supabase) service to sync data to localStorage before switching
-          await dataService.migrateToLocalStorage();
-        } catch (error) {
-          console.error(
-            '❌ Error syncing data to localStorage on logout:',
-            error
-          );
-        }
-      }
-      // Update previous auth state
-      setPreviousAuthState(isAuthenticated);
+      prevAuthRef.current = isAuthenticated;
     };
 
-    if (!authLoading) {
-      handleLogout();
-    }
-  }, [isAuthenticated, authLoading, previousAuthState, dataService]);
+    handleAuthChange();
+  }, [isAuthenticated, authLoading]);
 
   // Load data when data service is available
   useEffect(() => {
@@ -463,9 +461,13 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         plannedTasksRef.current = loadedPlannedTasks;
         setPlannedTasks(loadedPlannedTasks);
 
-        // If switching from localStorage to Supabase, migrate data
+        // On login: migrate any guest data into Supabase, then reload planned
+        // tasks so the current session reflects what migration just wrote.
         if (currentAuthStateRef.current && dataService) {
           await dataService.migrateFromLocalStorage();
+          const postMigrationTasks = await dataService.getPlannedTasks();
+          plannedTasksRef.current = postMigrationTasks;
+          setPlannedTasks(postMigrationTasks);
         }
 
         // Allow todo/planned-task save effects to fire for user-initiated changes
