@@ -8,7 +8,8 @@ assignees: ""
 ---
 
 **Is this a new component or an extension of an existing one?**
-What is the existing component, if any?
+- [ ] New component
+- [ ] Extension of existing component
 
 **Describe the feature**
 A clear and concise description of the new feature. What is the expected behavior?

@@ -9,8 +9,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Automated Electron desktop release CI — when the existing version-bump release workflow publishes a new GitHub Release, a new `electron-release.yml` workflow builds the Electron app for macOS (DMG) and Windows (NSIS) on `release: published` and uploads the installers as release assets via `softprops/action-gh-release`.
-  — `.github/workflows/electron-release.yml` (new)
+- `AppSidebar` — new collapsible sidebar navigation component replacing the top `SiteNavigationMenu`. Uses shadcn/ui `Sidebar` primitives; groups nav items into Planning/Manage/Reports sections; shows live session timer in the footer alongside sync status, auth, and export actions.
+  — `src/components/AppSidebar.tsx` (new), `src/App.tsx` (wrapped in `SidebarProvider`, renders `AppSidebar`)
+
+- `PageTitleContext` — new React context that decouples page-level header state (title, badge, actions) from layout. `PageLayout` writes to it via `usePageTitle`; the sidebar header reads from it to render the current page title and action buttons in the top bar.
+  — `src/contexts/PageTitleContext.tsx` (new), `src/contexts/page-title-context.ts` (new), `src/hooks/usePageTitle.ts` (new)
+
+### Fixed
+
+- `PageLayout.test.tsx` mock for `usePageTitle` was missing `setBadge`, causing all 8 PageLayout tests to throw `TypeError: setBadge is not a function` after the `badge` prop was added to `PageLayout`.
+  — `src/components/PageLayout.test.tsx`
+
+### Changed
+
+- `PageLayout` refactored to use `PageTitleContext` — no longer renders its own heading or navigation; instead calls `setTitle`/`setBadge`/`setActions` on mount via `usePageTitle` and cleans up on unmount. Added `badge?: ReactNode` prop.
+  — `src/components/PageLayout.tsx`
+
+### Added
+
+- Expanded test suite from 93 → 187 tests across 14 files. New files cover all previously untested business logic and two key UI components:
+  - `src/utils/calculationUtils.test.ts` (18 tests) — billing math: `getDayStats`, `getHoursWorkedForDay`, `getRevenueForDay`, `getBillableHoursForDay`, `getNonBillableHoursForDay`, `getTotalHoursForPeriod`, `getRevenueForPeriod`
+  - `src/utils/checklistUtils.test.ts` (13 tests) — GFM checklist parse/toggle: `parseTaskChecklist`, `toggleDescriptionChecklistItem`
+  - `src/utils/exportUtils.test.ts` (16 tests) — CSV/JSON/invoice export and CSV import: `exportToCSV`, `exportToJSON`, `generateInvoiceData`, `parseCSVImport`
+  - `src/contexts/TimeTracking.test.tsx` (28 new tests, 47 total) — todo items, planned tasks, project CRUD + archive/restore/reset, category CRUD, `discardDay`, `adjustTaskTime`, `addBackdatedDay`, `archiveClient`/`restoreClient` (including active-project blocking guard)
+  - `src/components/NewTaskForm.test.tsx` (9 tests) — form render, submit, empty-title validation, whitespace rejection, post-submit collapse, cancel, FAB toggle
+  - `src/components/TaskItem.test.tsx` (10 tests) — title/description/badge render, Active badge, delete confirm flow, edit dialog open
+  - `@testing-library/user-event` added as dev dependency for component interaction testing
+- `loading: boolean` exposed on `TimeTrackingContextType` and context value — signals when async `loadData()` has completed; used as the init gate in context integration tests (`await waitFor(() => expect(result.current.loading).toBe(false))`)
+
+### Fixed
+
+- Removed `@radix-ui/themes` (separate design system, leftover from earlier scaffold). Its `<Theme>` wrapper applied a `.radix-themes` class that set its own `--color-background`, overriding the shadcn `--color-background` token from `@theme` and breaking `bg-background`/theming app-wide after the Tailwind v4 upgrade. `Badge`/`Flex` usages replaced with shadcn `Badge` + Radix color-scale utility classes (`bg-X-3 text-X-11 border-X-6`).
+  — `src/main.tsx`, `src/components/KanbanColumn.tsx`, `src/components/PlannedTaskCard.tsx`, `src/components/TaskItem.tsx`, `src/pages/Archive.tsx`, `package.json`
+
+- Pruned unused `@radix-ui/colors` scale imports and their `@theme` mappings in `src/index.css` — kept only the 12 scales referenced by components (`gray`, `mauve`, `slate`, `red`, `purple`, `violet`, `indigo`, `blue`, `cyan`, `green`, `brown`, `orange`), removing 18 unused light/dark scale imports and ~250 lines of `--color-X-1..12` mappings. No behavior change.
+  — `src/index.css`
+
+### Changed
+
+- Upgraded to Tailwind CSS v4 via the official `@tailwindcss/upgrade` codemod. `tailwind.config.ts` removed — theme (semantic colors, Radix scales, radius, keyframes/animations, `container`) now lives in `@theme`/`@layer base` blocks in `src/index.css`. PostCSS now uses `@tailwindcss/postcss` (replaces `tailwindcss` + `autoprefixer`). Deprecated utility renames applied across components (`outline-none` → `outline-hidden`, `shadow-sm` → `shadow-xs`, etc.). `components.json` updated to drop the now-deleted `tailwind.config.ts` reference.
+  — `src/index.css`, `postcss.config.js`, `package.json`, `components.json`, 42 component files
+
+### Added
+
+- Category add/edit forms moved to a Sheet drawer — both `CategoryManagement.tsx` (legacy dialog) and the `/categories` page's inline "Add/Edit Category" cards are replaced by a shared `CategorySheet` (mirrors `ClientSheet`/`ProjectSheet`), opened via "Add Category" or per-category Edit and pre-filled in edit mode.
+  — `src/components/CategorySheet.tsx` (new: shared add/edit Sheet form), `src/components/CategoryManagement.tsx`, `src/pages/Categories.tsx` (removed inline form cards, added sheet state)
+
+- Project add/edit forms moved to a Sheet drawer — the Project Management dialog's inline "Add/Edit Project" card is replaced by a shared `ProjectSheet` (mirrors `ClientSheet`), opened via the "Add Project" button or per-project Edit action and pre-filled in edit mode. Submitting calls `addProject`/`updateProject` followed by `forceSyncToDatabase()` (project mutations don't auto-save).
+  — `src/components/ProjectSheet.tsx` (new: shared add/edit Sheet form), `src/components/ProjectManagement.tsx` (removed inline form card, added sheet state)
+
+- Client editing — clients can now be edited after creation. An Edit button (pencil icon) appears on each active client card and opens a Sheet drawer pre-filled with the client's current name, address, and contact fields. The same Sheet is reused for "Add Client" (previously an inline card form), making both flows consistent. `updateClient(id, data)` added to `TimeTrackingContext` — merges partial data into the existing client, preserves `id`/`createdAt`/`archived`, updates `clientsRef` + state, and returns the updated `Client`; callers persist via the existing `persistClient` → `upsertClient` path (1 Supabase call). Archived clients show no Edit button (restore first).
+  — `src/components/ClientSheet.tsx` (new: shared add/edit Sheet form), `src/components/ClientManagement.tsx` (removed inline form card, added edit button + sheet state), `src/contexts/TimeTrackingContext.tsx` (`updateClient` method in interface + implementation + context value)
+
+### Added
+
 - Electron desktop build target — the app can now be packaged as a native Mac (DMG) or Windows (NSIS) desktop app via Electron. `electron/main.ts` creates a `BrowserWindow` (1280×800, `contextIsolation: true`, `nodeIntegration: false`) with a CSP header that allows `self`, `data:`, and `https://*.supabase.co`. Dev mode loads `http://localhost:8080`; production serves `dist/` via a custom `app://` protocol handler (required because the app uses `BrowserRouter` — `file://` + pushState breaks without a real origin). `vite.electron.config.ts` compiles the main process to CJS (`dist-electron/main.cjs`) in isolation from the app Vite config. New scripts: `electron:build:main`, `electron:dev`, `electron:preview`, `electron:build`. CI updated to use pnpm exclusively (`pnpm/action-setup@v4`, `pnpm install --frozen-lockfile`); `package-lock.json` removed in favour of `pnpm-lock.yaml` as the single lock file.
   — `electron/main.ts` (new), `electron/tsconfig.json` (new), `vite.electron.config.ts` (new), `package.json` (`packageManager`, `main`, scripts, electron-builder `build` config), `.gitignore` (`dist-electron/`, `dist-electron-build/`), `.github/workflows/test.yml` (pnpm)
 
@@ -40,7 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - iOS navigation bar redesigned as a floating pill — rounded-full shape, frosted-glass background (`rgba(255,255,255,0.80)`), drop shadow, and `mb-2 mx-2` margins replacing the full-width border-top bar
   — `src/components/MobileNav.tsx`
-- Page title heading hidden on non-iOS web builds (`hidden` class added to title `div` in `PageLayout`)
+- `PageLayout` no longer renders an inline heading or navigation — page title/badge/actions are delegated to `PageTitleContext` and rendered by the sidebar header instead (see above)
   — `src/components/PageLayout.tsx`
 - Homepage stats grid changed from single-column to two-column on mobile (`grid-cols-2`)
   — `src/pages/Index.tsx`

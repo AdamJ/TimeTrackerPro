@@ -11,6 +11,7 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 
 export const AuthDialog: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   isOpen,
@@ -69,42 +70,53 @@ export const AuthDialog: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+      <div className="bg-background rounded-lg p-6 max-w-md w-full mx-4">
         <Card>
           <CardHeader>
             <CardTitle>Sign In</CardTitle>
             <CardDescription>
-              Sign in to sync your data across devices, or continue using the
-              app without an account.
+              Sign in to sync your data across devices.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signin-email">Email</Label>
-                <Input
-                  id="signin-email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signin-password">Password</Label>
-                <Input
-                  id="signin-password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Signing in...' : 'Sign In'}
-              </Button>
+            <form onSubmit={handleSignIn}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="signin-email">Email</FieldLabel>
+                  <Input
+                    id="signin-email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="signin-password">Password</FieldLabel>
+                  <Input
+                    id="signin-password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </Field>
+                <Field>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Signing in...' : 'Sign In'}
+                  </Button>
+                </Field>
+                <Field>
+                  <Button variant="outline" className="w-full" onClick={onClose}>
+                    Continue without account
+                  </Button>
+                </Field>
+                <FieldDescription className="text-center">
+                  Don't have an account? Continue using local storage.
+                </FieldDescription>
+              </FieldGroup>
             </form>
             {error && (
               <Alert variant="destructive" className="mt-4">
@@ -119,12 +131,6 @@ export const AuthDialog: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                 </AlertDescription>
               </Alert>
             )}
-
-            <div className="flex justify-between mt-6">
-              <Button variant="outline" onClick={onClose}>
-                Continue without account
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>

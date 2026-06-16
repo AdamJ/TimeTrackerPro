@@ -169,18 +169,18 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 								<TabsList className="border-b mb-4">
 									<TabsTrigger
 										value="summary"
-										className="px-3 py-1 text-sm font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+										className="px-3 py-1 text-sm font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:border-b-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
 									>
 										Summary
 									</TabsTrigger>
 									<TabsTrigger
 										value="notes"
-										className="px-3 py-1 text-sm font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+										className="px-3 py-1 text-sm font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:border-b-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
 									>
 										Notes
 									</TabsTrigger>
 								</TabsList>
-								<TabsContent value="summary" className="focus-visible:outline-none">
+								<TabsContent value="summary" className="focus-visible:outline-hidden">
 									<div className="bg-muted p-4 rounded-md print:bg-white print:border print:border-border">
 										<MarkdownDisplay
 											content={dailySummary}
@@ -188,7 +188,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 										/>
 									</div>
 								</TabsContent>
-								<TabsContent value="notes" className="focus-visible:outline-none">
+								<TabsContent value="notes" className="focus-visible:outline-hidden">
 									<div className="bg-muted p-4 rounded-md print:bg-white print:border print:border-border">
 										{day.notes ? (
 											<MarkdownDisplay

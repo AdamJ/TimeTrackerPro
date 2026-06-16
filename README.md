@@ -18,7 +18,7 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 - **Daily Time Tracking** — start/stop your workday with clear daily boundaries
 - **Task Management** — create, edit, and delete tasks with real-time duration tracking
 - **Projects & Clients** — organize work by project with per-project hourly rates; projects and clients can be archived and restored
-- **Client Management** — maintain a managed client list, pick clients from a dropdown when creating projects, and archive clients (blocked while they still have active projects)
+- **Client Management** — maintain a managed client list with address and contact details; add, edit, and archive clients (blocked while they still have active projects); pick clients from a dropdown when creating projects
 - **Revenue Tracking** — automatic earnings calculation based on hourly rates
 - **Custom Categories** — color-coded, billable/non-billable categorization
 - **Rich Text Notes** — GitHub Flavored Markdown in task descriptions
@@ -58,7 +58,7 @@ npm run preview          # Preview production build
 
 # Code Quality
 npm run lint             # ESLint
-npm run test             # Vitest unit tests
+npm run test             # Vitest unit tests (187 tests across 14 files)
 
 # PWA Screenshots
 npm run screenshots:install   # Install Playwright (first time)
@@ -132,7 +132,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 - Apple HIG pass for native iOS: bottom sheets, haptic feedback, status bar theming, page transitions, and long-press context menus
 - Persistent report summaries saved to localStorage; markdown preview/export in the report output panel
 - Weekly Report distinguishes Gemini API failure modes (rate limit, quota, overload, key issues)
-- `PageLayout` shared component standardizes page chrome across all pages
+- `AppSidebar` collapsible sidebar navigation with live session timer; `PageTitleContext` decouples page header state from layout
 
 ---
 

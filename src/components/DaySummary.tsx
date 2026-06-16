@@ -22,7 +22,7 @@ export const DaySummary: React.FC<DaySummaryProps> = ({
 }) => {
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+      <Card className="bg-linear-to-r from-green-50 to-blue-50 border-green-200">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 text-green-800">
             <Calendar className="w-5 h-5" />

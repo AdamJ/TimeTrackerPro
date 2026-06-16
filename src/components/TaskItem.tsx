@@ -23,7 +23,7 @@ import {
   ClipboardCheck
 } from "lucide-react";
 import { formatDuration, formatTime } from "@/utils/timeUtil";
-import { Badge } from "@radix-ui/themes";
+import { Badge } from "@/components/ui/badge";
 
 interface TaskItemProps {
   task: Task;
@@ -74,7 +74,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                   {task.title}
                 </h3>
                 {isActive && (
-                  <Badge variant="solid" color="indigo">
+                  <Badge variant="outline" className="bg-indigo-9 text-white border-transparent">
                     Active
                   </Badge>
                 )}
@@ -99,19 +99,20 @@ export const TaskItem: React.FC<TaskItemProps> = ({
               <div className="flex items-center flex-wrap gap-2 mt-3">
                 {category && (
                   <Badge
-                    radius="full"
+                    variant="outline"
+                    className="border-transparent"
                     style={{ backgroundColor: category.color, color: "#fff" }}
                   >
                     {category.name}
                   </Badge>
                 )}
                 {task.project && (
-                  <Badge color="gray" variant="outline" radius="full">
+                  <Badge variant="outline" className="border-mauve-7 text-mauve-11">
                     {task.project}
                   </Badge>
                 )}
                 {task.client && (
-                  <Badge color="cyan" radius="full">
+                  <Badge variant="outline" className="bg-cyan-3 text-cyan-11 border-cyan-6">
                     <ClipboardCheck className="w-3 h-3 inline-flex" />
                     {task.client}
                   </Badge>

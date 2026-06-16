@@ -1,75 +1,76 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { PageLayout } from "@/components/PageLayout";
 import { BriefcaseIcon } from "lucide-react";
 
-vi.mock("@/components/Navigation", () => ({
-	default: () => <nav data-testid="site-nav" />,
+const mockSetTitle = vi.fn();
+const mockSetActions = vi.fn();
+const mockSetBadge = vi.fn();
+
+vi.mock("@/hooks/usePageTitle", () => ({
+  usePageTitle: () => ({
+    title: null,
+    actions: null,
+    badge: null,
+    setTitle: mockSetTitle,
+    setActions: mockSetActions,
+    setBadge: mockSetBadge,
+  }),
 }));
 
 describe("PageLayout", () => {
-	it("renders nav and children", () => {
-		render(<PageLayout><p>content</p></PageLayout>);
-		expect(screen.getByTestId("site-nav")).toBeInTheDocument();
-		expect(screen.getByText("content")).toBeInTheDocument();
-	});
+  beforeEach(() => {
+    mockSetTitle.mockClear();
+    mockSetActions.mockClear();
+    mockSetBadge.mockClear();
+  });
 
-	it("renders h1 with title when title is provided", () => {
-		render(<PageLayout title="Settings"><p>x</p></PageLayout>);
-		expect(screen.getByRole("heading", { name: /settings/i })).toBeInTheDocument();
-	});
+  it("renders children", () => {
+    render(<PageLayout><p>content</p></PageLayout>);
+    expect(screen.getByText("content")).toBeInTheDocument();
+  });
 
-	it("renders icon alongside title", () => {
-		render(
-			<PageLayout title="Projects" icon={<BriefcaseIcon data-testid="icon" />}>
-				<p>x</p>
-			</PageLayout>
-		);
-		expect(screen.getByTestId("icon")).toBeInTheDocument();
-	});
+  it("calls setTitle with title on mount", () => {
+    render(<PageLayout title="Settings"><p>x</p></PageLayout>);
+    expect(mockSetTitle).toHaveBeenCalledWith("Settings");
+  });
 
-	it("renders actions when title is provided", () => {
-		render(
-			<PageLayout title="Projects" actions={<button>Add</button>}>
-				<p>x</p>
-			</PageLayout>
-		);
-		// Actions render in both the desktop header and the mobile strip
-		const buttons = screen.getAllByRole("button", { name: "Add" });
-		expect(buttons.length).toBeGreaterThan(0);
-	});
+  it("calls setActions with actions on mount", () => {
+    const btn = <button>Add</button>;
+    render(<PageLayout title="Projects" actions={btn}><p>x</p></PageLayout>);
+    expect(mockSetActions).toHaveBeenCalledWith(btn);
+  });
 
-	it("renders description when title is provided", () => {
-		render(
-			<PageLayout title="Report" description="Weekly summary">
-				<p>x</p>
-			</PageLayout>
-		);
-		expect(screen.getByText("Weekly summary")).toBeInTheDocument();
-	});
+  it("accepts icon prop without error", () => {
+    expect(() =>
+      render(
+        <PageLayout title="Projects" icon={<BriefcaseIcon data-testid="icon" />}>
+          <p>x</p>
+        </PageLayout>
+      )
+    ).not.toThrow();
+  });
 
-	it("does not render h1 when title is omitted", () => {
-		render(<PageLayout><p>content</p></PageLayout>);
-		expect(screen.queryByRole("heading")).not.toBeInTheDocument();
-	});
+  it("accepts description prop without error", () => {
+    expect(() =>
+      render(<PageLayout title="Report" description="Weekly summary"><p>x</p></PageLayout>)
+    ).not.toThrow();
+  });
 
-	it("renders children directly after nav when title is omitted", () => {
-		render(<PageLayout><div data-testid="inner">content</div></PageLayout>);
-		expect(screen.getByTestId("inner")).toBeInTheDocument();
-	});
+  it("accepts ReactNode title", () => {
+    const title = <><span>Archive</span><span>for user@example.com</span></>;
+    render(<PageLayout title={title}><p>x</p></PageLayout>);
+    expect(mockSetTitle).toHaveBeenCalledWith(title);
+  });
 
-	it("supports ReactNode title (e.g. title with conditional suffix)", () => {
-		render(
-			<PageLayout title={<><span>Archive</span><span>for user@example.com</span></>}>
-				<p>x</p>
-			</PageLayout>
-		);
-		expect(screen.getByText("Archive")).toBeInTheDocument();
-		expect(screen.getByText("for user@example.com")).toBeInTheDocument();
-	});
+  it("calls setTitle(null) when title is omitted", () => {
+    render(<PageLayout><p>content</p></PageLayout>);
+    expect(mockSetTitle).toHaveBeenCalledWith(null);
+  });
 
-	it("does not render actions when title is omitted", () => {
-		render(<PageLayout actions={<button>Add</button>}><p>content</p></PageLayout>);
-		expect(screen.queryByRole("button", { name: "Add" })).not.toBeInTheDocument();
-	});
+  it("does not render inline heading or navigation", () => {
+    render(<PageLayout title="Settings"><p>x</p></PageLayout>);
+    expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+  });
 });
