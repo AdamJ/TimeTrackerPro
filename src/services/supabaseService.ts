@@ -1225,7 +1225,11 @@ export class SupabaseService implements DataService {
 					await this.saveTodos(todos);
 				}
 
-				if (hasPlannedTasks) {
+				// Only migrate planned tasks if Supabase has none — prevents stale
+				// localStorage data (left over from a previous logout) from overwriting
+				// tasks that were created on another device after that logout.
+				const existingPlannedTasks = await this.getPlannedTasks();
+				if (hasPlannedTasks && existingPlannedTasks.length === 0) {
 					await this.savePlannedTasks(plannedTasks);
 				}
 			} else {
