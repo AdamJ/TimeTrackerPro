@@ -82,7 +82,7 @@ export const ProjectSheet: React.FC<ProjectSheetProps> = ({
     setIsAddingClient(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = name.trim();
     const trimmedClient = client.trim();
@@ -110,7 +110,7 @@ export const ProjectSheet: React.FC<ProjectSheetProps> = ({
       });
     }
 
-    forceSyncToDatabase();
+    await forceSyncToDatabase();
     onOpenChange(false);
   };
 
