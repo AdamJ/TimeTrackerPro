@@ -354,6 +354,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     const loadData = async () => {
       if (!dataService) return;
 
+      // Block mutations from firing against the new service until load completes.
+      todoLoadedRef.current = false;
+      plannedLoadedRef.current = false;
       setLoading(true);
       try {
         // Load current day
