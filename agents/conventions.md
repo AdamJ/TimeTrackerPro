@@ -6,8 +6,7 @@
 
 ### Indentation & Quotes
 
-- **Tabs, not spaces** — Always use tabs
-- **Tab width**: 2 spaces
+- **Spaces, not tabs** — Always use spaces with width = 2
 - **Quotes**: Always double quotes (`""`) — never single quotes (`''`)
 
 ### Component Patterns

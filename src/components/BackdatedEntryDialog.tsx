@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import {
-	AdaptiveDialog,
-	AdaptiveDialogContent,
-	AdaptiveDialogHeader,
-	AdaptiveDialogTitle,
-	AdaptiveDialogDescription,
-	AdaptiveDialogFooter,
-} from "@/components/ui/adaptive-dialog";
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogDescription,
+	DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +25,6 @@ import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import { Badge } from "@/components/ui/badge";
 import { DayRecord, Task } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
-import { useHaptics } from "@/hooks/useHaptics";
 import { formatDuration } from "@/utils/timeUtil";
 import { Calendar, Plus, Trash2, Loader2, Copy } from "lucide-react";
 
@@ -89,7 +88,6 @@ export const BackdatedEntryDialog: React.FC<BackdatedEntryDialogProps> = ({
 	onClose,
 }) => {
 	const { projects, categories, addBackdatedDay } = useTimeTracking();
-	const { successNotify, errorNotify } = useHaptics();
 
 	const [selectedDate, setSelectedDate] = useState(getYesterday());
 	const [dayStartTime, setDayStartTime] = useState("09:00");
@@ -151,7 +149,6 @@ export const BackdatedEntryDialog: React.FC<BackdatedEntryDialogProps> = ({
 		const errs = validate();
 		if (errs.length > 0) {
 			setErrors(errs);
-			errorNotify();
 			return;
 		}
 		setErrors([]);
@@ -193,10 +190,9 @@ export const BackdatedEntryDialog: React.FC<BackdatedEntryDialogProps> = ({
 			};
 
 			await addBackdatedDay(dayRecord);
-			successNotify();
 			onClose();
 		} catch {
-			// addBackdatedDay already shows a toast and calls errorNotify
+			// addBackdatedDay already shows a toast
 		} finally {
 			setIsSaving(false);
 		}
@@ -243,17 +239,17 @@ export const BackdatedEntryDialog: React.FC<BackdatedEntryDialogProps> = ({
 	const isValid = errors.length === 0;
 
 	return (
-		<AdaptiveDialog open={isOpen} onOpenChange={onClose} snapPoints={[0.85, 1]}>
-			<AdaptiveDialogContent className="max-w-[90dvw] max-h-[90dvh] overflow-y-auto">
-				<AdaptiveDialogHeader>
-					<AdaptiveDialogTitle className="flex items-center space-x-2">
+		<Dialog open={isOpen} onOpenChange={onClose}>
+			<DialogContent className="max-w-[90dvw] max-h-[90dvh] overflow-y-auto">
+				<DialogHeader>
+					<DialogTitle className="flex items-center space-x-2">
 						<Calendar className="w-5 h-5" />
 						<span>Add Past Entry</span>
-					</AdaptiveDialogTitle>
-					<AdaptiveDialogDescription>
+					</DialogTitle>
+					<DialogDescription>
 						Record time you worked on a previous day.
-					</AdaptiveDialogDescription>
-				</AdaptiveDialogHeader>
+					</DialogDescription>
+				</DialogHeader>
 
 				<div className="space-y-6 py-4">
 					{errors.length > 0 && (
@@ -512,7 +508,7 @@ export const BackdatedEntryDialog: React.FC<BackdatedEntryDialogProps> = ({
 					</Card>
 				</div>
 
-				<AdaptiveDialogFooter>
+				<DialogFooter>
 					<Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
 						Cancel
 					</Button>
@@ -530,8 +526,8 @@ export const BackdatedEntryDialog: React.FC<BackdatedEntryDialogProps> = ({
 							"Save Entry"
 						)}
 					</Button>
-				</AdaptiveDialogFooter>
-			</AdaptiveDialogContent>
-		</AdaptiveDialog>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 };

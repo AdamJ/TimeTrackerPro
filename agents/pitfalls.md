@@ -2,17 +2,17 @@
 
 ## Common Code Mistakes
 
-### 1. Using Spaces Instead of Tabs
+### 1. Using Tabs Instead of Spaces
 
 ```typescript
 // ❌ WRONG
 export const Component = () => {
-  return <div>Content < /div>; / / spaces;
+	return <div>Content</div>; // tabs
 };
 
 // ✅ CORRECT
 export const Component = () => {
-  return <div>Content < /div>; / / tabs;
+  return <div>Content</div>; // spaces (width = 2)
 };
 ```
 

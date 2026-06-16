@@ -10,16 +10,6 @@ vi.mock("@/hooks/useTimeTracking", () => ({
   })
 }));
 
-vi.mock("@/hooks/useHaptics", () => ({
-  useHaptics: () => ({
-    lightImpact: vi.fn(),
-    mediumImpact: vi.fn(),
-    heavyImpact: vi.fn(),
-    successNotify: vi.fn(),
-    errorNotify: vi.fn()
-  })
-}));
-
 vi.mock("@/hooks/useLongPress", () => ({
   useLongPress: () => ({})
 }));

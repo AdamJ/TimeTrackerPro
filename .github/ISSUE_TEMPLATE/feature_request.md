@@ -1,10 +1,10 @@
 ---
 name: Feature request
 about: Suggest a new feature for Timetraked. Features augment or impact end user experience and requires design input.
-title: "[Component] - [short description]"
+title: "Feature: [short description]"
 type: Feature
-assignees: ""
-
+assignees:
+  -  AdamJ
 ---
 
 **Is this a new component or an extension of an existing one?**

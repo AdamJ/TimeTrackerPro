@@ -8,14 +8,14 @@ git clone <repository-url>
 cd TimeTrackerPro
 
 # Install dependencies
-npm install
+pnpm install
 
 # Setup environment (optional — for cloud sync)
 cp .env.example .env
 # Edit .env with your Supabase credentials
 
 # Start development server
-npm run dev
+pnpm dev
 # Opens on http://localhost:8080
 ```
 
@@ -23,24 +23,24 @@ npm run dev
 
 ```bash
 # Development
-npm run dev              # Start dev server (localhost:8080)
-npm run build            # Build for production
-npm run build:dev        # Build with development mode
-npm run preview          # Preview production build
+pnpm dev              # Start dev server (localhost:8080)
+pnpm build            # Build for production
+pnpm build:dev        # Build with development mode
+pnpm preview          # Preview production build
 
 # Code Quality
-npm run lint             # Run ESLint
-npm run test             # Run Vitest tests
+pnpm lint             # Run ESLint
+pnpm test             # Run Vitest tests
 
 # Testing Scripts
-npm run test-full-import      # Test full CSV import
-npm run test-error-handling   # Test CSV error handling
-npm run test-csv-import       # Test standard CSV import
+pnpm test-full-import      # Test full CSV import
+pnpm test-error-handling   # Test CSV error handling
+pnpm test-csv-import       # Test standard CSV import
 
 # PWA Screenshot Generation
-npm run screenshots:install   # Install Playwright browsers (first time only)
-npm run screenshots           # Capture PWA screenshots (headless)
-npm run screenshots:headed    # Capture screenshots with visible browser
+pnpm screenshots:install   # Install Playwright browsers (first time only)
+pnpm screenshots           # Capture PWA screenshots (headless)
+pnpm screenshots:headed    # Capture screenshots with visible browser
 ```
 
 **PWA Screenshot Usage:**
@@ -84,9 +84,20 @@ git commit -m "refactor: improve data service caching"
 
 1. **Title Format**: `[Timetraked] <Descriptive Title>`
 2. **Description**: Clear explanation of changes
-3. **Wait for checks**: Don't merge until all tests pass
-4. **Add labels**: Appropriate PR labels
-5. **See**: `agents/pull_requests.md` for full guidelines
+3. **Run checks locally**: `pnpm lint && pnpm build && pnpm test`
+4. **Wait for CI**: Don't merge until all checks pass
+5. **Add labels**: Appropriate PR labels
+6. **See**: `agents/pull_requests.md` for full guidelines
+
+**Release-triggering prefixes** (determines CI version bump):
+
+| Prefix | Bump | Approval |
+| --- | --- | --- |
+| `major:` | Major | Code owner required |
+| `feat:` / `feature:` / `fix:` | Minor | No |
+| `patch:` | Patch | No |
+| `bump:` / `maint:` / `refactor:` / `a11y:` | Patch | No |
+| `docs:` / `chore:` / others | None | — |
 
 ---
 

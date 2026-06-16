@@ -1,7 +1,6 @@
 import React, { useRef, useState } from "react";
 import { PlannedTask, PlannedTaskStatus } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
-import { useHaptics } from "@/hooks/useHaptics";
 import { useLongPress } from "@/hooks/useLongPress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,13 +67,11 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
     movePlannedTask,
     pullPlannedTaskToDay,
   } = useTimeTracking();
-  const { lightImpact, mediumImpact } = useHaptics();
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const longPressHandlers = useLongPress(() => {
-    mediumImpact();
     if (contextMenuTriggerRef.current) {
       contextMenuTriggerRef.current.dispatchEvent(
         new MouseEvent("contextmenu", { bubbles: true, cancelable: true }),
@@ -171,10 +168,7 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
                         )}
                         <DropdownMenuGroup>
                           <DropdownMenuItem
-                            onClick={() => {
-                              lightImpact();
-                              setShowEditDialog(true);
-                            }}
+                            onClick={() => setShowEditDialog(true)}
                           >
                             <PencilIcon className="w-4 h-4 mr-2" />
                             Edit
@@ -203,10 +197,7 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
                           <DropdownMenuItem
-                            onClick={() => {
-                              mediumImpact();
-                              setShowDeleteDialog(true);
-                            }}
+                            onClick={() => setShowDeleteDialog(true)}
                             variant="destructive"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
@@ -233,10 +224,7 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
             </>
           )}
           <ContextMenuItem
-            onClick={() => {
-              lightImpact();
-              setShowEditDialog(true);
-            }}
+            onClick={() => setShowEditDialog(true)}
           >
             <Edit className="w-4 h-4 mr-2" />
             Edit Task
@@ -259,10 +247,7 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
           </ContextMenuSub>
           <ContextMenuSeparator />
           <ContextMenuItem
-            onClick={() => {
-              mediumImpact();
-              setShowDeleteDialog(true);
-            }}
+            onClick={() => setShowDeleteDialog(true)}
             className="text-destructive focus:text-destructive"
           >
             <Trash2 className="w-4 h-4 mr-2" />

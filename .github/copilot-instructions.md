@@ -17,14 +17,14 @@ This repository uses **GitHub Copilot** to assist with code generation, refactor
 2. **Use inline suggestions** – Press `Ctrl+Enter` (Windows/Linux) or `⌘+Enter` (macOS) to accept a suggestion.
 3. **Cycle suggestions** – Press `Ctrl+Space` (Windows/Linux) or `⌘+Space` (macOS) to view alternative completions.
 4. **Review the diff** – After accepting, review the changes in the *Source Control* panel.
-5. **Run tests** – Execute `npm test` or `npm run test:watch` to confirm the change.
+5. **Run tests** – Execute `pnpm test` or `pnpm test:watch` to confirm the change.
 
 ## 3. Code Review Checklist
 
 When reviewing Copilot‑generated code, check:
 
 - **Type safety** – All new types are correctly inferred or explicitly declared.
-- **Linting** – `npm run lint` passes without errors.
+- **Linting** – `pnpm lint` passes without errors.
 - **Security** – No hard‑coded secrets or unsafe API usage.
 - **Performance** – No obvious O(n²) loops or unnecessary re‑renders.
 - **Documentation** – Add JSDoc comments if the function is non‑trivial.
@@ -54,7 +54,7 @@ When reviewing Copilot‑generated code, check:
 
 1. **Create a branch** for your feature or bug fix.
 2. **Use Copilot** to draft code, but always review.
-3. **Run `npm run lint && npm test`** before committing.
+3. **Run `pnpm lint && pnpm test`** before committing.
 4. **Open a PR** and request a review.
 5. **Address feedback** and re‑run tests.
 

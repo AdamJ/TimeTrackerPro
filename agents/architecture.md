@@ -148,3 +148,25 @@ const service = createDataService(isAuthenticated);
 - **Login**: Migrates localStorage data to Supabase (smart merge)
 - **Logout**: Syncs Supabase data to localStorage for offline access
 - **Logic**: Compares data freshness, prevents overwriting newer data
+
+---
+
+## Client Management
+
+Clients are a first-class entity distinct from projects. A project has an optional client; multiple projects can share the same client. Clients can be archived independently of projects (but not if they own active projects).
+
+**Data shape**:
+- `clients` state in TimeTrackingContext: `Client[]`
+- Persisted separately from other data (single-row upserts, not bulk save)
+- Guest mode: localStorage blob (`localStorageService/clients.ts`)
+- Authenticated mode: Supabase `clients` table with RLS
+
+**Reconciliation** (runs at app init, idempotent):
+- Scans all projects for unique `client` names
+- Adds any missing client names as active clients
+- Prevents orphaning clients that users created during CSV import
+
+**Persistence pattern**:
+- Add/Edit: `persistClient(client)` → single-row upsert
+- Archive/Restore: `persistClients()` → full list reconcile (select distinct, upsert)
+- Not part of `forceSyncToDatabase()` bulk save

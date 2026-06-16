@@ -36,8 +36,8 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 ```bash
 git clone https://github.com/AdamJ/TimeTrackerPro.git
 cd TimeTrackerPro
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Open [http://localhost:8080](http://localhost:8080) in your browser.
@@ -52,42 +52,42 @@ Open [http://localhost:8080](http://localhost:8080) in your browser.
 
 ```bash
 # Development
-npm run dev              # Start dev server (localhost:8080)
-npm run build            # Production build
-npm run preview          # Preview production build
+pnpm dev                 # Start dev server (localhost:8080)
+pnpm build               # Production build
+pnpm preview             # Preview production build
 
 # Code Quality
-npm run lint             # ESLint
-npm run test             # Vitest unit tests (187 tests across 14 files)
+pnpm lint                # ESLint
+pnpm test                # Vitest unit tests (187 tests across 14 files)
 
 # PWA Screenshots
-npm run screenshots:install   # Install Playwright (first time)
-npm run screenshots           # Capture screenshots (headless)
+pnpm screenshots:install   # Install Playwright (first time)
+pnpm screenshots           # Capture screenshots (headless)
 
 # CSV Import Testing
-npm run test-csv-import
-npm run test-full-import
-npm run test-error-handling
+pnpm test-csv-import
+pnpm test-full-import
+pnpm test-error-handling
 ```
 
 ---
 
 ## Development Setup
 
-**Prerequisites:** Node.js 18+ and npm. Supabase account is optional (guest mode works without it).
+**Prerequisites:** Node.js 18+ and pnpm. Supabase account is optional (guest mode works without it).
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Before committing:
 
 ```bash
-npm run lint && npm run build
+pnpm lint && pnpm build
 ```
 
-See [CLAUDE.md](CLAUDE.md) for code style requirements (tabs, double quotes, `@/` imports). See [README-EXT.md](README-EXT.md) for full developer documentation.
+See [AGENTS.md](AGENTS.md) for code style requirements (tabs, double quotes, `@/` imports). See [README-EXT.md](README-EXT.md) for full developer documentation.
 
 ---
 
@@ -101,7 +101,6 @@ Detailed documentation lives in [README-EXT.md](README-EXT.md):
 - [Technical Architecture](README-EXT.md#technical-architecture) — stack, patterns, data flow, project structure, conventions
 - [Development Workflow](README-EXT.md#development-workflow) — git workflow, testing, adding features
 - [Documentation Index](README-EXT.md#documentation-index) — links to all docs
-- [iOS Screenshots](README-EXT.md#ios-screenshots)
 
 ### Contributing
 
@@ -129,9 +128,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 
 - **Backdated entry creation** — "Add Past Entry" button on Archive page opens a multi-step dialog to log tasks for any past date
 - **Kanban planning board** — drag-and-drop task planning view (`KanbanBoard`, `KanbanColumn`, `PlannedTaskCard`)
-- Apple HIG pass for native iOS: bottom sheets, haptic feedback, status bar theming, page transitions, and long-press context menus
 - Persistent report summaries saved to localStorage; markdown preview/export in the report output panel
-- Weekly Report distinguishes Gemini API failure modes (rate limit, quota, overload, key issues)
 - `AppSidebar` collapsible sidebar navigation with live session timer; `PageTitleContext` decouples page header state from layout
 
 ---

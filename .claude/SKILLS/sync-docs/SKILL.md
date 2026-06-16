@@ -19,7 +19,7 @@ It keeps the four documentation files consistent with the actual codebase state.
 | `CHANGELOG.md` | Any user-visible or developer-visible change |
 | `README.md` | Features, commands, install steps, or quick-start change |
 | `README-EXT.md` | Detailed usage, architecture, stack, conventions, or workflow change |
-| `CLAUDE.md` | Tech stack, critical code style rules, key files, or iOS config change |
+| `AGENTS.md` | Tech stack, critical code style rules, key files |
 
 ## Steps
 
@@ -27,16 +27,16 @@ It keeps the four documentation files consistent with the actual codebase state.
 
 ```bash
 git diff main...HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' \
-  'package.json' 'vite.config.ts' 'tailwind.config.ts' \
-  'capacitor.config.ts' 'eslint.config.js'
+  'package.json' 'vite.config.ts' 'vite.electron.config.ts' \
+  'eslint.config.js' 'electron/main.ts'
 ```
 
 If still on the same branch without a comparison target, use:
 
 ```bash
 git diff HEAD~1 -- '*.ts' '*.tsx' '*.js' '*.jsx' \
-  'package.json' 'vite.config.ts' 'tailwind.config.ts' \
-  'capacitor.config.ts' 'eslint.config.js'
+  'package.json' 'vite.config.ts' 'vite.electron.config.ts' \
+  'eslint.config.js' 'electron/main.ts'
 ```
 
 Read the diff output carefully before touching any documentation file.
@@ -60,7 +60,7 @@ Read the diff output carefully before touching any documentation file.
 Update only if one or more of the following changed:
 
 - A user-facing feature was added or removed
-- An `npm run` command was added, renamed, or removed
+- A `pnpm` command was added, renamed, or removed
 - The install/quick-start steps changed
 - The "Recent highlights" section in the Changelog block is stale
 
@@ -82,14 +82,13 @@ Update only the section(s) directly affected by the diff:
 
 Do **not** rewrite or reformat sections that are unaffected.
 
-### 5 — Update CLAUDE.md
+### 5 — Update AGENTS.md
 
 Update only if one or more of the following changed:
 
 - **Technology Stack table** — new or removed dependency
 - **Critical Code Style** — lint rule or formatting convention change
 - **Key Files table** — a key file was added, renamed, or its purpose changed
-- **iOS Environment / Capacitor** — iOS build config, scripts, or deployment target changed
 - **Pre-Commit Checklist** — new required check added
 
 Do **not** modify the "Agent Sub-Documents" table or general narrative unless the files it references changed.
@@ -99,13 +98,13 @@ Do **not** modify the "Agent Sub-Documents" table or general narrative unless th
 Quickly cross-check that the four files don't contradict each other:
 
 - CHANGELOG entry matches what README/README-EXT describe
-- Any new npm script in CLAUDE.md also appears in README.md's commands table
-- Tech stack table in CLAUDE.md and README-EXT.md agree
+- Any new pnpm script in AGENTS.md also appears in README.md's commands table
+- Tech stack table in AGENTS.md and README-EXT.md agree
 
 ### 7 — Commit the updates
 
 ```bash
-git add CHANGELOG.md README.md README-EXT.md CLAUDE.md
+git add CHANGELOG.md README.md README-EXT.md AGENTS.md
 git diff --staged --stat
 ```
 

@@ -4,19 +4,19 @@
 
 ```bash
 # Unit tests
-npx vitest run
+pnpm test
 
 # Watch mode
-npx vitest
+pnpm test:watch
 
 # Single file
-npx vitest run src/utils/calculationUtils.test.ts
+pnpm test src/utils/calculationUtils.test.ts
 
 # Linting
-npm run lint
+pnpm lint
 
 # Type checking (via build)
-npm run build
+pnpm build
 ```
 
 ---
@@ -78,18 +78,9 @@ vi.mock("@/hooks/useTimeTracking", () => ({
 }));
 ```
 
-For components that use haptics / long-press:
+For components that use long-press:
 
 ```tsx
-vi.mock("@/hooks/useHaptics", () => ({
-  useHaptics: () => ({
-    lightImpact: vi.fn(),
-    mediumImpact: vi.fn(),
-    heavyImpact: vi.fn(),
-    successNotify: vi.fn(),
-    errorNotify: vi.fn()
-  })
-}));
 vi.mock("@/hooks/useLongPress", () => ({ useLongPress: () => ({}) }));
 ```
 

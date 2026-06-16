@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
-  AdaptiveDialog,
-  AdaptiveDialogContent,
-  AdaptiveDialogFooter,
-  AdaptiveDialogHeader,
-  AdaptiveDialogTitle,
-} from "@/components/ui/adaptive-dialog";
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -206,14 +206,14 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
   };
 
   return (
-    <AdaptiveDialog open={isOpen} onOpenChange={onClose} snapPoints={[0.85, 1]}>
-      <AdaptiveDialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-        <AdaptiveDialogHeader>
-          <AdaptiveDialogTitle className="flex items-center space-x-2">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <DialogHeader>
+          <DialogTitle className="flex items-center space-x-2">
             <Clock className="w-5 h-5" />
             <span>Edit Task</span>
-          </AdaptiveDialogTitle>
-        </AdaptiveDialogHeader>
+          </DialogTitle>
+        </DialogHeader>
 
         <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="space-y-6">
@@ -459,7 +459,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
         </div>
         </div>
 
-        <AdaptiveDialogFooter>
+        <DialogFooter>
           <Button variant="ghost" onClick={handleCancel}>
             Cancel
           </Button>
@@ -470,8 +470,8 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
             <Save className="w-4 h-4 mr-2" />
             {hasChanges ? 'Save Changes' : 'No Changes'}
           </Button>
-        </AdaptiveDialogFooter>
-      </AdaptiveDialogContent>
-    </AdaptiveDialog>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
