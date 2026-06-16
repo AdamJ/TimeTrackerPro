@@ -55,7 +55,7 @@ Cover all of the following:
 Run the tests to confirm they fail for the right reason:
 
 ```bash
-npm run test -- --run
+pnpm test -- --run
 ```
 
 All new tests must fail at this point. If a test passes without implementation, the test is too weak — strengthen it.
@@ -65,8 +65,8 @@ All new tests must fail at this point. If a test passes without implementation, 
 Build the feature in small increments, running tests after each meaningful change:
 
 ```bash
-npm run test -- --run
-npm run lint
+pnpm test -- --run
+pnpm lint
 ```
 
 Follow project code style — **non-negotiable**:
@@ -92,8 +92,8 @@ Continue iterating until:
 
 - [ ] All new tests pass
 - [ ] All pre-existing tests still pass
-- [ ] `npm run lint` exits with no errors
-- [ ] `npm run build` succeeds
+- [ ] `pnpm lint` exits with no errors
+- [ ] `pnpm build` succeeds
 
 **Do not ask for help or report partial progress.** Debug failures yourself:
 

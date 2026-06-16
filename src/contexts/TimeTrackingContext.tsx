@@ -27,8 +27,6 @@ import {
 } from '@/utils/exportUtils';
 import { parseTaskChecklist } from '@/utils/checklistUtils';
 import { SCHEMA_VERSION } from '@/services/localStorageService';
-import { useAppLifecycle } from '@/hooks/useAppLifecycle';
-import { useHaptics } from '@/hooks/useHaptics';
 
 export interface Task {
   id: string;
@@ -294,8 +292,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const [dayEndTime, setDayEndTime] = useState<Date | null>(null);
   const [plannedTasks, setPlannedTasks] = useState<PlannedTask[]>([]);
 
-  const { successNotify, errorNotify, lightImpact, mediumImpact } = useHaptics();
-
   // Debounce refs to manage timeouts
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentTaskTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -560,7 +556,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           "❌ Manual sync partially failed:",
           failed.map((f) => (f as PromiseRejectedResult).reason)
         );
-        errorNotify();
         // Do not mark sync as successful when any save failed
         return;
       }
@@ -569,11 +564,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       setHasUnsavedChanges(false);
     } catch (error) {
       console.error('❌ Manual sync failed:', error);
-      errorNotify();
     } finally {
       setIsSyncing(false);
     }
-  }, [dataService, stableSaveCurrentDay, categories, archivedDays, todoItems, errorNotify]);
+  }, [dataService, stableSaveCurrentDay, categories, archivedDays, todoItems]);
 
   // Load current day data (for periodic sync)
   const loadCurrentDay = useCallback(async () => {
@@ -621,24 +615,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [dataService]);
 
-  // On iOS/Capacitor, useAppLifecycle fires at the Swift layer (appStateChange)
-  // before WKWebView is frozen — more reliable than beforeunload or visibilitychange.
-  // On web, it falls back to visibilitychange automatically.
-  // Uses latestStateRef to avoid the same stale-closure race as beforeunload.
-  const handleBackground = useCallback(() => {
-    const state = latestStateRef.current;
-    if (!state.isDayStarted && state.tasks.length === 0) return;
-    try {
-      localStorage.setItem(
-        STORAGE_KEYS.CURRENT_DAY,
-        JSON.stringify({ ...state, _v: SCHEMA_VERSION })
-      );
-    } catch {
-      // best effort
-    }
-  }, []);
-
-  useAppLifecycle(handleBackground);
 
   // Sync to backend when coming back online
   useEffect(() => {
@@ -768,7 +744,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setTasks(updatedTasks);
     setCurrentTask(newTask);
     setHasUnsavedChanges(true);
-    successNotify();
     // Save with freshly computed state to avoid reading from stale latestStateRef
     if (dataService) {
       dataService.saveCurrentDay({ isDayStarted, dayStartTime, currentTask: newTask, tasks: updatedTasks })
@@ -879,7 +854,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         }
 
         setHasUnsavedChanges(false);
-        successNotify();
 
         // Show success notification to user
         toast({
@@ -1161,7 +1135,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         await dataService.saveArchivedDays(updatedDays);
         setHasUnsavedChanges(false);
-        successNotify();
         toast({
           title: "Entry Added",
           description: `${day.tasks.length} task(s) saved for ${day.date}`,
@@ -1169,7 +1142,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         });
       } catch (error) {
         setArchivedDays(prev => prev.filter(d => d.id !== day.id));
-        errorNotify();
         toast({
           title: "Save Failed",
           description: "Could not save the backdated entry. Please try again.",
@@ -1356,8 +1328,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     plannedTasksRef.current = next;
     setPlannedTasks(next);
     if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(newTask);
-    successNotify();
-  }, [successNotify]);
+  }, []);
 
   const updatePlannedTask = useCallback((id: string, updates: Partial<PlannedTask>) => {
     const now = new Date().toISOString();
@@ -1375,8 +1346,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     plannedTasksRef.current = next;
     setPlannedTasks(next);
     if (plannedLoadedRef.current) void dataServiceRef.current?.deletePlannedTask(id);
-    mediumImpact();
-  }, [mediumImpact]);
+  }, []);
 
   const movePlannedTask = useCallback((id: string, status: PlannedTaskStatus) => {
     const now = new Date().toISOString();
@@ -1387,8 +1357,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       const updated = next.find(t => t.id === id);
       if (updated) void dataServiceRef.current?.upsertPlannedTask(updated);
     }
-    lightImpact();
-  }, [lightImpact]);
+  }, []);
 
   const pullPlannedTaskToDay = (id: string) => {
     if (!isDayStarted) {

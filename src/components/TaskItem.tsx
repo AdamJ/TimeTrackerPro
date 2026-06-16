@@ -2,7 +2,6 @@ import React, { useState, useRef } from "react";
 import { Task } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { Button } from "@/components/ui/button";
-import { useHaptics } from "@/hooks/useHaptics";
 import { useLongPress } from "@/hooks/useLongPress";
 import {
   ContextMenu,
@@ -41,11 +40,9 @@ export const TaskItem: React.FC<TaskItemProps> = ({
   const { categories } = useTimeTracking();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const { lightImpact, mediumImpact } = useHaptics();
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
 
   const longPressHandlers = useLongPress(() => {
-    mediumImpact();
     if (contextMenuTriggerRef.current) {
       contextMenuTriggerRef.current.dispatchEvent(
         new MouseEvent("contextmenu", { bubbles: true, cancelable: true })
@@ -122,7 +119,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
             <div className="flex space-x-2 ml-4">
               <Button
-                onClick={() => { mediumImpact(); setShowDeleteDialog(true); }}
+                onClick={() => setShowDeleteDialog(true)}
                 size="sm"
                 variant="outline"
                 aria-label={`Delete task: ${task.title}`}
@@ -132,7 +129,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 <span className="hidden sm:block">Delete</span>
               </Button>
               <Button
-                onClick={() => { lightImpact(); setShowEditDialog(true); }}
+                onClick={() => setShowEditDialog(true)}
                 size="sm"
                 variant="outline"
                 aria-label={`Edit task: ${task.title}`}
@@ -149,14 +146,14 @@ export const TaskItem: React.FC<TaskItemProps> = ({
         </ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuItem
-            onClick={() => { lightImpact(); setShowEditDialog(true); }}
+            onClick={() => setShowEditDialog(true)}
           >
             <Edit className="w-4 h-4 mr-2" />
             Edit Task
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem
-            onClick={() => { mediumImpact(); setShowDeleteDialog(true); }}
+            onClick={() => setShowDeleteDialog(true)}
             className="text-destructive focus:text-destructive"
           >
             <Trash2 className="w-4 h-4 mr-2" />

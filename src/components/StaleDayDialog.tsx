@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import {
-	AdaptiveDialog,
-	AdaptiveDialogContent,
-	AdaptiveDialogHeader,
-	AdaptiveDialogTitle,
-	AdaptiveDialogDescription,
-	AdaptiveDialogFooter,
-} from "@/components/ui/adaptive-dialog";
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogDescription,
+	DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { TimePicker } from "@/components/ui/scroll-time-picker";
@@ -40,19 +40,19 @@ export const StaleDayDialog: React.FC = () => {
 	};
 
 	return (
-		<AdaptiveDialog open={isDayStale} onOpenChange={() => {}} snapPoints={[0.6, 1]}>
-			<AdaptiveDialogContent>
-				<AdaptiveDialogHeader>
-					<AdaptiveDialogTitle className="flex items-center gap-2">
+		<Dialog open={isDayStale} onOpenChange={() => {}}>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle className="flex items-center gap-2">
 						<AlertTriangle className="w-5 h-5 text-warning" />
 						<span>Unfinished Work Day</span>
-					</AdaptiveDialogTitle>
-					<AdaptiveDialogDescription>
+					</DialogTitle>
+					<DialogDescription>
 						You have an open work day from{" "}
 						<strong>{dayStartTime ? formatDateLabel(dayStartTime) : "a previous day"}</strong>.
 						When did you finish working?
-					</AdaptiveDialogDescription>
-				</AdaptiveDialogHeader>
+					</DialogDescription>
+				</DialogHeader>
 
 				<div className="py-4">
 					<Label htmlFor="stale-end-time">End Time</Label>
@@ -64,7 +64,7 @@ export const StaleDayDialog: React.FC = () => {
 					/>
 				</div>
 
-				<AdaptiveDialogFooter>
+				<DialogFooter>
 					<Button
 						variant="outline"
 						onClick={discardDay}
@@ -75,8 +75,8 @@ export const StaleDayDialog: React.FC = () => {
 					<Button onClick={handleEndDay}>
 						End Day at {selectedTime}
 					</Button>
-				</AdaptiveDialogFooter>
-			</AdaptiveDialogContent>
-		</AdaptiveDialog>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 };

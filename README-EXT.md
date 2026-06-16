@@ -36,7 +36,6 @@ For the main overview, see [README.md](README.md).
   - [Adding Features](#adding-features)
   - [Customizing Markdown Styles](#customizing-markdown-styles)
 - [Documentation Index](#documentation-index)
-- [iOS Screenshots](#ios-screenshots)
 
 ---
 
@@ -117,7 +116,7 @@ Clients populate the project form's client dropdown. On first run the client lis
 Prepare a CSV using the [template format](docs/CSV_TEMPLATES_README.md), then use the import functionality or run a test script:
 
 ```bash
-npm run test-csv-import
+pnpm test-csv-import
 ```
 
 ### Markdown in Task Descriptions
@@ -176,21 +175,6 @@ Task descriptions support **GitHub Flavored Markdown (GFM)**:
 
 **Native-Like Experience:** Standalone window, app icon, splash screen on launch.
 
-### iOS Native App (Capacitor)
-
-The Capacitor build (`VITE_IOS_BUILD=true`) includes additional Apple HIG enhancements that are inactive in the PWA:
-
-| Feature                      | Detail                                                                                                       |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **Bottom sheets**            | All edit/confirm dialogs slide up as swipe-to-dismiss sheets instead of centered overlays                    |
-| **Haptic feedback**          | Light impact on navigation taps, medium on destructive intent, success/error notifications on outcomes       |
-| **Status bar theming**       | Status bar text colour tracks light/dark mode; content extends behind the status bar via `black-translucent` |
-| **iOS navigation header**    | Sticky 17 px title bar with safe-area-inset-top padding and back chevron replaces the desktop nav bar        |
-| **Keyboard avoidance**       | Viewport shrinks above the software keyboard; bottom sheet forms scroll above it automatically               |
-| **Long-press context menus** | Hold a task card to reveal Edit / Delete without on-card buttons cluttering the layout                       |
-| **Page transitions**         | Subtle 280 ms slide-in animation on route changes, matching the iOS push-navigation idiom                    |
-| **Rubber-band bounce**       | Native scroll bounce restored on the main scroll container                                                   |
-
 ---
 
 ## Authentication & Storage
@@ -208,7 +192,7 @@ Timetraked uses an **action-triggered save** approach optimized for single-devic
 
 1. **In-Memory First** — changes update React state immediately.
 2. **Action Saves** — every task mutation (start, update, delete) and day lifecycle event (start day, end day) triggers an immediate `saveCurrentDay()` call with the freshly computed state, keeping localStorage and Supabase in sync without a debounce delay.
-3. **Emergency Backups** — on iOS, `@capacitor/app`'s `appStateChange` event fires at the Swift layer before WKWebView freezes, giving a reliable save window; on web, `visibilitychange` and `beforeunload` write a synchronous localStorage snapshot as a last-resort fallback before JavaScript execution is suspended.
+3. **Emergency Backups** — on web, `visibilitychange` and `beforeunload` write a synchronous localStorage snapshot as a last-resort fallback before JavaScript execution is suspended.
 4. **Manual Sync** — the sync button in the navigation saves all data types (tasks, projects, categories, archived days, todos) in one batch, useful after recovering from an error.
 
 When you sign in, your `localStorage` data automatically migrates to Supabase (timestamps compared to prevent overwriting newer data, no data loss). When you sign out, Supabase data syncs back to `localStorage`.
@@ -230,13 +214,11 @@ cp .env.example .env
 
 **4. Apply the database schema** from `supabase/migrations/` (see [Schema Compatibility](docs/SCHEMA_COMPATIBILITY.md)).
 
-**5. Restart the dev server:** `npm run dev`
+**5. Restart the dev server:** `pnpm dev`
 
 > ⚠️ Never commit your `.env` file to version control.
 
 ### Authentication Flow
-
-**Sign Up:** Click "Sign In" → "Sign Up" tab → enter email and password → verify email → sign in.
 
 **Sign In:** Click "Sign In" → enter credentials → data migrates from `localStorage`.
 
@@ -267,7 +249,6 @@ See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) and [docs/SECURITY.md](docs
 | Forms        | React Hook Form + Zod                       |
 | Backend      | Supabase (optional) or localStorage         |
 | PWA          | Vite PWA Plugin + Workbox                   |
-| Native iOS   | Capacitor 8                                 |
 | Testing      | Vitest + React Testing Library + Playwright |
 
 ### Architecture Patterns
@@ -301,8 +282,6 @@ const service = createDataService(isAuthenticated);
 
 - `useAuth()` — authentication state and methods
 - `useTimeTracking()` — time tracking state and operations
-- `useHaptics()` — Capacitor haptic feedback (no-op on web)
-- `useAppLifecycle()` — Capacitor app background/foreground events
 - `useLongPress()` — 500 ms hold detector for touch context menus
 - `useReportStorage()` — persists and restores generated AI report summaries
 - `useReportSummary()` — calls Gemini API to generate weekly summaries
@@ -343,17 +322,20 @@ Precache:      App shell (HTML, CSS, JS, icons)
 src/
 ├── components/
 │   ├── ui/                       # Base components (49+ files, including adaptive-dialog)
+│   ├── AppSidebar.tsx            # Collapsible sidebar nav (replaces top Navigation)
 │   ├── ArchiveEditDialog.tsx
 │   ├── ArchiveFilter.tsx
 │   ├── ArchiveItem.tsx
 │   ├── AuthDialog.tsx
+│   ├── BackdatedEntryDialog.tsx
 │   ├── CategoryManagement.tsx
+│   ├── CategorySheet.tsx
+│   ├── ClientManagement.tsx
+│   ├── ClientSheet.tsx
 │   ├── DaySummary.tsx
 │   ├── DeleteConfirmationDialog.tsx
 │   ├── ExportDialog.tsx
 │   ├── InstallPrompt.tsx
-│   ├── AppSidebar.tsx             # Collapsible sidebar nav (replaces top Navigation)
-│   ├── IosPageHeader.tsx          # iOS-only sticky nav bar
 │   ├── KanbanBoard.tsx            # Kanban planning board
 │   ├── KanbanColumn.tsx
 │   ├── MarkdownDisplay.tsx
@@ -364,11 +346,14 @@ src/
 │   ├── PlannedTaskCard.tsx
 │   ├── PlannedTaskDialog.tsx
 │   ├── ProjectManagement.tsx
+│   ├── ProjectSheet.tsx
+│   ├── PwaUpdatePrompt.tsx
 │   ├── StaleDayDialog.tsx
 │   ├── StartDayDialog.tsx
 │   ├── SummaryOutput.tsx
 │   ├── SyncStatus.tsx
 │   ├── TaskEditDialog.tsx
+│   ├── TaskItemInArchiveDialog.tsx
 │   ├── TaskItem.tsx
 │   ├── TaskTrackingPanel.tsx
 │   ├── UpdateNotification.tsx
@@ -379,23 +364,24 @@ src/
 ├── contexts/
 │   ├── AuthContext.tsx
 │   ├── OfflineContext.tsx         # Online/offline detection and toasts
+│   ├── PageTitleContext.tsx
 │   └── TimeTrackingContext.tsx
 ├── hooks/
-│   ├── use-mobile.tsx
-│   ├── use-toast.tsx
-│   ├── useAppLifecycle.ts        # @capacitor/app background persistence
-│   ├── useAuth.tsx
-│   ├── useHaptics.ts             # @capacitor/haptics wrapper
+│   ├── use-mobile.tsx            # Mobile-specific state management
+│   ├── use-toast.tsx             # Toast notification state management
+│   ├── useAuth.tsx               # Authentication state management
 │   ├── useLongPress.ts           # 500 ms hold detector
+│   ├── usePageTitle.ts           # Page title state management
 │   ├── useReportStorage.ts       # Persist generated report summaries
 │   ├── useReportSummary.ts       # Gemini AI summary generation
-│   └── useTimeTracking.tsx
+│   └── useTimeTracking.tsx       # Time tracking state management
 ├── lib/
 │   ├── supabase.ts               # Supabase client and call telemetry
 │   └── utils.ts                  # Helper functions
 ├── pages/
 │   ├── Archive.tsx               # Archived days
 │   ├── Categories.tsx            # Category management
+│   ├── Client.tsx                # Client management
 │   ├── Index.tsx                 # Dashboard (start/end day, stats)
 │   ├── NotFound.tsx              # 404 page
 │   ├── ProjectList.tsx           # Project management
@@ -403,8 +389,8 @@ src/
 │   ├── Settings.tsx              # App settings
 │   └── TaskList.tsx              # Active task list and NewTaskForm
 ├── services/
-│   ├── dataService.ts            # Factory — returns LocalStorage or Supabase impl
 │   ├── localStorageService/      # localStorage implementation (per-entity modules)
+│   ├── dataService.ts            # Factory — returns LocalStorage or Supabase impl
 │   └── supabaseService.ts        # Supabase implementation (1100+ lines)
 ├── utils/
 │   ├── calculationUtils.ts       # Revenue and hours calculations
@@ -412,7 +398,9 @@ src/
 │   ├── exportUtils.ts            # CSV import/export
 │   ├── reportUtils.ts            # Report grouping and formatting
 │   └── timeUtil.ts               # Time formatting
+├── App.css
 ├── App.tsx
+├── index.css
 └── main.tsx
 ```
 
@@ -420,14 +408,14 @@ src/
 
 | Rule        | Requirement                                          |
 | ----------- | ---------------------------------------------------- |
-| Indentation | Tabs only, 2-space display width                     |
+| Indentation | Spaces (not tabs), width = 2 display width           |
 | Quotes      | Double quotes always (`""`)                          |
 | Imports     | `@/` alias — never relative paths (`../../`)         |
 | Components  | PascalCase (`TaskItem.tsx`)                          |
 | Hooks       | camelCase with `use` prefix (`useAuth.tsx`)          |
 | Utilities   | camelCase (`timeUtil.ts`)                            |
 | Constants   | UPPER_SNAKE_CASE (`STORAGE_KEYS`)                    |
-| Styling     | Radix/theme variables — never custom Tailwind colors |
+| Styling     | Prefer semantic tokens (`bg-primary`, `bg-muted`, etc.) for theming. Radix scale classes (`bg-mauve-3`, `text-blue-11`, `border-violet-6`) are allowed for explicit color needs — use steps 1-2 for backgrounds, 3-5 for component fills, 6-8 for borders, 9-10 for solid fills, 11-12 for text. Never use arbitrary Tailwind palette colors like `bg-blue-500`. |
 
 See [CLAUDE.md](CLAUDE.md) for comprehensive conventions.
 
@@ -484,7 +472,7 @@ git commit -m "refactor: split localStorageService into modules"
 | `bump:` / `maint:` / `refactor:` / `a11y:` | Patch | No                                               |
 | `docs:` / `chore:` / others                | None  | —                                                |
 
-**Pull Requests:** Title format `[Timetraked] Descriptive Title`. See [agents/pull_requests.md](agents/pull_requests.md) for full guidelines.
+**Pull Requests:** Title format `[prefix]: Descriptive Title`. See [agents/pull_requests.md](agents/pull_requests.md) for full guidelines.
 
 ### Testing
 
@@ -508,12 +496,12 @@ git commit -m "refactor: split localStorageService into modules"
 **Automated tests:**
 
 ```bash
-npm run test                 # Vitest unit tests
-npm run test-csv-import      # Standard CSV import
-npm run test-full-import     # Full CSV import
-npm run test-error-handling  # CSV error handling
-npm run screenshots:install  # Install Playwright (first time)
-npm run screenshots          # Capture PWA screenshots
+pnpm test                 # Vitest unit tests
+pnpm run test-csv-import      # Standard CSV import
+pnpm run test-full-import     # Full CSV import
+pnpm run test-error-handling  # CSV error handling
+pnpm run screenshots:install  # Install Playwright (first time)
+pnpm run screenshots          # Capture PWA screenshots
 ```
 
 ### Adding Features
@@ -570,8 +558,8 @@ const MyPage = lazy(() => import("./pages/MyPage"));
 
 | Document                                                               | Description                               |
 | ---------------------------------------------------------------------- | ----------------------------------------- |
-| [CLAUDE.md](CLAUDE.md)                                                 | Comprehensive codebase guide — start here |
-| [AGENTS.md](AGENTS.md)                                                 | Quick agent instructions and workflows    |
+| [CLAUDE.md](CLAUDE.md)                                                 | Specific for Claude - references AGENTS.md |
+| [AGENTS.md](AGENTS.md)                                                 | Comprehensive guide    |
 | [agents/styles.md](agents/styles.md)                                   | UI/UX style guidelines                    |
 | [agents/pull_requests.md](agents/pull_requests.md)                     | PR creation and review rules              |
 | [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md)                       | Auth setup and configuration              |
@@ -591,16 +579,3 @@ const MyPage = lazy(() => import("./pages/MyPage"));
 - [React Router](https://reactrouter.com) — routing
 - [Supabase Docs](https://supabase.com/docs) — backend
 - [Vite](https://vitejs.dev) — build tool
-
----
-
-## iOS Screenshots
-
-| View                  | Image                                                                                          |
-| --------------------- | ---------------------------------------------------------------------------------------------- |
-| Dashboard             | <img src="screenshots/iOS/01Timetraked-iOS.png" width="200" alt="Timetracker screenshot 01" /> |
-| Time Entry — Markdown | <img src="screenshots/iOS/02Timetraked-iOS.png" width="200" alt="Timetracker screenshot 02" /> |
-| Time Entry — Preview  | <img src="screenshots/iOS/03Timetraked-iOS.png" width="200" alt="Timetracker screenshot 03" /> |
-| Active Tasks          | <img src="screenshots/iOS/04Timetraked-iOS.png" width="200" alt="Timetracker screenshot 04" /> |
-| Day Ended             | <img src="screenshots/iOS/06Timetraked-iOS.png" width="200" alt="Timetracker screenshot 06" /> |
-| Archive               | <img src="screenshots/iOS/07Timetraked-iOS.png" width="200" alt="Timetracker screenshot 07" /> |
