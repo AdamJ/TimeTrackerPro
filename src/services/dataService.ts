@@ -3,6 +3,7 @@ import { Task } from "@/contexts/TimeTrackingContext";
 import { TaskCategory } from "@/config/categories";
 import { LocalStorageService } from "@/services/localStorageService";
 import { SupabaseService } from "@/services/supabaseService";
+import { SqlApiService } from "@/services/sqlApiService";
 
 export { STORAGE_KEYS } from "@/services/localStorageService";
 
@@ -56,5 +57,10 @@ export interface DataService {
 
 // Factory function to get the appropriate service
 export const createDataService = (isAuthenticated: boolean): DataService => {
+	// Self-hosted SQL backend opt-in — takes precedence over Supabase/localStorage
+	// when explicitly configured, but never affects existing deployments.
+	if (import.meta.env.VITE_DATA_BACKEND === "sql") {
+		return new SqlApiService();
+	}
 	return isAuthenticated ? new SupabaseService() : new LocalStorageService();
 };

@@ -185,6 +185,7 @@ Task descriptions support **GitHub Flavored Markdown (GFM)**:
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | **Guest (default)**          | No account required. All data in `localStorage`. Full functionality, single-device only.                      |
 | **Authenticated (optional)** | Sign in via Supabase. Data synced to PostgreSQL. Multi-device access with automatic `localStorage` migration. |
+| **Self-hosted SQL (optional)** | Opt-in via `VITE_DATA_BACKEND=sql`. Talks to the small REST API in `server/` backed by your own Postgres or MySQL database. See [docs/SQL_BACKEND.md](docs/SQL_BACKEND.md). |
 
 ### How Data Storage Works
 
@@ -217,6 +218,34 @@ cp .env.example .env
 **5. Restart the dev server:** `pnpm dev`
 
 > ⚠️ Never commit your `.env` file to version control.
+
+### Setting Up a Self-Hosted SQL Backend
+
+For local deployments that don't want Supabase, Timetraked can run against your own PostgreSQL or MySQL database via a small bundled REST API (`server/`). This mode is fully opt-in — leaving `VITE_DATA_BACKEND` unset keeps the existing Supabase/`localStorage` behavior unchanged.
+
+**1. Configure the backend** in `.env` (see `.env.example` for the full list): `DB_CLIENT` (`pg` or `mysql2`), `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`.
+
+**2. Apply the schema and seed default data:**
+
+```bash
+pnpm run db:migrate
+pnpm run db:seed
+```
+
+**3. Start the backend API:**
+
+```bash
+pnpm run server:dev
+```
+
+**4. Point the frontend at it** in `.env`:
+
+```bash
+VITE_DATA_BACKEND=sql
+VITE_SQL_API_URL=http://localhost:4001/api
+```
+
+See [docs/SQL_BACKEND.md](docs/SQL_BACKEND.md) for full setup details.
 
 ### Authentication Flow
 
@@ -265,7 +294,7 @@ App.tsx
 
 #### 2. Service Layer Pattern
 
-Data persistence is abstracted through a factory that returns either `LocalStorageService` or `SupabaseService` depending on auth state:
+Data persistence is abstracted through a factory that returns `LocalStorageService`, `SupabaseService`, or `SqlApiService` depending on auth state and the `VITE_DATA_BACKEND` env var:
 
 ```typescript
 interface DataService {
@@ -390,8 +419,9 @@ src/
 │   └── TaskList.tsx              # Active task list and NewTaskForm
 ├── services/
 │   ├── localStorageService/      # localStorage implementation (per-entity modules)
-│   ├── dataService.ts            # Factory — returns LocalStorage or Supabase impl
-│   └── supabaseService.ts        # Supabase implementation (1100+ lines)
+│   ├── dataService.ts            # Factory — returns LocalStorage, Supabase, or SqlApi impl
+│   ├── supabaseService.ts        # Supabase implementation (1100+ lines)
+│   └── sqlApiService.ts          # REST client for the self-hosted server/ backend
 ├── utils/
 │   ├── calculationUtils.ts       # Revenue and hours calculations
 │   ├── checklistUtils.ts         # GFM checklist extraction
@@ -566,6 +596,7 @@ const MyPage = lazy(() => import("./pages/MyPage"));
 | [docs/AUTH_DATA_PERSISTENCE_FIX.md](docs/AUTH_DATA_PERSISTENCE_FIX.md) | Persistence implementation details        |
 | [docs/SCHEMA_COMPATIBILITY.md](docs/SCHEMA_COMPATIBILITY.md)           | Database schema history                   |
 | [docs/MIGRATION.md](docs/MIGRATION.md)                                 | Supabase data migration guide             |
+| [docs/SQL_BACKEND.md](docs/SQL_BACKEND.md)                             | Self-hosted SQL (Postgres/MySQL) backend setup |
 | [docs/SECURITY.md](docs/SECURITY.md)                                   | Security configuration and practices      |
 | [docs/CSV_TEMPLATES_README.md](docs/CSV_TEMPLATES_README.md)           | CSV import/export format                  |
 | [docs/FEATURES.md](docs/FEATURES.md)                                   | Feature requests and improvement notes    |

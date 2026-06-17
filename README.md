@@ -27,6 +27,7 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 - **CSV Import** — bring in existing time data from other tools
 - **Weekly Report** — AI-generated work summaries (standup, client, or retrospective tone)
 - **No Account Required** — full functionality with local storage; optional cloud sync via Supabase
+- **Self-Hosted SQL Backend** — optionally run against your own PostgreSQL or MySQL database instead of Supabase or local storage (see [docs/SQL_BACKEND.md](docs/SQL_BACKEND.md))
 - **PWA** — installable on desktop/mobile
 
 ---
@@ -68,6 +69,12 @@ pnpm screenshots           # Capture screenshots (headless)
 pnpm test-csv-import
 pnpm test-full-import
 pnpm test-error-handling
+
+# Self-Hosted SQL Backend (optional)
+pnpm db:migrate          # apply schema to your Postgres/MySQL database
+pnpm db:seed             # seed default categories/projects
+pnpm server:dev          # run the backend API in watch mode
+pnpm server:start        # run the backend API
 ```
 
 ---
@@ -126,6 +133,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 
 **Recent highlights:**
 
+- **Self-hosted SQL backend** — opt-in PostgreSQL/MySQL support via a small REST API (`server/`), alongside the existing Supabase and local storage modes
 - **Backdated entry creation** — "Add Past Entry" button on Archive page opens a multi-step dialog to log tasks for any past date
 - **Kanban planning board** — drag-and-drop task planning view (`KanbanBoard`, `KanbanColumn`, `PlannedTaskCard`)
 - Persistent report summaries saved to localStorage; markdown preview/export in the report output panel

@@ -122,9 +122,11 @@ export const MyComponent = () => {
 | File                                          | Purpose                                                                            |
 | --------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `src/contexts/TimeTrackingContext.tsx`        | Main application state and logic (1200+ lines)                                     |
-| `src/services/dataService.ts`                 | Data persistence factory — returns `LocalStorageService` or `SupabaseService`      |
+| `src/services/dataService.ts`                 | Data persistence factory — returns `LocalStorageService`, `SupabaseService`, or `SqlApiService` |
 | `src/services/supabaseService.ts`             | Supabase data persistence implementation (1100+ lines)                             |
 | `src/services/localStorageService/`           | localStorage data persistence implementation (split into per-entity modules)       |
+| `src/services/sqlApiService.ts`               | `DataService` implementation that talks to the self-hosted `server/` REST API over `fetch` |
+| `server/`                                     | Optional self-hosted SQL backend (Express + Knex, Postgres/MySQL) — see `docs/SQL_BACKEND.md` |
 | `src/contexts/AuthContext.tsx`                | Authentication state management                                                    |
 | `src/lib/supabase.ts`                         | Supabase client configuration and caching                                          |
 | `src/config/categories.ts`                    | Default category definitions                                                       |
