@@ -15,6 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   — `src/components/AppSidebar.tsx`
 - Tighten Electron CSP `script-src` from `'self' 'unsafe-inline' 'unsafe-eval'` to `'self'`; production build uses only `<script type="module">` and requires neither directive
   — `electron/main.ts`
+- Upgrade `vite` 5.4.21 → 6.4.3 to resolve `server.fs.deny` bypass and NTLMv2 hash disclosure (Windows dev-server, HIGH)
+  — `package.json`, `pnpm-lock.yaml`
+- Upgrade `vitest` 1.6.1 → 3.2.6 to resolve arbitrary file read/execute via UI server (CRITICAL)
+  — `package.json`, `pnpm-lock.yaml`
+- Pin `react-router-dom` floor to `^6.30.4` to resolve open-redirect via protocol-relative URL (MEDIUM)
+  — `package.json`
+- Pin `hono` to `4.12.25` (direct devDep) to resolve CORS credential reflection, path traversal, and Lambda header issues (HIGH)
+  — `package.json`, `pnpm-lock.yaml`
+- Pin `form-data` to `4.0.6` (direct devDep) to resolve CRLF injection via unescaped multipart field names (HIGH)
+  — `package.json`, `pnpm-lock.yaml`
+- Add `.npmrc` to declare `only-built-dependencies` allowlist for pnpm v10 (moved from `package.json#pnpm`)
+  — `.npmrc`
 
 ### Added
 
