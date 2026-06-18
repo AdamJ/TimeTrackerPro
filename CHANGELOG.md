@@ -28,6 +28,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `.npmrc` to declare `only-built-dependencies` allowlist for pnpm v10 (moved from `package.json#pnpm`)
   — `.npmrc`
 
+### Fixed
+
+- Login/logout race conditions for planned tasks resolved. Auth state change handling consolidated into a single `useEffect` with an async `handleAuthChange`; `previousAuthState` state replaced with `prevAuthRef` (ref) to avoid extra re-renders. On logout, `migrateToLocalStorage` now runs _before_ `setDataService` so `loadData` reads the freshly-written localStorage snapshot instead of racing the migration write. `todoLoadedRef`/`plannedLoadedRef` reset before `setLoading(true)` to block mutations against the incoming service until load completes.
+  — `src/contexts/TimeTrackingContext.tsx`
+
+- Planned tasks no longer overwritten on login. After migrating guest data into Supabase, planned tasks are reloaded from Supabase so the session reflects what migration just wrote. `migrateFromLocalStorage` skips writing planned tasks if Supabase already has any, preventing stale localStorage data (left from a previous logout) from overwriting tasks created on another device.
+  — `src/contexts/TimeTrackingContext.tsx`, `src/services/supabaseService.ts`
+
+- `ProjectSheet` now awaits `forceSyncToDatabase()` before closing — previously the sheet dismissed before the sync completed, causing the save to be skipped on fast interactions.
+  — `src/components/ProjectSheet.tsx`
+
+### Changed
+
+- `ContextMenuItem` gained a `variant` prop (`"default" | "destructive"`). Destructive variant renders `text-destructive` at rest and inverts to `focus:bg-destructive focus:text-destructive-foreground` on focus, replacing ad-hoc `className` overrides on individual menu items.
+  — `src/components/ui/context-menu.tsx`, `src/components/PlannedTaskCard.tsx`
+
+- Destructive button hover changed from `hover:bg-destructive/90` to `hover:opacity-90` across `DeleteConfirmationDialog` and `ProjectManagement` — avoids Tailwind v4 color-mix issues with the `oklch` destructive token.
+  — `src/components/DeleteConfirmationDialog.tsx`, `src/components/ProjectManagement.tsx`
+
+- Button order in `DeleteConfirmationDialog` corrected: Cancel now precedes Delete per standard dialog convention (was reversed).
+  — `src/components/DeleteConfirmationDialog.tsx`
+
+- `--destructive-foreground` CSS token added for both light and dark themes so destructive context menu items and buttons have a legible foreground color when filled.
+  — `src/index.css`
+
 ### Added
 
 - `AppSidebar` — new collapsible sidebar navigation component replacing the top `SiteNavigationMenu`. Uses shadcn/ui `Sidebar` primitives; groups nav items into Planning/Manage/Reports sections; shows live session timer in the footer alongside sync status, auth, and export actions.

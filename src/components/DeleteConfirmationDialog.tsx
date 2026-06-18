@@ -30,17 +30,17 @@ export const DeleteConfirmationDialog: React.FC<
 					</DialogDescription>
 				</DialogHeader>
 				<DialogFooter>
+					<Button variant="outline" onClick={onClose}>
+						Cancel
+					</Button>
 					<Button
 						onClick={() => {
 							onConfirm();
 							onClose();
 						}}
-						className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+						className="bg-destructive text-destructive-foreground hover:opacity-90"
 					>
 						Delete
-					</Button>
-					<Button variant="outline" onClick={onClose}>
-						Cancel
 					</Button>
 				</DialogFooter>
 			</DialogContent>

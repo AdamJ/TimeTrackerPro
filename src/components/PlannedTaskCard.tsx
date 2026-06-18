@@ -248,7 +248,7 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
           <ContextMenuSeparator />
           <ContextMenuItem
             onClick={() => setShowDeleteDialog(true)}
-            className="text-destructive focus:text-destructive"
+            variant="destructive"
           >
             <Trash2 className="w-4 h-4 mr-2" />
             Delete Task
