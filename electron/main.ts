@@ -30,7 +30,7 @@ function createWindow(): void {
 				...details.responseHeaders,
 				"Content-Security-Policy": [
 					"default-src 'self' app: data: https://*.supabase.co; " +
-					"script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+					"script-src 'self'; " +
 					"style-src 'self' 'unsafe-inline'; " +
 					"img-src 'self' app: data: blob: https:; " +
 					"connect-src 'self' https://*.supabase.co wss://*.supabase.co;",

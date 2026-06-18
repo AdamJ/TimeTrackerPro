@@ -194,7 +194,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Link to="https://github.com/AdamJ/TimeTrackerPro/issues/new?template=bug_report.md" target="_blank">
+                      <Link to="https://github.com/AdamJ/TimeTrackerPro/issues/new?template=bug_report.md" target="_blank" rel="noopener noreferrer">
                         <Bug />
                         <span>Report a Bug</span>
                       </Link>
@@ -202,7 +202,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Link to="https://github.com/AdamJ/TimeTrackerPro/issues/new?template=feature_request.md" target="_blank">
+                      <Link to="https://github.com/AdamJ/TimeTrackerPro/issues/new?template=feature_request.md" target="_blank" rel="noopener noreferrer">
                         <Send />
                         <span>Request a Feature</span>
                       </Link>
@@ -210,7 +210,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Link to="https://github.com/AdamJ/TimeTrackerPro/security/policy" target="_blank">
+                      <Link to="https://github.com/AdamJ/TimeTrackerPro/security/policy" target="_blank" rel="noopener noreferrer">
                         <Scale />
                         <span>Security Policy</span>
                       </Link>
