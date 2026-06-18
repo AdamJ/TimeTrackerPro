@@ -121,6 +121,33 @@ If credentials are accidentally exposed:
 
 ---
 
+## Dependency Vulnerability Management
+
+### Version Floors
+
+Certain transitive dependencies are pinned as direct `devDependencies` to enforce a minimum safe version, because pnpm's `overrides` field does not force version bumps for packages already at the minimum satisfying version. These entries exist for security — not because the project uses these packages directly.
+
+| Package | Pinned version | CVE / reason |
+|---|---|---|
+| `hono` | `4.12.25` | CORS credential reflection, path traversal, Lambda header issues |
+| `form-data` | `4.0.6` | CRLF injection via unescaped multipart field names |
+
+### Build Tool Security
+
+Major version upgrades performed to resolve known CVEs in dev toolchain (dev-only, not shipped to production):
+
+| Package | From | To | Severity |
+|---|---|---|---|
+| `vitest` | 1.6.1 | 3.2.6 | Critical — arbitrary file read/execute via UI server |
+| `vite` | 5.4.21 | 6.4.3 | High — `server.fs.deny` bypass on Windows |
+| `react-router-dom` | ^6.30.3 | ^6.30.4 | Medium — open redirect via protocol-relative URL |
+
+### pnpm Build Script Allowlist
+
+`.npmrc` declares `only-built-dependencies` for packages allowed to run postinstall scripts: `esbuild`, `@swc/core`, `electron-winstaller`, `msw`. All other packages run without postinstall. This was moved from `package.json#pnpm` to `.npmrc` when pnpm v10 stopped reading the `pnpm` namespace in `package.json`.
+
+---
+
 ## Frontend Security Controls
 
 ### URL Sanitization
