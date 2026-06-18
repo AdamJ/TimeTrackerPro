@@ -186,11 +186,21 @@ export const ClientManagement: React.FC = () => {
                           </Button>
                         </p>
                       )}
-                      {client.contactWebsite && (
+                      {client.contactWebsite && (() => {
+                        let safeUrl: string | null = null;
+                        try {
+                          const parsed = new URL(client.contactWebsite);
+                          if (parsed.protocol === "https:" || parsed.protocol === "http:") {
+                            safeUrl = client.contactWebsite;
+                          }
+                        } catch {
+                          // invalid URL — render as plain text below
+                        }
+                        return safeUrl ? (
                         <p>
                           <Button variant="link" className="p-0" asChild>
                             <a
-                              href={client.contactWebsite}
+                              href={safeUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -199,7 +209,15 @@ export const ClientManagement: React.FC = () => {
                             </a>
                           </Button>
                         </p>
-                      )}
+                        ) : (
+                          <p>
+                            <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                              <Globe className="w-4 h-4" />
+                              {client.contactWebsite}
+                            </span>
+                          </p>
+                        );
+                      })()}
                     </ItemDescription>
                   </ItemContent>
                   <ItemActions>

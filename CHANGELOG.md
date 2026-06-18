@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Sanitize `contactWebsite` URLs in `ClientManagement` using `URL()` before rendering as `href`; only `http:` and `https:` schemes produce a clickable link — invalid or `javascript:` URLs fall back to plain text display
+  — `src/components/ClientManagement.tsx` (XSS via stored javascript: URI)
+- Add `rel="noopener noreferrer"` to all `target="_blank"` sidebar links to prevent `window.opener` exposure
+  — `src/components/AppSidebar.tsx`
+- Tighten Electron CSP `script-src` from `'self' 'unsafe-inline' 'unsafe-eval'` to `'self'`; production build uses only `<script type="module">` and requires neither directive
+  — `electron/main.ts`
+
 ### Added
 
 - `AppSidebar` — new collapsible sidebar navigation component replacing the top `SiteNavigationMenu`. Uses shadcn/ui `Sidebar` primitives; groups nav items into Planning/Manage/Reports sections; shows live session timer in the footer alongside sync status, auth, and export actions.

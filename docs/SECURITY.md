@@ -121,4 +121,36 @@ If credentials are accidentally exposed:
 
 ---
 
+## Frontend Security Controls
+
+### URL Sanitization
+
+User-supplied URLs (e.g. `contactWebsite` on client records) are validated with `URL()` before being rendered as `href` attributes. Only `http:` and `https:` schemes produce a clickable anchor — any other value (including `javascript:` URIs or malformed URLs) is rendered as plain text.
+
+**Location:** `src/components/ClientManagement.tsx`
+
+### External Link Isolation
+
+All `target="_blank"` links include `rel="noopener noreferrer"` to prevent the opened page from accessing `window.opener` and to suppress the `Referer` header.
+
+**Locations:** `src/components/AppSidebar.tsx`, `src/components/ClientManagement.tsx`
+
+### Content Security Policy (Electron)
+
+The Electron build sets a `Content-Security-Policy` response header via `session.defaultSession.webRequest.onHeadersReceived`. Key directives:
+
+```
+default-src 'self' app: data: https://*.supabase.co
+script-src 'self'
+style-src 'self' 'unsafe-inline'
+img-src 'self' app: data: blob: https:
+connect-src 'self' https://*.supabase.co wss://*.supabase.co
+```
+
+`'unsafe-inline'` and `'unsafe-eval'` are intentionally absent from `script-src` — the production build uses only `<script type="module">` and requires neither.
+
+**Location:** `electron/main.ts`
+
+---
+
 **Remember**: It's always better to be overly cautious with credentials than to deal with a security incident later!
