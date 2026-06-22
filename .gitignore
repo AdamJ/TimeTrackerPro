@@ -2,6 +2,7 @@
 node_modules
 dist
 dev-dist
+dev-dist/sw.js
 .env
 .env.local
 .env.development.local
@@ -17,3 +18,16 @@ dist-electron-build/
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+.DS_Store
+.github/.DS_Store
+docs/.DS_Store
+public/.DS_Store
+public/icons/.DS_Store
+public/screenshots/.DS_Store
+src/.DS_Store
+supabase/.DS_Store
+
+# Supabase
+supabase/*
+supabase/**

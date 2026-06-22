@@ -89,6 +89,12 @@ export interface TodoItem {
 
 export type PlannedTaskStatus = "todo" | "in_progress" | "done" | "blocked";
 
+export interface PlannedTaskTimeEntry {
+  taskId: string;   // id of the timed Task created via "Pull to Day" or "Add to Day"
+  duration: number; // milliseconds; 0 while the task is still running
+  date: string;     // YYYY-MM-DD of the session
+}
+
 export interface PlannedTask {
   id: string;
   title: string;
@@ -97,10 +103,12 @@ export interface PlannedTask {
   project?: string;
   client?: string;
   category?: string;
-  priority: number;        // integer sort order within column; lower = higher; default 0
-  linkedTaskId?: string;   // id of the timed Task created via "Pull to Day" (display only)
-  createdAt: string;       // ISO string
-  updatedAt: string;       // ISO string
+  priority: number;                     // integer sort order within column; lower = higher; default 0
+  linkedTaskId?: string;                // id of the first timed Task (legacy/display only)
+  timeEntries: PlannedTaskTimeEntry[];  // full history of linked task sessions
+  timeSpent: number;                    // denormalized total milliseconds worked
+  createdAt: string;                    // ISO string
+  updatedAt: string;                    // ISO string
 }
 
 export interface TimeEntry {
@@ -224,11 +232,12 @@ interface TimeTrackingContextType {
 
   // Planned tasks (kanban board)
   plannedTasks: PlannedTask[];
-  addPlannedTask: (data: Omit<PlannedTask, "id" | "createdAt" | "updatedAt" | "status">) => void;
+  addPlannedTask: (data: Omit<PlannedTask, "id" | "createdAt" | "updatedAt" | "status" | "timeEntries" | "timeSpent">) => void;
   updatePlannedTask: (id: string, updates: Partial<PlannedTask>) => void;
   deletePlannedTask: (id: string) => void;
   movePlannedTask: (id: string, status: PlannedTaskStatus) => void;
   pullPlannedTaskToDay: (id: string) => void;
+  addPlannedTaskToDay: (id: string) => void;
 
   // Calculated values
   getTotalDayDuration: () => number;
@@ -456,8 +465,13 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         const loadedTodos = await dataService.getTodos();
         setTodoItems(loadedTodos);
 
-        // Load planned tasks
-        const loadedPlannedTasks = await dataService.getPlannedTasks();
+        // Load planned tasks — normalize legacy records missing the new fields
+        const rawPlannedTasks = await dataService.getPlannedTasks();
+        const loadedPlannedTasks = rawPlannedTasks.map(t => ({
+          ...t,
+          timeEntries: t.timeEntries ?? [],
+          timeSpent: t.timeSpent ?? 0
+        }));
         plannedTasksRef.current = loadedPlannedTasks;
         setPlannedTasks(loadedPlannedTasks);
 
@@ -465,7 +479,12 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         // tasks so the current session reflects what migration just wrote.
         if (currentAuthStateRef.current && dataService) {
           await dataService.migrateFromLocalStorage();
-          const postMigrationTasks = await dataService.getPlannedTasks();
+          const rawPostMigrationTasks = await dataService.getPlannedTasks();
+          const postMigrationTasks = rawPostMigrationTasks.map(t => ({
+            ...t,
+            timeEntries: t.timeEntries ?? [],
+            timeSpent: t.timeSpent ?? 0
+          }));
           plannedTasksRef.current = postMigrationTasks;
           setPlannedTasks(postMigrationTasks);
         }
@@ -669,14 +688,16 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     const effectiveEndTime = endDateTime ?? new Date();
     let finalTasks = tasks;
     if (currentTask) {
+      const duration = effectiveEndTime.getTime() - currentTask.startTime.getTime();
       const endedTask = {
         ...currentTask,
         endTime: effectiveEndTime,
-        duration: effectiveEndTime.getTime() - currentTask.startTime.getTime()
+        duration
       };
       finalTasks = tasks.map(t => (t.id === currentTask.id ? endedTask : t));
       setTasks(finalTasks);
       setCurrentTask(null);
+      accumulatePlannedTaskTime(currentTask.id, duration);
     }
     setDayEndTime(effectiveEndTime);
     setIsDayStarted(false);
@@ -721,13 +742,15 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     // End current task if exists and compute the updated task list synchronously
     let baseTasks = tasks;
     if (currentTask) {
+      const duration = now.getTime() - currentTask.startTime.getTime();
       const endedTask = {
         ...currentTask,
         endTime: now,
-        duration: now.getTime() - currentTask.startTime.getTime()
+        duration
       };
       baseTasks = tasks.map(t => (t.id === currentTask.id ? endedTask : t));
       setTasks(baseTasks);
+      accumulatePlannedTaskTime(currentTask.id, duration);
     }
 
     // Determine start time: use dayStartTime for first task, otherwise use current time
@@ -1320,12 +1343,14 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // === PLANNED TASKS ===
 
-  const addPlannedTask = useCallback((data: Omit<PlannedTask, "id" | "createdAt" | "updatedAt" | "status">) => {
+  const addPlannedTask = useCallback((data: Omit<PlannedTask, "id" | "createdAt" | "updatedAt" | "status" | "timeEntries" | "timeSpent">) => {
     const now = new Date().toISOString();
     const newTask: PlannedTask = {
       ...data,
       id: `planned-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       status: "todo",
+      timeEntries: [],
+      timeSpent: 0,
       createdAt: now,
       updatedAt: now
     };
@@ -1355,6 +1380,34 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const movePlannedTask = useCallback((id: string, status: PlannedTaskStatus) => {
     const now = new Date().toISOString();
+    // If marking done and the active timed task is linked to this planned task, end it first.
+    if (status === "done") {
+      const activeTask = latestStateRef.current.currentTask;
+      if (activeTask) {
+        const plannedTask = plannedTasksRef.current.find(t => t.id === id);
+        const isLinked = plannedTask?.timeEntries.some(e => e.taskId === activeTask.id);
+        if (isLinked) {
+          const endTime = new Date();
+          const duration = endTime.getTime() - activeTask.startTime.getTime();
+          const endedTask = { ...activeTask, endTime, duration };
+          const updatedTasks = latestStateRef.current.tasks.map(t =>
+            t.id === activeTask.id ? endedTask : t
+          );
+          setTasks(updatedTasks);
+          setCurrentTask(null);
+          setHasUnsavedChanges(true);
+          if (dataServiceRef.current) {
+            void dataServiceRef.current.saveCurrentDay({
+              isDayStarted: latestStateRef.current.isDayStarted,
+              dayStartTime: latestStateRef.current.dayStartTime,
+              currentTask: null,
+              tasks: updatedTasks
+            });
+          }
+          accumulatePlannedTaskTime(activeTask.id, duration);
+        }
+      }
+    }
     const next = plannedTasksRef.current.map(t => t.id === id ? { ...t, status, updatedAt: now } : t);
     plannedTasksRef.current = next;
     setPlannedTasks(next);
@@ -1363,6 +1416,37 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       if (updated) void dataServiceRef.current?.upsertPlannedTask(updated);
     }
   }, []);
+
+  /**
+   * Called whenever a timed Task ends (endDay, startNewTask ending the previous task).
+   * Finds the planned task whose timeEntries includes the given taskId, updates that
+   * entry's duration, and recalculates timeSpent.
+   */
+  const accumulatePlannedTaskTime = (endedTaskId: string, duration: number) => {
+    const now = new Date().toISOString();
+    let changed = false;
+    const next = plannedTasksRef.current.map(pt => {
+      const entryIdx = pt.timeEntries.findIndex(e => e.taskId === endedTaskId);
+      if (entryIdx === -1) return pt;
+      const oldDuration = pt.timeEntries[entryIdx].duration;
+      const updatedEntries = pt.timeEntries.map((e, i) =>
+        i === entryIdx ? { ...e, duration } : e
+      );
+      const updated: PlannedTask = {
+        ...pt,
+        timeEntries: updatedEntries,
+        timeSpent: pt.timeSpent - oldDuration + duration,
+        updatedAt: now
+      };
+      changed = true;
+      if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(updated);
+      return updated;
+    });
+    if (changed) {
+      plannedTasksRef.current = next;
+      setPlannedTasks(next);
+    }
+  };
 
   const pullPlannedTaskToDay = (id: string) => {
     if (!isDayStarted) {
@@ -1377,12 +1461,47 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!task) return;
     const newTaskId = startNewTask(task.title, task.description, task.project, task.client, task.category);
     const now = new Date().toISOString();
-    const updated: PlannedTask = { ...task, status: "in_progress" as PlannedTaskStatus, linkedTaskId: newTaskId, updatedAt: now };
+    const date = now.slice(0, 10);
+    const newEntry: PlannedTaskTimeEntry = { taskId: newTaskId, duration: 0, date };
+    const updated: PlannedTask = {
+      ...task,
+      status: "in_progress" as PlannedTaskStatus,
+      linkedTaskId: newTaskId,
+      timeEntries: [...task.timeEntries, newEntry],
+      updatedAt: now
+    };
     const next = plannedTasksRef.current.map(t => t.id === id ? updated : t);
     plannedTasksRef.current = next;
     setPlannedTasks(next);
     if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(updated);
     toast({ title: `Task started: ${task.title}` });
+  };
+
+  const addPlannedTaskToDay = (id: string) => {
+    if (!isDayStarted) {
+      toast({ title: "Start your work day first", description: "Go to the Dashboard and start your day before adding tasks." });
+      return;
+    }
+    if (isDayStale) {
+      toast({ title: "Resolve your previous day first", description: "Your previous work day is still open. Please end or discard it." });
+      return;
+    }
+    const task = plannedTasksRef.current.find(t => t.id === id);
+    if (!task) return;
+    const newTaskId = startNewTask(task.title, task.description, task.project, task.client, task.category);
+    const now = new Date().toISOString();
+    const date = now.slice(0, 10);
+    const newEntry: PlannedTaskTimeEntry = { taskId: newTaskId, duration: 0, date };
+    const updated: PlannedTask = {
+      ...task,
+      timeEntries: [...task.timeEntries, newEntry],
+      updatedAt: now
+    };
+    const next = plannedTasksRef.current.map(t => t.id === id ? updated : t);
+    plannedTasksRef.current = next;
+    setPlannedTasks(next);
+    if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(updated);
+    toast({ title: `Resumed: ${task.title}` });
   };
 
   const importFromCSV = async (
@@ -1459,6 +1578,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         deletePlannedTask,
         movePlannedTask,
         pullPlannedTaskToDay,
+        addPlannedTaskToDay,
         addProject,
         updateProject,
         deleteProject,

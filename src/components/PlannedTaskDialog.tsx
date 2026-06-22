@@ -15,6 +15,8 @@ import { SheetFooter } from "@/components/ui/sheet";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import { PlannedTask, PlannedTaskStatus } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
+import { formatDuration } from "@/utils/reportUtils";
+import { Field, FieldLabel } from "./ui/field";
 
 interface PlannedTaskDialogProps {
   task?: PlannedTask;
@@ -152,6 +154,7 @@ export const PlannedTaskDialog: React.FC<PlannedTaskDialogProps> = ({
       </div>
 
       {isEditMode && (
+        <>
         <div>
           <Label htmlFor="planned-status">Status</Label>
           <Select
@@ -170,6 +173,18 @@ export const PlannedTaskDialog: React.FC<PlannedTaskDialogProps> = ({
             </SelectContent>
           </Select>
         </div>
+        <Field>
+          <FieldLabel htmlFor="planned-time-spent">Time Spent</FieldLabel>
+          <Input
+            id="planned-time-spent"
+            name="planned-time-spent"
+            readOnly
+            aria-readonly="true"
+
+            value={formatDuration(task.timeSpent)}
+          />
+        </Field>
+        </>
       )}
 
       <div>

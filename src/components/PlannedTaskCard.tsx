@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/sheet";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Edit, Trash2, Play, MoveRight, MoreVertical, PencilIcon, Briefcase, Tag, Users } from "lucide-react";
+import { Edit, Trash2, Play, MoveRight, MoreVertical, PencilIcon, Briefcase, Tag, Users, PlusCircle, Clock } from "lucide-react";
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 interface PlannedTaskCardProps {
@@ -56,6 +56,15 @@ const OTHER_STATUSES = (current: PlannedTaskStatus): PlannedTaskStatus[] =>
     (s) => s !== current,
   );
 
+const formatDuration = (ms: number): string => {
+  if (ms <= 0) return "0m";
+  const totalMinutes = Math.floor(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes}m`;
+  return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
+};
+
 export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
   task,
   isDayStarted,
@@ -66,6 +75,7 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
     deletePlannedTask,
     movePlannedTask,
     pullPlannedTaskToDay,
+    addPlannedTaskToDay,
   } = useTimeTracking();
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -80,7 +90,8 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
   });
 
   const category = categories.find((c) => c.id === task.category);
-  const canPull = isDayStarted && !isDayStale && task.status !== "done";
+  const canPull = isDayStarted && !isDayStale && task.status !== "done" && task.status !== "in_progress";
+  const canAddToDay = isDayStarted && !isDayStale && task.status === "in_progress";
 
   return (
     <>
@@ -133,13 +144,13 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
                           {task.client}
                         </Badge>
                       )}
-                      {task.linkedTaskId && (
+                      {task.timeSpent > 0 && (
                         <Badge
                           variant="outline"
-                          className="bg-green-3 text-green-11 border-green-6"
+                          className="bg-violet-3 text-violet-11 border-violet-6"
                         >
-                          <Play className="w-2.5 h-2.5 inline mr-0.5" />
-                          Active
+                          <Clock className="w-2.5 h-2.5 inline mr-0.5" />
+                          {formatDuration(task.timeSpent)}
                         </Badge>
                       )}
                     </div>
@@ -156,12 +167,21 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
                         {canPull && (
                           <DropdownMenuGroup>
                             <DropdownMenuItem
-                              onClick={() => {
-                                pullPlannedTaskToDay(task.id);
-                              }}
+                              onClick={() => pullPlannedTaskToDay(task.id)}
                             >
                               <Play className="w-3 h-3 mr-1" />
                               Pull to Active Day
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </DropdownMenuGroup>
+                        )}
+                        {canAddToDay && (
+                          <DropdownMenuGroup>
+                            <DropdownMenuItem
+                              onClick={() => addPlannedTaskToDay(task.id)}
+                            >
+                              <PlusCircle className="w-3 h-3 mr-1" />
+                              Add to Active Day
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                           </DropdownMenuGroup>
@@ -219,6 +239,15 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
               <ContextMenuItem onClick={() => pullPlannedTaskToDay(task.id)}>
                 <Play className="w-4 h-4 mr-2" />
                 Pull to Active Day
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+            </>
+          )}
+          {canAddToDay && (
+            <>
+              <ContextMenuItem onClick={() => addPlannedTaskToDay(task.id)}>
+                <PlusCircle className="w-4 h-4 mr-2" />
+                Add to Active Day
               </ContextMenuItem>
               <ContextMenuSeparator />
             </>
