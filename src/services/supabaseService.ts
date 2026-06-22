@@ -1072,6 +1072,8 @@ export class SupabaseService implements DataService {
 			category_id: t.category ?? null,
 			priority: t.priority,
 			linked_task_id: t.linkedTaskId ?? null,
+			time_entries: t.timeEntries ?? [],
+			time_spent: t.timeSpent ?? 0,
 			created_at: t.createdAt
 		}));
 
@@ -1095,6 +1097,8 @@ export class SupabaseService implements DataService {
 			category_id: task.category ?? null,
 			priority: task.priority,
 			linked_task_id: task.linkedTaskId ?? null,
+			time_entries: task.timeEntries ?? [],
+			time_spent: task.timeSpent ?? 0,
 			created_at: task.createdAt
 		}, { onConflict: "id" });
 		trackDbCall("upsert", "planned_tasks");
@@ -1138,6 +1142,8 @@ export class SupabaseService implements DataService {
 			category_id: string | null;
 			priority: number;
 			linked_task_id: string | null;
+			time_entries: PlannedTask["timeEntries"] | null;
+			time_spent: number | null;
 			created_at: string;
 			updated_at: string;
 		}) => ({
@@ -1150,6 +1156,8 @@ export class SupabaseService implements DataService {
 			category: row.category_id ?? undefined,
 			priority: row.priority,
 			linkedTaskId: row.linked_task_id ?? undefined,
+			timeEntries: row.time_entries ?? [],
+			timeSpent: row.time_spent ?? 0,
 			createdAt: row.created_at,
 			updatedAt: row.updated_at
 		}));
