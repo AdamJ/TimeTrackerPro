@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Planned task time tracking — `PlannedTask` now accumulates total time worked via a `timeEntries: PlannedTaskTimeEntry[]` array and a denormalized `timeSpent` (milliseconds) field. Each time a planned task is pulled to the active day (or resumed via "Add to Active Day"), a new `PlannedTaskTimeEntry` is appended with the linked timed-task id and date; its `duration` is filled in when the timed task ends
+  — `src/contexts/TimeTrackingContext.tsx`, `src/services/supabaseService.ts`
+
+- `addPlannedTaskToDay` context method — creates a new timed task linked to an `in_progress` planned task without changing its status, allowing a planned task to accumulate time across multiple day sessions or task segments
+  — `src/contexts/TimeTrackingContext.tsx`
+
+- "Add to Active Day" action on `PlannedTaskCard` — visible for `in_progress` tasks when the day is started and not stale; available in both the dropdown menu and long-press context menu
+  — `src/components/PlannedTaskCard.tsx`
+
+- Time spent badge on `PlannedTaskCard` — displays accumulated duration (e.g. `1h 30m`) using a violet badge when `timeSpent > 0`; replaces the old "Active" badge that showed on `linkedTaskId` presence
+  — `src/components/PlannedTaskCard.tsx`
+
+- Time Spent read-only field in `PlannedTaskDialog` — shown in edit mode alongside the Status selector so users can see total time logged against a planned task
+  — `src/components/PlannedTaskDialog.tsx`
+
+- Auto-stop linked timed task when moving a planned task to "done" — if the currently running timed task is linked to the planned task being marked done, `movePlannedTask` ends it, accumulates its duration, and persists the day state before applying the status change
+  — `src/contexts/TimeTrackingContext.tsx`
+
 ### Security
 
 - Sanitize `contactWebsite` URLs in `ClientManagement` using `URL()` before rendering as `href`; only `http:` and `https:` schemes produce a clickable link — invalid or `javascript:` URLs fall back to plain text display
