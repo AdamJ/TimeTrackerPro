@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Framer Motion animations on app-layer components — task list add/delete (`AnimatePresence` + `layout` reflow), active-task scale/ring transition, PWA update/install prompt slide in/out, and a `layoutId`-based sliding active indicator on the mobile nav
+  — `src/pages/Index.tsx`, `src/components/TaskItem.tsx`, `src/components/PwaUpdatePrompt.tsx`, `src/components/InstallPrompt.tsx`, `src/components/MobileNav.tsx`
+
 - Planned task time tracking — `PlannedTask` now accumulates total time worked via a `timeEntries: PlannedTaskTimeEntry[]` array and a denormalized `timeSpent` (milliseconds) field. Each time a planned task is pulled to the active day (or resumed via "Add to Active Day"), a new `PlannedTaskTimeEntry` is appended with the linked timed-task id and date; its `duration` is filled in when the timed task ends
   — `src/contexts/TimeTrackingContext.tsx`, `src/services/supabaseService.ts`
 

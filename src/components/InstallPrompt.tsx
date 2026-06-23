@@ -1,17 +1,18 @@
-import { useState, useEffect, memo } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, memo } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
-} from '@/components/ui/card';
-import { Download, X } from 'lucide-react';
+} from "@/components/ui/card";
+import { Download, X } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
 export const InstallPrompt = memo(function InstallPrompt() {
@@ -22,14 +23,14 @@ export const InstallPrompt = memo(function InstallPrompt() {
 
   useEffect(() => {
     // Check if app is already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (window.matchMedia("(display-mode: standalone)").matches) {
       setIsInstalled(true);
       return;
     }
 
     // Check if user has previously dismissed the prompt
     try {
-      const dismissed = localStorage.getItem('pwa-install-dismissed');
+      const dismissed = localStorage.getItem("pwa-install-dismissed");
       if (dismissed) {
         const dismissedTime = parseInt(dismissed, 10);
         const daysSinceDismissed =
@@ -61,12 +62,12 @@ export const InstallPrompt = memo(function InstallPrompt() {
       setDeferredPrompt(null);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
-    window.addEventListener('appinstalled', installedHandler);
+    window.addEventListener("beforeinstallprompt", handler);
+    window.addEventListener("appinstalled", installedHandler);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-      window.removeEventListener('appinstalled', installedHandler);
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", installedHandler);
     };
   }, []);
 
@@ -77,51 +78,59 @@ export const InstallPrompt = memo(function InstallPrompt() {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
 
-      if (outcome === 'accepted') {
+      if (outcome === "accepted") {
         setIsInstalled(true);
       }
 
       setDeferredPrompt(null);
       setShowPrompt(false);
     } catch (error) {
-      console.error('Error showing install prompt:', error);
+      console.error("Error showing install prompt:", error);
     }
   };
 
   const handleDismiss = () => {
     setShowPrompt(false);
     try {
-      localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+      localStorage.setItem("pwa-install-dismissed", Date.now().toString());
     } catch {
       // localStorage unavailable; dismiss state not persisted
     }
   };
 
-  if (!showPrompt || !deferredPrompt || isInstalled) {
-    return null;
-  }
-
   return (
-    <Card className="fixed bottom-4 right-4 w-80 shadow-lg z-50 animate-in slide-in-from-bottom-4 print:hidden">
-      <button
-        onClick={handleDismiss}
-        className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
-        aria-label="Dismiss install prompt"
-      >
-        <X className="h-4 w-4" />
-      </button>
-      <CardHeader>
-        <CardTitle className="text-lg">Install Timetraked</CardTitle>
-        <CardDescription>
-          Install the app for quick access and offline functionality
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button onClick={handleInstall} className="w-full">
-          <Download className="mr-2 h-4 w-4" />
-          Install App
-        </Button>
-      </CardContent>
-    </Card>
+    <AnimatePresence>
+      {showPrompt && deferredPrompt && !isInstalled && (
+        <motion.div
+          initial={{ y: 24, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 24, opacity: 0 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
+          className="fixed bottom-4 right-4 z-50 print:hidden"
+        >
+          <Card className="w-80 shadow-lg">
+            <button
+              onClick={handleDismiss}
+              className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+              aria-label="Dismiss install prompt"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <CardHeader>
+              <CardTitle className="text-lg">Install Timetraked</CardTitle>
+              <CardDescription>
+                Install the app for quick access and offline functionality
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleInstall} className="w-full">
+                <Download className="mr-2 h-4 w-4" />
+                Install App
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 });
