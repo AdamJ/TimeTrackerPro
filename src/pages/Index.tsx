@@ -19,6 +19,7 @@ import { DashboardIcon } from "@radix-ui/react-icons";
 import { PageLayout } from "@/components/PageLayout";
 import { TaskTrackingPanel } from "@/components/TaskTrackingPanel";
 import { useState, useMemo, useCallback } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   Sheet,
   SheetContent,
@@ -348,19 +349,29 @@ const TimeTrackerContent = () => {
 
                 {tasks.length > 0 && (
                   <div className="space-y-3">
-                    {tasks.map((task) => (
-                      <TaskItem
-                        key={task.id}
-                        task={task}
-                        isActive={currentTask?.id === task.id}
-                        currentDuration={
-                          currentTask?.id === task.id
-                            ? getCurrentTaskDuration()
-                            : 0
-                        }
-                        onDelete={deleteTask}
-                      />
-                    ))}
+                    <AnimatePresence>
+                      {tasks.map((task) => (
+                        <motion.div
+                          key={task.id}
+                          layout
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                          transition={{ duration: 0.18, ease: "easeOut" }}
+                        >
+                          <TaskItem
+                            task={task}
+                            isActive={currentTask?.id === task.id}
+                            currentDuration={
+                              currentTask?.id === task.id
+                                ? getCurrentTaskDuration()
+                                : 0
+                            }
+                            onDelete={deleteTask}
+                          />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 )}
 

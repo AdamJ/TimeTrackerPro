@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { motion } from "motion/react";
 import { Task } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,8 @@ import {
 } from "lucide-react";
 import { formatDuration, formatTime } from "@/utils/timeUtil";
 import { Badge } from "@/components/ui/badge";
+
+const MotionCard = motion.create(Card);
 
 interface TaskItemProps {
   task: Task;
@@ -58,9 +61,12 @@ export const TaskItem: React.FC<TaskItemProps> = ({
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div ref={contextMenuTriggerRef} {...longPressHandlers}>
-      <Card
-        className={`transition-all duration-200 ${
-          isActive ? "ring-2 ring-blue-500 hover:shadow-md hover:shadow-blue-300 bg-white" : "hover:shadow-md"
+      <MotionCard
+        variants={{ active: { scale: 1.005 }, inactive: { scale: 1 } }}
+        animate={isActive ? "active" : "inactive"}
+        transition={{ duration: 0.15, ease: "easeOut" }}
+        className={`transition-shadow duration-200 ${
+          isActive ? "ring-2 ring-blue-8 shadow-md shadow-blue-4 bg-white" : "hover:shadow-md"
         }`}
       >
         <CardContent className="p-4">
@@ -141,7 +147,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
             </div>
           </div>
         </CardContent>
-      </Card>
+      </MotionCard>
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent>

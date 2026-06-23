@@ -1,13 +1,14 @@
-import { memo } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { memo } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { motion } from "motion/react";
 import {
   Home,
   Archive,
   Settings,
   PaperclipIcon,
   ClipboardList
-} from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+} from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export const MobileNav = memo(function MobileNav() {
   const location = useLocation();
@@ -19,48 +20,48 @@ export const MobileNav = memo(function MobileNav() {
 
   const navItems = [
     {
-      path: '/',
+      path: "/",
       icon: Home,
-      label: 'Home'
+      label: "Home"
     },
     {
-      path: '/tasks',
+      path: "/tasks",
       icon: ClipboardList,
-      label: 'Tasks'
+      label: "Tasks"
     },
     ...(isAuthenticated
       ? [
           {
-            path: '/report',
+            path: "/report",
             icon: PaperclipIcon,
-            label: 'Report'
+            label: "Report"
           }
         ]
       : []),
     {
-      path: '/archive',
+      path: "/archive",
       icon: Archive,
-      label: 'Archive'
+      label: "Archive"
     },
     {
-      path: '/settings',
+      path: "/settings",
       icon: Settings,
-      label: 'Settings'
+      label: "Settings"
     }
   ];
 
   const gridClass =
     navItems.length <= 3
-      ? 'grid-cols-3'
+      ? "grid-cols-3"
       : navItems.length === 4
-        ? 'grid-cols-4'
-        : 'grid-cols-5';
+        ? "grid-cols-4"
+        : "grid-cols-5";
 
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 mb-2 mx-2 rounded-full border border-border bg-card/80 shadow-lg md:hidden z-40 print:hidden"
       style={{
-        padding: 'max(env(safe-area-inset-bottom, 8px), 8px)'
+        padding: "max(env(safe-area-inset-bottom, 8px), 8px)"
       }}
     >
       <div className={`grid ${gridClass} h-12`}>
@@ -68,16 +69,23 @@ export const MobileNav = memo(function MobileNav() {
           <Link
             key={path}
             to={path}
-            className={`flex flex-col items-center justify-center space-y-1 transition-colors touch-manipulation ${
-              isActive(path)
-                ? 'text-primary'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className="relative flex flex-col items-center justify-center space-y-1 transition-colors touch-manipulation text-muted-foreground hover:text-foreground"
             aria-label={label}
-            aria-current={isActive(path) ? 'page' : undefined}
+            aria-current={isActive(path) ? "page" : undefined}
           >
-            <Icon className="h-5 w-5" />
-            <span className="text-xs font-medium">{label}</span>
+            {isActive(path) && (
+              <motion.div
+                layoutId="mobile-nav-active"
+                className="absolute inset-0 rounded-full bg-accent"
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              />
+            )}
+            <span className={`relative z-10 ${isActive(path) ? "text-primary" : ""}`}>
+              <Icon className="h-5 w-5" />
+            </span>
+            <span className={`relative z-10 text-xs font-medium ${isActive(path) ? "text-primary" : ""}`}>
+              {label}
+            </span>
           </Link>
         ))}
       </div>
