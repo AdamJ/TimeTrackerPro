@@ -58,12 +58,9 @@ export const MobileNav = memo(function MobileNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 mb-2 mx-2 rounded-full border border-gray-200 md:hidden z-40 print:hidden"
+      className="fixed bottom-0 left-0 right-0 mb-2 mx-2 rounded-full border border-border bg-card/80 shadow-lg md:hidden z-40 print:hidden"
       style={{
-        padding: 'max(env(safe-area-inset-bottom, 8px), 8px)',
-        boxShadow:
-          '0 4px 16px -8px rgba(0,0,0,0.10), 0 3px 12px -4px rgba(0,0,0,0.10), 0 2px 3px -2px rgba(0, 78, 194, 0.08)',
-        background: 'rgba(255,255,255,0.80)'
+        padding: 'max(env(safe-area-inset-bottom, 8px), 8px)'
       }}
     >
       <div className={`grid ${gridClass} h-12`}>

@@ -20,7 +20,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 const getNavLinkClasses = (isActive: boolean) =>
-	`transition-all duration-200 flex items-center space-x-2 px-4 rounded-full h-10 border border-gray-200 hover:border-input ${isActive ? "bg-accent hover:bg-accent/80 hover:text-accent-foreground" : "bg-white hover:bg-accent hover:text-accent-foreground"}`;
+	`transition-all duration-200 flex items-center space-x-2 px-4 rounded-full h-10 border border-border hover:border-input ${isActive ? "bg-accent hover:bg-accent/80 hover:text-accent-foreground" : "bg-card hover:bg-accent hover:text-accent-foreground"}`;
 
 const SiteNavigationMenu = () => {
   const [showExportDialog, setShowExportDialog] = useState(false);
@@ -47,12 +47,7 @@ const SiteNavigationMenu = () => {
 
   return (
     <>
-      <NavigationMenu className="sticky top-0 left-0 right-0 mt-2 mx-auto container rounded-full border border-gray-200 hidden md:block z-40 print:hidden"
-      style={{
-        boxShadow:
-          '0 4px 16px -8px rgba(0,0,0,0.10), 0 3px 12px -4px rgba(0,0,0,0.10), 0 2px 3px -2px rgba(0, 78, 194, 0.08)',
-        background: 'rgba(255,255,255,0.80)'
-      }}>
+      <NavigationMenu className="sticky top-0 left-0 right-0 mt-2 mx-auto container rounded-full border border-border bg-card/80 shadow-lg hidden md:block z-40 print:hidden">
         <List className="flex items-center justify-between px-4 py-2 md:px-8 md:py-4 m-0 list-none rounded-md p-1 shadow-xs">
           <Item className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-foreground flex">
@@ -171,7 +166,7 @@ const SiteNavigationMenu = () => {
         </List>
 
         <div className="perspective-[2000px] absolute left-0 top-full flex w-full justify-center">
-          <Viewport className="relative mt-2.5 h-(--radix-navigation-menu-viewport-height) w-full origin-[top_center] overflow-hidden rounded-md bg-white transition-[width,height] duration-300 data-[state=closed]:animate-scaleOut data-[state=open]:animate-scaleIn sm:w-(--radix-navigation-menu-viewport-width)" />
+          <Viewport className="relative mt-2.5 h-(--radix-navigation-menu-viewport-height) w-full origin-[top_center] overflow-hidden rounded-md bg-card transition-[width,height] duration-300 data-[state=closed]:animate-scaleOut data-[state=open]:animate-scaleIn sm:w-(--radix-navigation-menu-viewport-width)" />
         </div>
       </NavigationMenu>
 
