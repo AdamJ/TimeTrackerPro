@@ -57,6 +57,11 @@ if (!isDev) {
 }
 
 function createWindow(): void {
+	// Reset per-window-lifecycle flush state — macOS can reopen a window
+	// (via "activate") after the previous one quit-flushed and closed.
+	isQuittingForReal = false;
+	quitFlushPending = false;
+
 	const win = new BrowserWindow({
 		width: 1280,
 		height: 800,
@@ -70,6 +75,12 @@ function createWindow(): void {
 	});
 
 	mainWindow = win;
+	win.on("close", (event) => {
+		if (isQuittingForReal) return;
+
+		event.preventDefault();
+		beginQuitFlush(win);
+	});
 	win.on("closed", () => {
 		if (mainWindow === win) mainWindow = null;
 	});
@@ -102,7 +113,11 @@ app.whenReady().then(() => {
 		// Serve dist/ via app:// so BrowserRouter's pushState URLs resolve correctly
 		protocol.handle("app", (request) => {
 			const url = new URL(request.url);
-			const distDir = path.join(app.getAppPath(), "dist");
+			// dist/ is always a sibling of dist-electron/ (both copied in by
+			// electron-builder's "files" glob) — app.getAppPath() resolves to the
+			// directory of the entry script itself here, not its parent, so it
+			// can't be used to find dist/.
+			const distDir = path.join(__dirname, "..", "dist");
 			// Strip leading slash from pathname
 			const relativePath = url.pathname.replace(/^\//, "") || "index.html";
 			const filePath = path.join(distDir, relativePath);
@@ -131,21 +146,26 @@ app.on("window-all-closed", () => {
 
 // beforeunload (DOM) doesn't fire on app.quit() without a window close, on a
 // force-quit, or on a crash. This gives the renderer one last chance to flush
-// state to localStorage and write a final disk backup before the process exits,
-// with a timeout so quit is never blocked indefinitely.
-app.on("before-quit", (event) => {
-	if (isQuittingForReal || quitFlushPending) return;
-	if (!mainWindow || mainWindow.isDestroyed()) return;
-
+// state to localStorage and write a final disk backup before the window
+// actually closes, with a timeout so quit is never blocked indefinitely.
+//
+// Intercepting the window's own "close" event (rather than app's "before-quit")
+// matters: closing the last window fires "closed" -> mainWindow set to null ->
+// "window-all-closed" -> app.quit() -> "before-quit", so by the time "before-quit"
+// would fire, mainWindow is already destroyed and there's no renderer left to
+// flush. Hooking "close" runs while the window (and its renderer) is still alive,
+// covering both the direct close-button path and app.quit() triggered without
+// closing the window first (Electron closes each window as part of quitting).
+function beginQuitFlush(win: BrowserWindow): void {
+	if (quitFlushPending) return;
 	quitFlushPending = true;
-	event.preventDefault();
 
 	let settled = false;
 	const finishQuit = () => {
 		if (settled) return;
 		settled = true;
 		isQuittingForReal = true;
-		app.quit();
+		win.close();
 	};
 
 	const timeoutId = setTimeout(finishQuit, QUIT_FLUSH_TIMEOUT_MS);
@@ -154,5 +174,5 @@ app.on("before-quit", (event) => {
 		finishQuit();
 	});
 
-	mainWindow.webContents.send("before-quit-flush");
-});
+	win.webContents.send("before-quit-flush");
+}
