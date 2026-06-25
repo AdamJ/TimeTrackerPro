@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -22,16 +22,46 @@ import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { PageLayout } from '@/components/PageLayout';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { useBackgroundNotificationSetting } from '@/hooks/useBackgroundNotificationSetting';
+import { toast } from '@/hooks/use-toast';
+import { consumePendingMenuAction } from '@/lib/electronMenuActions';
 
 const SettingsContent: React.FC = () => {
   const { archivedDays, projects, categories, clients } = useTimeTracking();
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showClearDataDialog, setShowClearDataDialog] = useState(false);
   const [clearConfirmText, setClearConfirmText] = useState("");
+  const [backgroundNotificationsEnabled, setBackgroundNotificationsEnabled] = useBackgroundNotificationSetting();
+  const notificationsSupported = typeof window !== 'undefined' && 'Notification' in window;
+
+  useEffect(() => {
+    if (consumePendingMenuAction('export')) {
+      setShowExportDialog(true);
+    }
+  }, []);
 
   const handleClearAllData = () => {
     localStorage.clear();
     window.location.replace(window.location.pathname);
+  };
+
+  const handleBackgroundNotificationsToggle = async (checked: boolean) => {
+    if (!checked) {
+      setBackgroundNotificationsEnabled(false);
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      setBackgroundNotificationsEnabled(true);
+    } else {
+      toast({
+        title: 'Notifications blocked',
+        description: 'Allow notifications for this site in your browser settings to enable this feature.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -118,6 +148,33 @@ const SettingsContent: React.FC = () => {
                   <ChevronRight className="w-4 h-4" />
                 </ItemActions>
               </a>
+            </Item>
+          </div>
+          {/* Notifications */}
+          <h2 className="border-b font-semibold flex gap-3 pb-2">
+            Notifications
+          </h2>
+          <div className="flex w-full flex-col gap-4">
+            <Item
+              variant="outline"
+              className="shadow-none duration-100 hover:shadow-md transition-shadow"
+            >
+              <ItemContent>
+                <ItemTitle>Background timer reminders</ItemTitle>
+                <ItemDescription>
+                  {notificationsSupported
+                    ? 'Get an OS notification if you leave a timer running while the app is backgrounded.'
+                    : 'Your browser does not support notifications.'}
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Switch
+                  checked={backgroundNotificationsEnabled}
+                  disabled={!notificationsSupported}
+                  onCheckedChange={handleBackgroundNotificationsToggle}
+                  aria-label="Toggle background timer reminders"
+                />
+              </ItemActions>
             </Item>
           </div>
           {/* Data Management */}
