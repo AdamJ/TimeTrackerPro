@@ -169,7 +169,7 @@ Task descriptions support **GitHub Flavored Markdown (GFM)**:
 
 **Offline Capability:** All features work without internet; data syncs automatically when the connection is restored.
 
-**Mobile Optimized:** Bottom navigation, 44×44 px minimum touch targets, safe-area support for notched devices, responsive layout.
+**Mobile Optimized:** Bottom navigation, 44×44 px minimum touch targets, safe-area support for notched devices, responsive layout, native OS picker (instead of an in-page popover) for dropdowns like category/project/client selection.
 
 **Seamless Updates:** New versions install automatically with a refresh prompt; no data is lost.
 
