@@ -10,13 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ResponsiveSelect } from "@/components/ui/responsive-select";
 import { Project } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { toast } from "@/hooks/use-toast";
@@ -166,7 +160,8 @@ export const ProjectSheet: React.FC<ProjectSheetProps> = ({
                 </Button>
               </div>
             ) : (
-              <Select
+              <ResponsiveSelect
+                id="project-client"
                 value={client}
                 onValueChange={(value) => {
                   if (value === "__add_new__") {
@@ -175,24 +170,15 @@ export const ProjectSheet: React.FC<ProjectSheetProps> = ({
                   }
                   setClient(value);
                 }}
-              >
-                <SelectTrigger id="project-client">
-                  <SelectValue placeholder="Select a client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {activeClients.map((c) => (
-                    <SelectItem key={c.id} value={c.name}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                  {client && !clients.some((c) => c.name === client) && (
-                    <SelectItem value={client} disabled>
-                      {client} (unmanaged)
-                    </SelectItem>
-                  )}
-                  <SelectItem value="__add_new__">+ Add new client</SelectItem>
-                </SelectContent>
-              </Select>
+                placeholder="Select a client"
+                options={[
+                  ...activeClients.map((c) => ({ value: c.name, label: c.name })),
+                  ...(client && !clients.some((c) => c.name === client)
+                    ? [{ value: client, label: `${client} (unmanaged)`, disabled: true }]
+                    : []),
+                  { value: "__add_new__", label: "+ Add new client" },
+                ]}
+              />
             )}
           </div>
 

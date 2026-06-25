@@ -11,13 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue
-} from "@/components/ui/select";
+import { ResponsiveSelect } from "@/components/ui/responsive-select";
 import { TimePicker } from "@/components/ui/scroll-time-picker";
 import { Task } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
@@ -187,20 +181,20 @@ export const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = (
 
 					<div className="grid grid-cols-2 gap-4">
 						<div>
-							<Label>Category</Label>
-							<Select
+							<Label htmlFor="archive-task-category">Category</Label>
+							<ResponsiveSelect
+								id="archive-task-category"
 								value={formData.category}
 								onValueChange={value =>
 									setFormData(prev => ({ ...prev, category: value }))
 								}
-							>
-								<SelectTrigger>
-									<SelectValue placeholder="Select category" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="none">No category</SelectItem>
-									{categories.map(category => (
-										<SelectItem key={category.id} value={category.id}>
+								placeholder="Select category"
+								options={[
+									{ value: "none", label: "No category" },
+									...categories.map(category => ({
+										value: category.id,
+										textLabel: category.name,
+										label: (
 											<div className="flex items-center space-x-2">
 												<div
 													className="w-3 h-3 rounded-full"
@@ -208,37 +202,37 @@ export const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = (
 												/>
 												<span>{category.name}</span>
 											</div>
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+										),
+									})),
+								]}
+							/>
 						</div>
 
 						<div>
-							<Label>Project</Label>
-							<Select
+							<Label htmlFor="archive-task-project">Project</Label>
+							<ResponsiveSelect
+								id="archive-task-project"
 								value={formData.project}
 								onValueChange={value =>
 									setFormData(prev => ({ ...prev, project: value }))
 								}
-							>
-								<SelectTrigger>
-									<SelectValue placeholder="Select project" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="none">No project</SelectItem>
-									{projects.map(project => (
-										<SelectItem key={project.id} value={project.id}>
+								placeholder="Select project"
+								options={[
+									{ value: "none", label: "No project" },
+									...projects.map(project => ({
+										value: project.id,
+										textLabel: `${project.name} (${project.client})`,
+										label: (
 											<div className="flex flex-col">
 												<span>{project.name}</span>
 												<span className="text-sm text-muted-foreground">
 													{project.client}
 												</span>
 											</div>
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+										),
+									})),
+								]}
+							/>
 						</div>
 					</div>
 
