@@ -1,6 +1,6 @@
 # AGENTS.md - AI Assistant Codebase Guide
 
-**Last Updated:** 2026-06-16
+**Last Updated:** 2026-06-25
 **Version:** 2.6.0
 
 Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and consultants, with dual storage (localStorage guest mode and optional Supabase cloud sync).
