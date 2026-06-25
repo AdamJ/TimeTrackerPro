@@ -57,6 +57,23 @@ if (typeof URL.revokeObjectURL === "undefined") {
 	});
 }
 
+// Mock window.matchMedia (not available in jsdom)
+if (typeof window.matchMedia === "undefined") {
+	Object.defineProperty(window, "matchMedia", {
+		writable: true,
+		value: vi.fn().mockImplementation((query: string) => ({
+			matches: false,
+			media: query,
+			onchange: null,
+			addListener: vi.fn(),
+			removeListener: vi.fn(),
+			addEventListener: vi.fn(),
+			removeEventListener: vi.fn(),
+			dispatchEvent: vi.fn(),
+		})),
+	});
+}
+
 // Mock Date.now() for consistent testing
 const mockDate = new Date("2024-12-03T10:00:00.000Z");
 vi.setSystemTime(mockDate);

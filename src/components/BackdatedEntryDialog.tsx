@@ -13,13 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+import { ResponsiveSelect } from "@/components/ui/responsive-select";
 import { TimePicker } from "@/components/ui/scroll-time-picker";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import { Badge } from "@/components/ui/badge";
@@ -436,53 +430,42 @@ export const BackdatedEntryDialog: React.FC<BackdatedEntryDialogProps> = ({
 											{categories.length > 0 && (
 												<div>
 													<Label htmlFor={`task-cat-${task.id}`}>Category</Label>
-													<Select
+													<ResponsiveSelect
+														id={`task-cat-${task.id}`}
+														aria-label={`Task ${index + 1} category`}
 														value={task.category}
 														onValueChange={v => updateTask(task.id, "category", v)}
-													>
-														<SelectTrigger
-															id={`task-cat-${task.id}`}
-															aria-label={`Task ${index + 1} category`}
-														>
-															<SelectValue placeholder="Category" />
-														</SelectTrigger>
-														<SelectContent>
-															{categories.map(cat => (
-																<SelectItem key={cat.id} value={cat.id}>
-																	<div className="flex items-center gap-2">
-																		<div
-																			className="w-3 h-3 rounded-full shrink-0"
-																			style={{ backgroundColor: cat.color }}
-																		/>
-																		{cat.name}
-																	</div>
-																</SelectItem>
-															))}
-														</SelectContent>
-													</Select>
+														placeholder="Category"
+														options={categories.map(cat => ({
+															value: cat.id,
+															textLabel: cat.name,
+															label: (
+																<div className="flex items-center gap-2">
+																	<div
+																		className="w-3 h-3 rounded-full shrink-0"
+																		style={{ backgroundColor: cat.color }}
+																	/>
+																	{cat.name}
+																</div>
+															),
+														}))}
+													/>
 												</div>
 											)}
 											{projects.length > 0 && (
 												<div>
 													<Label htmlFor={`task-proj-${task.id}`}>Project</Label>
-													<Select
+													<ResponsiveSelect
+														id={`task-proj-${task.id}`}
+														aria-label={`Task ${index + 1} project`}
 														value={task.project}
 														onValueChange={v => updateTask(task.id, "project", v)}
-													>
-														<SelectTrigger
-															id={`task-proj-${task.id}`}
-															aria-label={`Task ${index + 1} project`}
-														>
-															<SelectValue placeholder="Project" />
-														</SelectTrigger>
-														<SelectContent>
-															{projects.map(proj => (
-																<SelectItem key={proj.id} value={proj.id}>
-																	{proj.name}
-																</SelectItem>
-															))}
-														</SelectContent>
-													</Select>
+														placeholder="Project"
+														options={projects.map(proj => ({
+															value: proj.id,
+															label: proj.name,
+														}))}
+													/>
 												</div>
 											)}
 										</div>

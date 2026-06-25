@@ -3,13 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ResponsiveSelect } from "@/components/ui/responsive-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SheetFooter } from "@/components/ui/sheet";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
@@ -157,21 +151,16 @@ export const PlannedTaskDialog: React.FC<PlannedTaskDialogProps> = ({
         <>
         <div>
           <Label htmlFor="planned-status">Status</Label>
-          <Select
+          <ResponsiveSelect
+            id="planned-status"
+            className="mt-1"
             value={status}
             onValueChange={(v) => setStatus(v as PlannedTaskStatus)}
-          >
-            <SelectTrigger id="planned-status" className="mt-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(Object.keys(STATUS_LABELS) as PlannedTaskStatus[]).map((s) => (
-                <SelectItem key={s} value={s}>
-                  {STATUS_LABELS[s]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            options={(Object.keys(STATUS_LABELS) as PlannedTaskStatus[]).map((s) => ({
+              value: s,
+              label: STATUS_LABELS[s],
+            }))}
+          />
         </div>
         <Field>
           <FieldLabel htmlFor="planned-time-spent">Time Spent</FieldLabel>
@@ -189,36 +178,32 @@ export const PlannedTaskDialog: React.FC<PlannedTaskDialogProps> = ({
 
       <div>
         <Label htmlFor="planned-category">Category</Label>
-        <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger id="planned-category" className="mt-1">
-            <SelectValue placeholder="No category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">No category</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <ResponsiveSelect
+          id="planned-category"
+          className="mt-1"
+          value={category}
+          onValueChange={setCategory}
+          placeholder="No category"
+          options={[
+            { value: "none", label: "No category" },
+            ...categories.map((c) => ({ value: c.id, label: c.name })),
+          ]}
+        />
       </div>
 
       <div>
         <Label htmlFor="planned-project">Project</Label>
-        <Select value={project} onValueChange={setProject}>
-          <SelectTrigger id="planned-project" className="mt-1">
-            <SelectValue placeholder="No project" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">No project</SelectItem>
-            {projects.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <ResponsiveSelect
+          id="planned-project"
+          className="mt-1"
+          value={project}
+          onValueChange={setProject}
+          placeholder="No project"
+          options={[
+            { value: "none", label: "No project" },
+            ...projects.map((p) => ({ value: p.id, label: p.name })),
+          ]}
+        />
       </div>
 
       <SheetFooter className="mt-2">
