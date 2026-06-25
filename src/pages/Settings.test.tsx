@@ -29,10 +29,16 @@ vi.mock("@/hooks/usePageTitle", () => ({
   }),
 }));
 
+const mockUseAuth = vi.fn(() => ({ isAuthenticated: false, user: null }));
+vi.mock("@/hooks/useAuth", () => ({
+  useAuth: () => mockUseAuth(),
+}));
+
 describe("Settings — background notifications toggle", () => {
   beforeEach(() => {
     localStorage.clear();
     mockToast.mockClear();
+    mockUseAuth.mockReturnValue({ isAuthenticated: false, user: null });
   });
 
   it("requests Notification permission and enables the setting once granted", async () => {
@@ -94,5 +100,28 @@ describe("Settings — background notifications toggle", () => {
     expect(toggle).toBeDisabled();
 
     (window as { Notification?: unknown }).Notification = original;
+  });
+});
+
+describe("Settings — data recovery visibility", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    mockToast.mockClear();
+  });
+
+  it("shows the Data Recovery item in guest mode", () => {
+    mockUseAuth.mockReturnValue({ isAuthenticated: false, user: null });
+
+    render(<Settings />);
+
+    expect(screen.getByText("Data Recovery")).toBeInTheDocument();
+  });
+
+  it("hides the Data Recovery item for authenticated (cloud-sync) users", () => {
+    mockUseAuth.mockReturnValue({ isAuthenticated: true, user: { id: "u1" } });
+
+    render(<Settings />);
+
+    expect(screen.queryByText("Data Recovery")).not.toBeInTheDocument();
   });
 });

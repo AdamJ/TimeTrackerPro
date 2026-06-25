@@ -4,6 +4,15 @@ contextBridge.exposeInMainWorld("electronAPI", {
 	writeBackup: (json: string): Promise<{ ok: boolean; error?: string }> =>
 		ipcRenderer.invoke("backup:write", json),
 
+	listBackups: (): Promise<{
+		ok: boolean;
+		backups?: { name: string; timestamp: string; sizeBytes: number }[];
+		error?: string;
+	}> => ipcRenderer.invoke("backup:list"),
+
+	readBackup: (name: string): Promise<{ ok: boolean; content?: string; error?: string }> =>
+		ipcRenderer.invoke("backup:read", name),
+
 	requestFlushBeforeQuit: (callback: () => void | Promise<void>): void => {
 		ipcRenderer.on("before-quit-flush", async () => {
 			try {
