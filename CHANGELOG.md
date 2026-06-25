@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Release workflow's "Create GitHub Release" step failing with "Bad credentials" — `RELEASE_PAT` secret regenerated
+  — `.github/workflows/release.yml`
+
 ### Added
 
 - Framer Motion animations on app-layer components — task list add/delete (`AnimatePresence` + `layout` reflow), active-task scale/ring transition, PWA update/install prompt slide in/out, and a `layoutId`-based sliding active indicator on the mobile nav
