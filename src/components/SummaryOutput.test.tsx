@@ -1,6 +1,6 @@
 // src/components/SummaryOutput.test.tsx
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import SummaryOutput from "@/components/SummaryOutput";
 
 vi.mock("@/components/MarkdownDisplay", () => ({
@@ -87,5 +87,73 @@ describe("SummaryOutput", () => {
 
 		createObjectURLSpy.mockRestore();
 		createSpy.mockRestore();
+	});
+
+	describe("share / copy button", () => {
+		afterEach(() => {
+			delete (navigator as unknown as { share?: unknown }).share;
+		});
+
+		it("renders a Share button and calls navigator.share when the Web Share API is available", () => {
+			const shareMock = vi.fn().mockResolvedValue(undefined);
+			Object.defineProperty(navigator, "share", { value: shareMock, configurable: true });
+
+			render(<SummaryOutput {...defaultProps} />);
+			expect(screen.queryByRole("button", { name: /^copy$/i })).not.toBeInTheDocument();
+			fireEvent.click(screen.getByRole("button", { name: /^share$/i }));
+
+			expect(shareMock).toHaveBeenCalledWith({
+				title: `Summary — ${defaultProps.weekLabel}`,
+				text: defaultProps.summary,
+			});
+		});
+
+		it("falls back to clipboard copy when the Web Share API is unavailable", async () => {
+			delete (navigator as unknown as { share?: unknown }).share;
+			const writeTextMock = vi.fn().mockResolvedValue(undefined);
+			Object.defineProperty(navigator, "clipboard", {
+				value: { writeText: writeTextMock },
+				configurable: true,
+			});
+
+			render(<SummaryOutput {...defaultProps} />);
+			expect(screen.queryByRole("button", { name: /^share$/i })).not.toBeInTheDocument();
+			fireEvent.click(screen.getByRole("button", { name: /^copy$/i }));
+
+			await waitFor(() => expect(writeTextMock).toHaveBeenCalledWith(defaultProps.summary));
+			expect(await screen.findByText(/copied/i)).toBeInTheDocument();
+		});
+
+		it("falls back to clipboard copy when navigator.share rejects with a non-abort error", async () => {
+			const shareMock = vi.fn().mockRejectedValue(new Error("share failed"));
+			Object.defineProperty(navigator, "share", { value: shareMock, configurable: true });
+			const writeTextMock = vi.fn().mockResolvedValue(undefined);
+			Object.defineProperty(navigator, "clipboard", {
+				value: { writeText: writeTextMock },
+				configurable: true,
+			});
+
+			render(<SummaryOutput {...defaultProps} />);
+			fireEvent.click(screen.getByRole("button", { name: /^share$/i }));
+
+			await waitFor(() => expect(writeTextMock).toHaveBeenCalledWith(defaultProps.summary));
+		});
+
+		it("does not fall back to clipboard copy when the user cancels the native share sheet", async () => {
+			const abortError = new DOMException("cancelled", "AbortError");
+			const shareMock = vi.fn().mockRejectedValue(abortError);
+			Object.defineProperty(navigator, "share", { value: shareMock, configurable: true });
+			const writeTextMock = vi.fn().mockResolvedValue(undefined);
+			Object.defineProperty(navigator, "clipboard", {
+				value: { writeText: writeTextMock },
+				configurable: true,
+			});
+
+			render(<SummaryOutput {...defaultProps} />);
+			fireEvent.click(screen.getByRole("button", { name: /^share$/i }));
+
+			await waitFor(() => expect(shareMock).toHaveBeenCalledTimes(1));
+			expect(writeTextMock).not.toHaveBeenCalled();
+		});
 	});
 });
