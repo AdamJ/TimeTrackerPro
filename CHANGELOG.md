@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Mobile dropdowns (category, project, client, status pickers) now render a native `<select>` below the `768px` breakpoint instead of the Radix popover, so iOS/Android show their platform-standard full-screen picker. A new `ResponsiveSelect` wrapper branches on `useIsMobile()` and is shared across `NewTaskForm`, `ProjectSheet`, `BackdatedEntryDialog`, `PlannedTaskDialog`, and `TaskEditInArchiveDialog`; the desktop Radix `Select` is unchanged
+  — `src/components/ui/responsive-select.tsx` (new), `src/components/NewTaskForm.tsx`, `src/components/ProjectSheet.tsx`, `src/components/BackdatedEntryDialog.tsx`, `src/components/PlannedTaskDialog.tsx`, `src/components/TaskEditInArchiveDialog.tsx`, `src/test-setup.ts`
+
 - Release workflow's "Create GitHub Release" step failing with "Bad credentials" — `RELEASE_PAT` secret regenerated
   — `.github/workflows/release.yml`
 
