@@ -1,16 +1,10 @@
 import { Client } from "@/contexts/TimeTrackingContext";
 import { STORAGE_KEYS, SCHEMA_VERSION } from "./constants";
-import { readVersioned } from "./utils";
+import { notifyWriteFailure, readVersioned, writeVersioned } from "./utils";
 
 export async function saveClients(clients: Client[]): Promise<void> {
-	try {
-		localStorage.setItem(
-			STORAGE_KEYS.CLIENTS,
-			JSON.stringify({ data: clients, _v: SCHEMA_VERSION })
-		);
-	} catch (error) {
-		console.warn("Failed to save clients to localStorage:", error);
-	}
+	const result = writeVersioned(STORAGE_KEYS.CLIENTS, { data: clients, _v: SCHEMA_VERSION });
+	if (!result.ok) notifyWriteFailure(STORAGE_KEYS.CLIENTS);
 }
 
 export async function getClients(): Promise<Client[]> {

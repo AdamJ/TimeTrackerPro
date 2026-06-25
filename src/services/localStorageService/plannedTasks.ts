@@ -1,16 +1,10 @@
 import { PlannedTask } from "@/contexts/TimeTrackingContext";
 import { STORAGE_KEYS, SCHEMA_VERSION } from "./constants";
-import { readVersioned } from "./utils";
+import { notifyWriteFailure, readVersioned, writeVersioned } from "./utils";
 
 export async function savePlannedTasks(tasks: PlannedTask[]): Promise<void> {
-	try {
-		localStorage.setItem(
-			STORAGE_KEYS.PLANNED_TASKS,
-			JSON.stringify({ data: tasks, _v: SCHEMA_VERSION })
-		);
-	} catch (error) {
-		console.warn("Failed to save planned tasks to localStorage:", error);
-	}
+	const result = writeVersioned(STORAGE_KEYS.PLANNED_TASKS, { data: tasks, _v: SCHEMA_VERSION });
+	if (!result.ok) notifyWriteFailure(STORAGE_KEYS.PLANNED_TASKS);
 }
 
 export async function upsertPlannedTask(task: PlannedTask): Promise<void> {

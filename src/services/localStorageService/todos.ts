@@ -1,16 +1,10 @@
 import { TodoItem } from "@/contexts/TimeTrackingContext";
 import { STORAGE_KEYS, SCHEMA_VERSION } from "./constants";
-import { readVersioned } from "./utils";
+import { notifyWriteFailure, readVersioned, writeVersioned } from "./utils";
 
 export async function saveTodos(todos: TodoItem[]): Promise<void> {
-	try {
-		localStorage.setItem(
-			STORAGE_KEYS.TODOS,
-			JSON.stringify({ data: todos, _v: SCHEMA_VERSION })
-		);
-	} catch (error) {
-		console.warn("Failed to save todos to localStorage:", error);
-	}
+	const result = writeVersioned(STORAGE_KEYS.TODOS, { data: todos, _v: SCHEMA_VERSION });
+	if (!result.ok) notifyWriteFailure(STORAGE_KEYS.TODOS);
 }
 
 export async function getTodos(): Promise<TodoItem[]> {

@@ -1,16 +1,11 @@
 import { Task } from "@/contexts/TimeTrackingContext";
 import type { CurrentDayData } from "@/services/dataService";
 import { STORAGE_KEYS, SCHEMA_VERSION } from "./constants";
+import { backupStaleKey, notifyWriteFailure, writeVersioned } from "./utils";
 
 export async function saveCurrentDay(data: CurrentDayData): Promise<void> {
-	try {
-		localStorage.setItem(
-			STORAGE_KEYS.CURRENT_DAY,
-			JSON.stringify({ ...data, _v: SCHEMA_VERSION })
-		);
-	} catch (error) {
-		console.warn("Failed to save current day to localStorage:", error);
-	}
+	const result = writeVersioned(STORAGE_KEYS.CURRENT_DAY, { ...data, _v: SCHEMA_VERSION });
+	if (!result.ok) notifyWriteFailure(STORAGE_KEYS.CURRENT_DAY);
 }
 
 export async function getCurrentDay(): Promise<CurrentDayData | null> {
@@ -20,7 +15,7 @@ export async function getCurrentDay(): Promise<CurrentDayData | null> {
 
 		const data = JSON.parse(saved);
 		if (data._v !== SCHEMA_VERSION) {
-			console.warn("localStorage current day schema mismatch — clearing stale data");
+			backupStaleKey(STORAGE_KEYS.CURRENT_DAY, saved, data._v);
 			localStorage.removeItem(STORAGE_KEYS.CURRENT_DAY);
 			return null;
 		}

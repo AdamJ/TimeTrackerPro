@@ -1,16 +1,10 @@
 import { Project } from "@/contexts/TimeTrackingContext";
 import { STORAGE_KEYS, SCHEMA_VERSION } from "./constants";
-import { readVersioned } from "./utils";
+import { notifyWriteFailure, readVersioned, writeVersioned } from "./utils";
 
 export async function saveProjects(projects: Project[]): Promise<void> {
-	try {
-		localStorage.setItem(
-			STORAGE_KEYS.PROJECTS,
-			JSON.stringify({ data: projects, _v: SCHEMA_VERSION })
-		);
-	} catch (error) {
-		console.warn("Failed to save projects to localStorage:", error);
-	}
+	const result = writeVersioned(STORAGE_KEYS.PROJECTS, { data: projects, _v: SCHEMA_VERSION });
+	if (!result.ok) notifyWriteFailure(STORAGE_KEYS.PROJECTS);
 }
 
 export async function getProjects(): Promise<Project[]> {

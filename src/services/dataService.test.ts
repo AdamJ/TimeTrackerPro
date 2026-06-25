@@ -2,6 +2,13 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createDataService } from './dataService';
 import type { DayRecord, Task } from '@/contexts/TimeTrackingContext';
 
+vi.mock('@/hooks/use-toast', () => ({
+  toast: vi.fn(),
+  useToast: vi.fn()
+}));
+
+import { toast } from '@/hooks/use-toast';
+
 describe('DataService', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -128,6 +135,62 @@ describe('DataService', () => {
         const days = await service.getArchivedDays();
         expect(days).toEqual([]);
       });
+    });
+  });
+
+  describe('write failure handling', () => {
+    let service: ReturnType<typeof createDataService>;
+
+    beforeEach(() => {
+      service = createDataService(false);
+    });
+
+    it('notifies the user via toast when saveCurrentDay hits a quota error', async () => {
+      const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new DOMException('Quota exceeded', 'QuotaExceededError');
+      });
+
+      await service.saveCurrentDay({
+        isDayStarted: true,
+        dayStartTime: new Date('2024-12-03T09:00:00.000Z'),
+        currentTask: null,
+        tasks: []
+      });
+
+      expect(toast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' }));
+      setItemSpy.mockRestore();
+    });
+
+    it('does not throw when saveArchivedDays hits a quota error', async () => {
+      const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new DOMException('Quota exceeded', 'QuotaExceededError');
+      });
+
+      await expect(service.saveArchivedDays([])).resolves.not.toThrow();
+
+      setItemSpy.mockRestore();
+    });
+  });
+
+  describe('schema mismatch handling', () => {
+    let service: ReturnType<typeof createDataService>;
+
+    beforeEach(() => {
+      service = createDataService(false);
+    });
+
+    it('backs up stale current-day data instead of destroying it on schema mismatch', async () => {
+      const raw = JSON.stringify({ isDayStarted: true, tasks: [], _v: 0 });
+      localStorage.setItem('timetracker_current_day', raw);
+
+      const state = await service.getCurrentDay();
+
+      expect(state).toBeNull();
+      const backupKeys = Object.keys(localStorage).filter((key) =>
+        key.startsWith('timetracker_current_day_v0_backup_')
+      );
+      expect(backupKeys).toHaveLength(1);
+      expect(localStorage.getItem(backupKeys[0])).toBe(raw);
     });
   });
 
