@@ -1,7 +1,8 @@
 actions:
   - .github/**
 dependencies:
-  - package-lock.json
+  - pnpm-lock.yaml
+  - package.json
 documentation:
   - docs/**
   - agents/**
@@ -9,12 +10,17 @@ documentation:
   - Integration.md
   - README-EXT.md
   - README.md
-ios:
-  - ios/**
 automation:
   - .github/**
   - .claude/**
   - CLAUDE.md
   - AGENTS.md
   - agents/**
+frontend:
+  - src/**
+electron:
+  - electron/**
+  - vite.electron.config.ts
+supabase:
+  - supabase/**
 
