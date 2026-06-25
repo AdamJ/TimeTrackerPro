@@ -195,6 +195,7 @@ Timetraked uses an **action-triggered save** approach optimized for single-devic
 3. **Emergency Backups** — on web, `visibilitychange` and `beforeunload` write a synchronous localStorage snapshot as a last-resort fallback before JavaScript execution is suspended.
 4. **Manual Sync** — the sync button in the navigation saves all data types (tasks, projects, categories, archived days, todos) in one batch, useful after recovering from an error.
 5. **Electron Disk Backups** — on the desktop build, the same save events (plus the app's `before-quit` lifecycle) additionally write a JSON snapshot to a disk file under the OS user-data directory (pruned to the most recent 20), a failure domain independent of `localStorage`. No-ops on web/PWA builds.
+6. **In-App Recovery** — in guest mode, Settings → "Data Recovery" lists the schema-mismatch `localStorage` backups and (on desktop) the disk snapshots above, with an entity-count preview before restoring. Restoring writes the backup back into the live storage keys and reloads the app.
 
 When you sign in, your `localStorage` data automatically migrates to Supabase (timestamps compared to prevent overwriting newer data, no data loss). When you sign out, Supabase data syncs back to `localStorage`.
 

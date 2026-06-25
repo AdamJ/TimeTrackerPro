@@ -12,13 +12,16 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { ExportDialog } from '@/components/ExportDialog';
+import { DataRecoveryDialog } from '@/components/DataRecoveryDialog';
 import {
   CogIcon,
   ChevronRight,
   Shredder,
-  DatabaseBackup
+  DatabaseBackup,
+  History
 } from 'lucide-react';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
+import { useAuth } from '@/hooks/useAuth';
 import { PageLayout } from '@/components/PageLayout';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { Badge } from '@/components/ui/badge';
@@ -29,8 +32,10 @@ import { consumePendingMenuAction } from '@/lib/electronMenuActions';
 
 const SettingsContent: React.FC = () => {
   const { archivedDays, projects, categories, clients } = useTimeTracking();
+  const { isAuthenticated } = useAuth();
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showClearDataDialog, setShowClearDataDialog] = useState(false);
+  const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
   const [clearConfirmText, setClearConfirmText] = useState("");
   const [backgroundNotificationsEnabled, setBackgroundNotificationsEnabled] = useBackgroundNotificationSetting();
   const notificationsSupported = typeof window !== 'undefined' && 'Notification' in window;
@@ -207,6 +212,28 @@ const SettingsContent: React.FC = () => {
             Storage
           </h2>
           <div className="flex w-full flex-col gap-4">
+            {!isAuthenticated && (
+              <Item
+                variant="outline"
+                className="shadow-none duration-100 hover:shadow-md transition-shadow"
+              >
+                <ItemContent>
+                  <ItemTitle>Data Recovery</ItemTitle>
+                  <ItemDescription>
+                    Restore a backup that was saved automatically before a schema upgrade or app quit.
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <Button
+                    onClick={() => setShowRecoveryDialog(true)}
+                    variant="outline"
+                  >
+                    <History className="w-4 h-4 mr-1" />
+                    Restore Backup
+                  </Button>
+                </ItemActions>
+              </Item>
+            )}
             <Item
               variant="outline"
               className="shadow-none duration-100 hover:shadow-md transition-shadow"
@@ -236,6 +263,10 @@ const SettingsContent: React.FC = () => {
       <ExportDialog
         isOpen={showExportDialog}
         onClose={() => setShowExportDialog(false)}
+      />
+      <DataRecoveryDialog
+        isOpen={showRecoveryDialog}
+        onClose={() => setShowRecoveryDialog(false)}
       />
       <AlertDialog
         open={showClearDataDialog}

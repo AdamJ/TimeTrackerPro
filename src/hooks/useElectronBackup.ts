@@ -20,5 +20,15 @@ export function useElectronBackup() {
 		window.electronAPI.requestFlushBeforeQuit(() => quitFlushRef.current?.());
 	}, []);
 
-	return { writeBackup, registerQuitFlush };
+	const listDiskBackups = useCallback(async () => {
+		if (!window.electronAPI) return { ok: true, backups: [] };
+		return window.electronAPI.listBackups();
+	}, []);
+
+	const readDiskBackup = useCallback(async (name: string) => {
+		if (!window.electronAPI) return { ok: false, error: "Not running in Electron" };
+		return window.electronAPI.readBackup(name);
+	}, []);
+
+	return { writeBackup, registerQuitFlush, listDiskBackups, readDiskBackup };
 }

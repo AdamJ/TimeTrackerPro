@@ -126,7 +126,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 
 **Recent highlights:**
 
-- **Guest-mode data durability** — schema-mismatch backups, write-failure toasts, undo for hard deletes, and Electron disk-based backup snapshots (independent of `localStorage`, including a final flush on app quit)
+- **Guest-mode data durability** — schema-mismatch backups, write-failure toasts, undo for hard deletes, Electron disk-based backup snapshots (independent of `localStorage`, including a final flush on app quit), and an in-app "Data Recovery" UI in Settings to preview and restore those backups
 - **Backdated entry creation** — "Add Past Entry" button on Archive page opens a multi-step dialog to log tasks for any past date
 - **Kanban planning board** — drag-and-drop task planning view (`KanbanBoard`, `KanbanColumn`, `PlannedTaskCard`)
 - Persistent report summaries saved to localStorage; markdown preview/export in the report output panel

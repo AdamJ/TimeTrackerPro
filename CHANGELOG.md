@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- In-app data recovery UI for guest-mode backups — a new "Data Recovery" item in Settings (guest mode only) lists localStorage schema-mismatch sibling-key backups and, on the desktop build, Electron disk snapshots, with a preview of entity counts (archived days, projects, etc.) before restoring. Restoring writes the backup data back into the live storage keys (re-stamped with the current schema version) and reloads. New `ipcMain.handle("backup:list"/"backup:read")` pair (filename-pattern validated against path traversal) exposed via `electronAPI.listBackups`/`readBackup`
+  — `electron/main.ts`, `electron/preload.ts`, `src/types/electron.d.ts`, `src/hooks/useElectronBackup.ts`, `src/services/localStorageService/recovery.ts` (new), `src/hooks/useDataRecovery.ts` (new), `src/components/DataRecoveryDialog.tsx` (new), `src/pages/Settings.tsx`
+
 - Electron disk-based backup snapshots — a separate failure domain from localStorage for guest-mode desktop users. A new preload bridge (`contextBridge`) exposes `writeBackup`/`requestFlushBeforeQuit` to the renderer; the main process writes timestamped JSON snapshots to `userData/backups/` (pruned to the most recent 20) via `ipcMain.handle("backup:write", ...)`. Snapshots are written at the same existing critical-save events (`postDay`, `forceSyncToDatabase`) plus once more on the Electron `before-quit` lifecycle event, which `preventDefault()`s and waits (with a 3s timeout fallback) for the renderer to flush — covering force-quit/crash cases the DOM `beforeunload` listener can't catch. No-ops entirely on web/PWA builds
   — `electron/main.ts`, `electron/preload.ts` (new), `src/hooks/useElectronBackup.ts` (new), `src/types/electron.d.ts` (new), `src/contexts/TimeTrackingContext.tsx`, `vite.electron.config.ts`
 
