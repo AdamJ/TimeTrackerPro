@@ -7,6 +7,8 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   { ignores: [
       "dist",
+      "dist-electron",
+      "dist-electron-build",
       "src/components/ui",
       "node_modules",
       "dev-dist/"

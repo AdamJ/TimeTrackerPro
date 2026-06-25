@@ -18,7 +18,8 @@ import { getBillableHoursForDay, getNonBillableHoursForDay } from "@/utils/calcu
 import { DashboardIcon } from "@radix-ui/react-icons";
 import { PageLayout } from "@/components/PageLayout";
 import { TaskTrackingPanel } from "@/components/TaskTrackingPanel";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { consumePendingMenuAction } from "@/lib/electronMenuActions";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Sheet,
@@ -55,6 +56,12 @@ const TimeTrackerContent = () => {
 
   const [showStartDayDialog, setShowStartDayDialog] = useState(false);
   const [showAddTaskForm, setShowAddTaskForm] = useState(false);
+
+  useEffect(() => {
+    if (consumePendingMenuAction("new-task")) {
+      setShowAddTaskForm(true);
+    }
+  }, []);
 
   const handleStartDay = () => {
     setShowStartDayDialog(true);

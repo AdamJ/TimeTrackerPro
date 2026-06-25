@@ -13,4 +13,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
 			}
 		});
 	},
+
+	onMenuAction: (callback: (action: string) => void): (() => void) => {
+		const listener = (_event: unknown, action: string) => callback(action);
+		ipcRenderer.on("menu:action", listener);
+		return () => ipcRenderer.removeListener("menu:action", listener);
+	},
 });
