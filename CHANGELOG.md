@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Electron quit-flush disk backup no longer fires its "done" ack on a fire-and-forget basis — `useElectronBackup`'s `writeBackup` now returns the IPC write result so the quit-flush callback can `await` it, and a failed write (disk full, permissions, unwritable `userData`) surfaces a destructive toast (mirroring the existing localStorage write-failure toast) instead of failing silently. Added regression coverage for the `backup:write` IPC handler's error path and the `before-quit-flush` timeout fallback closing the window even when the renderer never acks
+  — `src/hooks/useElectronBackup.ts`, `src/contexts/TimeTrackingContext.tsx`, `electron/main.test.ts` (new), `vite.config.ts`
+
 - Mobile dropdowns (category, project, client, status pickers) now render a native `<select>` below the `768px` breakpoint instead of the Radix popover, so iOS/Android show their platform-standard full-screen picker. A new `ResponsiveSelect` wrapper branches on `useIsMobile()` and is shared across `NewTaskForm`, `ProjectSheet`, `BackdatedEntryDialog`, `PlannedTaskDialog`, and `TaskEditInArchiveDialog`; the desktop Radix `Select` is unchanged
   — `src/components/ui/responsive-select.tsx` (new), `src/components/NewTaskForm.tsx`, `src/components/ProjectSheet.tsx`, `src/components/BackdatedEntryDialog.tsx`, `src/components/PlannedTaskDialog.tsx`, `src/components/TaskEditInArchiveDialog.tsx`, `src/test-setup.ts`
 

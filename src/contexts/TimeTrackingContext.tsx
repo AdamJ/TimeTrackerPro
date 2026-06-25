@@ -574,7 +574,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     clients: clientsRef.current
   }), [categories, archivedDays, todoItems]);
 
-  const handleQuitFlush = useCallback(() => {
+  const handleQuitFlush = useCallback(async () => {
     // Mirrors the existing beforeunload synchronous write, plus a final disk backup.
     try {
       localStorage.setItem(
@@ -584,7 +584,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch {
       // localStorage unavailable (quota exceeded, private mode); best effort only.
     }
-    writeBackup(buildFullSnapshot());
+    // Awaited so the quit-flush ack (and the resulting window close) doesn't fire
+    // until the disk write actually settles — within QUIT_FLUSH_TIMEOUT_MS, the
+    // main process still closes the window even if this hangs or errors.
+    await writeBackup(buildFullSnapshot());
   }, [writeBackup, buildFullSnapshot]);
 
   useEffect(() => {
