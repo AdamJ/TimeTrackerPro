@@ -8,7 +8,7 @@ import {
 	ClipboardCopyIcon,
 	CheckIcon,
 } from "@radix-ui/react-icons";
-import { Download, Printer } from "lucide-react";
+import { Download, Printer, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -26,11 +26,13 @@ interface SummaryOutputProps {
 }
 
 // ---------------------------------------------------------------------------
-// CopyButton
+// CopyButton — uses the native share sheet when available, falling back to
+// clipboard copy on desktop browsers or browsers without Web Share support.
 // ---------------------------------------------------------------------------
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text, title }: { text: string; title: string }) {
 	const [copied, setCopied] = useState(false);
+	const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
 
 	function handleCopy() {
 		navigator.clipboard.writeText(text).then(() => {
@@ -39,6 +41,29 @@ function CopyButton({ text }: { text: string }) {
 		}).catch(() => {
 			// clipboard unavailable — leave button in default state
 		});
+	}
+
+	function handleShare() {
+		navigator.share({ title, text }).catch((error: unknown) => {
+			// User-cancelled shares throw AbortError — not an actual failure
+			const name = error && typeof error === "object" ? (error as { name?: string }).name : undefined;
+			if (name === "AbortError") return;
+			handleCopy();
+		});
+	}
+
+	if (canShare) {
+		return (
+			<Button
+				variant="outline"
+				size="sm"
+				onClick={handleShare}
+				className="gap-1.5"
+			>
+				<Share2 className="h-3.5 w-3.5" />
+				Share
+			</Button>
+		);
 	}
 
 	return (
@@ -172,7 +197,7 @@ export default function SummaryOutput({
 
 			{/* Export row */}
 			<div className="flex items-center gap-1.5 flex-wrap">
-				<CopyButton text={summary} />
+				<CopyButton text={summary} title={`Summary — ${weekLabel}`} />
 				<Button
 					variant="outline"
 					size="sm"
