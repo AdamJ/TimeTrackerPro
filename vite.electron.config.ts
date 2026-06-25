@@ -18,6 +18,7 @@ export default defineConfig({
 		rollupOptions: {
 			external: [
 				"electron",
+				"electron-updater",
 				"path",
 				"url",
 				"fs",
