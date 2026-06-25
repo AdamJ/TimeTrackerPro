@@ -2,6 +2,8 @@ import { app, BrowserWindow, session, protocol, net, ipcMain } from "electron";
 import path from "path";
 import { pathToFileURL } from "url";
 import fs from "fs/promises";
+import { buildApplicationMenu } from "./menu";
+import { initAutoUpdater } from "./updater";
 
 const isDev = process.env.NODE_ENV === "development" || process.env.ELECTRON_DEV === "true";
 
@@ -129,7 +131,12 @@ app.whenReady().then(() => {
 		});
 	}
 
+	buildApplicationMenu();
 	createWindow();
+
+	if (!isDev) {
+		initAutoUpdater();
+	}
 
 	app.on("activate", () => {
 		if (BrowserWindow.getAllWindows().length === 0) {

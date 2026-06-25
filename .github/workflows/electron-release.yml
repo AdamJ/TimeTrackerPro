@@ -52,6 +52,9 @@ jobs:
           tag_name: ${{ github.event.release.tag_name }}
           files: |
             dist-electron-build/*.dmg
+            dist-electron-build/*.zip
             dist-electron-build/*.exe
             dist-electron-build/*.blockmap
+            dist-electron-build/latest.yml
+            dist-electron-build/latest-mac.yml
           token: ${{ secrets.GITHUB_TOKEN }}
