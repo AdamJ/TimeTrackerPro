@@ -14,6 +14,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Electron disk-based backup snapshots — a separate failure domain from localStorage for guest-mode desktop users. A new preload bridge (`contextBridge`) exposes `writeBackup`/`requestFlushBeforeQuit` to the renderer; the main process writes timestamped JSON snapshots to `userData/backups/` (pruned to the most recent 20) via `ipcMain.handle("backup:write", ...)`. Snapshots are written at the same existing critical-save events (`postDay`, `forceSyncToDatabase`) plus once more on the Electron `before-quit` lifecycle event, which `preventDefault()`s and waits (with a 3s timeout fallback) for the renderer to flush — covering force-quit/crash cases the DOM `beforeunload` listener can't catch. No-ops entirely on web/PWA builds
+  — `electron/main.ts`, `electron/preload.ts` (new), `src/hooks/useElectronBackup.ts` (new), `src/types/electron.d.ts` (new), `src/contexts/TimeTrackingContext.tsx`, `vite.electron.config.ts`
+
+- Undo toast for hard-delete actions — deleting a project, category, archived day, or planned task now shows a toast with an Undo action with an 8–10s grace window before the deletion is final, via a new `useUndoableDelete` hook. New context methods `restoreDeletedProject`, `restoreDeletedCategory`, `restoreDeletedArchivedDay`, `restoreDeletedPlannedTask` reinsert (and, for the two that persist immediately, re-persist) the deleted record with its original `id`
+  — `src/hooks/useUndoableDelete.tsx` (new), `src/contexts/TimeTrackingContext.tsx`, `src/components/ProjectManagement.tsx`, `src/components/CategoryManagement.tsx`, `src/components/ArchiveEditDialog.tsx`, `src/components/PlannedTaskCard.tsx`
+
+### Fixed
+
+- localStorage schema-mismatch handling no longer silently destroys data — `backupStaleKey` copies the stale blob to a sibling `${key}_v{old}_backup_{timestamp}` key before clearing it, instead of a bare `removeItem`
+  — `src/services/localStorageService/utils.ts`, `src/services/localStorageService/currentDay.ts`, `src/services/localStorageService/archivedDays.ts`
+
+- localStorage write failures (e.g. `QuotaExceededError`) are now surfaced to the user via a destructive toast instead of being silently swallowed in a console-only catch block. All 7 `save*` functions route through a new `writeVersioned` helper that returns `{ ok, error }` instead of throwing, with a debounce so a single failed bulk sync doesn't spam multiple toasts
+  — `src/services/localStorageService/utils.ts`, `src/services/localStorageService/currentDay.ts`, `src/services/localStorageService/archivedDays.ts`, `src/services/localStorageService/categories.ts`, `src/services/localStorageService/clients.ts`, `src/services/localStorageService/plannedTasks.ts`, `src/services/localStorageService/projects.ts`, `src/services/localStorageService/todos.ts`
+
+### Added
+
 - Framer Motion animations on app-layer components — task list add/delete (`AnimatePresence` + `layout` reflow), active-task scale/ring transition, PWA update/install prompt slide in/out, and a `layoutId`-based sliding active indicator on the mobile nav
   — `src/pages/Index.tsx`, `src/components/TaskItem.tsx`, `src/components/PwaUpdatePrompt.tsx`, `src/components/InstallPrompt.tsx`, `src/components/MobileNav.tsx`
 

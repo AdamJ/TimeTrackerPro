@@ -142,6 +142,7 @@ const service = createDataService(isAuthenticated);
   3. Manual sync button (`forceSyncToDatabase()`)
 - **Why?** Optimized for single-device usage, reduces unnecessary database calls
 - **Trade-off**: Users must manually sync or complete critical events
+- **Electron disk backup**: on desktop builds, `useElectronBackup` (`src/hooks/useElectronBackup.ts`) writes a JSON snapshot to disk (`userData/backups/`, pruned to the most recent 20) via IPC. This is **not** a new autosave trigger — it fires only at the same critical save events above (`postDay`, `forceSyncToDatabase`), plus once more on the Electron `before-quit` lifecycle event to cover force-quit/crash cases that the DOM `beforeunload` listener can't catch. No-ops entirely on web/PWA builds where `window.electronAPI` is absent.
 
 ### Data Migration — localStorage ↔ Supabase
 

@@ -171,9 +171,12 @@ The app can also be packaged as a native Mac (DMG) or Windows (NSIS) desktop app
 
 | File | Purpose |
 | ---- | ------- |
-| `electron/main.ts` | Electron main process — BrowserWindow, CSP header, dev/prod load logic |
+| `electron/main.ts` | Electron main process — BrowserWindow, CSP header, dev/prod load logic, IPC backup-write handler, `before-quit` flush handshake |
+| `electron/preload.ts` | `contextBridge`-exposed `window.electronAPI` (`writeBackup`, `requestFlushBeforeQuit`) — the renderer's only bridge to Node/Electron APIs |
 | `electron/tsconfig.json` | Compiles `electron/` to CJS in `dist-electron/` (isolated from the app tsconfig) |
-| `vite.electron.config.ts` | Dedicated Vite config for bundling only the main process (no VitePWA, no React) |
+| `vite.electron.config.ts` | Dedicated Vite config bundling the main process and preload script (no VitePWA, no React) |
+| `src/hooks/useElectronBackup.ts` | Renderer-side hook wrapping `window.electronAPI`; no-ops entirely on web/PWA builds where it's absent |
+| `src/types/electron.d.ts` | Ambient `Window.electronAPI` type |
 
 **npm scripts:**
 

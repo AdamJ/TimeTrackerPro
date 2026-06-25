@@ -194,6 +194,7 @@ Timetraked uses an **action-triggered save** approach optimized for single-devic
 2. **Action Saves** — every task mutation (start, update, delete) and day lifecycle event (start day, end day) triggers an immediate `saveCurrentDay()` call with the freshly computed state, keeping localStorage and Supabase in sync without a debounce delay.
 3. **Emergency Backups** — on web, `visibilitychange` and `beforeunload` write a synchronous localStorage snapshot as a last-resort fallback before JavaScript execution is suspended.
 4. **Manual Sync** — the sync button in the navigation saves all data types (tasks, projects, categories, archived days, todos) in one batch, useful after recovering from an error.
+5. **Electron Disk Backups** — on the desktop build, the same save events (plus the app's `before-quit` lifecycle) additionally write a JSON snapshot to a disk file under the OS user-data directory (pruned to the most recent 20), a failure domain independent of `localStorage`. No-ops on web/PWA builds.
 
 When you sign in, your `localStorage` data automatically migrates to Supabase (timestamps compared to prevent overwriting newer data, no data loss). When you sign out, Supabase data syncs back to `localStorage`.
 
@@ -306,7 +307,7 @@ DataService.save()
 localStorage OR Supabase
 ```
 
-**Save triggers:** every task mutation and day lifecycle event calls `dataService.saveCurrentDay()` directly; `postDay()` additionally saves archived days and todos; `visibilitychange` and `beforeunload` write synchronous localStorage backups; `forceSyncToDatabase()` (manual sync) saves all data types in parallel.
+**Save triggers:** every task mutation and day lifecycle event calls `dataService.saveCurrentDay()` directly; `postDay()` additionally saves archived days and todos; `visibilitychange` and `beforeunload` write synchronous localStorage backups; `forceSyncToDatabase()` (manual sync) saves all data types in parallel. On the Electron desktop build, `postDay()` and `forceSyncToDatabase()` also write a disk-based JSON backup via IPC, plus a final one on app quit — see "Electron Disk Backups" above.
 
 **Service Worker caching:**
 
