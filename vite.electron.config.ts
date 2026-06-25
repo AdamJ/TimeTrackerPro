@@ -1,16 +1,19 @@
 import { defineConfig } from "vite";
 import path from "path";
 
-// Vite config for compiling the Electron main process only.
+// Vite config for compiling the Electron main process and preload script.
 // Outputs CJS to dist-electron/ — no app plugins, no PWA, no React.
 export default defineConfig({
 	build: {
 		outDir: "dist-electron",
 		emptyOutDir: true,
 		lib: {
-			entry: path.resolve(__dirname, "electron/main.ts"),
+			entry: {
+				main: path.resolve(__dirname, "electron/main.ts"),
+				preload: path.resolve(__dirname, "electron/preload.ts"),
+			},
 			formats: ["cjs"],
-			fileName: () => "main.cjs",
+			fileName: (_format, entryName) => `${entryName}.cjs`,
 		},
 		rollupOptions: {
 			external: [
@@ -18,6 +21,7 @@ export default defineConfig({
 				"path",
 				"url",
 				"fs",
+				"fs/promises",
 				"os",
 				"crypto",
 				"stream",

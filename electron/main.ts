@@ -1,8 +1,52 @@
-import { app, BrowserWindow, session, protocol, net } from "electron";
+import { app, BrowserWindow, session, protocol, net, ipcMain } from "electron";
 import path from "path";
 import { pathToFileURL } from "url";
+import fs from "fs/promises";
 
 const isDev = process.env.NODE_ENV === "development" || process.env.ELECTRON_DEV === "true";
+
+const MAX_BACKUPS = 20;
+const MAX_BACKUP_BYTES = 10 * 1024 * 1024;
+const QUIT_FLUSH_TIMEOUT_MS = 3000;
+
+let mainWindow: BrowserWindow | null = null;
+let isQuittingForReal = false;
+let quitFlushPending = false;
+
+function getBackupsDir(): string {
+	return path.join(app.getPath("userData"), "backups");
+}
+
+async function pruneOldBackups(): Promise<void> {
+	const dir = getBackupsDir();
+	const entries = await fs.readdir(dir).catch(() => [] as string[]);
+	const backupFiles = entries.filter((name) => name.startsWith("backup_") && name.endsWith(".json")).sort();
+	const toDelete = backupFiles.slice(0, Math.max(0, backupFiles.length - MAX_BACKUPS));
+	await Promise.all(toDelete.map((name) => fs.unlink(path.join(dir, name)).catch(() => undefined)));
+}
+
+async function writeBackupFile(json: string): Promise<void> {
+	const dir = getBackupsDir();
+	await fs.mkdir(dir, { recursive: true });
+	// Filename is always generated here, never from renderer input.
+	const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+	const filePath = path.join(dir, `backup_${timestamp}.json`);
+	await fs.writeFile(filePath, json, "utf-8");
+	await pruneOldBackups();
+}
+
+ipcMain.handle("backup:write", async (_event, json: unknown) => {
+	if (typeof json !== "string" || json.length === 0 || json.length > MAX_BACKUP_BYTES) {
+		return { ok: false, error: "Invalid backup payload" };
+	}
+	try {
+		await writeBackupFile(json);
+		return { ok: true };
+	} catch (error) {
+		console.error("Failed to write backup file:", error);
+		return { ok: false, error: error instanceof Error ? error.message : String(error) };
+	}
+});
 
 // Register custom protocol for production SPA routing (BrowserRouter requires path-based URLs)
 // Must be registered before app is ready
@@ -21,7 +65,13 @@ function createWindow(): void {
 		webPreferences: {
 			contextIsolation: true,
 			nodeIntegration: false,
+			preload: path.join(__dirname, "preload.cjs"),
 		},
+	});
+
+	mainWindow = win;
+	win.on("closed", () => {
+		if (mainWindow === win) mainWindow = null;
 	});
 
 	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -77,4 +127,32 @@ app.on("window-all-closed", () => {
 	if (process.platform !== "darwin") {
 		app.quit();
 	}
+});
+
+// beforeunload (DOM) doesn't fire on app.quit() without a window close, on a
+// force-quit, or on a crash. This gives the renderer one last chance to flush
+// state to localStorage and write a final disk backup before the process exits,
+// with a timeout so quit is never blocked indefinitely.
+app.on("before-quit", (event) => {
+	if (isQuittingForReal || quitFlushPending) return;
+	if (!mainWindow || mainWindow.isDestroyed()) return;
+
+	quitFlushPending = true;
+	event.preventDefault();
+
+	let settled = false;
+	const finishQuit = () => {
+		if (settled) return;
+		settled = true;
+		isQuittingForReal = true;
+		app.quit();
+	};
+
+	const timeoutId = setTimeout(finishQuit, QUIT_FLUSH_TIMEOUT_MS);
+	ipcMain.once("before-quit-flush-done", () => {
+		clearTimeout(timeoutId);
+		finishQuit();
+	});
+
+	mainWindow.webContents.send("before-quit-flush");
 });
