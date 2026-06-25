@@ -40,27 +40,8 @@ afterEach(() => {
 	cleanup();
 });
 
-// Mock localStorage
-const localStorageMock = (() => {
-	let store: Record<string, string> = {};
-
-	return {
-		getItem: (key: string) => store[key] || null,
-		setItem: (key: string, value: string) => {
-			store[key] = value.toString();
-		},
-		removeItem: (key: string) => {
-			delete store[key];
-		},
-		clear: () => {
-			store = {};
-		}
-	};
-})();
-
-Object.defineProperty(window, "localStorage", {
-	value: localStorageMock
-});
+// jsdom provides a real Storage-backed localStorage (proper Storage.prototype
+// inheritance, real key enumeration) — no custom mock needed.
 
 // Mock URL.createObjectURL / revokeObjectURL (not available in jsdom)
 if (typeof URL.createObjectURL === "undefined") {

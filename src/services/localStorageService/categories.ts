@@ -1,16 +1,10 @@
 import { TaskCategory } from "@/config/categories";
 import { STORAGE_KEYS, SCHEMA_VERSION } from "./constants";
-import { readVersioned } from "./utils";
+import { notifyWriteFailure, readVersioned, writeVersioned } from "./utils";
 
 export async function saveCategories(categories: TaskCategory[]): Promise<void> {
-	try {
-		localStorage.setItem(
-			STORAGE_KEYS.CATEGORIES,
-			JSON.stringify({ data: categories, _v: SCHEMA_VERSION })
-		);
-	} catch (error) {
-		console.warn("Failed to save categories to localStorage:", error);
-	}
+	const result = writeVersioned(STORAGE_KEYS.CATEGORIES, { data: categories, _v: SCHEMA_VERSION });
+	if (!result.ok) notifyWriteFailure(STORAGE_KEYS.CATEGORIES);
 }
 
 export async function getCategories(): Promise<TaskCategory[]> {

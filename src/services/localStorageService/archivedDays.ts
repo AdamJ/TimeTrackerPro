@@ -1,16 +1,10 @@
 import { DayRecord } from "@/contexts/TimeTrackingContext";
 import { STORAGE_KEYS, SCHEMA_VERSION } from "./constants";
-import { hydrateDay } from "./utils";
+import { backupStaleKey, hydrateDay, notifyWriteFailure, writeVersioned } from "./utils";
 
 export async function saveArchivedDays(days: DayRecord[]): Promise<void> {
-	try {
-		localStorage.setItem(
-			STORAGE_KEYS.ARCHIVED_DAYS,
-			JSON.stringify({ days, _v: SCHEMA_VERSION })
-		);
-	} catch (error) {
-		console.warn("Failed to save archived days to localStorage:", error);
-	}
+	const result = writeVersioned(STORAGE_KEYS.ARCHIVED_DAYS, { days, _v: SCHEMA_VERSION });
+	if (!result.ok) notifyWriteFailure(STORAGE_KEYS.ARCHIVED_DAYS);
 }
 
 export async function getArchivedDays(): Promise<DayRecord[]> {
@@ -22,7 +16,7 @@ export async function getArchivedDays(): Promise<DayRecord[]> {
 		// Support both versioned format { days, _v } and legacy bare array
 		const data: DayRecord[] | undefined = Array.isArray(parsed) ? parsed : parsed?.days;
 		if (!Array.isArray(parsed) && parsed?._v !== SCHEMA_VERSION) {
-			console.warn("localStorage archived days schema mismatch — clearing stale data");
+			backupStaleKey(STORAGE_KEYS.ARCHIVED_DAYS, saved, parsed?._v);
 			localStorage.removeItem(STORAGE_KEYS.ARCHIVED_DAYS);
 			return [];
 		}
