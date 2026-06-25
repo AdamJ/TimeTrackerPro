@@ -20,7 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Edit, Trash2, Tag } from "lucide-react";
 import { TaskCategory } from "@/config/categories";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
-import { toast } from "@/hooks/use-toast";
+import { useUndoableDelete } from "@/hooks/useUndoableDelete";
 import { CategorySheet } from "@/components/CategorySheet";
 
 interface CategoryManagementProps {
@@ -32,8 +32,9 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 	isOpen,
 	onClose
 }) => {
-	const { categories, deleteCategory, forceSyncToDatabase } =
+	const { categories, deleteCategory, restoreDeletedCategory, forceSyncToDatabase } =
 		useTimeTracking();
+	const { confirmDelete } = useUndoableDelete<TaskCategory>();
 	const [editingCategory, setEditingCategory] = useState<TaskCategory | null>(
 		null
 	);
@@ -52,13 +53,18 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 
 	const handleDeleteConfirm = async () => {
 		if (!deleteTargetId) return;
-		const deletedName = categories.find((c) => c.id === deleteTargetId)?.name;
+		const deletedCategory = categories.find((c) => c.id === deleteTargetId);
 		deleteCategory(deleteTargetId);
 		await forceSyncToDatabase();
-		toast({
-			title: "Category deleted",
-			description: deletedName ? `"${deletedName}" has been removed.` : undefined
-		});
+		if (deletedCategory) {
+			confirmDelete(deletedCategory, (category) => {
+				restoreDeletedCategory(category);
+				void forceSyncToDatabase();
+			}, {
+				title: "Category deleted",
+				description: `"${deletedCategory.name}" has been removed.`
+			});
+		}
 		setDeleteTargetId(null);
 	};
 
@@ -167,7 +173,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 				<AlertDialogHeader>
 					<AlertDialogTitle>Delete this category?</AlertDialogTitle>
 					<AlertDialogDescription>
-						This action cannot be undone.
+						You'll have a few seconds to undo this from the confirmation toast.
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>

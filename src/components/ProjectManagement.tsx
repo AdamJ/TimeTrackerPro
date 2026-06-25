@@ -20,6 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Edit, Trash2, Briefcase, RotateCcw } from "lucide-react";
 import { Project } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
+import { useUndoableDelete } from "@/hooks/useUndoableDelete";
 import { toast } from "@/hooks/use-toast";
 import { ProjectSheet } from "@/components/ProjectSheet";
 
@@ -32,8 +33,9 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { projects, deleteProject, resetProjectsToDefaults } =
+  const { projects, deleteProject, restoreDeletedProject, resetProjectsToDefaults } =
     useTimeTracking();
+  const { confirmDelete } = useUndoableDelete<Project>();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -51,14 +53,14 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
 
   const handleDeleteConfirm = () => {
     if (!deleteTargetId) return;
-    const deletedName = projects.find((p) => p.id === deleteTargetId)?.name;
+    const deletedProject = projects.find((p) => p.id === deleteTargetId);
     deleteProject(deleteTargetId);
-    toast({
-      title: "Project deleted",
-      description: deletedName
-        ? `"${deletedName}" has been removed.`
-        : undefined,
-    });
+    if (deletedProject) {
+      confirmDelete(deletedProject, restoreDeletedProject, {
+        title: "Project deleted",
+        description: `"${deletedProject.name}" has been removed.`,
+      });
+    }
     setDeleteTargetId(null);
   };
 
@@ -190,7 +192,7 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this project?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone.
+              You'll have a few seconds to undo this from the confirmation toast.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
