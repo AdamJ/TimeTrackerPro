@@ -8,9 +8,11 @@ import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
 import { PageTitleProvider } from "@/contexts/PageTitleContext";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useAuth } from "@/hooks/useAuth";
+import { useElectronMenuActions } from "@/hooks/useElectronMenuActions";
 import { Suspense, lazy } from "react";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
+import { BackgroundTimerNotifier } from "@/components/BackgroundTimerNotifier";
 import { MobileNav } from "@/components/MobileNav";
 import { AppSidebar } from "@/components/AppSidebar";
 import {
@@ -48,6 +50,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppShell = () => {
   const { title, actions, badge } = usePageTitle();
+  useElectronMenuActions();
   return (
     <SidebarProvider
       style={{ "--sidebar-width": "19rem" } as React.CSSProperties}
@@ -104,6 +107,7 @@ const App = () => (
             </BrowserRouter>
             <InstallPrompt />
             <PwaUpdatePrompt />
+            <BackgroundTimerNotifier />
           </TooltipProvider>
         </PageTitleProvider>
       </TimeTrackingProvider>
