@@ -48,6 +48,7 @@ import { DayRecord, Task } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { TaskEditInArchiveDialog } from "@/components/TaskEditInArchiveDialog";
 import { useToast } from "@/hooks/use-toast";
+import { useUndoableDelete } from "@/hooks/useUndoableDelete";
 
 interface ArchiveEditDialogProps {
   day: DayRecord;
@@ -99,10 +100,12 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
     updateArchivedDay,
     deleteArchivedDay,
     restoreArchivedDay,
+    restoreDeletedArchivedDay,
     categories,
     isDayStarted,
   } = useTimeTracking();
   const { toast } = useToast();
+  const { confirmDelete } = useUndoableDelete<DayRecord>();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -252,6 +255,10 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 
   const handleDeleteDay = () => {
     deleteArchivedDay(day.id);
+    confirmDelete(day, restoreDeletedArchivedDay, {
+      title: "Archived day deleted",
+      description: `"${formatDate(day.date)}" has been removed.`,
+    });
     onClose();
   };
 
@@ -631,8 +638,9 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                       Delete Archived Day
                     </h4>
                     <p className="text-sm text-destructive mt-1">
-                      Are you sure you want to delete this archived day? This
-                      action cannot be undone.
+                      Are you sure you want to delete this archived day?
+                      You'll have a few seconds to undo this from the
+                      confirmation toast.
                     </p>
                   </div>
                   <div className="flex space-x-2">

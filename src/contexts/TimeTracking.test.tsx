@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { TimeTrackingProvider } from "./TimeTrackingContext";
+import type { Project, DayRecord, PlannedTask } from "./TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
+import type { TaskCategory } from "@/config/categories";
 
 // Mock the auth context
 vi.mock("@/hooks/useAuth", () => ({
@@ -321,6 +323,50 @@ describe("TimeTrackingContext", () => {
 
 			await waitFor(() => {
 				expect(result.current.archivedDays.length).toBe(initialCount - 1);
+			});
+		});
+
+		it("should restore a deleted archived day with its original id preserved", async () => {
+			const { result } = renderHook(() => useTimeTracking(), { wrapper });
+
+			await act(async () => {
+				const startTime = new Date("2024-12-03T09:00:00.000Z");
+				result.current.startDay(startTime);
+			});
+
+			await act(async () => {
+				result.current.startNewTask(
+					"Task to delete and restore",
+					"Test"
+				);
+			});
+
+			await act(async () => {
+				result.current.postDay();
+			});
+
+			let deletedDay: DayRecord;
+			let initialCount: number;
+			await waitFor(() => {
+				expect(result.current.archivedDays.length).toBeGreaterThan(0);
+				deletedDay = result.current.archivedDays[0];
+				initialCount = result.current.archivedDays.length;
+			});
+
+			await act(async () => {
+				result.current.deleteArchivedDay(deletedDay.id);
+			});
+			await waitFor(() => {
+				expect(result.current.archivedDays.length).toBe(initialCount - 1);
+			});
+
+			await act(async () => {
+				await result.current.restoreDeletedArchivedDay(deletedDay);
+			});
+
+			await waitFor(() => {
+				expect(result.current.archivedDays.length).toBe(initialCount);
+				expect(result.current.archivedDays.find(d => d.id === deletedDay.id)).toBeDefined();
 			});
 		});
 
@@ -796,6 +842,35 @@ describe("TimeTrackingContext", () => {
       });
     });
 
+    it("restores a deleted planned task with its original id preserved", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.addPlannedTask({ title: "To delete and restore" });
+      });
+
+      let deletedTask: PlannedTask;
+      await waitFor(() => { deletedTask = result.current.plannedTasks[0]; });
+
+      await act(async () => {
+        result.current.deletePlannedTask(deletedTask.id);
+      });
+      await waitFor(() => {
+        expect(result.current.plannedTasks).toHaveLength(0);
+      });
+
+      await act(async () => {
+        result.current.restoreDeletedPlannedTask(deletedTask);
+      });
+
+      await waitFor(() => {
+        expect(result.current.plannedTasks).toHaveLength(1);
+        expect(result.current.plannedTasks[0].id).toBe(deletedTask.id);
+        expect(result.current.plannedTasks[0].title).toBe("To delete and restore");
+      });
+    });
+
     it("moves a planned task to in_progress status", async () => {
       const { result } = renderHook(() => useTimeTracking(), { wrapper });
       await waitFor(() => expect(result.current.loading).toBe(false));
@@ -956,6 +1031,39 @@ describe("TimeTrackingContext", () => {
       });
     });
 
+    it("restores a deleted project with its original id preserved", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.addProject({ name: "Delete And Restore Me", client: "Client", color: "#000", isBillable: true });
+      });
+
+      let deletedProject: Project;
+      await waitFor(() => {
+        const found = result.current.projects.find(p => p.name === "Delete And Restore Me");
+        expect(found).toBeDefined();
+        deletedProject = found!;
+      });
+
+      await act(async () => {
+        result.current.deleteProject(deletedProject.id);
+      });
+      await waitFor(() => {
+        expect(result.current.projects.find(p => p.id === deletedProject.id)).toBeUndefined();
+      });
+
+      await act(async () => {
+        result.current.restoreDeletedProject(deletedProject);
+      });
+
+      await waitFor(() => {
+        const restored = result.current.projects.find(p => p.id === deletedProject.id);
+        expect(restored).toBeDefined();
+        expect(restored?.name).toBe("Delete And Restore Me");
+      });
+    });
+
     it("archives a project", async () => {
       const { result } = renderHook(() => useTimeTracking(), { wrapper });
       await waitFor(() => expect(result.current.loading).toBe(false));
@@ -1074,6 +1182,39 @@ describe("TimeTrackingContext", () => {
 
       await waitFor(() => {
         expect(result.current.categories.find(c => c.id === catId)).toBeUndefined();
+      });
+    });
+
+    it("restores a deleted category with its original id preserved", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.addCategory({ name: "Delete And Restore Me", color: "#000", isBillable: true });
+      });
+
+      let deletedCategory: TaskCategory;
+      await waitFor(() => {
+        const found = result.current.categories.find(c => c.name === "Delete And Restore Me");
+        expect(found).toBeDefined();
+        deletedCategory = found!;
+      });
+
+      await act(async () => {
+        result.current.deleteCategory(deletedCategory.id);
+      });
+      await waitFor(() => {
+        expect(result.current.categories.find(c => c.id === deletedCategory.id)).toBeUndefined();
+      });
+
+      await act(async () => {
+        result.current.restoreDeletedCategory(deletedCategory);
+      });
+
+      await waitFor(() => {
+        const restored = result.current.categories.find(c => c.id === deletedCategory.id);
+        expect(restored).toBeDefined();
+        expect(restored?.name).toBe("Delete And Restore Me");
       });
     });
   });

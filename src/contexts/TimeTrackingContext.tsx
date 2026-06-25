@@ -192,6 +192,7 @@ interface TimeTrackingContextType {
   addProject: (project: Omit<Project, 'id'>) => void;
   updateProject: (projectId: string, updates: Partial<Project>) => void;
   deleteProject: (projectId: string) => void;
+  restoreDeletedProject: (project: Project) => void;
   resetProjectsToDefaults: () => void;
   archiveProject: (projectId: string) => void;
   restoreProject: (projectId: string) => void;
@@ -208,6 +209,7 @@ interface TimeTrackingContextType {
   addCategory: (category: Omit<TaskCategory, 'id'>) => void;
   updateCategory: (categoryId: string, updates: Partial<TaskCategory>) => void;
   deleteCategory: (categoryId: string) => void;
+  restoreDeletedCategory: (category: TaskCategory) => void;
 
   generateInvoiceData: (
     clientName: string,
@@ -220,6 +222,7 @@ interface TimeTrackingContextType {
   updateArchivedDay: (dayId: string, updates: Partial<DayRecord>) => void;
   deleteArchivedDay: (dayId: string) => void;
   restoreArchivedDay: (dayId: string) => void;
+  restoreDeletedArchivedDay: (day: DayRecord) => Promise<void>;
   addBackdatedDay: (day: DayRecord) => Promise<void>;
 
   // Export functions
@@ -235,6 +238,7 @@ interface TimeTrackingContextType {
   addPlannedTask: (data: Omit<PlannedTask, "id" | "createdAt" | "updatedAt" | "status" | "timeEntries" | "timeSpent">) => void;
   updatePlannedTask: (id: string, updates: Partial<PlannedTask>) => void;
   deletePlannedTask: (id: string) => void;
+  restoreDeletedPlannedTask: (task: PlannedTask) => void;
   movePlannedTask: (id: string, status: PlannedTaskStatus) => void;
   pullPlannedTaskToDay: (id: string) => void;
   addPlannedTaskToDay: (id: string) => void;
@@ -958,6 +962,15 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setHasUnsavedChanges(true);
   };
 
+  // Re-inserts a project removed by deleteProject (Undo). Same non-persisting
+  // semantics as deleteProject — caller still owns calling forceSyncToDatabase().
+  const restoreDeletedProject = (project: Project) => {
+    const next = [...projectsRef.current, project];
+    projectsRef.current = next;
+    setProjects(next);
+    setHasUnsavedChanges(true);
+  };
+
   const resetProjectsToDefaults = () => {
     const defaultProjects = convertDefaultProjects(DEFAULT_PROJECTS);
     projectsRef.current = defaultProjects;
@@ -1129,6 +1142,28 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error('Error deleting archived day:', error);
     }
   };
+
+  // Re-inserts a day removed by deleteArchivedDay (Undo) and persists the
+  // restored list. Distinct from restoreArchivedDay, which reopens an
+  // archived day as the current/active day rather than undoing a delete.
+  const restoreDeletedArchivedDay = async (day: DayRecord) => {
+    if (!dataService) return;
+
+    // Captured via the setState updater (not the archivedDays closure) so a
+    // stale snapshot from before the original delete settled can't reintroduce
+    // a duplicate.
+    let next: DayRecord[] = [];
+    setArchivedDays(prev => {
+      next = [...prev, day];
+      return next;
+    });
+
+    try {
+      await dataService.saveArchivedDays(next);
+    } catch (error) {
+      console.error('Error restoring deleted archived day:', error);
+    }
+  };
   const restoreArchivedDay = (dayId: string) => {
     const dayToRestore = archivedDays.find(day => day.id === dayId);
     if (!dayToRestore) return;
@@ -1205,6 +1240,13 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const deleteCategory = (categoryId: string) => {
     setCategories(prev => prev.filter(category => category.id !== categoryId));
+    setHasUnsavedChanges(true);
+  };
+
+  // Re-inserts a category removed by deleteCategory (Undo). Same
+  // non-persisting semantics — caller still owns calling forceSyncToDatabase().
+  const restoreDeletedCategory = (category: TaskCategory) => {
+    setCategories(prev => [...prev, category]);
     setHasUnsavedChanges(true);
   };
 
@@ -1376,6 +1418,15 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     plannedTasksRef.current = next;
     setPlannedTasks(next);
     if (plannedLoadedRef.current) void dataServiceRef.current?.deletePlannedTask(id);
+  }, []);
+
+  // Re-inserts a planned task removed by deletePlannedTask (Undo), preserving
+  // its original id/timestamps rather than minting a new task via addPlannedTask.
+  const restoreDeletedPlannedTask = useCallback((task: PlannedTask) => {
+    const next = [...plannedTasksRef.current, task];
+    plannedTasksRef.current = next;
+    setPlannedTasks(next);
+    if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(task);
   }, []);
 
   const movePlannedTask = useCallback((id: string, status: PlannedTaskStatus) => {
@@ -1576,12 +1627,14 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         addPlannedTask,
         updatePlannedTask,
         deletePlannedTask,
+        restoreDeletedPlannedTask,
         movePlannedTask,
         pullPlannedTaskToDay,
         addPlannedTaskToDay,
         addProject,
         updateProject,
         deleteProject,
+        restoreDeletedProject,
         resetProjectsToDefaults,
         archiveProject,
         restoreProject,
@@ -1594,9 +1647,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         addCategory,
         updateCategory,
         deleteCategory,
+        restoreDeletedCategory,
         updateArchivedDay,
         deleteArchivedDay,
         restoreArchivedDay,
+        restoreDeletedArchivedDay,
         addBackdatedDay,
         adjustTaskTime,
         exportToCSV,

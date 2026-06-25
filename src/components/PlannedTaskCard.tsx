@@ -26,6 +26,7 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
+import { useUndoableDelete } from "@/hooks/useUndoableDelete";
 import { PlannedTaskDialog } from "@/components/PlannedTaskDialog";
 import {
   Sheet,
@@ -73,10 +74,12 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
   const {
     categories,
     deletePlannedTask,
+    restoreDeletedPlannedTask,
     movePlannedTask,
     pullPlannedTaskToDay,
     addPlannedTaskToDay,
   } = useTimeTracking();
+  const { confirmDelete } = useUndoableDelete<PlannedTask>();
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -303,6 +306,10 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
         onClose={() => setShowDeleteDialog(false)}
         onConfirm={() => {
           deletePlannedTask(task.id);
+          confirmDelete(task, restoreDeletedPlannedTask, {
+            title: "Planned task deleted",
+            description: `"${task.title}" has been removed.`,
+          });
           setShowDeleteDialog(false);
         }}
         taskTitle={task.title}
