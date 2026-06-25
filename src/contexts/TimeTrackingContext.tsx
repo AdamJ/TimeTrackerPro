@@ -27,6 +27,7 @@ import {
 } from '@/utils/exportUtils';
 import { parseTaskChecklist } from '@/utils/checklistUtils';
 import { SCHEMA_VERSION } from '@/services/localStorageService';
+import { useElectronBackup } from '@/hooks/useElectronBackup';
 
 export interface Task {
   id: string;
@@ -558,6 +559,38 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     await stableSaveCurrentDay();
   }, [dataService, stableSaveCurrentDay]);
 
+  // Electron-only disk backup, a separate failure domain from localStorage.
+  // No-ops on web/PWA builds. Fires at the same critical-save points as the
+  // existing manual-sync architecture — this is not a new autosave trigger.
+  const { writeBackup, registerQuitFlush } = useElectronBackup();
+
+  const buildFullSnapshot = useCallback(() => ({
+    currentDay: { ...latestStateRef.current, _v: SCHEMA_VERSION },
+    projects: projectsRef.current,
+    categories,
+    archivedDays,
+    todoItems,
+    plannedTasks: plannedTasksRef.current,
+    clients: clientsRef.current
+  }), [categories, archivedDays, todoItems]);
+
+  const handleQuitFlush = useCallback(() => {
+    // Mirrors the existing beforeunload synchronous write, plus a final disk backup.
+    try {
+      localStorage.setItem(
+        STORAGE_KEYS.CURRENT_DAY,
+        JSON.stringify({ ...latestStateRef.current, _v: SCHEMA_VERSION })
+      );
+    } catch {
+      // localStorage unavailable (quota exceeded, private mode); best effort only.
+    }
+    writeBackup(buildFullSnapshot());
+  }, [writeBackup, buildFullSnapshot]);
+
+  useEffect(() => {
+    registerQuitFlush(handleQuitFlush);
+  }, [registerQuitFlush, handleQuitFlush]);
+
   // Manual sync function - saves ALL data types
   const forceSyncToDatabase = useCallback(async () => {
     if (!dataService) {
@@ -590,12 +623,13 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
       setLastSyncTime(new Date());
       setHasUnsavedChanges(false);
+      writeBackup(buildFullSnapshot());
     } catch (error) {
       console.error('❌ Manual sync failed:', error);
     } finally {
       setIsSyncing(false);
     }
-  }, [dataService, stableSaveCurrentDay, categories, archivedDays, todoItems]);
+  }, [dataService, stableSaveCurrentDay, categories, archivedDays, todoItems, writeBackup, buildFullSnapshot]);
 
   // Load current day data (for periodic sync)
   const loadCurrentDay = useCallback(async () => {
@@ -886,6 +920,18 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         }
 
         setHasUnsavedChanges(false);
+
+        // Snapshot built from the values just persisted above, not the
+        // (stale, pre-archive) archivedDays/todoItems closures.
+        writeBackup({
+          currentDay: { isDayStarted: false, dayStartTime: null, currentTask: null, tasks: [], _v: SCHEMA_VERSION },
+          projects: projectsRef.current,
+          categories,
+          archivedDays: [...archivedDays, dayRecord],
+          todoItems: updatedTodos,
+          plannedTasks: plannedTasksRef.current,
+          clients: clientsRef.current
+        });
 
         // Show success notification to user
         toast({
