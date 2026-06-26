@@ -239,7 +239,17 @@ jobs:
           body: ${{ steps.changelog.outputs.content }}
           draft: false
           prerelease: false
-          token: ${{ secrets.RELEASE_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save release info for Electron build
+        run: echo "TAG=v${{ steps.new_version.outputs.version }}" > release-info.txt
+
+      - name: Upload release info artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-info
+          path: release-info.txt
+          retention-days: 1
 
       - name: Summary
         run: |
