@@ -28,7 +28,8 @@ import {
   FileText,
   Database,
   CheckCircle,
-  XCircle
+  XCircle,
+  Loader2
 } from 'lucide-react';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { formatDate } from '@/utils/timeUtil';
@@ -60,6 +61,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
   const [selectedClient, setSelectedClient] = useState<string>('');
   const [mode, setMode] = useState<'export' | 'import'>('export');
   const [importResult, setImportResult] = useState<{ success: boolean; message: string; importedCount: number } | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
   // Get unique clients from projects
   const clients = Array.from(new Set(projects.map((p) => p.client))).filter(
@@ -143,6 +145,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
       return;
     }
 
+    setIsImporting(true);
     try {
       const content = await file.text();
       const result = await importFromCSV(content);
@@ -159,13 +162,17 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
         message: `Error reading file: ${error instanceof Error ? error.message : 'Unknown error'}`,
         importedCount: 0
       });
+    } finally {
+      setIsImporting(false);
     }
 
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  };  return (
+  };
+
+  return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
@@ -198,7 +205,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                   setImportResult(null); // Clear import results when switching modes
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger autoFocus>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -411,8 +418,9 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                       <p className="text-sm text-muted-foreground mb-2">
                         Click to select a CSV file
                       </p>
-                      <Button onClick={handleImport} variant="outline">
-                        Choose File
+                      <Button onClick={handleImport} variant="outline" disabled={isImporting}>
+                        {isImporting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        {isImporting ? 'Importing...' : 'Choose File'}
                       </Button>
                     </div>
                   </div>
@@ -472,9 +480,13 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                 Export
               </Button>
             ) : (
-              <Button onClick={handleImport}>
-                <Upload className="w-4 h-4 mr-2" />
-                Select CSV File
+              <Button onClick={handleImport} disabled={isImporting}>
+                {isImporting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4 mr-2" />
+                )}
+                {isImporting ? 'Importing...' : 'Select CSV File'}
               </Button>
             )}
           </div>

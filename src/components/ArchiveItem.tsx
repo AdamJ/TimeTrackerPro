@@ -19,6 +19,11 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Calendar, Clock, Edit, RotateCcw, FileText } from "lucide-react";
 import {
 	formatDuration,
@@ -88,26 +93,36 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 						{formatDate(day.startTime)}
 					</CardTitle>
 					<div className="flex space-x-2 print:hidden">
-						<Button
-							onClick={handleRestore}
-							variant="ghost"
-							size="sm"
-							aria-label="Restore this day"
-							className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
-						>
-							<RotateCcw className="w-4 h-4 block" />
-							<span className="hidden md:block">Restore</span>
-						</Button>
-						<Button
-							onClick={() => onEdit(day)}
-							variant="default"
-							size="sm"
-							aria-label="Edit this day"
-							className="flex items-center space-x-2"
-						>
-							<Edit className="w-4 h-4 block" />
-							<span className="hidden md:block">Edit</span>
-						</Button>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									onClick={handleRestore}
+									variant="ghost"
+									size="sm"
+									aria-label="Restore this day"
+									className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
+								>
+									<RotateCcw className="w-4 h-4 block" />
+									<span className="hidden md:block">Restore</span>
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Restore this day</TooltipContent>
+						</Tooltip>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									onClick={() => onEdit(day)}
+									variant="default"
+									size="sm"
+									aria-label="Edit this day"
+									className="flex items-center space-x-2"
+								>
+									<Edit className="w-4 h-4 block" />
+									<span className="hidden md:block">Edit</span>
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>Edit this day</TooltipContent>
+						</Tooltip>
 					</div>
 				</div>
 			</CardHeader>

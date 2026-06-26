@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2 } from "lucide-react";
 import { TaskCategory } from "@/config/categories";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { toast } from "@/hooks/use-toast";
@@ -43,6 +44,7 @@ export const CategorySheet: React.FC<CategorySheetProps> = ({
 }) => {
   const { addCategory, updateCategory, forceSyncToDatabase } = useTimeTracking();
 
+  const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("#3B82F6");
@@ -61,6 +63,7 @@ export const CategorySheet: React.FC<CategorySheetProps> = ({
       setColor("#3B82F6");
       setIsBillable(true);
     }
+    setIsSaving(false);
   }, [open, mode, category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,22 +78,27 @@ export const CategorySheet: React.FC<CategorySheetProps> = ({
       isBillable,
     };
 
-    if (mode === "add") {
-      addCategory(data);
-      toast({
-        title: "Category added",
-        description: `"${trimmed}" has been added.`,
-      });
-    } else if (mode === "edit" && category) {
-      updateCategory(category.id, data);
-      toast({
-        title: "Category updated",
-        description: `"${trimmed}" has been updated.`,
-      });
-    }
+    setIsSaving(true);
+    try {
+      if (mode === "add") {
+        addCategory(data);
+        toast({
+          title: "Category added",
+          description: `"${trimmed}" has been added.`,
+        });
+      } else if (mode === "edit" && category) {
+        updateCategory(category.id, data);
+        toast({
+          title: "Category updated",
+          description: `"${trimmed}" has been updated.`,
+        });
+      }
 
-    await forceSyncToDatabase();
-    onOpenChange(false);
+      await forceSyncToDatabase();
+      onOpenChange(false);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -183,10 +191,14 @@ export const CategorySheet: React.FC<CategorySheetProps> = ({
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
+              disabled={isSaving}
             >
               Cancel
             </Button>
-            <Button type="submit">{mode === "add" ? "Add" : "Save"}</Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {isSaving ? "Saving..." : mode === "add" ? "Add" : "Save"}
+            </Button>
           </SheetFooter>
         </form>
       </SheetContent>

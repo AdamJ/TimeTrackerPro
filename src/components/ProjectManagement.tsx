@@ -17,6 +17,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Plus, Edit, Trash2, Briefcase, RotateCcw } from "lucide-react";
 import { Project } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
@@ -156,22 +161,32 @@ export const ProjectManagement: React.FC<ProjectManagementProps> = ({
                           </div>
 
                           <div className="flex space-x-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              aria-label="Edit project"
-                              onClick={() => handleEdit(project)}
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              aria-label="Delete project"
-                              onClick={() => setDeleteTargetId(project.id)}
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  aria-label="Edit project"
+                                  onClick={() => handleEdit(project)}
+                                >
+                                  <Edit className="w-3 h-3" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit project</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  aria-label="Delete project"
+                                  onClick={() => setDeleteTargetId(project.id)}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Delete project</TooltipContent>
+                            </Tooltip>
                           </div>
                         </div>
                       </CardContent>

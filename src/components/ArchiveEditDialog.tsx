@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,9 +28,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Callout } from "@/components/ui/callout";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
@@ -91,6 +106,19 @@ function formatTime12Hour(date: Date | undefined): string {
   return `${hours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
 }
 
+const dayFormSchema = z.object({
+  date: z.string().min(1, "Date is required"),
+  startTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Enter a valid time"),
+  endTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Enter a valid time"),
+  notes: z.string().optional(),
+});
+
+type DayFormValues = z.infer<typeof dayFormSchema>;
+
 export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   day,
   isOpen,
@@ -113,19 +141,19 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  const [dayData, setDayData] = useState({
-    date: "",
-    startTime: "",
-    endTime: "",
-    notes: "",
+  const dayForm = useForm<DayFormValues>({
+    resolver: zodResolver(dayFormSchema),
+    mode: "onBlur",
+    defaultValues: { date: "", startTime: "", endTime: "", notes: "" },
   });
+  const { isDirty: dayFormIsDirty } = dayForm.formState;
 
   const [tasks, setTasks] = useState<Task[]>([]);
 
   // Initialize form data when dialog opens
   useEffect(() => {
     if (isOpen && day) {
-      setDayData({
+      dayForm.reset({
         date: formatDateForInput(day.startTime),
         startTime: formatTimeForInput(day.startTime),
         endTime: formatTimeForInput(day.endTime),
@@ -137,6 +165,8 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
       setEditingTask(null);
       setShowDeleteConfirm(false);
     }
+    // dayForm is stable across renders; only re-run when the dialog/day changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [day, isOpen]);
 
   // Track whether the form differs from the saved day
@@ -145,17 +175,9 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
       setHasChanges(false);
       return;
     }
-    const initialData = {
-      date: formatDateForInput(day.startTime),
-      startTime: formatTimeForInput(day.startTime),
-      endTime: formatTimeForInput(day.endTime),
-      notes: day.notes || "",
-    };
-    const dayDataChanged =
-      JSON.stringify(dayData) !== JSON.stringify(initialData);
     const tasksChanged = JSON.stringify(tasks) !== JSON.stringify(day.tasks);
-    setHasChanges(dayDataChanged || tasksChanged);
-  }, [dayData, tasks, isEditing, day]);
+    setHasChanges(dayFormIsDirty || tasksChanged);
+  }, [dayFormIsDirty, tasks, isEditing, day]);
 
   const parseTimeInput = (timeStr: string, baseDate: Date): Date => {
     if (!timeStr || !timeStr.includes(":")) {
@@ -179,7 +201,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
     return taskList.reduce((total, task) => total + (task.duration || 0), 0);
   };
 
-  const handleSaveDay = async () => {
+  const handleSaveDay = async (dayData: DayFormValues) => {
     // Parse the new date from the input (same as StartDayDialog)
     const [year, month, dayOfMonth] = dayData.date.split("-").map(Number);
     const selectedDate = new Date(year, month - 1, dayOfMonth);
@@ -296,7 +318,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 
   const handleCancel = () => {
     // Reset to original values
-    setDayData({
+    dayForm.reset({
       date: formatDateForInput(day.startTime),
       startTime: formatTimeForInput(day.startTime),
       endTime: formatTimeForInput(day.endTime),
@@ -323,35 +345,51 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
           <div className="flex flex-wrap justify-center sm:justify-end items-center gap-3 my-4">
             {!isEditing ? (
               <>
-                <Button
-                  onClick={handleRestoreDay}
-                  variant="outline"
-                  size="sm"
-                  aria-label="Restore this day"
-                  className="text-blue-600 hover:text-blue-700"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  <span className="hidden md:block md:ml-2">Restore</span>
-                </Button>
-                <Button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  variant="destructive"
-                  size="sm"
-                  aria-label="Delete this day"
-                  className="text-white"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span className="hidden md:block md:ml-2">Delete</span>
-                </Button>
-                <Button
-                  onClick={() => setIsEditing(true)}
-                  variant="default"
-                  size="sm"
-                  aria-label="Edit this day"
-                >
-                  <Edit className="w-4 h-4" />
-                  <span className="hidden md:block md:ml-2">Edit</span>
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleRestoreDay}
+                      variant="outline"
+                      size="sm"
+                      aria-label="Restore this day"
+                      className="text-blue-600 hover:text-blue-700"
+                      autoFocus
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      <span className="hidden md:block md:ml-2">Restore</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Restore this day</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      variant="destructive"
+                      size="sm"
+                      aria-label="Delete this day"
+                      className="text-white"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span className="hidden md:block md:ml-2">Delete</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete this day</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => setIsEditing(true)}
+                      variant="default"
+                      size="sm"
+                      aria-label="Edit this day"
+                    >
+                      <Edit className="w-4 h-4" />
+                      <span className="hidden md:block md:ml-2">Edit</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Edit this day</TooltipContent>
+                </Tooltip>
               </>
             ) : (
               <>
@@ -359,7 +397,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                   Cancel
                 </Button>
                 <Button
-                  onClick={handleSaveDay}
+                  onClick={dayForm.handleSubmit(handleSaveDay)}
                   size="sm"
                   disabled={!hasChanges || isSaving}
                 >
@@ -396,80 +434,95 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
             </CardHeader>
             <CardContent>
               {isEditing ? (
-                <div className="space-y-4">
-                  <div>
-                    <Label>Date</Label>
-                    <Input
-                      type="date"
-                      value={dayData.date}
-                      onChange={(e) =>
-                        setDayData((prev) => ({
-                          ...prev,
-                          date: e.target.value,
-                        }))
-                      }
-                      className="w-full"
+                <Form {...dayForm}>
+                  <div className="space-y-4">
+                    <FormField
+                      control={dayForm.control}
+                      name="date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" className="w-full" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={dayForm.control}
+                        name="startTime"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Start Time</FormLabel>
+                            <FormControl>
+                              <TimePicker
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                aria-label="Day start time"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={dayForm.control}
+                        name="endTime"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>End Time</FormLabel>
+                            <FormControl>
+                              <TimePicker
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                aria-label="Day end time"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={dayForm.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notes</FormLabel>
+                          <Tabs defaultValue="edit" className="w-full">
+                            <TabsList className="grid w-full grid-cols-2">
+                              <TabsTrigger value="edit">Edit</TabsTrigger>
+                              <TabsTrigger value="preview">Preview</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="edit">
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Add notes about this day (optional, supports Markdown)"
+                                  className="min-h-[80px] resize-none"
+                                  {...field}
+                                />
+                              </FormControl>
+                            </TabsContent>
+                            <TabsContent value="preview">
+                              <div className="w-full min-h-[80px] p-3 border rounded-md bg-background">
+                                {field.value ? (
+                                  <MarkdownDisplay content={field.value} />
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">
+                                    No notes to preview
+                                  </p>
+                                )}
+                              </div>
+                            </TabsContent>
+                          </Tabs>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="day-start-time">Start Time</Label>
-                      <TimePicker
-                        id="day-start-time"
-                        value={dayData.startTime}
-                        onValueChange={(value) =>
-                          setDayData((prev) => ({ ...prev, startTime: value }))
-                        }
-                        aria-label="Day start time"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="day-end-time">End Time</Label>
-                      <TimePicker
-                        id="day-end-time"
-                        value={dayData.endTime}
-                        onValueChange={(value) =>
-                          setDayData((prev) => ({ ...prev, endTime: value }))
-                        }
-                        aria-label="Day end time"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="day-notes">Notes</Label>
-                    <Tabs defaultValue="edit" className="w-full">
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="edit">Edit</TabsTrigger>
-                        <TabsTrigger value="preview">Preview</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="edit">
-                        <Textarea
-                          id="day-notes"
-                          value={dayData.notes}
-                          onChange={(e) =>
-                            setDayData((prev) => ({
-                              ...prev,
-                              notes: e.target.value,
-                            }))
-                          }
-                          placeholder="Add notes about this day (optional, supports Markdown)"
-                          className="min-h-[80px] resize-none"
-                        />
-                      </TabsContent>
-                      <TabsContent value="preview">
-                        <div className="w-full min-h-[80px] p-3 border rounded-md bg-background">
-                          {dayData.notes ? (
-                            <MarkdownDisplay content={dayData.notes} />
-                          ) : (
-                            <p className="text-sm text-muted-foreground">
-                              No notes to preview
-                            </p>
-                          )}
-                        </div>
-                      </TabsContent>
-                    </Tabs>
-                  </div>
-                </div>
+                </Form>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm">
                   <div>
@@ -598,23 +651,33 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                           {isEditing && (
                             <TableCell>
                               <div className="flex space-x-2">
-                                <Button
-                                  onClick={() => handleTaskEdit(task)}
-                                  size="sm"
-                                  variant="outline"
-                                  aria-label="Edit task"
-                                >
-                                  <Edit className="w-3 h-3" />
-                                </Button>
-                                <Button
-                                  onClick={() => handleTaskDelete(task.id)}
-                                  size="sm"
-                                  variant="destructive"
-                                  aria-label="Delete task"
-                                  className="text-white"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      onClick={() => handleTaskEdit(task)}
+                                      size="sm"
+                                      variant="outline"
+                                      aria-label="Edit task"
+                                    >
+                                      <Edit className="w-3 h-3" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Edit task</TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      onClick={() => handleTaskDelete(task.id)}
+                                      size="sm"
+                                      variant="destructive"
+                                      aria-label="Delete task"
+                                      className="text-white"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Delete task</TooltipContent>
+                                </Tooltip>
                               </div>
                             </TableCell>
                           )}
