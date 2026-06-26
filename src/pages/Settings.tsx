@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -82,7 +83,7 @@ const SettingsContent: React.FC = () => {
               variant="outline"
               className="shadow-none duration-100 hover:shadow-md transition-shadow"
             >
-              <a href="/projectlist">
+              <Link to="/projectlist">
                 <ItemMedia>
                   <Badge variant="outline">{projects.length}</Badge>
                 </ItemMedia>
@@ -95,13 +96,13 @@ const SettingsContent: React.FC = () => {
                 <ItemActions>
                   <ChevronRight className="w-4 h-4" />
                 </ItemActions>
-              </a>
+              </Link>
             </Item>
             <Item asChild
               variant="outline"
               className="shadow-none duration-100 hover:shadow-md transition-shadow"
             >
-              <a href="/clients">
+              <Link to="/clients">
                 <ItemMedia>
                   <Badge variant="outline">{clients.length}</Badge>
                 </ItemMedia>
@@ -114,13 +115,13 @@ const SettingsContent: React.FC = () => {
                 <ItemActions>
                   <ChevronRight className="w-4 h-4" />
                 </ItemActions>
-              </a>
+              </Link>
             </Item>
             <Item asChild
               variant="outline"
               className="shadow-none duration-100 hover:shadow-md transition-shadow"
             >
-              <a href="/categories">
+              <Link to="/categories">
                 <ItemMedia>
                   <Badge variant="outline">{categories.length}</Badge>
                 </ItemMedia>
@@ -133,13 +134,13 @@ const SettingsContent: React.FC = () => {
                 <ItemActions>
                   <ChevronRight className="w-4 h-4" />
                 </ItemActions>
-              </a>
+              </Link>
             </Item>
             <Item asChild
               variant="outline"
               className="shadow-none duration-100 hover:shadow-md transition-shadow"
             >
-              <a href="/archive">
+              <Link to="/archive">
                 <ItemMedia>
                   <Badge variant="outline">{archivedDays.length}</Badge>
                 </ItemMedia>
@@ -152,7 +153,7 @@ const SettingsContent: React.FC = () => {
                 <ItemActions>
                   <ChevronRight className="w-4 h-4" />
                 </ItemActions>
-              </a>
+              </Link>
             </Item>
           </div>
           {/* Notifications */}

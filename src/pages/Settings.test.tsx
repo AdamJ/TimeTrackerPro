@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import Settings from "@/pages/Settings";
+
+const renderSettings = () => render(<Settings />, { wrapper: MemoryRouter });
 
 const mockToast = vi.fn();
 
@@ -45,7 +48,7 @@ describe("Settings — background notifications toggle", () => {
     const requestPermission = vi.fn().mockResolvedValue("granted");
     vi.stubGlobal("Notification", { permission: "default", requestPermission });
 
-    render(<Settings />);
+    renderSettings();
     const toggle = screen.getByRole("switch", { name: /toggle background timer reminders/i });
     fireEvent.click(toggle);
 
@@ -60,7 +63,7 @@ describe("Settings — background notifications toggle", () => {
     const requestPermission = vi.fn().mockResolvedValue("denied");
     vi.stubGlobal("Notification", { permission: "default", requestPermission });
 
-    render(<Settings />);
+    renderSettings();
     const toggle = screen.getByRole("switch", { name: /toggle background timer reminders/i });
     fireEvent.click(toggle);
 
@@ -78,7 +81,7 @@ describe("Settings — background notifications toggle", () => {
     const requestPermission = vi.fn();
     vi.stubGlobal("Notification", { permission: "granted", requestPermission });
 
-    render(<Settings />);
+    renderSettings();
     const toggle = screen.getByRole("switch", { name: /toggle background timer reminders/i });
     expect(toggle).toHaveAttribute("data-state", "checked");
 
@@ -95,7 +98,7 @@ describe("Settings — background notifications toggle", () => {
     const original = (window as { Notification?: unknown }).Notification;
     delete (window as { Notification?: unknown }).Notification;
 
-    render(<Settings />);
+    renderSettings();
     const toggle = screen.getByRole("switch", { name: /toggle background timer reminders/i });
     expect(toggle).toBeDisabled();
 
@@ -112,7 +115,7 @@ describe("Settings — data recovery visibility", () => {
   it("shows the Data Recovery item in guest mode", () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: false, user: null });
 
-    render(<Settings />);
+    renderSettings();
 
     expect(screen.getByText("Data Recovery")).toBeInTheDocument();
   });
@@ -120,7 +123,7 @@ describe("Settings — data recovery visibility", () => {
   it("hides the Data Recovery item for authenticated (cloud-sync) users", () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: true, user: { id: "u1" } });
 
-    render(<Settings />);
+    renderSettings();
 
     expect(screen.queryByText("Data Recovery")).not.toBeInTheDocument();
   });

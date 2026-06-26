@@ -100,7 +100,12 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>
-          <div ref={contextMenuTriggerRef} {...longPressHandlers}>
+          <div
+            ref={contextMenuTriggerRef}
+            tabIndex={0}
+            className="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
+            {...longPressHandlers}
+          >
             <Card className="border ring-0 hover:shadow-md transition-all duration-200">
               <CardContent>
                 <div className="flex items-start justify-between gap-2">
