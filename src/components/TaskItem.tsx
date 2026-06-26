@@ -65,7 +65,12 @@ export const TaskItem: React.FC<TaskItemProps> = ({
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>
-          <div ref={contextMenuTriggerRef} {...longPressHandlers}>
+          <div
+            ref={contextMenuTriggerRef}
+            tabIndex={0}
+            className="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
+            {...longPressHandlers}
+          >
       <MotionCard
         variants={{ active: { scale: 1.005 }, inactive: { scale: 1 } }}
         animate={isActive ? "active" : "inactive"}
@@ -102,6 +107,9 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 <span className="flex items-center space-x-1">
                   <ClockFading className="w-3 h-3" />
                   <span>Duration: {formatDuration(duration)}</span>
+                </span>
+                <span className="sr-only" aria-live="polite" aria-atomic="true">
+                  {isActive ? "Timer running" : "Timer stopped"}
                 </span>
               </div>
               <div className="flex items-center flex-wrap gap-2 mt-3">

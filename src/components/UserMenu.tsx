@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { SidebarMenuButton, useSidebar } from './ui/sidebar';
 
 interface UserMenuProps {
@@ -25,13 +26,14 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onSignInClick }) => {
 
   if (!isAuthenticated) {
     return (
-      <a
+      <Button
+        variant="outline"
         onClick={onSignInClick}
-        className="transition-all duration-200 flex items-center justify-center space-x-2 px-4 rounded-xl h-10 border border-gray-200 hover:border-input bg-white hover:bg-accent hover:text-accent-foreground hover:cursor-pointer"
+        className="rounded-xl h-10 hover:cursor-pointer"
       >
         <UserLock className="h-4 w-4" />
         <span>Sign In</span>
-      </a>
+      </Button>
     );
   }
 
