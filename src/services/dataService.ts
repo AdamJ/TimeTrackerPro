@@ -29,6 +29,7 @@ export interface DataService {
 	// Projects operations
 	saveProjects: (projects: Project[]) => Promise<void>;
 	getProjects: () => Promise<Project[]>;
+	deleteProject: (id: string) => Promise<void>;
 
 	// Clients operations
 	saveClients: (clients: Client[]) => Promise<void>;
@@ -38,10 +39,12 @@ export interface DataService {
 	// Categories operations
 	saveCategories: (categories: TaskCategory[]) => Promise<void>;
 	getCategories: () => Promise<TaskCategory[]>;
+	deleteCategory: (id: string) => Promise<void>;
 
 	// Todo items operations
 	saveTodos: (todos: TodoItem[]) => Promise<void>;
 	getTodos: () => Promise<TodoItem[]>;
+	deleteTodo: (id: string) => Promise<void>;
 
 	// Planned tasks operations
 	savePlannedTasks: (tasks: PlannedTask[]) => Promise<void>;

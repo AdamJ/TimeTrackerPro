@@ -15,3 +15,8 @@ export async function getCategories(): Promise<TaskCategory[]> {
 		return [];
 	}
 }
+
+export async function deleteCategory(id: string): Promise<void> {
+	const categories = await getCategories();
+	await saveCategories(categories.filter((category) => category.id !== id));
+}

@@ -8,7 +8,6 @@ import {
 	setCachedCategories,
 	getCachedClients,
 	setCachedClients,
-	clearDataCaches,
 	trackAuthCall
 } from "@/lib/supabase";
 import { Task, DayRecord, Project, Client, TodoItem, PlannedTask } from "@/contexts/TimeTrackingContext";
@@ -262,7 +261,12 @@ export class SupabaseService implements DataService {
 		return result;
 	}
 
+	// Upsert-only: never deletes a row absent from `days`, since `days` may be
+	// a stale snapshot missing rows another device already archived. Deletion
+	// only happens via the explicit, single-row deleteArchivedDay.
 	async saveArchivedDays(days: DayRecord[]): Promise<void> {
+
+		if (days.length === 0) return;
 
 		const user = await this.requireUser();
 
@@ -270,12 +274,6 @@ export class SupabaseService implements DataService {
 		const projects = getCachedProjects() ?? [];
 		const categoryMap = new Map(categories.map(c => [c.id, c]));
 		const projectMap = new Map(projects.map(p => [p.name, p]));
-
-		if (days.length === 0) {
-			await supabase.from("tasks").delete().eq("user_id", user.id).eq("is_current", false);
-			await supabase.from("archived_days").delete().eq("user_id", user.id);
-			return;
-		}
 
 		const archivedDaysToUpsert = days.map((day) => ({
 			id: day.id,
@@ -312,59 +310,6 @@ export class SupabaseService implements DataService {
 		);
 
 		try {
-			// Step 1: Get existing data to determine what to delete
-			const { data: existingDays } = await supabase
-				.from("archived_days")
-				.select("id")
-				.eq("user_id", user.id);
-			trackDbCall("select", "archived_days");
-
-			const { data: existingTasks } = await supabase
-				.from("tasks")
-				.select("id")
-				.eq("user_id", user.id)
-				.eq("is_current", false);
-			trackDbCall("select", "tasks");
-
-			const existingDayIds = new Set(existingDays?.map(d => d.id) || []);
-			const newDayIds = new Set(days.map(d => d.id));
-			const existingTaskIds = new Set(existingTasks?.map(t => t.id) || []);
-			const newTaskIds = new Set(allTasks.map(t => t.id));
-
-			// Step 2: Delete archived days that no longer exist in local state
-			const daysToDelete = Array.from(existingDayIds).filter(id => !newDayIds.has(id));
-			if (daysToDelete.length > 0) {
-				const { error: deleteDaysError } = await supabase
-					.from("archived_days")
-					.delete()
-					.eq("user_id", user.id)
-					.in("id", daysToDelete);
-				trackDbCall("delete", "archived_days");
-
-				if (deleteDaysError) {
-					console.error("❌ Error deleting obsolete days:", deleteDaysError);
-					throw deleteDaysError;
-				}
-			}
-
-			// Step 3: Delete archived tasks that no longer exist in local state
-			const tasksToDelete = Array.from(existingTaskIds).filter(id => !newTaskIds.has(id));
-			if (tasksToDelete.length > 0) {
-				const { error: deleteTasksError } = await supabase
-					.from("tasks")
-					.delete()
-					.eq("user_id", user.id)
-					.eq("is_current", false)
-					.in("id", tasksToDelete);
-				trackDbCall("delete", "tasks");
-
-				if (deleteTasksError) {
-					console.error("❌ Error deleting obsolete tasks:", deleteTasksError);
-					throw deleteTasksError;
-				}
-			}
-
-			// Step 4: Upsert archived days
 			const { error: daysError } = await supabase
 				.from("archived_days")
 				.upsert(archivedDaysToUpsert, { onConflict: "id" });
@@ -375,7 +320,6 @@ export class SupabaseService implements DataService {
 				throw daysError;
 			}
 
-			// Step 5: Upsert archived tasks
 			if (allTasks.length > 0) {
 
 				const { error: tasksError } = await supabase
@@ -390,8 +334,6 @@ export class SupabaseService implements DataService {
 				}
 
 			}
-
-			await this.verifyArchivedDataIntegrity(days);
 		} catch (error) {
 			console.error("💥 Archiving save failed:", error);
 			console.error("🚨 Data that failed to save:", {
@@ -400,50 +342,6 @@ export class SupabaseService implements DataService {
 				firstDay: archivedDaysToUpsert[0]?.date,
 				error: error
 			});
-			throw error;
-		}
-	}
-
-	private async verifyArchivedDataIntegrity(expectedDays: DayRecord[]): Promise<void> {
-		try {
-			const user = await this.requireUser();
-
-			const { data: savedDays, error: daysError } = await supabase
-				.from("archived_days")
-				.select("id")
-				.eq("user_id", user.id);
-
-			if (daysError) {
-				console.warn("⚠️ Could not verify archived days:", daysError);
-				return;
-			}
-
-			const { data: savedTasks, error: tasksError } = await supabase
-				.from("tasks")
-				.select("id")
-				.eq("user_id", user.id)
-				.eq("is_current", false);
-
-			if (tasksError) {
-				console.warn("⚠️ Could not verify archived tasks:", tasksError);
-				return;
-			}
-
-			const expectedTasksCount = expectedDays.reduce((sum, day) => sum + day.tasks.length, 0);
-
-			if (savedDays?.length !== expectedDays.length) {
-				console.error("❌ Archive verification failed: Day count mismatch");
-			}
-
-			if (savedTasks?.length !== expectedTasksCount) {
-				console.error("❌ Archive verification failed: Task count mismatch");
-				throw new Error(
-					`Archive verification failed: Expected ${expectedTasksCount} tasks, found ${savedTasks?.length}`
-				);
-			}
-
-		} catch (error) {
-			console.error("❌ Archive verification failed:", error);
 			throw error;
 		}
 	}
@@ -620,42 +518,14 @@ export class SupabaseService implements DataService {
 		if (error) throw error;
 	}
 
+	// Upsert-only: never deletes a row absent from `projects`, since `projects`
+	// may be a stale snapshot missing rows another device already saved.
+	// Deletion only happens via the explicit, single-row deleteProject.
 	async saveProjects(projects: Project[]): Promise<void> {
 
+		if (projects.length === 0) return;
+
 		const user = await this.requireUser();
-
-		if (projects.length === 0) {
-			await supabase.from("projects").delete().eq("user_id", user.id);
-			trackDbCall("delete", "projects");
-			clearDataCaches();
-			return;
-		}
-
-		const { data: existingProjects } = await supabase
-			.from("projects")
-			.select("id")
-			.eq("user_id", user.id);
-		trackDbCall("select", "projects");
-
-		const existingProjectIds = new Set(existingProjects?.map(p => p.id) || []);
-		const newProjectIds = new Set(projects.map(p => p.id));
-
-		const projectsToDelete = Array.from(existingProjectIds).filter(
-			id => !newProjectIds.has(id)
-		);
-		if (projectsToDelete.length > 0) {
-			const { error: deleteError } = await supabase
-				.from("projects")
-				.delete()
-				.eq("user_id", user.id)
-				.in("id", projectsToDelete);
-			trackDbCall("delete", "projects");
-
-			if (deleteError) {
-				console.error("❌ Error deleting obsolete projects:", deleteError);
-				throw deleteError;
-			}
-		}
 
 		// Dedup by id before upserting: a single upsert batch cannot contain two
 		// rows with the same conflict key or Postgres throws 21000 ("ON CONFLICT
@@ -720,44 +590,32 @@ export class SupabaseService implements DataService {
 		return result;
 	}
 
-	// Clients live in a dedicated `clients` table so they sync across devices
-	// (see supabase/migrations/20260530_clients.sql). Mirrors saveProjects:
-	// delete rows that no longer exist, then upsert the rest by id.
-	async saveClients(clients: Client[]): Promise<void> {
+	async deleteProject(id: string): Promise<void> {
 		const user = await this.requireUser();
 
-		if (clients.length === 0) {
-			await supabase.from("clients").delete().eq("user_id", user.id);
-			trackDbCall("delete", "clients");
-			setCachedClients([]);
-			return;
-		}
-
-		const { data: existingClients } = await supabase
-			.from("clients")
-			.select("id")
+		const { error } = await supabase
+			.from("projects")
+			.delete()
+			.eq("id", id)
 			.eq("user_id", user.id);
-		trackDbCall("select", "clients");
+		trackDbCall("delete", "projects");
 
-		const existingClientIds = new Set(existingClients?.map(c => c.id) || []);
-		const newClientIds = new Set(clients.map(c => c.id));
+		if (error) throw error;
 
-		const clientsToDelete = Array.from(existingClientIds).filter(
-			id => !newClientIds.has(id)
-		);
-		if (clientsToDelete.length > 0) {
-			const { error: deleteError } = await supabase
-				.from("clients")
-				.delete()
-				.eq("user_id", user.id)
-				.in("id", clientsToDelete);
-			trackDbCall("delete", "clients");
-
-			if (deleteError) {
-				console.error("❌ Error deleting obsolete clients:", deleteError);
-				throw deleteError;
-			}
+		const cached = getCachedProjects();
+		if (cached) {
+			setCachedProjects(cached.filter((project) => project.id !== id));
 		}
+	}
+
+	// Clients live in a dedicated `clients` table so they sync across devices
+	// (see supabase/migrations/20260530_clients.sql). Upsert-only, mirroring
+	// saveProjects — deletion happens via the explicit upsertClient flow's
+	// archive field rather than removal; clients are never bulk-deleted.
+	async saveClients(clients: Client[]): Promise<void> {
+		if (clients.length === 0) return;
+
+		const user = await this.requireUser();
 
 		const clientsToUpsert = clients.map((client) => ({
 			id: client.id,
@@ -867,42 +725,14 @@ export class SupabaseService implements DataService {
 		}
 	}
 
+	// Upsert-only: never deletes a row absent from `categories`, since
+	// `categories` may be a stale snapshot missing rows another device already
+	// saved. Deletion only happens via the explicit, single-row deleteCategory.
 	async saveCategories(categories: TaskCategory[]): Promise<void> {
 
+		if (categories.length === 0) return;
+
 		const user = await this.requireUser();
-
-		if (categories.length === 0) {
-			await supabase.from("categories").delete().eq("user_id", user.id);
-			trackDbCall("delete", "categories");
-			clearDataCaches();
-			return;
-		}
-
-		const { data: existingCategories } = await supabase
-			.from("categories")
-			.select("id")
-			.eq("user_id", user.id);
-		trackDbCall("select", "categories");
-
-		const existingCategoryIds = new Set(existingCategories?.map(c => c.id) || []);
-		const newCategoryIds = new Set(categories.map(c => c.id));
-
-		const categoriesToDelete = Array.from(existingCategoryIds).filter(
-			id => !newCategoryIds.has(id)
-		);
-		if (categoriesToDelete.length > 0) {
-			const { error: deleteError } = await supabase
-				.from("categories")
-				.delete()
-				.eq("user_id", user.id)
-				.in("id", categoriesToDelete);
-			trackDbCall("delete", "categories");
-
-			if (deleteError) {
-				console.error("❌ Error deleting obsolete categories:", deleteError);
-				throw deleteError;
-			}
-		}
 
 		const categoriesToUpsert = categories.map((category) => ({
 			id: category.id,
@@ -957,34 +787,31 @@ export class SupabaseService implements DataService {
 		return result;
 	}
 
-	async saveTodos(todos: TodoItem[]): Promise<void> {
+	async deleteCategory(id: string): Promise<void> {
 		const user = await this.requireUser();
 
-		if (todos.length === 0) {
-			await supabase.from("todo_items").delete().eq("user_id", user.id);
-			trackDbCall("delete", "todo_items");
-			return;
-		}
-
-		const { data: existingTodos } = await supabase
-			.from("todo_items")
-			.select("id")
+		const { error } = await supabase
+			.from("categories")
+			.delete()
+			.eq("id", id)
 			.eq("user_id", user.id);
-		trackDbCall("select", "todo_items");
+		trackDbCall("delete", "categories");
 
-		const existingIds = new Set(existingTodos?.map((t: { id: string }) => t.id) || []);
-		const newIds = new Set(todos.map((t) => t.id));
+		if (error) throw error;
 
-		const toDelete = Array.from(existingIds).filter((id) => !newIds.has(id));
-		if (toDelete.length > 0) {
-			const { error: deleteError } = await supabase
-				.from("todo_items")
-				.delete()
-				.eq("user_id", user.id)
-				.in("id", toDelete);
-			trackDbCall("delete", "todo_items");
-			if (deleteError) throw deleteError;
+		const cached = getCachedCategories();
+		if (cached) {
+			setCachedCategories(cached.filter((category) => category.id !== id));
 		}
+	}
+
+	// Upsert-only: never deletes a row absent from `todos`, since `todos` may
+	// be a stale snapshot missing rows another device already saved. Deletion
+	// only happens via the explicit, single-row deleteTodo.
+	async saveTodos(todos: TodoItem[]): Promise<void> {
+		if (todos.length === 0) return;
+
+		const user = await this.requireUser();
 
 		const toUpsert = todos.map((item) => ({
 			id: item.id,
@@ -1032,34 +859,24 @@ export class SupabaseService implements DataService {
 		}));
 	}
 
-	async savePlannedTasks(tasks: PlannedTask[]): Promise<void> {
+	async deleteTodo(id: string): Promise<void> {
 		const user = await this.requireUser();
-
-		if (tasks.length === 0) {
-			await supabase.from("planned_tasks").delete().eq("user_id", user.id);
-			trackDbCall("delete", "planned_tasks");
-			return;
-		}
-
-		const { data: existingRows } = await supabase
-			.from("planned_tasks")
-			.select("id")
+		const { error } = await supabase
+			.from("todo_items")
+			.delete()
+			.eq("id", id)
 			.eq("user_id", user.id);
-		trackDbCall("select", "planned_tasks");
+		trackDbCall("delete", "todo_items");
+		if (error) throw error;
+	}
 
-		const existingIds = new Set(existingRows?.map((r: { id: string }) => r.id) || []);
-		const newIds = new Set(tasks.map((t) => t.id));
+	// Upsert-only: never deletes a row absent from `tasks`, since `tasks` may
+	// be a stale snapshot missing rows another device already saved. Deletion
+	// happens via the explicit, single-row deletePlannedTask.
+	async savePlannedTasks(tasks: PlannedTask[]): Promise<void> {
+		if (tasks.length === 0) return;
 
-		const toDelete = Array.from(existingIds).filter((id) => !newIds.has(id));
-		if (toDelete.length > 0) {
-			const { error: deleteError } = await supabase
-				.from("planned_tasks")
-				.delete()
-				.eq("user_id", user.id)
-				.in("id", toDelete);
-			trackDbCall("delete", "planned_tasks");
-			if (deleteError) throw deleteError;
-		}
+		const user = await this.requireUser();
 
 		const toUpsert = tasks.map((t) => ({
 			id: t.id,
