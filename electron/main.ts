@@ -10,10 +10,16 @@ const isDev = process.env.NODE_ENV === "development" || process.env.ELECTRON_DEV
 const MAX_BACKUPS = 20;
 const MAX_BACKUP_BYTES = 10 * 1024 * 1024;
 const QUIT_FLUSH_TIMEOUT_MS = 3000;
+// Pruning does a full readdir + per-file stat/unlink, which is wasted work on
+// every single write when backups are well under MAX_BACKUPS. Run it only
+// every Nth write instead — worst case the directory briefly holds a few
+// extra files, which is harmless.
+const PRUNE_EVERY_N_WRITES = 5;
 
 let mainWindow: BrowserWindow | null = null;
 let isQuittingForReal = false;
 let quitFlushPending = false;
+let writesSincePrune = 0;
 
 function getBackupsDir(): string {
 	return path.join(app.getPath("userData"), "backups");
@@ -34,7 +40,12 @@ async function writeBackupFile(json: string): Promise<void> {
 	const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
 	const filePath = path.join(dir, `backup_${timestamp}.json`);
 	await fs.writeFile(filePath, json, "utf-8");
-	await pruneOldBackups();
+
+	writesSincePrune += 1;
+	if (writesSincePrune >= PRUNE_EVERY_N_WRITES) {
+		writesSincePrune = 0;
+		await pruneOldBackups();
+	}
 }
 
 ipcMain.handle("backup:write", async (_event, json: unknown) => {
@@ -110,6 +121,7 @@ function createWindow(): void {
 		webPreferences: {
 			contextIsolation: true,
 			nodeIntegration: false,
+			sandbox: true,
 			preload: path.join(__dirname, "preload.cjs"),
 		},
 	});

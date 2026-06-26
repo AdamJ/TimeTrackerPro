@@ -562,7 +562,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   // Electron-only disk backup, a separate failure domain from localStorage.
   // No-ops on web/PWA builds. Fires at the same critical-save points as the
   // existing manual-sync architecture — this is not a new autosave trigger.
-  const { writeBackup, registerQuitFlush } = useElectronBackup();
+  const { writeBackup, writeBackupDebounced, registerQuitFlush } = useElectronBackup();
 
   const buildFullSnapshot = useCallback(() => ({
     currentDay: { ...latestStateRef.current, _v: SCHEMA_VERSION },
@@ -626,13 +626,13 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
       setLastSyncTime(new Date());
       setHasUnsavedChanges(false);
-      writeBackup(buildFullSnapshot());
+      writeBackupDebounced(buildFullSnapshot());
     } catch (error) {
       console.error('❌ Manual sync failed:', error);
     } finally {
       setIsSyncing(false);
     }
-  }, [dataService, stableSaveCurrentDay, categories, archivedDays, todoItems, writeBackup, buildFullSnapshot]);
+  }, [dataService, stableSaveCurrentDay, categories, archivedDays, todoItems, writeBackupDebounced, buildFullSnapshot]);
 
   // Load current day data (for periodic sync)
   const loadCurrentDay = useCallback(async () => {
@@ -926,7 +926,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Snapshot built from the values just persisted above, not the
         // (stale, pre-archive) archivedDays/todoItems closures.
-        writeBackup({
+        writeBackupDebounced({
           currentDay: { isDayStarted: false, dayStartTime: null, currentTask: null, tasks: [], _v: SCHEMA_VERSION },
           projects: projectsRef.current,
           categories,

@@ -4,6 +4,10 @@ import { toast } from "@/hooks/use-toast";
 const BACKUP_FAILURE_TOAST_DEBOUNCE_MS = 2000;
 let lastBackupFailureToastAt = 0;
 
+// Coalesces rapid-fire calls (e.g. mashing manual-sync) into a single disk
+// write carrying the latest snapshot, rather than queuing one write per call.
+const WRITE_BACKUP_DEBOUNCE_MS = 1000;
+
 // Mirrors notifyWriteFailure (localStorageService/utils.ts) so disk-backup
 // failures get the same on-screen signal as localStorage write failures,
 // debounced for the same reason: a single bad save can fire several backups.
@@ -22,6 +26,8 @@ function notifyBackupFailure(error?: string): void {
 // No-ops entirely when window.electronAPI is absent (web/PWA builds).
 export function useElectronBackup() {
 	const quitFlushRef = useRef<() => void | Promise<void>>();
+	const pendingSnapshotRef = useRef<unknown>(null);
+	const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
 	// Returns the write result so the quit-flush path can await it (so the
 	// "flush done" ack reflects an actual write attempt, not just a fire-and-forget
@@ -31,6 +37,28 @@ export function useElectronBackup() {
 		const result = await window.electronAPI.writeBackup(JSON.stringify(snapshot));
 		if (!result.ok) notifyBackupFailure(result.error);
 		return result;
+	}, []);
+
+	// Fire-and-forget call sites (manual sync, day-archiving) use this instead
+	// of writeBackup directly, so rapid repeated calls collapse into one disk
+	// write of the latest snapshot rather than queuing overlapping writes/prunes.
+	// Not for the quit-flush path — that one must write immediately and be awaited.
+	const writeBackupDebounced = useCallback((snapshot: unknown): void => {
+		if (!window.electronAPI) return;
+		pendingSnapshotRef.current = snapshot;
+		if (debounceTimerRef.current) return;
+		debounceTimerRef.current = setTimeout(() => {
+			debounceTimerRef.current = undefined;
+			const latest = pendingSnapshotRef.current;
+			pendingSnapshotRef.current = null;
+			void writeBackup(latest);
+		}, WRITE_BACKUP_DEBOUNCE_MS);
+	}, [writeBackup]);
+
+	useEffect(() => {
+		return () => {
+			if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+		};
 	}, []);
 
 	const registerQuitFlush = useCallback((callback: () => void | Promise<void>) => {
@@ -54,5 +82,5 @@ export function useElectronBackup() {
 		return window.electronAPI.readBackup(name);
 	}, []);
 
-	return { writeBackup, registerQuitFlush, listDiskBackups, readDiskBackup };
+	return { writeBackup, writeBackupDebounced, registerQuitFlush, listDiskBackups, readDiskBackup };
 }
