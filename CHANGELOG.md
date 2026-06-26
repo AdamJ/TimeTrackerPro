@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release workflow's "Create GitHub Release" step failing with "Bad credentials" on every run, even after regenerating the `RELEASE_PAT` secret. Removed the PAT dependency entirely: the release is now created with the default `GITHUB_TOKEN`, and `electron-release.yml` switched from triggering on the `release: published` event (which GitHub Actions blocks for `GITHUB_TOKEN`-created releases, to prevent recursive workflow runs) to a `workflow_run` trigger that watches the Release workflow's completion and reads the published tag from a build artifact
   — `.github/workflows/release.yml`, `.github/workflows/electron-release.yml`
 
+- Electron Release workflow's build step failing with `Error: GitHub Personal Access Token is not set, neither programmatically, nor using env "GH_TOKEN"` — `electron-builder` auto-detects `CI=true` and, seeing the `publish` block in `package.json`'s `build` config, tried to publish directly instead of just producing local artifacts (asset upload is already handled by the workflow's separate `softprops/action-gh-release` step). Added `--publish never` to the `electron:build` script
+  — `package.json`
+
 ### Added
 
 - In-app data recovery UI for guest-mode backups — a new "Data Recovery" item in Settings (guest mode only) lists localStorage schema-mismatch sibling-key backups and, on the desktop build, Electron disk snapshots, with a preview of entity counts (archived days, projects, etc.) before restoring. Restoring writes the backup data back into the live storage keys (re-stamped with the current schema version) and reloads. New `ipcMain.handle("backup:list"/"backup:read")` pair (filename-pattern validated against path traversal) exposed via `electronAPI.listBackups`/`readBackup`
