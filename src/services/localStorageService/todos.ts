@@ -15,3 +15,8 @@ export async function getTodos(): Promise<TodoItem[]> {
 		return [];
 	}
 }
+
+export async function deleteTodo(id: string): Promise<void> {
+	const todos = await getTodos();
+	await saveTodos(todos.filter((todo) => todo.id !== id));
+}

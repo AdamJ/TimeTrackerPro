@@ -15,3 +15,8 @@ export async function getProjects(): Promise<Project[]> {
 		return [];
 	}
 }
+
+export async function deleteProject(id: string): Promise<void> {
+	const projects = await getProjects();
+	await saveProjects(projects.filter((project) => project.id !== id));
+}

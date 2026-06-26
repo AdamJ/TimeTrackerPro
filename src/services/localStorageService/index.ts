@@ -8,10 +8,10 @@ import {
 	updateArchivedDay,
 	deleteArchivedDay
 } from "./archivedDays";
-import { saveProjects, getProjects } from "./projects";
+import { saveProjects, getProjects, deleteProject } from "./projects";
 import { saveClients, getClients, upsertClient } from "./clients";
-import { saveCategories, getCategories } from "./categories";
-import { saveTodos, getTodos } from "./todos";
+import { saveCategories, getCategories, deleteCategory } from "./categories";
+import { saveTodos, getTodos, deleteTodo } from "./todos";
 import { savePlannedTasks, getPlannedTasks, upsertPlannedTask, deletePlannedTask } from "./plannedTasks";
 
 export { STORAGE_KEYS, SCHEMA_VERSION } from "./constants";
@@ -49,6 +49,10 @@ export class LocalStorageService implements DataService {
 		return getProjects();
 	}
 
+	deleteProject(id: string): Promise<void> {
+		return deleteProject(id);
+	}
+
 	saveClients(clients: Client[]): Promise<void> {
 		return saveClients(clients);
 	}
@@ -69,12 +73,20 @@ export class LocalStorageService implements DataService {
 		return getCategories();
 	}
 
+	deleteCategory(id: string): Promise<void> {
+		return deleteCategory(id);
+	}
+
 	saveTodos(todos: TodoItem[]): Promise<void> {
 		return saveTodos(todos);
 	}
 
 	getTodos(): Promise<TodoItem[]> {
 		return getTodos();
+	}
+
+	deleteTodo(id: string): Promise<void> {
+		return deleteTodo(id);
 	}
 
 	savePlannedTasks(tasks: PlannedTask[]): Promise<void> {

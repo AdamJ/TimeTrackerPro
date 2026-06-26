@@ -1004,27 +1004,42 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setHasUnsavedChanges(true);
   };
 
+  // Deletes immediately and explicitly rather than relying on the next
+  // forceSyncToDatabase()'s saveProjects() to infer the removal from a
+  // full-list diff — that diff is gone (see supabaseService.saveProjects),
+  // so deletion must be a single-row operation triggered by this action.
   const deleteProject = (projectId: string) => {
     const next = projectsRef.current.filter(project => project.id !== projectId);
     projectsRef.current = next;
     setProjects(next);
     setHasUnsavedChanges(true);
+    void dataServiceRef.current?.deleteProject(projectId);
   };
 
-  // Re-inserts a project removed by deleteProject (Undo). Same non-persisting
-  // semantics as deleteProject — caller still owns calling forceSyncToDatabase().
+  // Re-inserts a project removed by deleteProject (Undo). Persists
+  // immediately via upsert so the row reappears even if it was already
+  // deleted server-side by the explicit deleteProject call above.
   const restoreDeletedProject = (project: Project) => {
     const next = [...projectsRef.current, project];
     projectsRef.current = next;
     setProjects(next);
     setHasUnsavedChanges(true);
+    void dataServiceRef.current?.saveProjects(next);
   };
 
+  // Explicitly deletes every non-default project before installing the
+  // defaults — saveProjects is upsert-only, so without this the old custom
+  // projects would never be removed server-side.
   const resetProjectsToDefaults = () => {
     const defaultProjects = convertDefaultProjects(DEFAULT_PROJECTS);
+    const idsToDelete = projectsRef.current
+      .filter(project => !defaultProjects.some(d => d.id === project.id))
+      .map(project => project.id);
     projectsRef.current = defaultProjects;
     setProjects(defaultProjects);
     setHasUnsavedChanges(true);
+    idsToDelete.forEach(id => void dataServiceRef.current?.deleteProject(id));
+    void dataServiceRef.current?.saveProjects(defaultProjects);
   };
 
   const archiveProject = (projectId: string) => {
@@ -1287,16 +1302,27 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setHasUnsavedChanges(true);
   };
 
+  // Deletes immediately and explicitly rather than relying on the next
+  // forceSyncToDatabase()'s saveCategories() to infer the removal from a
+  // full-list diff — that diff is gone (see supabaseService.saveCategories),
+  // so deletion must be a single-row operation triggered by this action.
   const deleteCategory = (categoryId: string) => {
     setCategories(prev => prev.filter(category => category.id !== categoryId));
     setHasUnsavedChanges(true);
+    void dataServiceRef.current?.deleteCategory(categoryId);
   };
 
-  // Re-inserts a category removed by deleteCategory (Undo). Same
-  // non-persisting semantics — caller still owns calling forceSyncToDatabase().
+  // Re-inserts a category removed by deleteCategory (Undo). Persists
+  // immediately via upsert so the row reappears even if it was already
+  // deleted server-side by the explicit deleteCategory call above.
   const restoreDeletedCategory = (category: TaskCategory) => {
-    setCategories(prev => [...prev, category]);
+    let next: TaskCategory[] = [];
+    setCategories(prev => {
+      next = [...prev, category];
+      return next;
+    });
     setHasUnsavedChanges(true);
+    void dataServiceRef.current?.saveCategories(next);
   };
 
   // Time adjustment function (rounds to nearest 15 minutes)
@@ -1424,12 +1450,21 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     }));
   }, []);
 
+  // Deletes immediately and explicitly rather than relying on the next
+  // forceSyncToDatabase()'s saveTodos() to infer the removal from a
+  // full-list diff — that diff is gone (see supabaseService.saveTodos), so
+  // deletion must be a single-row operation triggered by this action.
   const deleteTodoItem = useCallback((id: string) => {
     setTodoItems(prev => prev.filter(item => item.id !== id));
+    void dataServiceRef.current?.deleteTodo(id);
   }, []);
 
   const clearCompletedTodos = useCallback(() => {
-    setTodoItems(prev => prev.filter(item => !item.completed));
+    setTodoItems(prev => {
+      const completedIds = prev.filter(item => item.completed).map(item => item.id);
+      completedIds.forEach(id => void dataServiceRef.current?.deleteTodo(id));
+      return prev.filter(item => !item.completed);
+    });
   }, []);
 
   // === PLANNED TASKS ===
