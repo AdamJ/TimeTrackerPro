@@ -15,6 +15,7 @@ import {
   Mail,
   MapPin,
   User,
+  Loader2,
 } from "lucide-react";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { PageLayout } from "@/components/PageLayout";
@@ -38,6 +39,7 @@ export const ClientManagement: React.FC = () => {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [archiveError, setArchiveError] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [pendingId, setPendingId] = useState<string | null>(null);
 
   const activeClients = clients.filter((client) => !client.archived);
   const archivedClients = clients.filter((client) => client.archived);
@@ -59,27 +61,37 @@ export const ClientManagement: React.FC = () => {
       setArchiveError(error);
       return;
     }
-    await persistClients();
-    const archivedName = clients.find((client) => client.id === clientId)?.name;
-    toast({
-      title: "Client archived",
-      description: archivedName
-        ? `"${archivedName}" has been archived.`  
-        : undefined,
-    });
+    setPendingId(clientId);
+    try {
+      await persistClients();
+      const archivedName = clients.find((client) => client.id === clientId)?.name;
+      toast({
+        title: "Client archived",
+        description: archivedName
+          ? `"${archivedName}" has been archived.`
+          : undefined,
+      });
+    } finally {
+      setPendingId(null);
+    }
   };
 
   const handleRestore = async (clientId: string) => {
     setArchiveError(null);
     restoreClient(clientId);
-    await persistClients();
-    const restoredName = clients.find((client) => client.id === clientId)?.name;
-    toast({
-      title: "Client restored",
-      description: restoredName
-        ? `"${restoredName}" has been restored.`
-        : undefined,
-    });
+    setPendingId(clientId);
+    try {
+      await persistClients();
+      const restoredName = clients.find((client) => client.id === clientId)?.name;
+      toast({
+        title: "Client restored",
+        description: restoredName
+          ? `"${restoredName}" has been restored.`
+          : undefined,
+      });
+    } finally {
+      setPendingId(null);
+    }
   };
 
   const pageTitle = useMemo(() => <>Clients</>, []);
@@ -231,8 +243,13 @@ export const ClientManagement: React.FC = () => {
                     <Button
                       variant="outline"
                       onClick={() => handleArchive(client.id)}
+                      disabled={pendingId === client.id}
                     >
-                      <Archive className="w-4 h-4 mr-1" />
+                      {pendingId === client.id ? (
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      ) : (
+                        <Archive className="w-4 h-4 mr-1" />
+                      )}
                       <span className="hidden sm:block">Archive</span>
                     </Button>
                   </ItemActions>
@@ -269,8 +286,13 @@ export const ClientManagement: React.FC = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => handleRestore(client.id)}
+                          disabled={pendingId === client.id}
                         >
-                          <RotateCcw className="w-3 h-3 sm:mr-2" />
+                          {pendingId === client.id ? (
+                            <Loader2 className="w-3 h-3 sm:mr-2 animate-spin" />
+                          ) : (
+                            <RotateCcw className="w-3 h-3 sm:mr-2" />
+                          )}
                           <span className="hidden sm:block">Restore</span>
                         </Button>
                       </div>

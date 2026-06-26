@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 import { Client } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { toast } from "@/hooks/use-toast";
@@ -28,6 +29,7 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
 }) => {
   const { addClient, updateClient, persistClient } = useTimeTracking();
 
+  const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState("");
   const [addressStreet, setAddressStreet] = useState("");
   const [addressCity, setAddressCity] = useState("");
@@ -61,6 +63,7 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
       setContactEmail("");
       setContactWebsite("");
     }
+    setIsSaving(false);
   }, [open, mode, client]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,23 +83,27 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
       contactWebsite: contactWebsite.trim() || undefined,
     };
 
-    if (mode === "add") {
-      const created = addClient(data);
-      if (created) await persistClient(created);
-      toast({
-        title: "Client added",
-        description: `"${trimmed}" has been added.`,
-      });
-    } else if (mode === "edit" && client) {
-      const updated = updateClient(client.id, data);
-      if (updated) await persistClient(updated);
-      toast({
-        title: "Client saved",
-        description: `"${trimmed}" has been saved.`,
-      });
+    setIsSaving(true);
+    try {
+      if (mode === "add") {
+        const created = addClient(data);
+        if (created) await persistClient(created);
+        toast({
+          title: "Client added",
+          description: `"${trimmed}" has been added.`,
+        });
+      } else if (mode === "edit" && client) {
+        const updated = updateClient(client.id, data);
+        if (updated) await persistClient(updated);
+        toast({
+          title: "Client saved",
+          description: `"${trimmed}" has been saved.`,
+        });
+      }
+      onOpenChange(false);
+    } finally {
+      setIsSaving(false);
     }
-
-    onOpenChange(false);
   };
 
   return (
@@ -213,10 +220,14 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
+              disabled={isSaving}
             >
               Cancel
             </Button>
-            <Button type="submit">{mode === "add" ? "Add" : "Save"}</Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {isSaving ? "Saving..." : mode === "add" ? "Add" : "Save"}
+            </Button>
           </SheetFooter>
         </form>
       </SheetContent>

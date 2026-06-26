@@ -12,6 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResponsiveSelect } from "@/components/ui/responsive-select";
 import { TimePicker } from "@/components/ui/scroll-time-picker";
@@ -368,27 +373,37 @@ export const BackdatedEntryDialog: React.FC<BackdatedEntryDialogProps> = ({
 														{formatDuration(taskDuration)}
 													</Badge>
 												)}
-												<Button
-													type="button"
-													onClick={() => duplicateTask(task.id)}
-													size="sm"
-													variant="ghost"
-													className="h-7 w-7 p-0"
-													aria-label={`Duplicate task ${index + 1}`}
-												>
-													<Copy className="w-3.5 h-3.5" />
-												</Button>
+												<Tooltip>
+													<TooltipTrigger asChild>
+														<Button
+															type="button"
+															onClick={() => duplicateTask(task.id)}
+															size="sm"
+															variant="ghost"
+															className="h-7 w-7 p-0"
+															aria-label={`Duplicate task ${index + 1}`}
+														>
+															<Copy className="w-3.5 h-3.5" />
+														</Button>
+													</TooltipTrigger>
+													<TooltipContent>Duplicate task</TooltipContent>
+												</Tooltip>
 												{tasks.length > 1 && (
-													<Button
-														type="button"
-														onClick={() => removeTask(task.id)}
-														size="sm"
-														variant="ghost"
-														className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-														aria-label={`Remove task ${index + 1}`}
-													>
-														<Trash2 className="w-3.5 h-3.5" />
-													</Button>
+													<Tooltip>
+														<TooltipTrigger asChild>
+															<Button
+																type="button"
+																onClick={() => removeTask(task.id)}
+																size="sm"
+																variant="ghost"
+																className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+																aria-label={`Remove task ${index + 1}`}
+															>
+																<Trash2 className="w-3.5 h-3.5" />
+															</Button>
+														</TooltipTrigger>
+														<TooltipContent>Remove task</TooltipContent>
+													</Tooltip>
 												)}
 											</div>
 										</div>

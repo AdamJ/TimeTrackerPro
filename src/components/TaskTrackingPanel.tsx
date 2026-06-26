@@ -10,6 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { PlusIcon } from "@radix-ui/react-icons";
 import { Label } from "./ui/label";
 import { SelectSeparator } from "./ui/select";
@@ -108,15 +113,20 @@ export function TaskTrackingPanel() {
                 >
                   {item.text}
                 </label>
-                <Button
-                  size="sm"
-                  variant="link"
-                  onClick={() => deleteTodoItem(item.id)}
-                  className="h-5 p-2 shrink-0 text-muted-foreground hover:text-primary-foreground hover:bg-destructive"
-                  aria-label="Delete todo"
-                >
-                  <Trash size={16} />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="link"
+                      onClick={() => deleteTodoItem(item.id)}
+                      className="h-5 p-2 shrink-0 text-muted-foreground hover:text-primary-foreground hover:bg-destructive"
+                      aria-label="Delete todo"
+                    >
+                      <Trash size={16} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete todo</TooltipContent>
+                </Tooltip>
               </li>
             ))}
           </ul>
@@ -162,15 +172,20 @@ export function TaskTrackingPanel() {
                   >
                     {item.text}
                   </label>
-                  <Button
-                    size="sm"
-                    variant="link"
-                    onClick={() => deleteTodoItem(item.id)}
-                    className="h-5 p-2 shrink-0 text-muted-foreground hover:text-primary-foreground hover:bg-destructive"
-                    aria-label="Clear completed todo"
-                  >
-                    <Trash size={16} />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="link"
+                        onClick={() => deleteTodoItem(item.id)}
+                        className="h-5 p-2 shrink-0 text-muted-foreground hover:text-primary-foreground hover:bg-destructive"
+                        aria-label="Clear completed todo"
+                      >
+                        <Trash size={16} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Clear completed todo</TooltipContent>
+                  </Tooltip>
                 </li>
               ))}
             </ul>

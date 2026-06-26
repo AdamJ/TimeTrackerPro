@@ -82,6 +82,7 @@ export const StartDayDialog: React.FC<StartDayDialogProps> = ({
               value={selectedDate}
               onChange={e => setSelectedDate(e.target.value)}
               className="w-full"
+              autoFocus
             />
           </div>
 

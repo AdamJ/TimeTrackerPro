@@ -12,6 +12,11 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { TaskEditDialog } from "@/components/TaskEditDialog";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
@@ -124,26 +129,36 @@ export const TaskItem: React.FC<TaskItemProps> = ({
             </div>
 
             <div className="flex space-x-2 ml-4">
-              <Button
-                onClick={() => setShowDeleteDialog(true)}
-                size="sm"
-                variant="outline"
-                aria-label={`Delete task: ${task.title}`}
-                className="flex items-center space-x-1 min-h-[44px] min-w-[44px] text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <Trash2 className="w-3 h-3" />
-                <span className="hidden sm:block">Delete</span>
-              </Button>
-              <Button
-                onClick={() => setShowEditDialog(true)}
-                size="sm"
-                variant="outline"
-                aria-label={`Edit task: ${task.title}`}
-                className="flex items-center space-x-1 min-h-[44px] min-w-[44px]"
-              >
-                <Edit className="w-3 h-3" />
-                <span className="hidden sm:block">Edit</span>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => setShowDeleteDialog(true)}
+                    size="sm"
+                    variant="outline"
+                    aria-label={`Delete task: ${task.title}`}
+                    className="flex items-center space-x-1 min-h-[44px] min-w-[44px] text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span className="hidden sm:block">Delete</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Delete task</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => setShowEditDialog(true)}
+                    size="sm"
+                    variant="outline"
+                    aria-label={`Edit task: ${task.title}`}
+                    className="flex items-center space-x-1 min-h-[44px] min-w-[44px]"
+                  >
+                    <Edit className="w-3 h-3" />
+                    <span className="hidden sm:block">Edit</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Edit task</TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </CardContent>

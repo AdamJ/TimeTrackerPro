@@ -2,7 +2,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TaskItem } from "@/components/TaskItem";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import type { Task } from "@/contexts/TimeTrackingContext";
+import type { ComponentProps } from "react";
+
+const renderTaskItem = (props: ComponentProps<typeof TaskItem>) =>
+  render(
+    <TooltipProvider>
+      <TaskItem {...props} />
+    </TooltipProvider>
+  );
 
 vi.mock("@/hooks/useTimeTracking", () => ({
   useTimeTracking: () => ({
@@ -57,38 +66,38 @@ describe("TaskItem", () => {
   });
 
   it("renders the task title", () => {
-    render(<TaskItem task={baseTask} isActive={false} onDelete={vi.fn()} />);
+    renderTaskItem({ task: baseTask, isActive: false, onDelete: vi.fn() });
     expect(screen.getByText("Review PR")).toBeInTheDocument();
   });
 
   it("renders the task description", () => {
-    render(<TaskItem task={baseTask} isActive={false} onDelete={vi.fn()} />);
+    renderTaskItem({ task: baseTask, isActive: false, onDelete: vi.fn() });
     expect(screen.getByText(/Check the authentication changes/)).toBeInTheDocument();
   });
 
   it("renders the project badge", () => {
-    render(<TaskItem task={baseTask} isActive={false} onDelete={vi.fn()} />);
+    renderTaskItem({ task: baseTask, isActive: false, onDelete: vi.fn() });
     expect(screen.getByText("Project A")).toBeInTheDocument();
   });
 
   it("renders the client badge", () => {
-    render(<TaskItem task={baseTask} isActive={false} onDelete={vi.fn()} />);
+    renderTaskItem({ task: baseTask, isActive: false, onDelete: vi.fn() });
     expect(screen.getByText("Client X")).toBeInTheDocument();
   });
 
   it("shows Active badge when isActive is true", () => {
-    render(<TaskItem task={baseTask} isActive={true} onDelete={vi.fn()} />);
+    renderTaskItem({ task: baseTask, isActive: true, onDelete: vi.fn() });
     expect(screen.getByText("Active")).toBeInTheDocument();
   });
 
   it("does not show Active badge when isActive is false", () => {
-    render(<TaskItem task={baseTask} isActive={false} onDelete={vi.fn()} />);
+    renderTaskItem({ task: baseTask, isActive: false, onDelete: vi.fn() });
     expect(screen.queryByText("Active")).not.toBeInTheDocument();
   });
 
   it("shows the delete confirmation dialog when Delete is clicked", async () => {
     const user = userEvent.setup();
-    render(<TaskItem task={baseTask} isActive={false} onDelete={vi.fn()} />);
+    renderTaskItem({ task: baseTask, isActive: false, onDelete: vi.fn() });
 
     await user.click(screen.getByRole("button", { name: /delete task: review pr/i }));
 
@@ -98,7 +107,7 @@ describe("TaskItem", () => {
   it("calls onDelete with task id when deletion is confirmed", async () => {
     const onDelete = vi.fn();
     const user = userEvent.setup();
-    render(<TaskItem task={baseTask} isActive={false} onDelete={onDelete} />);
+    renderTaskItem({ task: baseTask, isActive: false, onDelete });
 
     await user.click(screen.getByRole("button", { name: /delete task: review pr/i }));
     await user.click(screen.getByRole("button", { name: /confirm delete/i }));
@@ -108,7 +117,7 @@ describe("TaskItem", () => {
 
   it("opens the edit dialog when Edit is clicked", async () => {
     const user = userEvent.setup();
-    render(<TaskItem task={baseTask} isActive={false} onDelete={vi.fn()} />);
+    renderTaskItem({ task: baseTask, isActive: false, onDelete: vi.fn() });
 
     await user.click(screen.getByRole("button", { name: /edit task: review pr/i }));
 
@@ -116,7 +125,7 @@ describe("TaskItem", () => {
   });
 
   it("renders the category badge when category matches", () => {
-    render(<TaskItem task={baseTask} isActive={false} onDelete={vi.fn()} />);
+    renderTaskItem({ task: baseTask, isActive: false, onDelete: vi.fn() });
     expect(screen.getByText("Development")).toBeInTheDocument();
   });
 });
