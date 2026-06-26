@@ -1,12 +1,44 @@
 name: Electron Release
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
 
 jobs:
+  check:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      should_build: ${{ steps.tag.outputs.should_build }}
+    steps:
+      - name: Download release info
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: release-info
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read release tag
+        id: tag
+        run: |
+          if [ -f release-info.txt ]; then
+            TAG=$(grep '^TAG=' release-info.txt | cut -d= -f2)
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "Found release tag: $TAG"
+          else
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            echo "No release-info artifact found; Release workflow run did not publish a release."
+          fi
+
   build:
-    if: ${{ !github.event.release.prerelease && !github.event.release.draft }}
+    needs: check
+    if: needs.check.outputs.should_build == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -30,7 +62,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ needs.check.outputs.tag }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -49,7 +81,7 @@ jobs:
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.release.tag_name }}
+          tag_name: ${{ needs.check.outputs.tag }}
           files: |
             dist-electron-build/*.dmg
             dist-electron-build/*.zip

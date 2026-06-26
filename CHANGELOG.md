@@ -18,8 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mobile dropdowns (category, project, client, status pickers) now render a native `<select>` below the `768px` breakpoint instead of the Radix popover, so iOS/Android show their platform-standard full-screen picker. A new `ResponsiveSelect` wrapper branches on `useIsMobile()` and is shared across `NewTaskForm`, `ProjectSheet`, `BackdatedEntryDialog`, `PlannedTaskDialog`, and `TaskEditInArchiveDialog`; the desktop Radix `Select` is unchanged
   — `src/components/ui/responsive-select.tsx` (new), `src/components/NewTaskForm.tsx`, `src/components/ProjectSheet.tsx`, `src/components/BackdatedEntryDialog.tsx`, `src/components/PlannedTaskDialog.tsx`, `src/components/TaskEditInArchiveDialog.tsx`, `src/test-setup.ts`
 
-- Release workflow's "Create GitHub Release" step failing with "Bad credentials" — `RELEASE_PAT` secret regenerated
-  — `.github/workflows/release.yml`
+- Release workflow's "Create GitHub Release" step failing with "Bad credentials" on every run, even after regenerating the `RELEASE_PAT` secret. Removed the PAT dependency entirely: the release is now created with the default `GITHUB_TOKEN`, and `electron-release.yml` switched from triggering on the `release: published` event (which GitHub Actions blocks for `GITHUB_TOKEN`-created releases, to prevent recursive workflow runs) to a `workflow_run` trigger that watches the Release workflow's completion and reads the published tag from a build artifact
+  — `.github/workflows/release.yml`, `.github/workflows/electron-release.yml`
 
 ### Added
 
