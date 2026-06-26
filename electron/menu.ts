@@ -76,12 +76,18 @@ export function buildApplicationMenu(): Menu {
 				{ role: "togglefullscreen" },
 			],
 		},
-		{
-			label: "Window",
-			submenu: isMac
-				? [{ role: "minimize" }, { role: "zoom" }, { type: "separator" }, { role: "front" }]
-				: [{ role: "minimize" }, { role: "close" }],
-		},
+		// macOS's "windowMenu" role auto-builds the standard Window menu
+		// (Minimize, Zoom, Bring All to Front, open-window list) — Electron's
+		// own default app menu template uses it as a whole top-level entry
+		// rather than a hand-rolled submenu.
+		...(isMac
+			? ([{ role: "windowMenu" }] as MenuItemConstructorOptions[])
+			: ([
+					{
+						label: "Window",
+						submenu: [{ role: "minimize" }, { role: "close" }],
+					},
+				] as MenuItemConstructorOptions[])),
 		{
 			label: "Help",
 			submenu: [

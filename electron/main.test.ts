@@ -83,6 +83,27 @@ describe("electron/main backup:write IPC handler", () => {
 
 		expect(result).toEqual({ ok: true });
 	});
+
+	it("only prunes (readdir) every 5th write, not on every single write", async () => {
+		const readdirMock = fsPromises.default.readdir as ReturnType<typeof vi.fn>;
+		const handler = ipcHandlers.get("backup:write");
+
+		for (let i = 0; i < 4; i++) {
+			await handler?.(undefined, JSON.stringify({ foo: "bar" }));
+		}
+		expect(readdirMock).not.toHaveBeenCalled();
+
+		await handler?.(undefined, JSON.stringify({ foo: "bar" }));
+		expect(readdirMock).toHaveBeenCalledTimes(1);
+
+		for (let i = 0; i < 4; i++) {
+			await handler?.(undefined, JSON.stringify({ foo: "bar" }));
+		}
+		expect(readdirMock).toHaveBeenCalledTimes(1);
+
+		await handler?.(undefined, JSON.stringify({ foo: "bar" }));
+		expect(readdirMock).toHaveBeenCalledTimes(2);
+	});
 });
 
 describe("electron/main quit-flush timeout fallback", () => {

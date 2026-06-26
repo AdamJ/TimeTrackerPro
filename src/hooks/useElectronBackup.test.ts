@@ -114,4 +114,80 @@ describe("useElectronBackup", () => {
 		await expect(registeredCallback?.()).resolves.not.toThrow();
 		expect(quitFlushCallback).toHaveBeenCalledTimes(1);
 	});
+
+	describe("writeBackupDebounced", () => {
+		// vi.setSystemTime() in the global test-setup.ts already puts vitest's
+		// fake-timer machinery in a state where vi.useFakeTimers() throws, so the
+		// real setTimeout/clearTimeout are spied on directly instead (same
+		// workaround as electron/main.test.ts).
+		let timeoutCallback: (() => void) | undefined;
+		let setTimeoutSpy: ReturnType<typeof vi.spyOn>;
+
+		beforeEach(() => {
+			timeoutCallback = undefined;
+			setTimeoutSpy = vi.spyOn(globalThis, "setTimeout").mockImplementation(((cb: () => void) => {
+				timeoutCallback = cb;
+				return 1 as unknown as NodeJS.Timeout;
+			}) as typeof setTimeout);
+		});
+
+		afterEach(() => {
+			setTimeoutSpy.mockRestore();
+		});
+
+		it("no-ops without throwing when window.electronAPI is absent", () => {
+			const { result } = renderHook(() => useElectronBackup());
+
+			expect(() => {
+				act(() => {
+					result.current.writeBackupDebounced({ foo: "bar" });
+				});
+			}).not.toThrow();
+			expect(setTimeoutSpy).not.toHaveBeenCalled();
+		});
+
+		it("coalesces rapid repeated calls into a single write of the latest snapshot", () => {
+			const writeBackup = vi.fn().mockResolvedValue({ ok: true });
+			window.electronAPI = { writeBackup, requestFlushBeforeQuit: vi.fn() };
+
+			const { result } = renderHook(() => useElectronBackup());
+
+			act(() => {
+				result.current.writeBackupDebounced({ value: 1 });
+				result.current.writeBackupDebounced({ value: 2 });
+				result.current.writeBackupDebounced({ value: 3 });
+			});
+
+			// Only one timer scheduled for the whole burst.
+			expect(setTimeoutSpy).toHaveBeenCalledTimes(1);
+			expect(writeBackup).not.toHaveBeenCalled();
+
+			timeoutCallback?.();
+
+			expect(writeBackup).toHaveBeenCalledTimes(1);
+			expect(writeBackup).toHaveBeenCalledWith(JSON.stringify({ value: 3 }));
+		});
+
+		it("schedules a new timer for a call made after the previous debounce window fires", () => {
+			const writeBackup = vi.fn().mockResolvedValue({ ok: true });
+			window.electronAPI = { writeBackup, requestFlushBeforeQuit: vi.fn() };
+
+			const { result } = renderHook(() => useElectronBackup());
+
+			act(() => {
+				result.current.writeBackupDebounced({ value: 1 });
+			});
+			timeoutCallback?.();
+			expect(writeBackup).toHaveBeenCalledTimes(1);
+
+			act(() => {
+				result.current.writeBackupDebounced({ value: 2 });
+			});
+			expect(setTimeoutSpy).toHaveBeenCalledTimes(2);
+
+			timeoutCallback?.();
+			expect(writeBackup).toHaveBeenCalledTimes(2);
+			expect(writeBackup).toHaveBeenLastCalledWith(JSON.stringify({ value: 2 }));
+		});
+	});
 });
