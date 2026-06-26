@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- `ai-proxy` Edge Function accepted requests from any origin (`Access-Control-Allow-Origin: "*"`) with no auth check, letting any site consume the project's Gemini quota. Replaced the wildcard with an origin allowlist (production domain, Cloudflare Pages default + branch-preview domains, local dev, the Electron `app://localhost` origin); requests from other origins now get a 403 before any model call is made. Auth wasn't made a hard requirement since the AI summary feature is also used in guest (unauthenticated) mode
+  — `supabase/functions/ai-proxy/index.ts`
+- CSV export (`exportToCSV`) wrote task fields directly into quoted cells with no formula-injection guard, so a task title/description/project/client starting with `=`, `+`, `-`, or `@` would open as a live formula in Excel/Sheets on import. Cells matching that pattern are now prefixed with a leading `'` before quoting; `parseCSVImport` strips the same prefix on re-import so round-tripping an exported CSV restores the original value
+  — `src/utils/exportUtils.ts`, `src/utils/exportUtils.test.ts`
+- Supabase data caches (`getCachedProjects`/`getCachedCategories`/`getCachedClients`) were keyed only by a TTL, not by `user.id`, so a future code path reading the cache outside the auth-gated load flow could serve one user's cached data to another. Cache entries are now tagged with the `user.id` they were populated for and a lookup for a different user is treated as a miss
+  — `src/lib/supabase.ts`, `src/lib/supabase.test.ts` (new), `src/services/supabaseService.ts`, `src/services/supabaseService.test.ts`
+- `.env.example` documented client-side `VITE_ANTHROPIC_API_KEY`/`VITE_GEMINI_API_KEY` variables that are never read anywhere in `src/` (the AI proxy reads a server-side `GEMINI_API_KEY` Supabase Function secret, not a client env var) — removed the misleading lines and pointed at the correct `supabase secrets set` setup instead
+  — `.env.example`
+
 ### Fixed
 
 - Accessibility gaps in modal, keyboard, and live-region flows: `AuthDialog` rebuilt on the shadcn `Dialog` primitive instead of a raw overlay `div`, giving it `role="dialog"`, `aria-modal`, a focus trap, Escape-to-close, and focus return; `UserMenu`'s fake `<a onClick>` sign-in link (no `href`, not keyboard-activatable as a link) replaced with a shadcn `Button`; `TaskItem` gained a visually-hidden `aria-live="polite"` region announcing only start/stop transitions (not the per-second duration tick) plus a focusable, `tabIndex`-able long-press context-menu trigger; `PlannedTaskCard`'s long-press context-menu trigger got the same `tabIndex` fix; `Settings`'s Projects/Clients/Categories/Archived Days nav rows switched from `<a href>` to `react-router-dom`'s `Link` so they navigate via the SPA router instead of forcing a full page reload
