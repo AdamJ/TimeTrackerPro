@@ -13,16 +13,50 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 const ALLOWED_MODELS = new Set(["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"]);
 
-const CORS_HEADERS = {
-	"Access-Control-Allow-Origin": "*",
-	"Access-Control-Allow-Methods": "POST, OPTIONS",
-	"Access-Control-Allow-Headers": "authorization, content-type, x-client-info, apikey",
-};
+// Known origins the app is served from. The AI summary feature works in
+// guest mode (no Supabase session), so this proxy can't require auth —
+// origin allowlisting is the available guard against cross-site abuse of
+// the project's Gemini quota.
+const ALLOWED_ORIGINS = new Set([
+	"https://timetrackerpro.adamjolicoeur.me",
+	"https://timetrackerpro.pages.dev",
+	"http://localhost:8080",
+	"app://localhost",
+]);
+// Cloudflare Pages branch-preview deployments, e.g. https://<branch>.timetrackerpro.pages.dev
+const ALLOWED_ORIGIN_PATTERN = /^https:\/\/[a-z0-9-]+\.timetrackerpro\.pages\.dev$/;
+
+function isAllowedOrigin(origin: string | null): origin is string {
+	if (!origin) return false;
+	return ALLOWED_ORIGINS.has(origin) || ALLOWED_ORIGIN_PATTERN.test(origin);
+}
+
+function buildCorsHeaders(origin: string | null): Record<string, string> {
+	const headers: Record<string, string> = {
+		"Access-Control-Allow-Methods": "POST, OPTIONS",
+		"Access-Control-Allow-Headers": "authorization, content-type, x-client-info, apikey",
+		"Vary": "Origin",
+	};
+	if (isAllowedOrigin(origin)) {
+		headers["Access-Control-Allow-Origin"] = origin;
+	}
+	return headers;
+}
 
 serve(async (req: Request) => {
+	const origin = req.headers.get("Origin");
+	const CORS_HEADERS = buildCorsHeaders(origin);
+
 	// Handle CORS preflight
 	if (req.method === "OPTIONS") {
 		return new Response(null, { status: 204, headers: CORS_HEADERS });
+	}
+
+	if (!isAllowedOrigin(origin)) {
+		return new Response(JSON.stringify({ error: "Origin not allowed" }), {
+			status: 403,
+			headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+		});
 	}
 
 	if (req.method !== "POST") {
