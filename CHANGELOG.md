@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   — `src/lib/supabase.ts`, `src/lib/supabase.test.ts` (new), `src/services/supabaseService.ts`, `src/services/supabaseService.test.ts`
 - `.env.example` documented client-side `VITE_ANTHROPIC_API_KEY`/`VITE_GEMINI_API_KEY` variables that are never read anywhere in `src/` (the AI proxy reads a server-side `GEMINI_API_KEY` Supabase Function secret, not a client env var) — removed the misleading lines and pointed at the correct `supabase secrets set` setup instead
   — `.env.example`
+- Electron auto-updater downloaded and self-installed unsigned binaries from GitHub Releases on every launch (`autoDownload`/`autoInstallOnAppQuit` both `true`, no electron-builder signing config for either platform). Downloading now requires explicit user consent via a dialog shown on the `update-available` event; failed update checks are persisted to a disk-backed state file and back off exponentially (1h, doubling up to a 24h cap) instead of retrying — and failing — on every single launch
+  — `electron/updater.ts`, `electron/updater.test.ts` (new)
+- Electron `BrowserWindow` relied on the version-dependent default for `webPreferences.sandbox` instead of setting it explicitly, despite using a `contextBridge` preload with no Node API exposure in the renderer. Also switched the Mac menu's "Window" submenu to Electron's `windowMenu` role, matching its own recommended default template
+  — `electron/main.ts`, `electron/menu.ts`
 
 ### Fixed
 
@@ -31,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Electron quit-flush disk backup no longer fires its "done" ack on a fire-and-forget basis — `useElectronBackup`'s `writeBackup` now returns the IPC write result so the quit-flush callback can `await` it, and a failed write (disk full, permissions, unwritable `userData`) surfaces a destructive toast (mirroring the existing localStorage write-failure toast) instead of failing silently. Added regression coverage for the `backup:write` IPC handler's error path and the `before-quit-flush` timeout fallback closing the window even when the renderer never acks
   — `src/hooks/useElectronBackup.ts`, `src/contexts/TimeTrackingContext.tsx`, `electron/main.test.ts` (new), `vite.config.ts`
+
+- Electron disk backup did a full `readdir` plus per-file `stat`/`unlink` prune pass on every single `backup:write` call, and the two fire-and-forget call sites (manual sync, day-archiving) queued a fresh write/prune on every invocation with no coalescing — mashing manual sync could queue overlapping disk writes. Pruning now runs only every 5th write; the two non-quit-flush call sites go through a new debounced `writeBackupDebounced` that collapses rapid repeated calls into a single write of the latest snapshot (the quit-flush path is unaffected and still writes/awaits immediately)
+  — `electron/main.ts`, `src/hooks/useElectronBackup.ts`, `src/contexts/TimeTrackingContext.tsx`, `electron/main.test.ts`, `src/hooks/useElectronBackup.test.ts`
 
 - Mobile dropdowns (category, project, client, status pickers) now render a native `<select>` below the `768px` breakpoint instead of the Radix popover, so iOS/Android show their platform-standard full-screen picker. A new `ResponsiveSelect` wrapper branches on `useIsMobile()` and is shared across `NewTaskForm`, `ProjectSheet`, `BackdatedEntryDialog`, `PlannedTaskDialog`, and `TaskEditInArchiveDialog`; the desktop Radix `Select` is unchanged
   — `src/components/ui/responsive-select.tsx` (new), `src/components/NewTaskForm.tsx`, `src/components/ProjectSheet.tsx`, `src/components/BackdatedEntryDialog.tsx`, `src/components/PlannedTaskDialog.tsx`, `src/components/TaskEditInArchiveDialog.tsx`, `src/test-setup.ts`
