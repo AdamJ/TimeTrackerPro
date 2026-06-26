@@ -73,60 +73,52 @@ interface Client {
   createdAt: string;
 }
 
-let cachedProjects: Project[] | null = null;
-let cachedCategories: TaskCategory[] | null = null;
-let cachedClients: Client[] | null = null;
-let lastProjectsCheck: Date | null = null;
-let lastCategoriesCheck: Date | null = null;
-let lastClientsCheck: Date | null = null;
+// Each cache entry is tagged with the user.id it was populated for. A get
+// whose userId doesn't match the stored owner is treated as a miss, so a
+// future code path that reads the cache without going through the
+// auth-gated flow that clears it on sign-in/out can't serve user A's data
+// to user B.
+interface CacheEntry<T> {
+  userId: string;
+  data: T;
+  checkedAt: Date;
+}
+
+let cachedProjects: CacheEntry<Project[]> | null = null;
+let cachedCategories: CacheEntry<TaskCategory[]> | null = null;
+let cachedClients: CacheEntry<Client[]> | null = null;
 const DATA_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-export const getCachedProjects = (): Project[] | null => {
-  if (cachedProjects && lastProjectsCheck &&
-      (Date.now() - lastProjectsCheck.getTime()) < DATA_CACHE_DURATION) {
-    return cachedProjects;
+const readCache = <T>(entry: CacheEntry<T> | null, userId: string): T | null => {
+  if (entry && entry.userId === userId &&
+      (Date.now() - entry.checkedAt.getTime()) < DATA_CACHE_DURATION) {
+    return entry.data;
   }
   return null;
 };
 
-export const setCachedProjects = (projects: Project[]) => {
-  cachedProjects = projects;
-  lastProjectsCheck = new Date();
+export const getCachedProjects = (userId: string): Project[] | null => readCache(cachedProjects, userId);
+
+export const setCachedProjects = (projects: Project[], userId: string) => {
+  cachedProjects = { userId, data: projects, checkedAt: new Date() };
 };
 
-export const getCachedCategories = (): TaskCategory[] | null => {
-  if (cachedCategories && lastCategoriesCheck &&
-      (Date.now() - lastCategoriesCheck.getTime()) < DATA_CACHE_DURATION) {
-    return cachedCategories;
-  }
-  return null;
+export const getCachedCategories = (userId: string): TaskCategory[] | null => readCache(cachedCategories, userId);
+
+export const setCachedCategories = (categories: TaskCategory[], userId: string) => {
+  cachedCategories = { userId, data: categories, checkedAt: new Date() };
 };
 
-export const setCachedCategories = (categories: TaskCategory[]) => {
-  cachedCategories = categories;
-  lastCategoriesCheck = new Date();
-};
+export const getCachedClients = (userId: string): Client[] | null => readCache(cachedClients, userId);
 
-export const getCachedClients = (): Client[] | null => {
-  if (cachedClients && lastClientsCheck &&
-      (Date.now() - lastClientsCheck.getTime()) < DATA_CACHE_DURATION) {
-    return cachedClients;
-  }
-  return null;
-};
-
-export const setCachedClients = (clients: Client[]) => {
-  cachedClients = clients;
-  lastClientsCheck = new Date();
+export const setCachedClients = (clients: Client[], userId: string) => {
+  cachedClients = { userId, data: clients, checkedAt: new Date() };
 };
 
 export const clearDataCaches = () => {
   cachedProjects = null;
   cachedCategories = null;
   cachedClients = null;
-  lastProjectsCheck = null;
-  lastCategoriesCheck = null;
-  lastClientsCheck = null;
 };
 
 // Database call monitoring with enhanced tracking

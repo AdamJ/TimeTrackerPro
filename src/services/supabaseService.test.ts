@@ -98,9 +98,10 @@ describe("SupabaseService — upsert-only bulk saves (#215)", () => {
 			expect(builder.delete).toHaveBeenCalledTimes(1);
 			expect(builder.eq).toHaveBeenCalledWith("id", "p1");
 			expect(builder.eq).toHaveBeenCalledWith("user_id", "user-1");
-			expect(setCachedProjectsMock).toHaveBeenCalledWith([
-				{ id: "p2", name: "Beta", client: "Acme" }
-			]);
+			expect(setCachedProjectsMock).toHaveBeenCalledWith(
+				[{ id: "p2", name: "Beta", client: "Acme" }],
+				"user-1"
+			);
 		});
 	});
 
@@ -136,9 +137,10 @@ describe("SupabaseService — upsert-only bulk saves (#215)", () => {
 			expect(builder.delete).toHaveBeenCalledTimes(1);
 			expect(builder.eq).toHaveBeenCalledWith("id", "c1");
 			expect(builder.eq).toHaveBeenCalledWith("user_id", "user-1");
-			expect(setCachedCategoriesMock).toHaveBeenCalledWith([
-				{ id: "c2", name: "Admin", color: "#111", isBillable: true }
-			]);
+			expect(setCachedCategoriesMock).toHaveBeenCalledWith(
+				[{ id: "c2", name: "Admin", color: "#111", isBillable: true }],
+				"user-1"
+			);
 		});
 	});
 

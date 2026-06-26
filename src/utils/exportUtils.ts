@@ -3,6 +3,15 @@ import { TaskCategory } from "@/config/categories";
 import { generateDailySummary } from "@/utils/timeUtil";
 import { getTotalHoursForPeriod, getRevenueForPeriod } from "@/utils/calculationUtils";
 
+// Prefixes cell values that would be interpreted as a formula by Excel/Sheets
+// (starting with =, +, -, or @) with a leading single quote, then quotes the
+// result. Prevents formula injection from task titles/descriptions/etc.
+function csvCell(value: string): string {
+	const escaped = value.replace(/"/g, '""');
+	const safe = /^[=+\-@]/.test(escaped) ? `'${escaped}` : escaped;
+	return `"${safe}"`;
+}
+
 export function exportToCSV(
 	archivedDays: DayRecord[],
 	projects: Project[],
@@ -59,23 +68,23 @@ export function exportToCSV(
 				const updatedAtISO = task.updatedAt?.toISOString() || new Date().toISOString();
 
 				const row = [
-					`"${task.id}"`,
-					`"${userId}"`,
-					`"${task.title}"`,
-					`"${task.description || ""}"`,
-					`"${startTimeISO}"`,
-					`"${endTimeISO}"`,
+					csvCell(task.id),
+					csvCell(userId),
+					csvCell(task.title),
+					csvCell(task.description || ""),
+					csvCell(startTimeISO),
+					csvCell(endTimeISO),
 					task.duration || "",
-					`"${project?.id || ""}"`,
-					`"${task.project || ""}"`,
-					`"${task.client || ""}"`,
-					`"${category?.id || ""}"`,
-					`"${task.category || ""}"`,
-					`"${day.id}"`,
+					csvCell(project?.id || ""),
+					csvCell(task.project || ""),
+					csvCell(task.client || ""),
+					csvCell(category?.id || ""),
+					csvCell(task.category || ""),
+					csvCell(day.id),
 					"false",
-					`"${insertedAtISO}"`,
-					`"${updatedAtISO}"`,
-					`"${dailySummary.replace(/"/g, '""')}"`
+					csvCell(insertedAtISO),
+					csvCell(updatedAtISO),
+					csvCell(dailySummary)
 				];
 				rows.push(row.join(","));
 			}
@@ -303,7 +312,9 @@ export function parseCSVImport(
 
 			const taskData: { [key: string]: string } = {};
 			headers.forEach((header, index) => {
-				taskData[header] = values[index].replace(/^"|"$/g, "");
+				// Strip wrapping quotes, then the leading "'" added on export to
+				// neutralize values that looked like a spreadsheet formula.
+				taskData[header] = values[index].replace(/^"|"$/g, "").replace(/^'([=+\-@])/, "$1");
 			});
 
 			if (!taskData.id || !taskData.title || !taskData.start_time) {

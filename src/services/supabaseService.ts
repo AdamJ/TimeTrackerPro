@@ -95,8 +95,8 @@ export class SupabaseService implements DataService {
 
 		const user = await this.requireUser();
 
-		const categories = getCachedCategories() ?? [];
-		const projects = getCachedProjects() ?? [];
+		const categories = getCachedCategories(user.id) ?? [];
+		const projects = getCachedProjects(user.id) ?? [];
 		const categoryMap = new Map(categories.map(c => [c.id, c]));
 		const projectMap = new Map(projects.map(p => [p.name, p]));
 
@@ -270,8 +270,8 @@ export class SupabaseService implements DataService {
 
 		const user = await this.requireUser();
 
-		const categories = getCachedCategories() ?? [];
-		const projects = getCachedProjects() ?? [];
+		const categories = getCachedCategories(user.id) ?? [];
+		const projects = getCachedProjects(user.id) ?? [];
 		const categoryMap = new Map(categories.map(c => [c.id, c]));
 		const projectMap = new Map(projects.map(p => [p.name, p]));
 
@@ -418,8 +418,8 @@ export class SupabaseService implements DataService {
 	async updateArchivedDay(dayId: string, updates: Partial<DayRecord>): Promise<void> {
 		const user = await this.requireUser();
 
-		const categories = getCachedCategories() ?? [];
-		const projects = getCachedProjects() ?? [];
+		const categories = getCachedCategories(user.id) ?? [];
+		const projects = getCachedProjects(user.id) ?? [];
 		const categoryMap = new Map(categories.map(c => [c.id, c]));
 		const projectMap = new Map(projects.map(p => [p.name, p]));
 
@@ -554,17 +554,17 @@ export class SupabaseService implements DataService {
 			throw error;
 		}
 
-		setCachedProjects(projects);
+		setCachedProjects(projects, user.id);
 	}
 
 	async getProjects(): Promise<Project[]> {
 
-		const cachedResult = await getCachedProjects();
+		const user = await this.requireUser();
+
+		const cachedResult = getCachedProjects(user.id);
 		if (cachedResult) {
 			return cachedResult;
 		}
-
-		const user = await this.requireUser();
 
 		const { data, error } = await supabase
 			.from("projects")
@@ -586,7 +586,7 @@ export class SupabaseService implements DataService {
 			isBillable: project.is_billable !== false
 		}));
 
-		setCachedProjects(result);
+		setCachedProjects(result, user.id);
 		return result;
 	}
 
@@ -602,9 +602,9 @@ export class SupabaseService implements DataService {
 
 		if (error) throw error;
 
-		const cached = getCachedProjects();
+		const cached = getCachedProjects(user.id);
 		if (cached) {
-			setCachedProjects(cached.filter((project) => project.id !== id));
+			setCachedProjects(cached.filter((project) => project.id !== id), user.id);
 		}
 	}
 
@@ -643,16 +643,16 @@ export class SupabaseService implements DataService {
 			throw error;
 		}
 
-		setCachedClients(clients);
+		setCachedClients(clients, user.id);
 	}
 
 	async getClients(): Promise<Client[]> {
-		const cachedResult = getCachedClients();
+		const user = await this.requireUser();
+
+		const cachedResult = getCachedClients(user.id);
 		if (cachedResult) {
 			return cachedResult;
 		}
-
-		const user = await this.requireUser();
 
 		const { data, error } = await supabase
 			.from("clients")
@@ -681,7 +681,7 @@ export class SupabaseService implements DataService {
 			contactWebsite: client.contact_website ?? undefined,
 		}));
 
-		setCachedClients(result);
+		setCachedClients(result, user.id);
 		return result;
 	}
 
@@ -716,12 +716,12 @@ export class SupabaseService implements DataService {
 			throw error;
 		}
 
-		const cached = getCachedClients();
+		const cached = getCachedClients(user.id);
 		if (cached) {
 			const merged = cached.some(c => c.id === client.id)
 				? cached.map(c => (c.id === client.id ? client : c))
 				: [...cached, client];
-			setCachedClients(merged);
+			setCachedClients(merged, user.id);
 		}
 	}
 
@@ -753,17 +753,17 @@ export class SupabaseService implements DataService {
 			throw error;
 		}
 
-		setCachedCategories(categories);
+		setCachedCategories(categories, user.id);
 	}
 
 	async getCategories(): Promise<TaskCategory[]> {
 
-		const cachedResult = await getCachedCategories();
+		const user = await this.requireUser();
+
+		const cachedResult = getCachedCategories(user.id);
 		if (cachedResult) {
 			return cachedResult;
 		}
-
-		const user = await this.requireUser();
 
 		const { data, error } = await supabase
 			.from("categories")
@@ -783,7 +783,7 @@ export class SupabaseService implements DataService {
 			isBillable: category.is_billable !== false
 		}));
 
-		setCachedCategories(result);
+		setCachedCategories(result, user.id);
 		return result;
 	}
 
@@ -799,9 +799,9 @@ export class SupabaseService implements DataService {
 
 		if (error) throw error;
 
-		const cached = getCachedCategories();
+		const cached = getCachedCategories(user.id);
 		if (cached) {
-			setCachedCategories(cached.filter((category) => category.id !== id));
+			setCachedCategories(cached.filter((category) => category.id !== id), user.id);
 		}
 	}
 

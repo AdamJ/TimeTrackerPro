@@ -86,6 +86,30 @@ describe("exportUtils", () => {
       const dataRow = csv.split("\n")[1];
       expect(dataRow).toContain("user-abc");
     });
+
+    it("neutralizes task fields that look like a spreadsheet formula", () => {
+      const day = makeDay({
+        tasks: [
+          {
+            id: "task-001",
+            title: "=cmd|'/c calc'!A1",
+            description: "+SUM(A1:A2)",
+            startTime: new Date("2024-12-01T09:00:00Z"),
+            endTime: new Date("2024-12-01T10:00:00Z"),
+            duration: 3_600_000,
+            project: "-1+1",
+            client: "@SUM(1+1)",
+            category: "cat1"
+          }
+        ]
+      });
+      const csv = exportToCSV([day], [project], [category], "user-1");
+      const dataRow = csv.split("\n")[1];
+      expect(dataRow).toContain("\"'=cmd|'/c calc'!A1\"");
+      expect(dataRow).toContain("\"'+SUM(A1:A2)\"");
+      expect(dataRow).toContain('"\'-1+1"');
+      expect(dataRow).toContain("\"'@SUM(1+1)\"");
+    });
   });
 
   describe("exportToJSON", () => {
@@ -190,6 +214,14 @@ describe("exportUtils", () => {
       const row = `"task-1","user-1","My Task","","NOT_A_DATE","","","","","","","","day-1","false","",""`;
       const result = parseCSVImport(`${headers}\n${row}`, []);
       expect(result.importedCount).toBe(0);
+    });
+
+    it("strips the formula-injection guard added on export when re-importing", () => {
+      const headers = "id,user_id,title,description,start_time,end_time,duration,project_id,project_name,client,category_id,category_name,day_record_id,is_current,inserted_at,updated_at";
+      const row = `"task-1","user-1","'=cmd|'/c calc'!A1","","2024-12-01T09:00:00.000Z","","","","","","","","day-1","false","",""`;
+      const result = parseCSVImport(`${headers}\n${row}`, []);
+      expect(result.success).toBe(true);
+      expect(result.newArchivedDays[0].tasks[0].title).toBe("=cmd|'/c calc'!A1");
     });
   });
 });
