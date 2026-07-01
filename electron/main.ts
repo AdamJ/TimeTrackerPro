@@ -19,6 +19,7 @@ const PRUNE_EVERY_N_WRITES = 5;
 let mainWindow: BrowserWindow | null = null;
 let isQuittingForReal = false;
 let quitFlushPending = false;
+let isQuitIntent = false;
 let writesSincePrune = 0;
 
 function getBackupsDir(): string {
@@ -112,6 +113,7 @@ function createWindow(): void {
 	// (via "activate") after the previous one quit-flushed and closed.
 	isQuittingForReal = false;
 	quitFlushPending = false;
+	isQuitIntent = false;
 
 	const win = new BrowserWindow({
 		width: 1280,
@@ -201,6 +203,14 @@ app.on("window-all-closed", () => {
 	}
 });
 
+// Real quit requests (Cmd+Q, the app/File menu's Quit item, or an updater-driven
+// app.quit()) fire "before-quit" before Electron asks each window to close. A plain
+// click on the window's own close button never fires it. Recording that here lets
+// beginQuitFlush tell the two apart once the flush completes.
+app.on("before-quit", () => {
+	isQuitIntent = true;
+});
+
 // beforeunload (DOM) doesn't fire on app.quit() without a window close, on a
 // force-quit, or on a crash. This gives the renderer one last chance to flush
 // state to localStorage and write a final disk backup before the window
@@ -213,6 +223,13 @@ app.on("window-all-closed", () => {
 // flush. Hooking "close" runs while the window (and its renderer) is still alive,
 // covering both the direct close-button path and app.quit() triggered without
 // closing the window first (Electron closes each window as part of quitting).
+//
+// Calling event.preventDefault() on "close" aborts Electron's in-flight quit
+// sequence, not just the window close — so once the flush is done, a real quit
+// request has to be resumed with a fresh app.quit() rather than a plain
+// win.close(), or the app would only ever close its window and never actually
+// terminate (macOS keeps a window-less app running, so this previously required
+// a second Cmd+Q to really quit).
 function beginQuitFlush(win: BrowserWindow): void {
 	if (quitFlushPending) return;
 	quitFlushPending = true;
@@ -222,7 +239,11 @@ function beginQuitFlush(win: BrowserWindow): void {
 		if (settled) return;
 		settled = true;
 		isQuittingForReal = true;
-		win.close();
+		if (isQuitIntent) {
+			app.quit();
+		} else {
+			win.close();
+		}
 	};
 
 	const timeoutId = setTimeout(finishQuit, QUIT_FLUSH_TIMEOUT_MS);

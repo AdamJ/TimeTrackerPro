@@ -5,9 +5,11 @@ type Handler = (...args: unknown[]) => unknown;
 const ipcHandlers = new Map<string, Handler>();
 const onceHandlers = new Map<string, Handler>();
 const winEventHandlers = new Map<string, Handler>();
+const appEventHandlers = new Map<string, Handler>();
 
 const closeMock = vi.fn();
 const sendMock = vi.fn();
+const appQuitMock = vi.fn();
 
 vi.mock("fs/promises", () => ({
 	default: {
@@ -24,8 +26,10 @@ vi.mock("electron", () => ({
 	app: {
 		getPath: vi.fn(() => "/tmp/userData"),
 		whenReady: vi.fn(() => Promise.resolve()),
-		on: vi.fn(),
-		quit: vi.fn(),
+		on: vi.fn((event: string, handler: Handler) => {
+			appEventHandlers.set(event, handler);
+		}),
+		quit: appQuitMock,
 		isPackaged: false
 	},
 	BrowserWindow: Object.assign(
@@ -59,6 +63,7 @@ describe("electron/main backup:write IPC handler", () => {
 		ipcHandlers.clear();
 		onceHandlers.clear();
 		winEventHandlers.clear();
+		appEventHandlers.clear();
 		vi.resetModules();
 		await import("./main");
 		await new Promise((resolve) => setImmediate(resolve));
@@ -120,6 +125,7 @@ describe("electron/main quit-flush timeout fallback", () => {
 		ipcHandlers.clear();
 		onceHandlers.clear();
 		winEventHandlers.clear();
+		appEventHandlers.clear();
 		vi.resetModules();
 		timeoutCallback = undefined;
 		setTimeoutSpy = vi.spyOn(globalThis, "setTimeout").mockImplementation(((cb: () => void) => {
@@ -172,5 +178,31 @@ describe("electron/main quit-flush timeout fallback", () => {
 		// Firing the (already-cleared) timeout callback afterward must not close it again.
 		timeoutCallback?.();
 		expect(closeMock).toHaveBeenCalledTimes(1);
+	});
+
+	it("resumes app.quit() after the flush when the close was triggered by a real quit request (Cmd+Q/menu Quit), instead of only closing the window", () => {
+		const beforeQuitHandler = appEventHandlers.get("before-quit");
+		expect(beforeQuitHandler).toBeDefined();
+		beforeQuitHandler?.();
+
+		const closeHandler = winEventHandlers.get("close");
+		closeHandler?.({ preventDefault: vi.fn() });
+
+		const doneHandler = onceHandlers.get("before-quit-flush-done");
+		doneHandler?.();
+
+		expect(appQuitMock).toHaveBeenCalledTimes(1);
+		expect(closeMock).not.toHaveBeenCalled();
+	});
+
+	it("just closes the window (without forcing a full app.quit()) when the close was a plain window-close, not a real quit request", () => {
+		const closeHandler = winEventHandlers.get("close");
+		closeHandler?.({ preventDefault: vi.fn() });
+
+		const doneHandler = onceHandlers.get("before-quit-flush-done");
+		doneHandler?.();
+
+		expect(closeMock).toHaveBeenCalledTimes(1);
+		expect(appQuitMock).not.toHaveBeenCalled();
 	});
 });
