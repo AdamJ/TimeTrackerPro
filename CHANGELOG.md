@@ -53,6 +53,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Global keyboard shortcuts for the web/PWA build and native menu accelerators for the Electron build: `Cmd/Ctrl+N` (new task), `Cmd/Ctrl+S` (save), `Cmd/Ctrl+K` (command palette — jump to any page or run an action), and `?` (keyboard shortcuts help). A new `CommandPalette` (built on the existing shadcn `Command`/`cmdk` primitives) and `KeyboardShortcutsDialog` (using the new shadcn `Kbd` component) surface the shortcuts; a keyboard icon in the page header also opens the help dialog. Electron's `save`/`command-palette`/`shortcuts-help` menu actions are dispatched over the existing `menu:action` IPC channel and handled by an extended `useElectronMenuActions`
+  — `src/hooks/useKeyboardShortcuts.ts` (new), `src/components/CommandPalette.tsx` (new), `src/components/KeyboardShortcutsDialog.tsx` (new), `src/components/ui/kbd.tsx` (new), `src/lib/platform.ts` (new), `src/App.tsx`, `src/hooks/useElectronMenuActions.ts`, `electron/menu.ts`, `src/test-setup.ts`
+
 - In-app data recovery UI for guest-mode backups — a new "Data Recovery" item in Settings (guest mode only) lists localStorage schema-mismatch sibling-key backups and, on the desktop build, Electron disk snapshots, with a preview of entity counts (archived days, projects, etc.) before restoring. Restoring writes the backup data back into the live storage keys (re-stamped with the current schema version) and reloads. New `ipcMain.handle("backup:list"/"backup:read")` pair (filename-pattern validated against path traversal) exposed via `electronAPI.listBackups`/`readBackup`
   — `electron/main.ts`, `electron/preload.ts`, `src/types/electron.d.ts`, `src/hooks/useElectronBackup.ts`, `src/services/localStorageService/recovery.ts` (new), `src/hooks/useDataRecovery.ts` (new), `src/components/DataRecoveryDialog.tsx` (new), `src/pages/Settings.tsx`
 

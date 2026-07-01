@@ -26,6 +26,7 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 - **Backdated Entry Creation** — log work for past days directly from the Archive page via "Add Past Entry"
 - **CSV Import** — bring in existing time data from other tools
 - **Weekly Report** — AI-generated work summaries (standup, client, or retrospective tone)
+- **Keyboard Shortcuts** — `Cmd/Ctrl+N` new task, `Cmd/Ctrl+S` save, `Cmd/Ctrl+K` command palette, `?` for the shortcuts help dialog (web and Electron)
 - **No Account Required** — full functionality with local storage; optional cloud sync via Supabase
 - **PWA** — installable on desktop/mobile
 
@@ -126,6 +127,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 
 **Recent highlights:**
 
+- **Keyboard shortcuts** — global `Cmd/Ctrl+N`/`Cmd/Ctrl+S`/`Cmd/Ctrl+K` shortcuts and a `?` help dialog in the web/PWA build, plus matching native menu accelerators in the Electron build
 - **Guest-mode data durability** — schema-mismatch backups, write-failure toasts, undo for hard deletes, Electron disk-based backup snapshots (independent of `localStorage`, including a final flush on app quit), and an in-app "Data Recovery" UI in Settings to preview and restore those backups
 - **Backdated entry creation** — "Add Past Entry" button on Archive page opens a multi-step dialog to log tasks for any past date
 - **Kanban planning board** — drag-and-drop task planning view (`KanbanBoard`, `KanbanColumn`, `PlannedTaskCard`)

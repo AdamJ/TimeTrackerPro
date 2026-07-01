@@ -72,4 +72,61 @@ describe("useElectronMenuActions", () => {
 
 		expect(unsubscribe).toHaveBeenCalledTimes(1);
 	});
+
+	it("invokes onSave for the save action without navigating", () => {
+		let listener: ((action: string) => void) | undefined;
+		window.electronAPI = {
+			writeBackup: vi.fn(),
+			requestFlushBeforeQuit: vi.fn(),
+			onMenuAction: (callback) => {
+				listener = callback;
+				return vi.fn();
+			},
+		};
+		const onSave = vi.fn();
+
+		renderHook(() => useElectronMenuActions({ onSave }));
+		listener?.("save");
+
+		expect(onSave).toHaveBeenCalledTimes(1);
+		expect(navigateMock).not.toHaveBeenCalled();
+	});
+
+	it("invokes onOpenCommandPalette for the command-palette action", () => {
+		let listener: ((action: string) => void) | undefined;
+		window.electronAPI = {
+			writeBackup: vi.fn(),
+			requestFlushBeforeQuit: vi.fn(),
+			onMenuAction: (callback) => {
+				listener = callback;
+				return vi.fn();
+			},
+		};
+		const onOpenCommandPalette = vi.fn();
+
+		renderHook(() => useElectronMenuActions({ onOpenCommandPalette }));
+		listener?.("command-palette");
+
+		expect(onOpenCommandPalette).toHaveBeenCalledTimes(1);
+		expect(navigateMock).not.toHaveBeenCalled();
+	});
+
+	it("invokes onOpenShortcutsHelp for the shortcuts-help action", () => {
+		let listener: ((action: string) => void) | undefined;
+		window.electronAPI = {
+			writeBackup: vi.fn(),
+			requestFlushBeforeQuit: vi.fn(),
+			onMenuAction: (callback) => {
+				listener = callback;
+				return vi.fn();
+			},
+		};
+		const onOpenShortcutsHelp = vi.fn();
+
+		renderHook(() => useElectronMenuActions({ onOpenShortcutsHelp }));
+		listener?.("shortcuts-help");
+
+		expect(onOpenShortcutsHelp).toHaveBeenCalledTimes(1);
+		expect(navigateMock).not.toHaveBeenCalled();
+	});
 });
