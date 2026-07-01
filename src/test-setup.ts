@@ -57,6 +57,24 @@ if (typeof URL.revokeObjectURL === "undefined") {
 	});
 }
 
+// Mock ResizeObserver (not available in jsdom; used by cmdk's Command component)
+if (typeof window.ResizeObserver === "undefined") {
+	class ResizeObserverMock {
+		observe = vi.fn();
+		unobserve = vi.fn();
+		disconnect = vi.fn();
+	}
+	Object.defineProperty(window, "ResizeObserver", {
+		writable: true,
+		value: ResizeObserverMock,
+	});
+}
+
+// Mock Element.scrollIntoView (not available in jsdom; used by cmdk's Command component)
+if (typeof Element.prototype.scrollIntoView === "undefined") {
+	Element.prototype.scrollIntoView = vi.fn();
+}
+
 // Mock window.matchMedia (not available in jsdom)
 if (typeof window.matchMedia === "undefined") {
 	Object.defineProperty(window, "matchMedia", {

@@ -8,13 +8,19 @@ import { TimeTrackingProvider } from "@/contexts/TimeTrackingContext";
 import { PageTitleProvider } from "@/contexts/PageTitleContext";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useAuth } from "@/hooks/useAuth";
+import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { useElectronMenuActions } from "@/hooks/useElectronMenuActions";
-import { Suspense, lazy } from "react";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { Suspense, lazy, useState } from "react";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
 import { BackgroundTimerNotifier } from "@/components/BackgroundTimerNotifier";
 import { MobileNav } from "@/components/MobileNav";
 import { AppSidebar } from "@/components/AppSidebar";
+import { CommandPalette } from "@/components/CommandPalette";
+import { KeyboardShortcutsDialog } from "@/components/KeyboardShortcutsDialog";
+import { Button } from "@/components/ui/button";
+import { Keyboard } from "lucide-react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -50,7 +56,24 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppShell = () => {
   const { title, actions, badge } = usePageTitle();
-  useElectronMenuActions();
+  const { forceSyncToDatabase } = useTimeTracking();
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+
+  const openCommandPalette = () => setShowCommandPalette(true);
+  const openShortcutsHelp = () => setShowShortcutsHelp(true);
+
+  useElectronMenuActions({
+    onSave: forceSyncToDatabase,
+    onOpenCommandPalette: openCommandPalette,
+    onOpenShortcutsHelp: openShortcutsHelp,
+  });
+  useKeyboardShortcuts({
+    onSave: forceSyncToDatabase,
+    onOpenCommandPalette: openCommandPalette,
+    onOpenShortcutsHelp: openShortcutsHelp,
+  });
+
   return (
     <SidebarProvider
       style={{ "--sidebar-width": "19rem" } as React.CSSProperties}
@@ -65,7 +88,19 @@ const AppShell = () => {
           />
           <h1 className="text-base font-medium">{title}</h1>
           {badge}
-          {actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}
+          <div className="ml-auto flex items-center gap-2">
+            {actions}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7"
+              onClick={openShortcutsHelp}
+              aria-label="Keyboard shortcuts"
+              title="Keyboard shortcuts (?)"
+            >
+              <Keyboard className="size-4" />
+            </Button>
+          </div>
         </header>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -87,6 +122,12 @@ const AppShell = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </SidebarInset>
+      <CommandPalette
+        open={showCommandPalette}
+        onOpenChange={setShowCommandPalette}
+        onSave={forceSyncToDatabase}
+      />
+      <KeyboardShortcutsDialog open={showShortcutsHelp} onOpenChange={setShowShortcutsHelp} />
     </SidebarProvider>
   );
 };
