@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keyboard users had no way to bypass the sidebar navigation to reach main content, requiring a full tab through every nav item on each page. Added a "Skip to content" link, visually hidden until focused, as the first focusable element in the app shell; it jumps to a new `<main id="main-content">` wrapper around the routed page content
+  — `src/App.tsx`
+- Tooltip content (`TooltipContent`) rendered inline in the DOM instead of through a Radix `Portal`, so opening a tooltip on hover (e.g. the Edit/Delete buttons) pushed the trigger button sideways. Wrapped `TooltipContent` in `TooltipPrimitive.Portal` so it renders outside the trigger's layout flow
+  — `src/components/ui/tooltip.tsx`
 - Accessibility gaps in modal, keyboard, and live-region flows: `AuthDialog` rebuilt on the shadcn `Dialog` primitive instead of a raw overlay `div`, giving it `role="dialog"`, `aria-modal`, a focus trap, Escape-to-close, and focus return; `UserMenu`'s fake `<a onClick>` sign-in link (no `href`, not keyboard-activatable as a link) replaced with a shadcn `Button`; `TaskItem` gained a visually-hidden `aria-live="polite"` region announcing only start/stop transitions (not the per-second duration tick) plus a focusable, `tabIndex`-able long-press context-menu trigger; `PlannedTaskCard`'s long-press context-menu trigger got the same `tabIndex` fix; `Settings`'s Projects/Clients/Categories/Archived Days nav rows switched from `<a href>` to `react-router-dom`'s `Link` so they navigate via the SPA router instead of forcing a full page reload
   — `src/components/AuthDialog.tsx`, `src/components/UserMenu.tsx`, `src/components/TaskItem.tsx`, `src/components/PlannedTaskCard.tsx`, `src/pages/Settings.tsx`, `src/pages/Settings.test.tsx`
 
