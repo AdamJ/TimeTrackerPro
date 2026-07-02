@@ -19,7 +19,7 @@ import { DashboardIcon } from "@radix-ui/react-icons";
 import { PageLayout } from "@/components/PageLayout";
 import { TaskTrackingPanel } from "@/components/TaskTrackingPanel";
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { consumePendingMenuAction } from "@/lib/electronMenuActions";
+import { consumePendingMenuAction, addMenuActionListener } from "@/lib/electronMenuActions";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Sheet,
@@ -61,6 +61,7 @@ const TimeTrackerContent = () => {
     if (consumePendingMenuAction("new-task")) {
       setShowAddTaskForm(true);
     }
+    return addMenuActionListener("new-task", () => setShowAddTaskForm(true));
   }, []);
 
   const handleStartDay = () => {

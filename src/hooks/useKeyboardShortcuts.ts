@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { setPendingMenuAction } from "@/lib/electronMenuActions";
+import { useLocation } from "react-router-dom";
+import { notifyMenuAction } from "@/lib/electronMenuActions";
 
 interface UseKeyboardShortcutsOptions {
   onSave: () => void;
@@ -19,6 +19,9 @@ function isTypingTarget(target: EventTarget | null): boolean {
 // key rather than Cmd/Ctrl+N because Chrome/Firefox reserve that combination
 // for opening a new browser window and never deliver it to page JS from a
 // regular tab — it only works as a preventable shortcut in an installed PWA.
+// It's also scoped to the Dashboard route: unlike the other shortcuts, "new
+// task" has no meaning off the Dashboard, and silently redirecting there on
+// keypress would surprise a user typing elsewhere, so it's a no-op outside "/".
 // Electron intercepts Cmd/Ctrl+N/S/K at the native menu layer (electron/menu.ts)
 // before they reach this window listener, so the two never double-fire; its
 // menu keeps the native Cmd/Ctrl+N accelerator for New Task since Electron
@@ -28,7 +31,7 @@ export function useKeyboardShortcuts({
   onOpenCommandPalette,
   onOpenShortcutsHelp,
 }: UseKeyboardShortcutsOptions): void {
-  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -50,9 +53,9 @@ export function useKeyboardShortcuts({
       if (isTypingTarget(event.target)) return;
 
       if (!hasModifier && !event.altKey && key === "n") {
+        if (location.pathname !== "/") return;
         event.preventDefault();
-        setPendingMenuAction("new-task");
-        navigate("/");
+        notifyMenuAction("new-task");
         return;
       }
 
@@ -64,5 +67,5 @@ export function useKeyboardShortcuts({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [navigate, onSave, onOpenCommandPalette, onOpenShortcutsHelp]);
+  }, [location.pathname, onSave, onOpenCommandPalette, onOpenShortcutsHelp]);
 }

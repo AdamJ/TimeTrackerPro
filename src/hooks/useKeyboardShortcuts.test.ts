@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { consumePendingMenuAction } from "@/lib/electronMenuActions";
+import { addMenuActionListener } from "@/lib/electronMenuActions";
 
-const navigateMock = vi.fn();
+let mockPathname = "/";
 
 vi.mock("react-router-dom", () => ({
-	useNavigate: () => navigateMock,
+	useLocation: () => ({ pathname: mockPathname }),
 }));
 
 function dispatchKeyDown(init: KeyboardEventInit & { target?: EventTarget }) {
@@ -17,7 +17,7 @@ function dispatchKeyDown(init: KeyboardEventInit & { target?: EventTarget }) {
 
 describe("useKeyboardShortcuts", () => {
 	beforeEach(() => {
-		navigateMock.mockClear();
+		mockPathname = "/";
 	});
 
 	it("opens the command palette on Cmd/Ctrl+K", () => {
@@ -43,28 +43,50 @@ describe("useKeyboardShortcuts", () => {
 		document.body.removeChild(input);
 	});
 
-	it("navigates home and stashes the new-task pending action on plain N", () => {
+	it("notifies the new-task listener on plain N while on the Dashboard", () => {
+		mockPathname = "/";
+		const onNewTask = vi.fn();
+		const unsubscribe = addMenuActionListener("new-task", onNewTask);
 		renderHook(() =>
 			useKeyboardShortcuts({ onSave: vi.fn(), onOpenCommandPalette: vi.fn(), onOpenShortcutsHelp: vi.fn() })
 		);
 
 		dispatchKeyDown({ key: "n" });
 
-		expect(navigateMock).toHaveBeenCalledWith("/");
-		expect(consumePendingMenuAction("new-task")).toBe(true);
+		expect(onNewTask).toHaveBeenCalledTimes(1);
+		unsubscribe();
+	});
+
+	it("does nothing for plain N off the Dashboard", () => {
+		mockPathname = "/tasks";
+		const onNewTask = vi.fn();
+		const unsubscribe = addMenuActionListener("new-task", onNewTask);
+		renderHook(() =>
+			useKeyboardShortcuts({ onSave: vi.fn(), onOpenCommandPalette: vi.fn(), onOpenShortcutsHelp: vi.fn() })
+		);
+
+		dispatchKeyDown({ key: "n" });
+
+		expect(onNewTask).not.toHaveBeenCalled();
+		unsubscribe();
 	});
 
 	it("ignores Cmd/Ctrl+N (reserved by the browser for a new window) so it doesn't double-fire", () => {
+		const onNewTask = vi.fn();
+		const unsubscribe = addMenuActionListener("new-task", onNewTask);
 		renderHook(() =>
 			useKeyboardShortcuts({ onSave: vi.fn(), onOpenCommandPalette: vi.fn(), onOpenShortcutsHelp: vi.fn() })
 		);
 
 		dispatchKeyDown({ key: "n", ctrlKey: true });
 
-		expect(navigateMock).not.toHaveBeenCalled();
+		expect(onNewTask).not.toHaveBeenCalled();
+		unsubscribe();
 	});
 
-	it("ignores plain N while typing in a field", () => {
+	it("ignores plain N while typing in a field, even on the Dashboard", () => {
+		const onNewTask = vi.fn();
+		const unsubscribe = addMenuActionListener("new-task", onNewTask);
 		renderHook(() =>
 			useKeyboardShortcuts({ onSave: vi.fn(), onOpenCommandPalette: vi.fn(), onOpenShortcutsHelp: vi.fn() })
 		);
@@ -73,8 +95,9 @@ describe("useKeyboardShortcuts", () => {
 		document.body.appendChild(input);
 		dispatchKeyDown({ key: "n", target: input });
 
-		expect(navigateMock).not.toHaveBeenCalled();
+		expect(onNewTask).not.toHaveBeenCalled();
 		document.body.removeChild(input);
+		unsubscribe();
 	});
 
 	it("opens the shortcuts help dialog on ?", () => {

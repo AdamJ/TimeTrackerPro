@@ -78,7 +78,7 @@ Available in both the web/PWA build and the Electron desktop app:
 
 | Shortcut | Action |
 | --- | --- |
-| `N` | Create a new task (navigates to the Dashboard first if needed) |
+| `N` | Create a new task (Dashboard only — a no-op elsewhere, it never redirects you) |
 | `Cmd/Ctrl+S` | Save changes (triggers a manual sync) |
 | `Cmd/Ctrl+K` | Open the command palette — jump to any page or run an action |
 | `?` | Show the keyboard shortcuts help dialog |
