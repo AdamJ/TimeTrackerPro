@@ -14,10 +14,15 @@ function isTypingTarget(target: EventTarget | null): boolean {
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target.isContentEditable;
 }
 
-// Global shortcuts for the web/PWA build: Cmd/Ctrl+N (new task), Cmd/Ctrl+S
-// (save), Cmd/Ctrl+K (command palette), and ? (shortcuts help). Electron
-// intercepts the same combinations at the native menu layer (electron/menu.ts)
-// before they reach this window listener, so the two never double-fire.
+// Global shortcuts for the web/PWA build: N (new task), Cmd/Ctrl+S (save),
+// Cmd/Ctrl+K (command palette), and ? (shortcuts help). New task uses a plain
+// key rather than Cmd/Ctrl+N because Chrome/Firefox reserve that combination
+// for opening a new browser window and never deliver it to page JS from a
+// regular tab — it only works as a preventable shortcut in an installed PWA.
+// Electron intercepts Cmd/Ctrl+N/S/K at the native menu layer (electron/menu.ts)
+// before they reach this window listener, so the two never double-fire; its
+// menu keeps the native Cmd/Ctrl+N accelerator for New Task since Electron
+// doesn't have the browser's reservation.
 export function useKeyboardShortcuts({
   onSave,
   onOpenCommandPalette,
@@ -44,7 +49,7 @@ export function useKeyboardShortcuts({
 
       if (isTypingTarget(event.target)) return;
 
-      if (hasModifier && key === "n") {
+      if (!hasModifier && !event.altKey && key === "n") {
         event.preventDefault();
         setPendingMenuAction("new-task");
         navigate("/");

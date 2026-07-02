@@ -14,7 +14,7 @@ interface KeyboardShortcutsDialogProps {
 }
 
 const shortcuts: { keys: string[]; description: string }[] = [
-  { keys: [modKey, "N"], description: "Create a new task" },
+  { keys: ["N"], description: "Create a new task" },
   { keys: [modKey, "S"], description: "Save changes" },
   { keys: [modKey, "K"], description: "Jump to a page or command" },
   { keys: ["?"], description: "Show this list of shortcuts" },

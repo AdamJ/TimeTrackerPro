@@ -69,7 +69,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onOpenChan
             <span>New Task</span>
             <CommandShortcut>
               <KbdGroup>
-                <Kbd>{modKey}</Kbd>
                 <Kbd>N</Kbd>
               </KbdGroup>
             </CommandShortcut>

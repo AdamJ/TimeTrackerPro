@@ -43,25 +43,35 @@ describe("useKeyboardShortcuts", () => {
 		document.body.removeChild(input);
 	});
 
-	it("navigates home and stashes the new-task pending action on Cmd/Ctrl+N", () => {
+	it("navigates home and stashes the new-task pending action on plain N", () => {
+		renderHook(() =>
+			useKeyboardShortcuts({ onSave: vi.fn(), onOpenCommandPalette: vi.fn(), onOpenShortcutsHelp: vi.fn() })
+		);
+
+		dispatchKeyDown({ key: "n" });
+
+		expect(navigateMock).toHaveBeenCalledWith("/");
+		expect(consumePendingMenuAction("new-task")).toBe(true);
+	});
+
+	it("ignores Cmd/Ctrl+N (reserved by the browser for a new window) so it doesn't double-fire", () => {
 		renderHook(() =>
 			useKeyboardShortcuts({ onSave: vi.fn(), onOpenCommandPalette: vi.fn(), onOpenShortcutsHelp: vi.fn() })
 		);
 
 		dispatchKeyDown({ key: "n", ctrlKey: true });
 
-		expect(navigateMock).toHaveBeenCalledWith("/");
-		expect(consumePendingMenuAction("new-task")).toBe(true);
+		expect(navigateMock).not.toHaveBeenCalled();
 	});
 
-	it("ignores Cmd/Ctrl+N while typing in a field", () => {
+	it("ignores plain N while typing in a field", () => {
 		renderHook(() =>
 			useKeyboardShortcuts({ onSave: vi.fn(), onOpenCommandPalette: vi.fn(), onOpenShortcutsHelp: vi.fn() })
 		);
 
 		const input = document.createElement("input");
 		document.body.appendChild(input);
-		dispatchKeyDown({ key: "n", ctrlKey: true, target: input });
+		dispatchKeyDown({ key: "n", target: input });
 
 		expect(navigateMock).not.toHaveBeenCalled();
 		document.body.removeChild(input);

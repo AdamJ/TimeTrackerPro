@@ -78,12 +78,14 @@ Available in both the web/PWA build and the Electron desktop app:
 
 | Shortcut | Action |
 | --- | --- |
-| `Cmd/Ctrl+N` | Create a new task (navigates to the Dashboard first if needed) |
+| `N` | Create a new task (navigates to the Dashboard first if needed) |
 | `Cmd/Ctrl+S` | Save changes (triggers a manual sync) |
 | `Cmd/Ctrl+K` | Open the command palette — jump to any page or run an action |
 | `?` | Show the keyboard shortcuts help dialog |
 
-The command palette and help dialog are also reachable from the keyboard icon in the page header. On Electron, `Cmd/Ctrl+N`/`Cmd/Ctrl+S`/`Cmd/Ctrl+K` are native menu accelerators (File/View menus) dispatched to the renderer over the existing `menu:action` IPC channel; `?` has no native accelerator but works identically since it isn't intercepted by the OS menu layer.
+New Task uses a plain `N` rather than `Cmd/Ctrl+N` in the web/PWA build because Chrome and Firefox reserve that combination for opening a new browser window and never deliver it to page JavaScript from a regular tab — it's unpreventable outside of an installed PWA. The command palette and help dialog are also reachable from the keyboard icon in the page header.
+
+On Electron, `Cmd/Ctrl+S`/`Cmd/Ctrl+K` are native menu accelerators (File/View menus) dispatched to the renderer over the existing `menu:action` IPC channel; New Task keeps the native `Cmd/Ctrl+N` accelerator there too, since Electron doesn't have the browser's reservation. `?` has no native accelerator but works identically on both platforms since it isn't intercepted by the OS menu layer.
 
 ### Project Management
 
@@ -389,7 +391,7 @@ src/
 │   ├── use-toast.tsx             # Toast notification state management
 │   ├── useAuth.tsx               # Authentication state management
 │   ├── useElectronMenuActions.ts # Electron menu:action IPC → navigate/save/command-palette/help
-│   ├── useKeyboardShortcuts.ts   # Global web/PWA keyboard shortcuts (Cmd/Ctrl+N/S/K, ?)
+│   ├── useKeyboardShortcuts.ts   # Global web/PWA keyboard shortcuts (N, Cmd/Ctrl+S/K, ?)
 │   ├── useLongPress.ts           # 500 ms hold detector
 │   ├── usePageTitle.ts           # Page title state management
 │   ├── useReportStorage.ts       # Persist generated report summaries
