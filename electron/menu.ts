@@ -1,7 +1,7 @@
 import { app, shell, BrowserWindow, Menu, type MenuItemConstructorOptions } from "electron";
 import { checkForUpdates } from "./updater";
 
-export type MenuAction = "new-task" | "export" | "settings";
+export type MenuAction = "new-task" | "export" | "settings" | "save" | "command-palette" | "shortcuts-help";
 
 function sendMenuAction(action: MenuAction): void {
 	const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
@@ -39,6 +39,7 @@ export function buildApplicationMenu(): Menu {
 			label: "File",
 			submenu: [
 				{ label: "New Task", accelerator: "CmdOrCtrl+N", click: () => sendMenuAction("new-task") },
+				{ label: "Save Changes", accelerator: "CmdOrCtrl+S", click: () => sendMenuAction("save") },
 				{ label: "Export Data…", accelerator: "CmdOrCtrl+E", click: () => sendMenuAction("export") },
 				...(!isMac
 					? ([
@@ -65,6 +66,8 @@ export function buildApplicationMenu(): Menu {
 		{
 			label: "View",
 			submenu: [
+				{ label: "Command Palette…", accelerator: "CmdOrCtrl+K", click: () => sendMenuAction("command-palette") },
+				{ type: "separator" },
 				{ role: "reload" },
 				{ role: "forceReload" },
 				{ role: "toggleDevTools" },
@@ -96,6 +99,7 @@ export function buildApplicationMenu(): Menu {
 					click: () => void shell.openExternal("https://github.com/AdamJ/TimeTrackerPro"),
 				},
 				{ type: "separator" },
+				{ label: "Keyboard Shortcuts", click: () => sendMenuAction("shortcuts-help") },
 				{ label: "Check for Updates…", click: () => checkForUpdates() },
 			],
 		},

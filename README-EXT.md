@@ -9,6 +9,7 @@ For the main overview, see [README.md](README.md).
 
 - [How to Use](#how-to-use)
   - [Daily Workflow](#daily-workflow)
+  - [Keyboard Shortcuts](#keyboard-shortcuts)
   - [Project Management](#project-management)
   - [Client Management](#client-management)
   - [Category Management](#category-management)
@@ -70,6 +71,21 @@ For the main overview, see [README.md](README.md).
 - Manage projects and rates via **Archive → Projects**.
 - Customize categories on the **Categories** page.
 - Export data via **Archive → Export**.
+
+### Keyboard Shortcuts
+
+Available in both the web/PWA build and the Electron desktop app:
+
+| Shortcut | Action |
+| --- | --- |
+| `N` | Create a new task (Dashboard only — a no-op elsewhere, it never redirects you) |
+| `Cmd/Ctrl+S` | Save changes (triggers a manual sync) |
+| `Cmd/Ctrl+K` | Open the command palette — jump to any page or run an action |
+| `?` | Show the keyboard shortcuts help dialog |
+
+New Task uses a plain `N` rather than `Cmd/Ctrl+N` in the web/PWA build because Chrome and Firefox reserve that combination for opening a new browser window and never deliver it to page JavaScript from a regular tab — it's unpreventable outside of an installed PWA. The command palette and help dialog are also reachable from the keyboard icon in the page header.
+
+On Electron, `Cmd/Ctrl+S`/`Cmd/Ctrl+K` are native menu accelerators (File/View menus) dispatched to the renderer over the existing `menu:action` IPC channel; New Task keeps the native `Cmd/Ctrl+N` accelerator there too, since Electron doesn't have the browser's reservation. `?` has no native accelerator but works identically on both platforms since it isn't intercepted by the OS menu layer.
 
 ### Project Management
 
@@ -323,7 +339,7 @@ Precache:      App shell (HTML, CSS, JS, icons)
 ```text
 src/
 ├── components/
-│   ├── ui/                       # Base components (49+ files, including adaptive-dialog)
+│   ├── ui/                       # Base components (49+ files, including adaptive-dialog, kbd, command)
 │   ├── AppSidebar.tsx            # Collapsible sidebar nav (replaces top Navigation)
 │   ├── ArchiveEditDialog.tsx
 │   ├── ArchiveFilter.tsx
@@ -334,12 +350,14 @@ src/
 │   ├── CategorySheet.tsx
 │   ├── ClientManagement.tsx
 │   ├── ClientSheet.tsx
+│   ├── CommandPalette.tsx        # Cmd/Ctrl+K "jump to" navigation + actions (built on ui/command)
 │   ├── DaySummary.tsx
 │   ├── DeleteConfirmationDialog.tsx
 │   ├── ExportDialog.tsx
 │   ├── InstallPrompt.tsx
 │   ├── KanbanBoard.tsx            # Kanban planning board
 │   ├── KanbanColumn.tsx
+│   ├── KeyboardShortcutsDialog.tsx # "?" help dialog listing shortcuts (uses ui/kbd)
 │   ├── MarkdownDisplay.tsx
 │   ├── MobileNav.tsx
 │   ├── Navigation.tsx
@@ -372,12 +390,16 @@ src/
 │   ├── use-mobile.tsx            # Mobile-specific state management
 │   ├── use-toast.tsx             # Toast notification state management
 │   ├── useAuth.tsx               # Authentication state management
+│   ├── useElectronMenuActions.ts # Electron menu:action IPC → navigate/save/command-palette/help
+│   ├── useKeyboardShortcuts.ts   # Global web/PWA keyboard shortcuts (N, Cmd/Ctrl+S/K, ?)
 │   ├── useLongPress.ts           # 500 ms hold detector
 │   ├── usePageTitle.ts           # Page title state management
 │   ├── useReportStorage.ts       # Persist generated report summaries
 │   ├── useReportSummary.ts       # Gemini AI summary generation
 │   └── useTimeTracking.tsx       # Time tracking state management
 ├── lib/
+│   ├── electronMenuActions.ts     # Pending menu-action stash consumed by page-mount effects
+│   ├── platform.ts                # isMac/modKey — shortcut hint glyph per platform
 │   ├── supabase.ts               # Supabase client and call telemetry
 │   └── utils.ts                  # Helper functions
 ├── pages/

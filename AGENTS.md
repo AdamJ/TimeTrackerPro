@@ -147,6 +147,13 @@ export const MyComponent = () => {
 | `src/services/localStorageService/recovery.ts` | Lists/previews/restores localStorage schema-mismatch backup keys and Electron disk-backup snapshots; the read side of the write-only backup safety nets |
 | `src/hooks/useDataRecovery.ts`                | Unifies browser (`recovery.ts`) and desktop (`useElectronBackup`'s `listDiskBackups`/`readDiskBackup`) backup sources behind one list/preview/restore API |
 | `src/components/DataRecoveryDialog.tsx`       | Settings → "Data Recovery" (guest mode only): lists backups, previews entity-count diffs against current state, restores and reloads |
+| `src/hooks/useKeyboardShortcuts.ts`           | Global web/PWA `keydown` listener: `N` new task (plain key — `Cmd/Ctrl+N` is unpreventable in a regular browser tab), `Cmd/Ctrl+S` save, `Cmd/Ctrl+K` command palette, `?` shortcuts help; ignores typing targets except save/palette |
+| `src/hooks/useElectronMenuActions.ts`         | Electron `menu:action` IPC listener; `new-task`/`export`/`settings` use the navigate+pending-action pattern, `save`/`command-palette`/`shortcuts-help` call their callback directly (no page to mount into) |
+| `src/components/CommandPalette.tsx`           | `Cmd/Ctrl+K` dialog (shadcn `Command`/`cmdk`) listing New Task/Save actions and page navigation destinations |
+| `src/components/KeyboardShortcutsDialog.tsx`  | `?` help dialog listing all shortcuts via the `Kbd`/`KbdGroup` components |
+| `src/components/ui/kbd.tsx`                   | shadcn `Kbd`/`KbdGroup` components — key-cap styling used by the command palette and shortcuts help dialog |
+| `src/lib/platform.ts`                         | `isMac`/`modKey` — platform-appropriate shortcut glyph (`⌘` vs `Ctrl`) for the UI above |
+| `electron/menu.ts`                            | Builds the Electron app menu; `File` has New Task/Save Changes accelerators, `View` has the Command Palette accelerator, `Help` has a Keyboard Shortcuts entry — all dispatched via `sendMenuAction` over the `menu:action` IPC channel |
 
 ---
 

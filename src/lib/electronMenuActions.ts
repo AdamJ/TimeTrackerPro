@@ -17,3 +17,22 @@ export function consumePendingMenuAction(action: ElectronMenuAction): boolean {
 	pendingAction = null;
 	return true;
 }
+
+const ACTION_EVENT = "timetracker:menu-action";
+
+// Complements consumePendingMenuAction for callers that already know the
+// destination page is mounted (e.g. a keyboard shortcut fired while already
+// on the Dashboard) — consumePendingMenuAction only fires for a page that's
+// mounting *because of* the navigation the action triggered, so it never
+// reaches a listener that was already there before the event was sent.
+export function notifyMenuAction(action: ElectronMenuAction): void {
+	window.dispatchEvent(new CustomEvent<ElectronMenuAction>(ACTION_EVENT, { detail: action }));
+}
+
+export function addMenuActionListener(action: ElectronMenuAction, listener: () => void): () => void {
+	const handler = (event: Event) => {
+		if ((event as CustomEvent<ElectronMenuAction>).detail === action) listener();
+	};
+	window.addEventListener(ACTION_EVENT, handler);
+	return () => window.removeEventListener(ACTION_EVENT, handler);
+}
