@@ -78,6 +78,12 @@ const AppShell = () => {
     <SidebarProvider
       style={{ "--sidebar-width": "19rem" } as React.CSSProperties}
     >
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-md focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        Skip to content
+      </a>
       <AppSidebar />
       <SidebarInset>
         <header className="flex h-12 shrink-0 items-center gap-2 px-4">
@@ -102,25 +108,27 @@ const AppShell = () => {
             </Button>
           </div>
         </header>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/tasks" element={<TaskList />} />
-          <Route path="/projectlist" element={<ProjectList />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/clients" element={<Clients />} />
-          <Route path="/archive" element={<Archive />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route
-            path="/report"
-            element={
-              <ProtectedRoute>
-                <Report />
-              </ProtectedRoute>
-            }
-          />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <main id="main-content" tabIndex={-1}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/tasks" element={<TaskList />} />
+            <Route path="/projectlist" element={<ProjectList />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/archive" element={<Archive />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route
+              path="/report"
+              element={
+                <ProtectedRoute>
+                  <Report />
+                </ProtectedRoute>
+              }
+            />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
       </SidebarInset>
       <CommandPalette
         open={showCommandPalette}
