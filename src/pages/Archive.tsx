@@ -9,7 +9,6 @@ import { ArchiveItem } from "@/components/ArchiveItem";
 import { ArchiveEditDialog } from "@/components/ArchiveEditDialog";
 import { BackdatedEntryDialog } from "@/components/BackdatedEntryDialog";
 import { ExportDialog } from "@/components/ExportDialog";
-import { ProjectManagement } from "@/components/ProjectManagement";
 import { ArchiveFilter, ArchiveFilterState } from "@/components/ArchiveFilter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
@@ -27,7 +26,6 @@ const ArchiveContent: React.FC = () => {
   } = useTimeTracking();
   const [editingDay, setEditingDay] = useState<DayRecord | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
-  const [showProjectManagement, setShowProjectManagement] = useState(false);
   const [showBackdatedEntry, setShowBackdatedEntry] = useState(false);
   const [filters, setFilters] = useState<ArchiveFilterState>({
     startDate: "",
@@ -270,11 +268,6 @@ const ArchiveContent: React.FC = () => {
       <ExportDialog
         isOpen={showExportDialog}
         onClose={() => setShowExportDialog(false)}
-      />
-
-      <ProjectManagement
-        isOpen={showProjectManagement}
-        onClose={() => setShowProjectManagement(false)}
       />
     </PageLayout>
   );

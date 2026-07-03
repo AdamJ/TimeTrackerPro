@@ -20,7 +20,6 @@ import {
 } from "lucide-react"
 import { AuthDialog } from "@/components/AuthDialog"
 import { ExportDialog } from "@/components/ExportDialog"
-import { ProjectManagement } from "@/components/ProjectManagement"
 import { UserMenu } from "@/components/UserMenu"
 import { SyncStatus } from "@/components/SyncStatus"
 import { Button } from "@/components/ui/button"
@@ -94,7 +93,6 @@ const navItems = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [showAuthDialog, setShowAuthDialog] = useState(false)
   const [showExportDialog, setShowExportDialog] = useState(false)
-  const [showProjectManagement, setShowProjectManagement] = useState(false)
   const { pathname } = useLocation()
 
   const { isAuthenticated } = useAuth()
@@ -254,10 +252,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <ExportDialog
         isOpen={showExportDialog}
         onClose={() => setShowExportDialog(false)}
-      />
-      <ProjectManagement
-        isOpen={showProjectManagement}
-        onClose={() => setShowProjectManagement(false)}
       />
     </>
   )
