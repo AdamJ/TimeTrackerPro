@@ -36,13 +36,15 @@ const fakeAutoUpdater = {
 };
 
 const showMessageBoxMock = vi.fn().mockResolvedValue({ response: 1 });
+const openExternalMock = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("electron-updater", () => ({ autoUpdater: fakeAutoUpdater }));
 
 vi.mock("electron", () => ({
 	app: { getPath: vi.fn(() => "/tmp/userData") },
 	BrowserWindow: { getFocusedWindow: vi.fn(() => undefined), getAllWindows: vi.fn(() => []) },
-	dialog: { showMessageBox: showMessageBoxMock }
+	dialog: { showMessageBox: showMessageBoxMock },
+	shell: { openExternal: openExternalMock }
 }));
 
 vi.mock("fs/promises", () => ({
@@ -62,6 +64,7 @@ describe("electron/updater", () => {
 		fakeAutoUpdater.autoDownload = true;
 		fakeAutoUpdater.checkForUpdates.mockResolvedValue({});
 		showMessageBoxMock.mockResolvedValue({ response: 1 });
+		openExternalMock.mockResolvedValue(undefined);
 		(fsPromises.default.readFile as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("ENOENT"));
 		vi.resetModules();
 	});
@@ -107,6 +110,58 @@ describe("electron/updater", () => {
 			.map(([, payload]) => JSON.parse(payload as string))
 			.some((state) => state.consecutiveFailures === 1);
 		expect(persisted).toBe(true);
+	});
+
+	it("shows an install-failed dialog (not the silent backoff path) when quitAndInstall errors, e.g. unsigned macOS builds", async () => {
+		const { initAutoUpdater } = await import("./updater");
+		initAutoUpdater();
+
+		showMessageBoxMock.mockResolvedValueOnce({ response: 0 }); // "Restart Now"
+		emit("update-downloaded", { version: "9.9.9" });
+		await new Promise((resolve) => setImmediate(resolve));
+
+		expect(fakeAutoUpdater.quitAndInstall).toHaveBeenCalledTimes(1);
+
+		showMessageBoxMock.mockResolvedValueOnce({ response: 1 }); // dialog response, don't care which yet
+		emit("error", new Error("Could not get code signature for running application"));
+		await new Promise((resolve) => setImmediate(resolve));
+
+		expect(showMessageBoxMock).toHaveBeenCalledWith(
+			expect.objectContaining({ title: "Update install failed" })
+		);
+
+		const writeFileMock = fsPromises.default.writeFile as ReturnType<typeof vi.fn>;
+		const persistedFailure = writeFileMock.mock.calls
+			.map(([, payload]) => JSON.parse(payload as string))
+			.some((state) => state.consecutiveFailures === 1);
+		expect(persistedFailure).toBe(false);
+	});
+
+	it("opens the releases page when the user picks that option from the install-failed dialog", async () => {
+		const { initAutoUpdater } = await import("./updater");
+		initAutoUpdater();
+
+		showMessageBoxMock.mockResolvedValueOnce({ response: 0 }); // "Restart Now"
+		emit("update-downloaded", { version: "9.9.9" });
+		await new Promise((resolve) => setImmediate(resolve));
+
+		showMessageBoxMock.mockResolvedValueOnce({ response: 0 }); // "Open Releases Page"
+		emit("error", new Error("Could not get code signature for running application"));
+		await new Promise((resolve) => setImmediate(resolve));
+
+		expect(openExternalMock).toHaveBeenCalledWith("https://github.com/AdamJ/TimeTrackerPro/releases/latest");
+	});
+
+	it("falls back to the silent backoff path for a plain background check error (no pending install)", async () => {
+		const { initAutoUpdater } = await import("./updater");
+		initAutoUpdater();
+
+		emit("error", new Error("network down"));
+		await new Promise((resolve) => setImmediate(resolve));
+
+		expect(showMessageBoxMock).not.toHaveBeenCalledWith(
+			expect.objectContaining({ title: "Update install failed" })
+		);
 	});
 
 	it("skips the startup check when still within the backoff window from a recent failure", async () => {

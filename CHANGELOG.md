@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Clicking "Restart Now" on the Electron update-ready dialog silently did nothing on macOS, forcing users to reinstall manually. Root cause: Squirrel.Mac (the native updater `quitAndInstall()` hands off to) refuses to apply an update unless the app is code-signed, and these builds are intentionally unsigned (issue #220) — the resulting failure was only logged to console via the generic `error` handler. `quitAndInstall()` is now tracked as in-flight, and an `error` event while installing shows a dialog explaining the automatic install failed with a button to open the GitHub Releases page for a manual install, instead of failing with no visible feedback
+  — `electron/updater.ts`, `electron/updater.test.ts`
 - Keyboard users had no way to bypass the sidebar navigation to reach main content, requiring a full tab through every nav item on each page. Added a "Skip to content" link, visually hidden until focused, as the first focusable element in the app shell; it jumps to a new `<main id="main-content">` wrapper around the routed page content
   — `src/App.tsx`
 - Tooltip content (`TooltipContent`) rendered inline in the DOM instead of through a Radix `Portal`, so opening a tooltip on hover (e.g. the Edit/Delete buttons) pushed the trigger button sideways. Wrapped `TooltipContent` in `TooltipPrimitive.Portal` so it renders outside the trigger's layout flow
