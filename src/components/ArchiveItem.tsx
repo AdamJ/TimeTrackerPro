@@ -100,7 +100,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 									variant="ghost"
 									size="sm"
 									aria-label="Restore this day"
-									className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
+									className="flex items-center space-x-2 text-blue-11 hover:text-blue-12"
 								>
 									<RotateCcw className="w-4 h-4 block" />
 									<span className="hidden md:block">Restore</span>
@@ -141,8 +141,8 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 								</span>
 							</div>
 							<div className="flex items-center space-x-2">
-								<Clock className="w-4 h-4 text-green-600 print:text-black" />
-								<span className="font-semibold text-green-600 print:text-black">
+								<Clock aria-hidden="true" className="w-4 h-4 text-green-9 print:text-black" />
+								<span className="font-semibold text-green-11 print:text-black">
 									{formatDurationLong(day.totalDuration)}
 								</span>
 							</div>
@@ -152,12 +152,12 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 						<div className="space-y-2 border-t pt-2">
 							<div className="flex items-center justify-between text-sm print:text-base">
 								<div className="flex items-center space-x-4">
-									<span className="text-blue-600 print:text-black font-medium">
+									<span className="text-blue-11 print:text-black font-medium">
 										Total{" "}
 										<span className="hidden md:d-inline-flex">Hours: </span>
 										{dayStats.hoursWorked.toFixed(2)}h
 									</span>
-									<span className="text-green-600 print:text-black font-medium">
+									<span className="text-green-11 print:text-black font-medium">
 										Billable: {dayStats.billableHours.toFixed(2)}h
 									</span>
 									<span className="text-muted-foreground print:text-black font-medium">
@@ -165,7 +165,7 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 									</span>
 								</div>
 								{dayStats.revenue > 0 && (
-									<span className="text-green-600 print:text-black font-semibold">
+									<span className="text-green-11 print:text-black font-semibold">
 										Revenue: ${dayStats.revenue.toFixed(2)}
 									</span>
 								)}
@@ -294,13 +294,13 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 											</TableCell>
 											<TableCell className="print:text-black">
 												{formatDuration(task.duration || 0)}
-												<div className="text-xs text-gray-500 print:text-gray-600">
+												<div className="text-xs text-muted-foreground print:text-black">
 													{taskHours.toFixed(2)}h
 												</div>
 											</TableCell>
 											<TableCell className="print:text-black">
 												{taskValue > 0 ? (
-													<span className="font-medium text-green-600 print:text-black">
+													<span className="font-medium text-green-11 print:text-black">
 														${taskValue.toFixed(2)}
 													</span>
 												) : (

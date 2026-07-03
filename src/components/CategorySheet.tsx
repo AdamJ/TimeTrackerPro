@@ -162,11 +162,18 @@ export const CategorySheet: React.FC<CategorySheetProps> = ({
                     key={c}
                     type="button"
                     onClick={() => setColor(c)}
-                    className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${
-                      color === c ? "border-foreground" : "border-border"
-                    }`}
-                    style={{ backgroundColor: c }}
-                  />
+                    aria-label={`Set color to ${c}`}
+                    aria-pressed={color === c}
+                    className="w-11 h-11 flex items-center justify-center rounded-full"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${
+                        color === c ? "border-foreground" : "border-border"
+                      }`}
+                      style={{ backgroundColor: c }}
+                    />
+                  </button>
                 ))}
               </div>
             </div>

@@ -48,7 +48,7 @@ export const SyncStatus = memo(function SyncStatus({
                 size="default"
                 className="w-full"
                 aria-label="Offline">
-                <CloudOff className="h-4 w-4 text-violet-900" />
+                <CloudOff aria-hidden="true" className="h-4 w-4 text-violet-9" />
                 Local Storage Only
               </Button>
             </TooltipTrigger>
@@ -63,6 +63,8 @@ export const SyncStatus = memo(function SyncStatus({
 
   return (
     <div
+      role="status"
+      aria-live="polite"
       className={`flex gap-2 w-full transition-opacity duration-300 ${isSyncing || hasUnsavedChanges || showStatus ? 'opacity-100' : 'opacity-70'
         }`}
     >
@@ -75,15 +77,15 @@ export const SyncStatus = memo(function SyncStatus({
         aria-label={hasUnsavedChanges ? "Save changes" : "Changes saved"}
       >
         {isSyncing ? (
-          <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
+          <RefreshCw aria-hidden="true" className="h-4 w-4 animate-spin text-blue-9" />
         ) : hasUnsavedChanges ? (
           <>
-            <AlertCircle className="h-4 w-4 text-orange-600" />
+            <AlertCircle aria-hidden="true" className="h-4 w-4 text-orange-9" />
             <span>Save</span>
           </>
         ) : (
           <>
-            <Save className="h-4 w-4 text-green-600" />
+            <Save aria-hidden="true" className="h-4 w-4 text-green-9" />
             <span>Save</span>
           </>
         )}

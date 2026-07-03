@@ -59,6 +59,8 @@ export const ArchiveFilter: React.FC<ArchiveFilterProps> = ({
           <div className="flex items-center justify-between">
             <button
               onClick={() => setIsExpanded(!isExpanded)}
+              aria-expanded={isExpanded}
+              aria-controls="archive-filter-panel"
               className="flex items-center space-x-2 hover:opacity-70 transition-opacity"
             >
               <h3 className="font-semibold text-lg">Filter Archive</h3>
@@ -81,7 +83,7 @@ export const ArchiveFilter: React.FC<ArchiveFilterProps> = ({
           </div>
 
           {isExpanded && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div id="archive-filter-panel" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Date Range */}
               <div className="space-y-2">
                 <Label htmlFor="startDate">Start Date</Label>

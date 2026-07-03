@@ -439,7 +439,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                   </div>
 
                   {/* Current Values Display */}
-                  <div className="bg-gray-50 p-3 rounded-md text-sm">
+                  <div className="bg-mauve-2 p-3 rounded-md text-sm">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <span className="font-medium">Current Start:</span>{' '}

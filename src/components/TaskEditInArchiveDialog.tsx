@@ -132,10 +132,11 @@ export const TaskEditInArchiveDialog: React.FC<TaskEditInArchiveDialogProps> = (
 
 				<div className="space-y-4">
 					<div>
-						<Label>
+						<Label htmlFor="archive-task-title">
 							Task Title <span className="text-destructive">*</span>
 						</Label>
 						<Input
+							id="archive-task-title"
 							value={formData.title}
 							onChange={e =>
 								setFormData(prev => ({ ...prev, title: e.target.value }))

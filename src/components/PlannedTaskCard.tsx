@@ -167,7 +167,12 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
                   <div className="flex flex-col gap-1 shrink-0">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-9 w-9 p-0"
+                          aria-label="Task options"
+                        >
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>

@@ -275,11 +275,12 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium">Start Date</label>
+                  <label id="export-start-date-label" className="text-sm font-medium">Start Date</label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
+                        aria-labelledby="export-start-date-label"
                         className={cn(
                           'w-full justify-start text-left font-normal',
                           !startDate && 'text-muted-foreground'
@@ -301,11 +302,12 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium">End Date</label>
+                  <label id="export-end-date-label" className="text-sm font-medium">End Date</label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
+                        aria-labelledby="export-end-date-label"
                         className={cn(
                           'w-full justify-start text-left font-normal',
                           !endDate && 'text-muted-foreground'
@@ -394,14 +396,14 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 
                     {/* Import Result Alert */}
                     {importResult && (
-                      <Alert className={`${importResult.success ? 'border-green-200 bg-green-50' : 'border-destructive/20 bg-destructive/5'}`}>
+                      <Alert className={`${importResult.success ? 'border-green-6 bg-green-2' : 'border-destructive/20 bg-destructive/5'}`}>
                         <div className="flex items-center space-x-2">
                           {importResult.success ? (
-                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <CheckCircle className="h-4 w-4 text-green-9" />
                           ) : (
                             <XCircle className="h-4 w-4 text-destructive" />
                           )}
-                          <AlertDescription className={`${importResult.success ? 'text-green-800' : 'text-destructive'}`}>
+                          <AlertDescription className={`${importResult.success ? 'text-green-11' : 'text-destructive'}`}>
                             <strong>{importResult.success ? 'Success!' : 'Error:'}</strong> {importResult.message}
                             {importResult.success && importResult.importedCount > 0 && (
                               <span className="block mt-1 text-sm">
@@ -413,7 +415,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                       </Alert>
                     )}
 
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <div className="border-2 border-dashed border-mauve-6 rounded-lg p-6 text-center">
                       <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                       <p className="text-sm text-muted-foreground mb-2">
                         Click to select a CSV file
@@ -434,16 +436,16 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-muted-foreground space-y-3">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="bg-blue-2 border border-blue-6 rounded-lg p-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium text-blue-800">Need a template?</p>
-                          <p className="text-blue-600">Download a blank CSV template with the correct format</p>
+                          <p className="font-medium text-blue-11">Need a template?</p>
+                          <p className="text-blue-11">Download a blank CSV template with the correct format</p>
                         </div>
                         <a
                           href="/time-tracker-import-template.csv"
                           download="time-tracker-import-template.csv"
-                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-300 rounded-md hover:bg-blue-50"
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-11 bg-background border border-blue-6 rounded-md hover:bg-blue-2"
                         >
                           <Download className="w-4 h-4 mr-2" />
                           Download Template
