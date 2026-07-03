@@ -66,7 +66,7 @@ export const StartDayDialog: React.FC<StartDayDialogProps> = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <Calendar className="w-5 h-5 text-blue-600" />
+            <Calendar aria-hidden="true" className="w-5 h-5 text-blue-9" />
             <span>Start Your Work Day</span>
           </DialogTitle>
           <DialogDescription>
@@ -76,8 +76,9 @@ export const StartDayDialog: React.FC<StartDayDialogProps> = ({
 
         <div className="space-y-4 py-4">
           <div>
-            <Label>Date</Label>
+            <Label htmlFor="start-day-date">Date</Label>
             <Input
+              id="start-day-date"
               type="date"
               value={selectedDate}
               onChange={e => setSelectedDate(e.target.value)}
@@ -103,9 +104,9 @@ export const StartDayDialog: React.FC<StartDayDialogProps> = ({
           </Button>
           <Button
             onClick={handleStartDay}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-9 hover:bg-blue-10"
           >
-            <Clock className="w-4 h-4 mr-2" />
+            <Clock aria-hidden="true" className="w-4 h-4 mr-2" />
             Start Day
           </Button>
         </DialogFooter>

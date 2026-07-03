@@ -188,6 +188,7 @@ const ProjectContent: React.FC = () => {
                     <ItemActions>
                       <Button
                         variant="outline"
+                        aria-label="Edit project"
                         onClick={() => handleEdit(project)}
                       >
                         <Edit className="w-4 h-4 mr-1" />
@@ -203,6 +204,7 @@ const ProjectContent: React.FC = () => {
                       </Button>
                       <Button
                         variant="outline"
+                        aria-label="Delete project"
                         onClick={() => setDeleteTargetId(project.id)}
                         className="text-destructive hover:text-secondary bg-transparent hover:bg-destructive"
                       >

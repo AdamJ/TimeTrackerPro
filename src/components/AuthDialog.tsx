@@ -120,8 +120,8 @@ export const AuthDialog: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         )}
 
         {success && (
-          <Alert className="mt-4 border-green-200 bg-green-50">
-            <AlertDescription className="text-green-700">
+          <Alert className="mt-4 border-green-6 bg-green-2">
+            <AlertDescription className="text-green-11">
               {success}
             </AlertDescription>
           </Alert>

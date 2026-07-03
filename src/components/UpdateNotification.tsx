@@ -53,7 +53,11 @@ export const UpdateNotification = memo(function UpdateNotification() {
 
   if (offlineReady && !needRefresh && showOfflineReady) {
     return (
-      <div className="fixed bottom-20 md:bottom-4 left-4 z-50 animate-in slide-in-from-bottom-4">
+      <div
+        role="status"
+        aria-live="polite"
+        className="fixed bottom-20 md:bottom-4 left-4 z-50 animate-in slide-in-from-bottom-4"
+      >
         <Card className="shadow-lg">
           <CardContent className="p-4 pr-10 relative">
             <button
@@ -61,9 +65,9 @@ export const UpdateNotification = memo(function UpdateNotification() {
               className="absolute top-2 right-2 p-1 rounded-full hover:bg-accent transition-colors"
               aria-label="Dismiss offline ready notification"
             >
-              <X className="h-4 w-4 text-muted-foreground" />
+              <X aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
             </button>
-            <p className="text-sm text-green-600 font-medium">
+            <p className="text-sm text-green-11 font-medium">
               ✓ App is ready to work offline
             </p>
           </CardContent>
@@ -77,13 +81,17 @@ export const UpdateNotification = memo(function UpdateNotification() {
   }
 
   return (
-    <Card className="fixed top-4 right-4 w-80 shadow-lg z-50 animate-in slide-in-from-top-4">
+    <Card
+      role="status"
+      aria-live="polite"
+      className="fixed top-4 right-4 w-80 shadow-lg z-50 animate-in slide-in-from-top-4"
+    >
       <button
         onClick={handleDismiss}
-        className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+        className="absolute top-2 right-2 p-1 rounded-full hover:bg-mauve-3 transition-colors"
         aria-label="Dismiss update notification"
       >
-        <X className="h-4 w-4" />
+        <X aria-hidden="true" className="h-4 w-4" />
       </button>
       <CardHeader>
         <CardTitle className="text-lg">Update Available</CardTitle>
@@ -94,7 +102,7 @@ export const UpdateNotification = memo(function UpdateNotification() {
       </CardHeader>
       <CardContent>
         <Button onClick={handleUpdate} className="w-full">
-          <RefreshCw className="mr-2 h-4 w-4" />
+          <RefreshCw aria-hidden="true" className="mr-2 h-4 w-4" />
           Update Now
         </Button>
       </CardContent>

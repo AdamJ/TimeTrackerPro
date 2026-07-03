@@ -111,6 +111,7 @@ const CategoryContent: React.FC = () => {
                     <Button
                       size="sm"
                       variant="outline"
+                      aria-label="Edit category"
                       onClick={() => handleEdit(category)}
                     >
                       <Edit className="w-4 h-4 mr-1" />
@@ -119,6 +120,7 @@ const CategoryContent: React.FC = () => {
                     <Button
                       size="sm"
                       variant="outline"
+                      aria-label="Delete category"
                       onClick={() => setDeleteTargetId(category.id)}
                       className="text-destructive hover:text-secondary bg-transparent hover:bg-destructive"
                     >

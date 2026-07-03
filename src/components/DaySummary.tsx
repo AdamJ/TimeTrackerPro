@@ -22,10 +22,10 @@ export const DaySummary: React.FC<DaySummaryProps> = ({
 }) => {
   return (
     <div className="space-y-6">
-      <Card className="bg-linear-to-r from-green-50 to-blue-50 border-green-200">
+      <Card className="bg-linear-to-r from-green-2 to-blue-2 border-green-6">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-green-800">
-            <Calendar className="w-5 h-5" />
+          <CardTitle className="flex items-center space-x-2 text-green-11">
+            <Calendar aria-hidden="true" className="w-5 h-5" />
             <span>Day Complete!</span>
           </CardTitle>
         </CardHeader>
@@ -37,8 +37,8 @@ export const DaySummary: React.FC<DaySummaryProps> = ({
             </div>
 
             <div className="flex items-center space-x-2">
-              <Clock className="w-5 h-5 text-blue-600" />
-              <span className="text-2xl font-bold text-blue-600">
+              <Clock aria-hidden="true" className="w-5 h-5 text-blue-9" />
+              <span className="text-2xl font-bold text-blue-11">
                 {formatDuration(totalDuration)}
               </span>
               <span className="text-muted-foreground">total time</span>
@@ -60,7 +60,7 @@ export const DaySummary: React.FC<DaySummaryProps> = ({
 
             <Button
               onClick={onPostDay}
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
+              className="w-full bg-green-9 hover:bg-green-10 text-white"
             >
               Post Time to Archive
             </Button>

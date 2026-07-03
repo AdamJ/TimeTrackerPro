@@ -335,7 +335,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center space-x-2">
-              <Calendar className="w-5 h-5 text-blue-600" />
+              <Calendar aria-hidden="true" className="w-5 h-5 text-blue-9" />
               <span>{formatDate(day.startTime)}</span>
             </DialogTitle>
           </div>
@@ -352,7 +352,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                       variant="outline"
                       size="sm"
                       aria-label="Restore this day"
-                      className="text-blue-600 hover:text-blue-700"
+                      className="text-blue-11 hover:text-blue-12"
                       autoFocus
                     >
                       <RotateCcw className="w-4 h-4" />
@@ -546,8 +546,8 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                       Total Duration:
                     </span>
                     <div className="flex items-center space-x-2 mt-1">
-                      <Clock className="w-4 h-4 text-green-600" />
-                      <span className="font-semibold text-green-600">
+                      <Clock aria-hidden="true" className="w-4 h-4 text-green-9" />
+                      <span className="font-semibold text-green-11">
                         {formatDuration(calculateTotalDuration(tasks))}
                       </span>
                     </div>

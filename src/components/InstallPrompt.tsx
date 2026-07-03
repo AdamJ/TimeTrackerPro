@@ -111,7 +111,7 @@ export const InstallPrompt = memo(function InstallPrompt() {
           <Card className="w-80 shadow-lg">
             <button
               onClick={handleDismiss}
-              className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+              className="absolute top-2 right-2 p-1 rounded-full hover:bg-mauve-3 transition-colors"
               aria-label="Dismiss install prompt"
             >
               <X className="h-4 w-4" />

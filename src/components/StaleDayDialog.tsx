@@ -50,7 +50,8 @@ export const StaleDayDialog: React.FC = () => {
 					<DialogDescription>
 						You have an open work day from{" "}
 						<strong>{dayStartTime ? formatDateLabel(dayStartTime) : "a previous day"}</strong>.
-						When did you finish working?
+						When did you finish working? This dialog can't be dismissed with Escape or by
+						clicking outside — choose "Discard Day" or "End Day" below to continue.
 					</DialogDescription>
 				</DialogHeader>
 
