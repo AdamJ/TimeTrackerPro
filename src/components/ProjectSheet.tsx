@@ -290,12 +290,13 @@ export const ProjectSheet: React.FC<ProjectSheetProps> = ({
                         id="project-billable"
                         checked={field.value}
                         onCheckedChange={(checked) => field.onChange(checked === true)}
+                        aria-describedby="project-billable-hint"
                       />
                     </FormControl>
                     <Label htmlFor="project-billable" className="text-sm font-medium">
                       Billable project
                     </Label>
-                    <span className="text-xs text-muted-foreground">
+                    <span id="project-billable-hint" className="text-xs text-muted-foreground">
                       (Tasks in this project can generate revenue)
                     </span>
                   </div>

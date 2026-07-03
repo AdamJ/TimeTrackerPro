@@ -119,7 +119,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
                 <Link to="/">
-                  <img src="icon.png" alt="Logo" className="size-8 shrink-0" />
+                  <img src="icon.png" alt="" aria-hidden="true" className="size-8 shrink-0" />
                   <div className="flex flex-col gap-0.5 leading-none">
                     <span className="font-semibold">Timetraked</span>
                     {isDayStarted && tasks.length > 0 && (

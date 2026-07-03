@@ -52,6 +52,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
             <span className="text-foreground">{title}</span>
             <Badge
               variant="outline"
+              aria-label={`${tasks.length} ${tasks.length === 1 ? "task" : "tasks"}`}
               className={COLUMN_BADGE_COLORS[status]}
             >
               {tasks.length}

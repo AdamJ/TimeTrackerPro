@@ -179,12 +179,12 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
           <DialogTitle className="flex items-center space-x-2">
             {mode === 'export' ? (
               <>
-                <Download className="w-5 h-5" />
+                <Download aria-hidden="true" className="w-5 h-5" />
                 <span>Manage Time Data</span>
               </>
             ) : (
               <>
-                <Upload className="w-5 h-5" />
+                <Upload aria-hidden="true" className="w-5 h-5" />
                 <span>Manage Time Data</span>
               </>
             )}

@@ -133,7 +133,7 @@ export const ClientManagement: React.FC = () => {
           {activeClients.length === 0 ? (
             <Card>
               <CardContent className="text-center py-8">
-                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <Users aria-hidden="true" className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
                   No clients yet. Add your first client to get started!
                 </p>

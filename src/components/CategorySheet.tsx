@@ -184,11 +184,12 @@ export const CategorySheet: React.FC<CategorySheetProps> = ({
               id="category-billable"
               checked={isBillable}
               onCheckedChange={(checked) => setIsBillable(checked === true)}
+              aria-describedby="category-billable-hint"
             />
             <Label htmlFor="category-billable" className="text-sm font-medium">
               Billable category
             </Label>
-            <span className="text-xs text-muted-foreground">
+            <span id="category-billable-hint" className="text-xs text-muted-foreground">
               (Tasks in this category can generate revenue)
             </span>
           </div>
