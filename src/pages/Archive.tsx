@@ -1,8 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import {
-  TimeTrackingProvider,
-  DayRecord
-} from "@/contexts/TimeTrackingContext";
+import { DayRecord } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { getDayStats } from "@/utils/calculationUtils";
 import { ArchiveItem } from "@/components/ArchiveItem";
@@ -13,9 +10,8 @@ import { ArchiveFilter, ArchiveFilterState } from "@/components/ArchiveFilter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Archive as ArchiveIcon, Database, CirclePlus } from "lucide-react";
+import { Archive as ArchiveIcon, CirclePlus } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { PageLayout } from "@/components/PageLayout";
 
 const ArchiveContent: React.FC = () => {
@@ -98,8 +94,6 @@ const ArchiveContent: React.FC = () => {
   const handleCloseEdit = () => {
     setEditingDay(null);
   };
-
-  const { user, isAuthenticated } = useAuth();
 
   const pageTitle = useMemo(() => <span>Archive</span>, []);
   const pageBadge = useMemo(

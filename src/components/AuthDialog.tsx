@@ -16,7 +16,7 @@ export const AuthDialog: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   isOpen,
   onClose
 }) => {
-  const { signIn, signUp } = useAuth();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,26 +40,6 @@ export const AuthDialog: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
         setPassword('');
         setSuccess(null);
       }, 1000);
-    }
-
-    setLoading(false);
-  };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const { error } = await signUp(email, password);
-
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccess(
-        'Account created! Please check your email to verify your account.'
-      );
-      setEmail('');
-      setPassword('');
     }
 
     setLoading(false);

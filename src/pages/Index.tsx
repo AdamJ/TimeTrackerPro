@@ -9,17 +9,15 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import {
   CirclePlay,
   CircleStop,
-  Archive as Play,
   ClipboardList,
   PanelRight,
   Info,
 } from "lucide-react";
 import { getDayStats, getTotalDayDuration, getCurrentTaskDuration } from "@/utils/calculationUtils";
 import { useCurrentTime } from "@/hooks/useCurrentTime";
-import { DashboardIcon } from "@radix-ui/react-icons";
 import { PageLayout } from "@/components/PageLayout";
 import { TaskTrackingPanel } from "@/components/TaskTrackingPanel";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { consumePendingMenuAction, addMenuActionListener } from "@/lib/electronMenuActions";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -30,8 +28,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTrigger, PopoverTitle } from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverHeader, PopoverTrigger, PopoverTitle } from "@/components/ui/popover";
 
 // Stable epoch constant — avoids creating new Date(0) on every render
 const EPOCH = new Date(0);
@@ -101,7 +98,7 @@ const TimeTrackerContent = () => {
     [archivedDays, getTotalHoursForPeriod],
   );
 
-  const { todoItems, projects, categories, clients, archiveClient, archiveProject } = useTimeTracking();
+  const { todoItems, projects, categories, clients } = useTimeTracking();
 
   const projectMap = useMemo(
     () => new Map(projects.map(p => [p.name, p])),

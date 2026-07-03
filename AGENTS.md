@@ -22,7 +22,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (187 tests across 14 files)
+### Test File Inventory (~338 tests across 31 files)
 
 | File | Coverage |
 |---|---|
@@ -33,13 +33,32 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/utils/timeUtil.test.ts` | Time formatting utilities |
 | `src/contexts/TimeTracking.test.tsx` | Full context: day/task/archive management, todos, planned tasks, project CRUD, category CRUD, `discardDay`, `adjustTaskTime`, `addBackdatedDay`, client archive/restore |
 | `src/services/dataService.test.ts` | `LocalStorageService` save/load round-trips |
+| `src/services/supabaseService.test.ts` | Upsert-only bulk saves and single-row deletes (`saveProjects`, `deleteProject`, `saveCategories`, `deleteCategory`, `saveTodos`) — partial coverage of the 1100+ line service; `getCurrentDay`/`saveCurrentDay`/`migrateFromLocalStorage`/schema detection are not yet covered |
+| `src/services/localStorageService/recovery.test.ts` | Listing/summarizing/restoring localStorage schema-mismatch backups and full-snapshot disk backups |
+| `src/services/localStorageService/utils.test.ts` | Versioned read/write helpers, stale-key backup, write-failure notification |
 | `src/hooks/useReportStorage.test.ts` | Report storage hook |
 | `src/hooks/useReportSummary.test.ts` | Report summary hook |
+| `src/hooks/useBackgroundNotificationSetting.test.ts` | Background timer notification setting persistence |
+| `src/hooks/useDataRecovery.test.ts` | Unified browser + Electron disk backup listing/preview/restore |
+| `src/hooks/useElectronBackup.test.ts` | `writeBackupDebounced` and the renderer-side Electron backup bridge |
+| `src/hooks/useElectronMenuActions.test.ts` | Electron `menu:action` IPC listener dispatch |
+| `src/hooks/useKeyboardShortcuts.test.ts` | Global keyboard shortcut handling (new task, save, command palette, help) |
+| `src/hooks/useUndoableDelete.test.ts` | Undo-delete toast/timeout hook |
 | `src/components/PageLayout.test.tsx` | `PageLayout` renders children, delegates title/actions to context |
 | `src/components/SummaryOutput.test.tsx` | Summary output rendering |
 | `src/components/NewTaskForm.test.tsx` | Form render, submit, validation, cancel, FAB toggle |
 | `src/components/TaskItem.test.tsx` | Badge render, delete confirm, edit dialog |
 | `src/components/dateParsing.test.ts` | Date parsing utilities |
+| `src/components/BackgroundTimerNotifier.test.tsx` | Document title/OS notification updates while a timer runs in the background |
+| `src/components/CommandPalette.test.tsx` | `Cmd/Ctrl+K` command palette actions and navigation |
+| `src/components/DataRecoveryDialog.test.tsx` | Settings → Data Recovery dialog list/preview/restore flow |
+| `src/components/KeyboardShortcutsDialog.test.tsx` | `?` shortcuts help dialog content |
+| `src/components/TimerLiveRegion.test.tsx` | Screen-reader `aria-live` announcements for day/task start-stop transitions |
+| `src/pages/Settings.test.tsx` | Background notifications toggle, data recovery section visibility |
+| `src/lib/supabase.test.ts` | Per-user data cache keying (projects/categories/clients) |
+| `src/lib/electronMenuActions.test.ts` | Electron menu action pending-action/navigate pattern |
+| `electron/main.test.ts` | Backup-write IPC handler, quit-flush timeout fallback |
+| `electron/updater.test.ts` | Auto-updater event handling |
 
 ### Context Test Pattern
 

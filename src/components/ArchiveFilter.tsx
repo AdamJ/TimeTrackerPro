@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { X, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Project } from '@/contexts/TimeTrackingContext';
 import { TaskCategory } from '@/config/categories';
 import { ResetIcon } from '@radix-ui/react-icons';
