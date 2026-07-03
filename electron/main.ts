@@ -7,16 +7,12 @@ import { initAutoUpdater } from "./updater";
 
 const isDev = process.env.NODE_ENV === "development" || process.env.ELECTRON_DEV === "true";
 
-// Self-hosted SQL backend mode (sqlApiService.ts) fetches this origin — same
-// build-time env var, same default, so the CSP connect-src allowlist below
-// always matches whatever host the renderer actually calls.
-const SQL_API_ORIGIN = (() => {
-	try {
-		return new URL(import.meta.env.VITE_SQL_API_URL ?? "http://localhost:4001/api").origin;
-	} catch {
-		return "http://localhost:4001";
-	}
-})();
+// Self-hosted SQL backend mode (sqlApiService.ts) fetches VITE_SQL_API_URL's
+// origin — replaced with a literal by vite.electron.config.ts's `define` at
+// build time (this file's "module": "commonjs" target can't use import.meta
+// directly, see electron/tsconfig.json) — so the CSP connect-src allowlist
+// below always matches whatever host the renderer actually calls.
+declare const __SQL_API_ORIGIN__: string;
 
 const MAX_BACKUPS = 20;
 const MAX_BACKUP_BYTES = 10 * 1024 * 1024;
@@ -159,7 +155,7 @@ function createWindow(): void {
 					"script-src 'self'; " +
 					"style-src 'self' 'unsafe-inline'; " +
 					"img-src 'self' app: data: blob: https:; " +
-					`connect-src 'self' https://*.supabase.co wss://*.supabase.co ${SQL_API_ORIGIN};`,
+					`connect-src 'self' https://*.supabase.co wss://*.supabase.co ${__SQL_API_ORIGIN__};`,
 				],
 			},
 		});
