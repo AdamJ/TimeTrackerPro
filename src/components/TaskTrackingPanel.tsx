@@ -100,7 +100,7 @@ export function TaskTrackingPanel() {
           </div>
           <ul className="my-2">
             {activeTodos.map((item) => (
-              <li key={item.id} className="flex items-center py-1 px-2 gap-2 group hover:bg-slate-100">
+              <li key={item.id} className="flex items-center py-1 px-2 gap-2 group hover:bg-muted">
                 <Checkbox
                   id={`todo-${item.id}`}
                   checked={false}
@@ -159,7 +159,7 @@ export function TaskTrackingPanel() {
             </div>
             <ul className="my-2">
               {completedTodos.map((item) => (
-                <li key={item.id} className="flex items-center py-1 px-2 gap-2 group hover:bg-slate-100">
+                <li key={item.id} className="flex items-center py-1 px-2 gap-2 group hover:bg-muted">
                   <Checkbox
                     id={`todo-${item.id}`}
                     checked={true}
