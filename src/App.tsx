@@ -15,6 +15,7 @@ import { Suspense, lazy, useState } from "react";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
 import { BackgroundTimerNotifier } from "@/components/BackgroundTimerNotifier";
+import { TimerLiveRegion } from "@/components/TimerLiveRegion";
 import { MobileNav } from "@/components/MobileNav";
 import { AppSidebar } from "@/components/AppSidebar";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -157,6 +158,7 @@ const App = () => (
             <InstallPrompt />
             <PwaUpdatePrompt />
             <BackgroundTimerNotifier />
+            <TimerLiveRegion />
           </TooltipProvider>
         </PageTitleProvider>
       </TimeTrackingProvider>
