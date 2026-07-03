@@ -1,17 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { PlannedTaskStatus } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { KanbanColumn } from "@/components/KanbanColumn";
-import { PlannedTaskDialog } from "@/components/PlannedTaskDialog";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 
 const COLUMNS: { status: PlannedTaskStatus; title: string }[] = [
   { status: "todo", title: "To Do" },
@@ -22,7 +12,6 @@ const COLUMNS: { status: PlannedTaskStatus; title: string }[] = [
 
 export const KanbanBoard: React.FC = () => {
   const { plannedTasks, isDayStarted, isDayStale } = useTimeTracking();
-  const [showNewTaskSheet, setShowNewTaskSheet] = useState(false);
 
   const tasksByStatus = (status: PlannedTaskStatus) =>
     [...plannedTasks]

@@ -165,7 +165,7 @@ export class SqlApiService implements DataService {
 
 	// Reuses the same one-time-merge strategy as SupabaseService: only pull
 	// guest localStorage data in if the SQL backend doesn't already have it.
-	async migrateFromLocalStorage(): Promise<void> {
+	async migrateFromLocalStorage(): Promise<boolean> {
 		try {
 			const localService = new LocalStorageService();
 
@@ -186,7 +186,7 @@ export class SqlApiService implements DataService {
 			const hasClients = clients.length > 0;
 
 			if (!hasProjects && !hasCategories && !hasCurrentDay && !hasArchivedDays && !hasTodos && !hasPlannedTasks && !hasClients) {
-				return;
+				return true;
 			}
 
 			const existingProjects = await this.getProjects();
@@ -209,8 +209,11 @@ export class SqlApiService implements DataService {
 					await this.upsertClient(client);
 				}
 			}
+
+			return true;
 		} catch (error) {
 			console.error("❌ Error migrating data from localStorage to SQL backend:", error);
+			return false;
 		}
 	}
 

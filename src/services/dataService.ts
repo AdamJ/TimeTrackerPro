@@ -54,7 +54,7 @@ export interface DataService {
 	deletePlannedTask: (id: string) => Promise<void>;
 
 	// Migration operations
-	migrateFromLocalStorage: () => Promise<void>;
+	migrateFromLocalStorage: () => Promise<boolean>;
 	migrateToLocalStorage: () => Promise<void>;
 }
 

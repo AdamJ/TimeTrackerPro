@@ -483,7 +483,14 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         // On login: migrate any guest data into Supabase, then reload planned
         // tasks so the current session reflects what migration just wrote.
         if (currentAuthStateRef.current && dataService) {
-          await dataService.migrateFromLocalStorage();
+          const migrated = await dataService.migrateFromLocalStorage();
+          if (!migrated) {
+            toast({
+              title: "Data sync failed",
+              description: "Some local data couldn't be migrated to your account. Your data is still saved locally.",
+              variant: "destructive"
+            });
+          }
           const rawPostMigrationTasks = await dataService.getPlannedTasks();
           const postMigrationTasks = rawPostMigrationTasks.map(t => ({
             ...t,
