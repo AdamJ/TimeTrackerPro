@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useMemo,
   useRef
 } from 'react';
 import { DEFAULT_CATEGORIES, TaskCategory } from '@/config/categories';
@@ -17,7 +18,8 @@ import {
   getBillableHoursForDay as calcBillableHoursForDay,
   getNonBillableHoursForDay as calcNonBillableHoursForDay,
   getTotalHoursForPeriod as calcTotalHoursForPeriod,
-  getRevenueForPeriod as calcRevenueForPeriod
+  getRevenueForPeriod as calcRevenueForPeriod,
+  getTotalDayDuration as calcTotalDayDuration
 } from '@/utils/calculationUtils';
 import {
   exportToCSV as utilExportToCSV,
@@ -144,9 +146,6 @@ interface TimeTrackingContextType {
   currentTask: Task | null;
   tasks: Task[];
 
-  // Timer state
-  currentTime: Date;
-
   // Sync state - manual sync only
   isSyncing: boolean;
   lastSyncTime: Date | null;
@@ -245,8 +244,6 @@ interface TimeTrackingContextType {
   addPlannedTaskToDay: (id: string) => void;
 
   // Calculated values
-  getTotalDayDuration: () => number;
-  getCurrentTaskDuration: () => number;
   getTotalHoursForPeriod: (startDate: Date, endDate: Date) => number;
   getRevenueForPeriod: (startDate: Date, endDate: Date) => number;
   getHoursWorkedForDay: (day: DayRecord) => number;
@@ -290,7 +287,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const [dayStartTime, setDayStartTime] = useState<Date | null>(null);
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [archivedDays, setArchivedDays] = useState<DayRecord[]>([]);
   const [projects, setProjects] = useState<Project[]>(
     convertDefaultProjects(DEFAULT_PROJECTS)
@@ -699,20 +695,43 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => window.removeEventListener('online', handleOnline);
   }, [isAuthenticated, forceSyncToDatabase]);
 
-  // Update current time every 30 seconds (instead of every second for better performance)
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 30000); // 30 seconds instead of 1 second
-    return () => clearInterval(timer);
-  }, []);
-
   const isDayStale =
     isDayStarted &&
     !!dayStartTime &&
     dayStartTime.toDateString() !== new Date().toDateString();
 
-  const startDay = (startDateTime?: Date) => {
+  /**
+   * Called whenever a timed Task ends (endDay, startNewTask ending the previous task).
+   * Finds the planned task whose timeEntries includes the given taskId, updates that
+   * entry's duration, and recalculates timeSpent. Ref-based, so it needs no deps.
+   */
+  const accumulatePlannedTaskTime = useCallback((endedTaskId: string, duration: number) => {
+    const now = new Date().toISOString();
+    let changed = false;
+    const next = plannedTasksRef.current.map(pt => {
+      const entryIdx = pt.timeEntries.findIndex(e => e.taskId === endedTaskId);
+      if (entryIdx === -1) return pt;
+      const oldDuration = pt.timeEntries[entryIdx].duration;
+      const updatedEntries = pt.timeEntries.map((e, i) =>
+        i === entryIdx ? { ...e, duration } : e
+      );
+      const updated: PlannedTask = {
+        ...pt,
+        timeEntries: updatedEntries,
+        timeSpent: pt.timeSpent - oldDuration + duration,
+        updatedAt: now
+      };
+      changed = true;
+      if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(updated);
+      return updated;
+    });
+    if (changed) {
+      plannedTasksRef.current = next;
+      setPlannedTasks(next);
+    }
+  }, []);
+
+  const startDay = useCallback((startDateTime?: Date) => {
     const now = startDateTime || new Date();
 
     // Round to nearest 15 minutes
@@ -730,9 +749,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         .then(() => setLastSyncTime(new Date()))
         .catch(error => console.error("❌ Error saving after starting day:", error));
     }
-  };
+  }, [dataService, tasks]);
 
-  const endDay = (endDateTime?: Date) => {
+  const endDay = useCallback((endDateTime?: Date) => {
     const effectiveEndTime = endDateTime ?? new Date();
     let finalTasks = tasks;
     if (currentTask) {
@@ -764,9 +783,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           });
         });
     }
-  };
+  }, [tasks, currentTask, dayStartTime, dataService, accumulatePlannedTaskTime]);
 
-  const discardDay = () => {
+  const discardDay = useCallback(() => {
     setIsDayStarted(false);
     setDayStartTime(null);
     setCurrentTask(null);
@@ -776,9 +795,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       dataService.saveCurrentDay({ isDayStarted: false, dayStartTime: null, currentTask: null, tasks: [] })
         .catch(error => console.error("❌ Error saving state after discarding day:", error));
     }
-  };
+  }, [dataService]);
 
-  const startNewTask = (
+  const startNewTask = useCallback((
     title: string,
     description?: string,
     project?: string,
@@ -827,9 +846,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         .catch(error => console.error("❌ Error saving after starting task:", error));
     }
     return newTask.id;
-  };
+  }, [tasks, currentTask, dayStartTime, isDayStarted, dataService, accumulatePlannedTaskTime]);
 
-  const updateTask = (taskId: string, updates: Partial<Task>) => {
+  const updateTask = useCallback((taskId: string, updates: Partial<Task>) => {
     const updatedTasks = tasks.map(task => (task.id === taskId ? { ...task, ...updates } : task));
     const updatedCurrentTask = currentTask?.id === taskId ? { ...currentTask, ...updates } : currentTask;
     setTasks(updatedTasks);
@@ -842,9 +861,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         .then(() => setLastSyncTime(new Date()))
         .catch(error => console.error("❌ Error saving after updating task:", error));
     }
-  };
+  }, [tasks, currentTask, dayStartTime, isDayStarted, dataService]);
 
-  const deleteTask = (taskId: string) => {
+  const deleteTask = useCallback((taskId: string) => {
     const updatedTasks = tasks.filter(task => task.id !== taskId);
     const updatedCurrentTask = currentTask?.id === taskId ? null : currentTask;
     setTasks(updatedTasks);
@@ -857,9 +876,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         .then(() => setLastSyncTime(new Date()))
         .catch(error => console.error("❌ Error saving after deleting task:", error));
     }
-  };
+  }, [tasks, currentTask, dayStartTime, isDayStarted, dataService]);
 
-  const postDay = async (notes?: string) => {
+  const postDay = useCallback(async (notes?: string) => {
     if (!dayStartTime) return;
 
     // Collect incomplete checklist items from task descriptions so they carry
@@ -881,7 +900,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       id: Date.now().toString(),
       date: dayStartTime.toDateString(),
       tasks: tasks,
-      totalDuration: getTotalDayDuration(),
+      totalDuration: calcTotalDayDuration(tasks, currentTask, new Date()),
       startTime: dayStartTime,
       endTime: dayEndTime ?? new Date(),
       notes
@@ -986,12 +1005,12 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         });
       }
     }
-  };
+  }, [dayStartTime, tasks, currentTask, dayEndTime, archivedDays, todoItems, categories, dataService, writeBackupDebounced]);
 
   // Project management functions - NO AUTOMATIC SAVING
   // projectsRef is updated synchronously so forceSyncToDatabase() always reads
   // the latest list even when called immediately after a mutation.
-  const addProject = (project: Omit<Project, 'id'>) => {
+  const addProject = useCallback((project: Omit<Project, 'id'>) => {
     const newProject: Project = {
       ...project,
       id: Date.now().toString()
@@ -1000,44 +1019,44 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     projectsRef.current = next;
     setProjects(next);
     setHasUnsavedChanges(true);
-  };
+  }, []);
 
-  const updateProject = (projectId: string, updates: Partial<Project>) => {
+  const updateProject = useCallback((projectId: string, updates: Partial<Project>) => {
     const next = projectsRef.current.map(project =>
       project.id === projectId ? { ...project, ...updates } : project
     );
     projectsRef.current = next;
     setProjects(next);
     setHasUnsavedChanges(true);
-  };
+  }, []);
 
   // Deletes immediately and explicitly rather than relying on the next
   // forceSyncToDatabase()'s saveProjects() to infer the removal from a
   // full-list diff — that diff is gone (see supabaseService.saveProjects),
   // so deletion must be a single-row operation triggered by this action.
-  const deleteProject = (projectId: string) => {
+  const deleteProject = useCallback((projectId: string) => {
     const next = projectsRef.current.filter(project => project.id !== projectId);
     projectsRef.current = next;
     setProjects(next);
     setHasUnsavedChanges(true);
     void dataServiceRef.current?.deleteProject(projectId);
-  };
+  }, []);
 
   // Re-inserts a project removed by deleteProject (Undo). Persists
   // immediately via upsert so the row reappears even if it was already
   // deleted server-side by the explicit deleteProject call above.
-  const restoreDeletedProject = (project: Project) => {
+  const restoreDeletedProject = useCallback((project: Project) => {
     const next = [...projectsRef.current, project];
     projectsRef.current = next;
     setProjects(next);
     setHasUnsavedChanges(true);
     void dataServiceRef.current?.saveProjects(next);
-  };
+  }, []);
 
   // Explicitly deletes every non-default project before installing the
   // defaults — saveProjects is upsert-only, so without this the old custom
   // projects would never be removed server-side.
-  const resetProjectsToDefaults = () => {
+  const resetProjectsToDefaults = useCallback(() => {
     const defaultProjects = convertDefaultProjects(DEFAULT_PROJECTS);
     const idsToDelete = projectsRef.current
       .filter(project => !defaultProjects.some(d => d.id === project.id))
@@ -1047,25 +1066,25 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setHasUnsavedChanges(true);
     idsToDelete.forEach(id => void dataServiceRef.current?.deleteProject(id));
     void dataServiceRef.current?.saveProjects(defaultProjects);
-  };
+  }, []);
 
-  const archiveProject = (projectId: string) => {
+  const archiveProject = useCallback((projectId: string) => {
     const next = projectsRef.current.map(project =>
       project.id === projectId ? { ...project, archived: true } : project
     );
     projectsRef.current = next;
     setProjects(next);
     setHasUnsavedChanges(true);
-  };
+  }, []);
 
-  const restoreProject = (projectId: string) => {
+  const restoreProject = useCallback((projectId: string) => {
     const next = projectsRef.current.map(project =>
       project.id === projectId ? { ...project, archived: false } : project
     );
     projectsRef.current = next;
     setProjects(next);
     setHasUnsavedChanges(true);
-  };
+  }, []);
 
   // Client management functions - NO AUTOMATIC SAVING
   // Persists the current client list to the data service. Reads from
@@ -1096,7 +1115,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Returns the created client (or null if the name was blank) so the caller
   // can persist just that row via persistClient.
-  const addClient = (data: { name: string; addressStreet?: string; addressCity?: string; addressState?: string; addressZip?: string; addressCountry?: string; contactName?: string; contactEmail?: string; contactWebsite?: string }): Client | null => {
+  const addClient = useCallback((data: { name: string; addressStreet?: string; addressCity?: string; addressState?: string; addressZip?: string; addressCountry?: string; contactName?: string; contactEmail?: string; contactWebsite?: string }): Client | null => {
     const trimmed = data.name.trim();
     if (!trimmed) return null;
     const newClient: Client = {
@@ -1117,16 +1136,16 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     clientsRef.current = next;
     setClients(next);
     return newClient;
-  };
+  }, []);
 
   // Returns null on success, or an error message naming the active projects
   // that block archiving (a client cannot be archived while it still owns
   // non-archived projects).
-  const archiveClient = (clientId: string): string | null => {
+  const archiveClient = useCallback((clientId: string): string | null => {
     const client = clientsRef.current.find(c => c.id === clientId);
     if (!client) return "Client not found.";
 
-    const blockingProjects = projects.filter(
+    const blockingProjects = projectsRef.current.filter(
       project => project.client === client.name && project.archived !== true
     );
 
@@ -1144,17 +1163,17 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     clientsRef.current = next;
     setClients(next);
     return null;
-  };
+  }, []);
 
-  const restoreClient = (clientId: string) => {
+  const restoreClient = useCallback((clientId: string) => {
     const next = clientsRef.current.map(c =>
       c.id === clientId ? { ...c, archived: false } : c
     );
     clientsRef.current = next;
     setClients(next);
-  };
+  }, []);
 
-  const updateClient = (
+  const updateClient = useCallback((
     id: string,
     data: Partial<Omit<Client, "id" | "createdAt" | "archived">>
   ): Client | null => {
@@ -1165,10 +1184,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     clientsRef.current = next;
     setClients(next);
     return updated;
-  };
+  }, []);
 
   // Archive management functions
-  const updateArchivedDay = async (
+  const updateArchivedDay = useCallback(async (
     dayId: string,
     updates: Partial<DayRecord>
   ) => {
@@ -1201,9 +1220,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
       throw error; // Re-throw so the UI can handle it
     }
-  };
+  }, [dataService, archivedDays]);
 
-  const deleteArchivedDay = async (dayId: string) => {
+  const deleteArchivedDay = useCallback(async (dayId: string) => {
     if (!dataService) return;
 
     try {
@@ -1212,12 +1231,12 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       console.error('Error deleting archived day:', error);
     }
-  };
+  }, [dataService]);
 
   // Re-inserts a day removed by deleteArchivedDay (Undo) and persists the
   // restored list. Distinct from restoreArchivedDay, which reopens an
   // archived day as the current/active day rather than undoing a delete.
-  const restoreDeletedArchivedDay = async (day: DayRecord) => {
+  const restoreDeletedArchivedDay = useCallback(async (day: DayRecord) => {
     if (!dataService) return;
 
     // Captured via the setState updater (not the archivedDays closure) so a
@@ -1234,8 +1253,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       console.error('Error restoring deleted archived day:', error);
     }
-  };
-  const restoreArchivedDay = (dayId: string) => {
+  }, [dataService]);
+
+  const restoreArchivedDay = useCallback((dayId: string) => {
     const dayToRestore = archivedDays.find(day => day.id === dayId);
     if (!dayToRestore) return;
 
@@ -1259,9 +1279,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setArchivedDays(prev => prev.filter(day => day.id !== dayId));
 
     setHasUnsavedChanges(true);
-  };
+  }, [archivedDays]);
 
-  const addBackdatedDay = async (day: DayRecord) => {
+  const addBackdatedDay = useCallback(async (day: DayRecord) => {
     const updatedDays = [...archivedDays, day];
     setArchivedDays(updatedDays);
 
@@ -1285,19 +1305,19 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         throw error;
       }
     }
-  };
+  }, [archivedDays, dataService]);
 
   // Category management functions - NO AUTOMATIC SAVING
-  const addCategory = (category: Omit<TaskCategory, 'id'>) => {
+  const addCategory = useCallback((category: Omit<TaskCategory, 'id'>) => {
     const newCategory: TaskCategory = {
       ...category,
       id: Date.now().toString()
     };
     setCategories(prev => [...prev, newCategory]);
     setHasUnsavedChanges(true);
-  };
+  }, []);
 
-  const updateCategory = (
+  const updateCategory = useCallback((
     categoryId: string,
     updates: Partial<TaskCategory>
   ) => {
@@ -1307,22 +1327,22 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       )
     );
     setHasUnsavedChanges(true);
-  };
+  }, []);
 
   // Deletes immediately and explicitly rather than relying on the next
   // forceSyncToDatabase()'s saveCategories() to infer the removal from a
   // full-list diff — that diff is gone (see supabaseService.saveCategories),
   // so deletion must be a single-row operation triggered by this action.
-  const deleteCategory = (categoryId: string) => {
+  const deleteCategory = useCallback((categoryId: string) => {
     setCategories(prev => prev.filter(category => category.id !== categoryId));
     setHasUnsavedChanges(true);
     void dataServiceRef.current?.deleteCategory(categoryId);
-  };
+  }, []);
 
   // Re-inserts a category removed by deleteCategory (Undo). Persists
   // immediately via upsert so the row reappears even if it was already
   // deleted server-side by the explicit deleteCategory call above.
-  const restoreDeletedCategory = (category: TaskCategory) => {
+  const restoreDeletedCategory = useCallback((category: TaskCategory) => {
     let next: TaskCategory[] = [];
     setCategories(prev => {
       next = [...prev, category];
@@ -1330,10 +1350,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     });
     setHasUnsavedChanges(true);
     void dataServiceRef.current?.saveCategories(next);
-  };
+  }, []);
 
   // Time adjustment function (rounds to nearest 15 minutes)
-  const adjustTaskTime = (taskId: string, startTime: Date, endTime?: Date) => {
+  const adjustTaskTime = useCallback((taskId: string, startTime: Date, endTime?: Date) => {
     const roundToNearestQuarter = (date: Date): Date => {
       const minutes = date.getMinutes();
       const roundedMinutes = Math.round(minutes / 15) * 15;
@@ -1375,53 +1395,38 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       );
     }
     setHasUnsavedChanges(true);
-  };
+  }, [currentTask]);
 
-  const getTotalDayDuration = () => {
-    const completedTasksDuration = tasks
-      .filter(task => task.duration)
-      .reduce((total, task) => total + (task.duration || 0), 0);
+  const getTotalHoursForPeriod = useCallback((startDate: Date, endDate: Date): number =>
+    calcTotalHoursForPeriod(archivedDays, startDate, endDate), [archivedDays]);
 
-    const currentTaskDuration = getCurrentTaskDuration();
+  const getRevenueForPeriod = useCallback((startDate: Date, endDate: Date): number =>
+    calcRevenueForPeriod(archivedDays, projects, categories, startDate, endDate), [archivedDays, projects, categories]);
 
-    return completedTasksDuration + currentTaskDuration;
-  };
+  const getHoursWorkedForDay = useCallback((day: DayRecord): number =>
+    calcHoursWorkedForDay(day), []);
 
-  const getCurrentTaskDuration = () => {
-    if (!currentTask) return 0;
-    return currentTime.getTime() - currentTask.startTime.getTime();
-  };
+  const getRevenueForDay = useCallback((day: DayRecord): number =>
+    calcRevenueForDay(day, projects, categories), [projects, categories]);
 
-  const getTotalHoursForPeriod = (startDate: Date, endDate: Date): number =>
-    calcTotalHoursForPeriod(archivedDays, startDate, endDate);
+  const getBillableHoursForDay = useCallback((day: DayRecord): number =>
+    calcBillableHoursForDay(day, projects, categories), [projects, categories]);
 
-  const getRevenueForPeriod = (startDate: Date, endDate: Date): number =>
-    calcRevenueForPeriod(archivedDays, projects, categories, startDate, endDate);
+  const getNonBillableHoursForDay = useCallback((day: DayRecord): number =>
+    calcNonBillableHoursForDay(day, projects, categories), [projects, categories]);
 
-  const getHoursWorkedForDay = (day: DayRecord): number =>
-    calcHoursWorkedForDay(day);
+  const exportToCSV = useCallback((startDate?: Date, endDate?: Date): string =>
+    utilExportToCSV(archivedDays, projects, categories, user?.id || '', startDate, endDate), [archivedDays, projects, categories, user]);
 
-  const getRevenueForDay = (day: DayRecord): number =>
-    calcRevenueForDay(day, projects, categories);
+  const exportToJSON = useCallback((startDate?: Date, endDate?: Date): string =>
+    utilExportToJSON(archivedDays, projects, categories, startDate, endDate), [archivedDays, projects, categories]);
 
-  const getBillableHoursForDay = (day: DayRecord): number =>
-    calcBillableHoursForDay(day, projects, categories);
-
-  const getNonBillableHoursForDay = (day: DayRecord): number =>
-    calcNonBillableHoursForDay(day, projects, categories);
-
-  const exportToCSV = (startDate?: Date, endDate?: Date): string =>
-    utilExportToCSV(archivedDays, projects, categories, user?.id || '', startDate, endDate);
-
-  const exportToJSON = (startDate?: Date, endDate?: Date): string =>
-    utilExportToJSON(archivedDays, projects, categories, startDate, endDate);
-
-  const generateInvoiceData = (
+  const generateInvoiceData = useCallback((
     clientName: string,
     startDate: Date,
     endDate: Date
   ): InvoiceData =>
-    utilGenerateInvoiceData(archivedDays, projects, categories, clientName, startDate, endDate);
+    utilGenerateInvoiceData(archivedDays, projects, categories, clientName, startDate, endDate), [archivedDays, projects, categories]);
 
   // Persist todos whenever todoItems changes due to a user action.
   // Uses refs so this effect doesn't recreate todo callbacks on every change.
@@ -1557,40 +1562,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       const updated = next.find(t => t.id === id);
       if (updated) void dataServiceRef.current?.upsertPlannedTask(updated);
     }
-  }, []);
+  }, [accumulatePlannedTaskTime]);
 
-  /**
-   * Called whenever a timed Task ends (endDay, startNewTask ending the previous task).
-   * Finds the planned task whose timeEntries includes the given taskId, updates that
-   * entry's duration, and recalculates timeSpent.
-   */
-  const accumulatePlannedTaskTime = (endedTaskId: string, duration: number) => {
-    const now = new Date().toISOString();
-    let changed = false;
-    const next = plannedTasksRef.current.map(pt => {
-      const entryIdx = pt.timeEntries.findIndex(e => e.taskId === endedTaskId);
-      if (entryIdx === -1) return pt;
-      const oldDuration = pt.timeEntries[entryIdx].duration;
-      const updatedEntries = pt.timeEntries.map((e, i) =>
-        i === entryIdx ? { ...e, duration } : e
-      );
-      const updated: PlannedTask = {
-        ...pt,
-        timeEntries: updatedEntries,
-        timeSpent: pt.timeSpent - oldDuration + duration,
-        updatedAt: now
-      };
-      changed = true;
-      if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(updated);
-      return updated;
-    });
-    if (changed) {
-      plannedTasksRef.current = next;
-      setPlannedTasks(next);
-    }
-  };
-
-  const pullPlannedTaskToDay = (id: string) => {
+  const pullPlannedTaskToDay = useCallback((id: string) => {
     if (!isDayStarted) {
       toast({ title: "Start your work day first", description: "Go to the Dashboard and start your day before pulling tasks." });
       return;
@@ -1617,9 +1591,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setPlannedTasks(next);
     if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(updated);
     toast({ title: `Task started: ${task.title}` });
-  };
+  }, [isDayStarted, isDayStale, startNewTask]);
 
-  const addPlannedTaskToDay = (id: string) => {
+  const addPlannedTaskToDay = useCallback((id: string) => {
     if (!isDayStarted) {
       toast({ title: "Start your work day first", description: "Go to the Dashboard and start your day before adding tasks." });
       return;
@@ -1644,9 +1618,9 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setPlannedTasks(next);
     if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(updated);
     toast({ title: `Resumed: ${task.title}` });
-  };
+  }, [isDayStarted, isDayStale, startNewTask]);
 
-  const importFromCSV = async (
+  const importFromCSV = useCallback(async (
     csvContent: string
   ): Promise<{ success: boolean; message: string; importedCount: number }> => {
     try {
@@ -1681,84 +1655,150 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         importedCount: 0
       };
     }
-  };
+  }, [categories, archivedDays, dataService]);
+
+  const contextValue = useMemo<TimeTrackingContextType>(() => ({
+    loading,
+    isDayStarted,
+    isDayStale,
+    dayStartTime,
+    currentTask,
+    tasks,
+    isSyncing,
+    lastSyncTime,
+    hasUnsavedChanges,
+    refreshFromDatabase: loadCurrentDay,
+    forceSyncToDatabase,
+    archivedDays,
+    todoItems,
+    addTodoItem,
+    toggleTodoItem,
+    deleteTodoItem,
+    clearCompletedTodos,
+    projects,
+    clients,
+    categories,
+    startDay,
+    endDay,
+    discardDay,
+    startNewTask,
+    updateTask,
+    deleteTask,
+    postDay,
+    plannedTasks,
+    addPlannedTask,
+    updatePlannedTask,
+    deletePlannedTask,
+    restoreDeletedPlannedTask,
+    movePlannedTask,
+    pullPlannedTaskToDay,
+    addPlannedTaskToDay,
+    addProject,
+    updateProject,
+    deleteProject,
+    restoreDeletedProject,
+    resetProjectsToDefaults,
+    archiveProject,
+    restoreProject,
+    addClient,
+    updateClient,
+    archiveClient,
+    restoreClient,
+    persistClients,
+    persistClient,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    restoreDeletedCategory,
+    updateArchivedDay,
+    deleteArchivedDay,
+    restoreArchivedDay,
+    restoreDeletedArchivedDay,
+    addBackdatedDay,
+    adjustTaskTime,
+    exportToCSV,
+    exportToJSON,
+    importFromCSV,
+    generateInvoiceData,
+    getTotalHoursForPeriod,
+    getRevenueForPeriod,
+    getHoursWorkedForDay,
+    getRevenueForDay,
+    getBillableHoursForDay,
+    getNonBillableHoursForDay
+  }), [
+    loading,
+    isDayStarted,
+    isDayStale,
+    dayStartTime,
+    currentTask,
+    tasks,
+    isSyncing,
+    lastSyncTime,
+    hasUnsavedChanges,
+    loadCurrentDay,
+    forceSyncToDatabase,
+    archivedDays,
+    todoItems,
+    addTodoItem,
+    toggleTodoItem,
+    deleteTodoItem,
+    clearCompletedTodos,
+    projects,
+    clients,
+    categories,
+    startDay,
+    endDay,
+    discardDay,
+    startNewTask,
+    updateTask,
+    deleteTask,
+    postDay,
+    plannedTasks,
+    addPlannedTask,
+    updatePlannedTask,
+    deletePlannedTask,
+    restoreDeletedPlannedTask,
+    movePlannedTask,
+    pullPlannedTaskToDay,
+    addPlannedTaskToDay,
+    addProject,
+    updateProject,
+    deleteProject,
+    restoreDeletedProject,
+    resetProjectsToDefaults,
+    archiveProject,
+    restoreProject,
+    addClient,
+    updateClient,
+    archiveClient,
+    restoreClient,
+    persistClients,
+    persistClient,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    restoreDeletedCategory,
+    updateArchivedDay,
+    deleteArchivedDay,
+    restoreArchivedDay,
+    restoreDeletedArchivedDay,
+    addBackdatedDay,
+    adjustTaskTime,
+    exportToCSV,
+    exportToJSON,
+    importFromCSV,
+    generateInvoiceData,
+    getTotalHoursForPeriod,
+    getRevenueForPeriod,
+    getHoursWorkedForDay,
+    getRevenueForDay,
+    getBillableHoursForDay,
+    getNonBillableHoursForDay
+  ]);
 
   return (
-    <TimeTrackingContext.Provider
-      value={{
-        loading,
-        isDayStarted,
-        isDayStale,
-        dayStartTime,
-        currentTask,
-        tasks,
-        currentTime,
-        isSyncing,
-        lastSyncTime,
-        hasUnsavedChanges,
-        refreshFromDatabase: loadCurrentDay,
-        forceSyncToDatabase,
-        archivedDays,
-        todoItems,
-        addTodoItem,
-        toggleTodoItem,
-        deleteTodoItem,
-        clearCompletedTodos,
-        projects,
-        clients,
-        categories,
-        startDay,
-        endDay,
-        discardDay,
-        startNewTask,
-        updateTask,
-        deleteTask,
-        postDay,
-        plannedTasks,
-        addPlannedTask,
-        updatePlannedTask,
-        deletePlannedTask,
-        restoreDeletedPlannedTask,
-        movePlannedTask,
-        pullPlannedTaskToDay,
-        addPlannedTaskToDay,
-        addProject,
-        updateProject,
-        deleteProject,
-        restoreDeletedProject,
-        resetProjectsToDefaults,
-        archiveProject,
-        restoreProject,
-        addClient,
-        updateClient,
-        archiveClient,
-        restoreClient,
-        persistClients,
-        persistClient,
-        addCategory,
-        updateCategory,
-        deleteCategory,
-        restoreDeletedCategory,
-        updateArchivedDay,
-        deleteArchivedDay,
-        restoreArchivedDay,
-        restoreDeletedArchivedDay,
-        addBackdatedDay,
-        adjustTaskTime,
-        exportToCSV,
-        exportToJSON,
-        importFromCSV,
-        generateInvoiceData,
-        getTotalDayDuration,
-        getCurrentTaskDuration,
-        getTotalHoursForPeriod,
-        getRevenueForPeriod,
-        getHoursWorkedForDay,
-        getRevenueForDay,
-        getBillableHoursForDay,
-        getNonBillableHoursForDay
-      }}
-    >
+    <TimeTrackingContext.Provider value={contextValue}>
       {children}
     </TimeTrackingContext.Provider>
   );

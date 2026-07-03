@@ -63,6 +63,28 @@ export function getDayStats(
 	};
 }
 
+/**
+ * Duration of the in-progress task, given the current moment. Pure so callers
+ * control how often "now" advances (e.g. a locally-ticking hook) instead of
+ * forcing every consumer to re-render on a shared timer tick.
+ */
+export function getCurrentTaskDuration(currentTask: Task | null, now: Date): number {
+	if (!currentTask) return 0;
+	return now.getTime() - currentTask.startTime.getTime();
+}
+
+/**
+ * Total elapsed duration for the active day: completed tasks plus the
+ * in-progress one. See getCurrentTaskDuration for why "now" is a parameter.
+ */
+export function getTotalDayDuration(tasks: Task[], currentTask: Task | null, now: Date): number {
+	const completedTasksDuration = tasks
+		.filter(task => task.duration)
+		.reduce((total, task) => total + (task.duration || 0), 0);
+
+	return completedTasksDuration + getCurrentTaskDuration(currentTask, now);
+}
+
 export function getHoursWorkedForDay(day: DayRecord): number {
 	let totalTaskDuration = 0;
 	day.tasks.forEach(task => {

@@ -14,7 +14,8 @@ import {
   PanelRight,
   Info,
 } from "lucide-react";
-import { getBillableHoursForDay, getNonBillableHoursForDay } from "@/utils/calculationUtils";
+import { getBillableHoursForDay, getNonBillableHoursForDay, getTotalDayDuration, getCurrentTaskDuration } from "@/utils/calculationUtils";
+import { useCurrentTime } from "@/hooks/useCurrentTime";
 import { DashboardIcon } from "@radix-ui/react-icons";
 import { PageLayout } from "@/components/PageLayout";
 import { TaskTrackingPanel } from "@/components/TaskTrackingPanel";
@@ -49,10 +50,9 @@ const TimeTrackerContent = () => {
     postDay,
     deleteTask,
     startNewTask,
-    getTotalDayDuration,
     getTotalHoursForPeriod,
-    getCurrentTaskDuration,
   } = useTimeTracking();
+  const now = useCurrentTime();
 
   const [showStartDayDialog, setShowStartDayDialog] = useState(false);
   const [showAddTaskForm, setShowAddTaskForm] = useState(false);
@@ -154,7 +154,7 @@ const TimeTrackerContent = () => {
         <div className="max-w-4xl mx-auto p-6 space-y-6">
           <DaySummary
             tasks={tasks}
-            totalDuration={getTotalDayDuration()}
+            totalDuration={getTotalDayDuration(tasks, currentTask, now)}
             dayStartTime={dayStartTime}
             onPostDay={handlePostDay}
             onDiscardDay={handleDiscardDay}
@@ -372,7 +372,7 @@ const TimeTrackerContent = () => {
                             isActive={currentTask?.id === task.id}
                             currentDuration={
                               currentTask?.id === task.id
-                                ? getCurrentTaskDuration()
+                                ? getCurrentTaskDuration(currentTask, now)
                                 : 0
                             }
                             onDelete={deleteTask}

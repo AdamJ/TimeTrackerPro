@@ -24,8 +24,10 @@ import { UserMenu } from "@/components/UserMenu"
 import { SyncStatus } from "@/components/SyncStatus"
 import { Button } from "@/components/ui/button"
 import { formatDuration } from "@/utils/timeUtil"
+import { getTotalDayDuration } from "@/utils/calculationUtils"
 import { useAuth } from "@/hooks/useAuth"
 import { useTimeTracking } from "@/hooks/useTimeTracking"
+import { useCurrentTime } from "@/hooks/useCurrentTime"
 import {
   Sidebar,
   SidebarContent,
@@ -99,14 +101,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const {
     isDayStarted,
     tasks,
-    getTotalDayDuration,
+    currentTask,
     isSyncing,
     lastSyncTime,
     hasUnsavedChanges,
     forceSyncToDatabase,
   } = useTimeTracking()
+  const now = useCurrentTime()
 
-  const runningTime = isDayStarted ? getTotalDayDuration() : 0
+  const runningTime = isDayStarted ? getTotalDayDuration(tasks, currentTask, now) : 0
 
   return (
     <>
