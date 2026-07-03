@@ -28,6 +28,7 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 - **Weekly Report** — AI-generated work summaries (standup, client, or retrospective tone)
 - **Keyboard Shortcuts** — `N` new task, `Cmd/Ctrl+S` save, `Cmd/Ctrl+K` command palette, `?` for the shortcuts help dialog (web and Electron; Electron's native menu also offers `Cmd/Ctrl+N` for new task)
 - **No Account Required** — full functionality with local storage; optional cloud sync via Supabase
+- **Self-Hosted SQL Backend** — optionally run against your own PostgreSQL or MySQL database instead of Supabase or local storage (see [docs/SQL_BACKEND.md](docs/SQL_BACKEND.md))
 - **PWA** — installable on desktop/mobile
 
 ---
@@ -69,6 +70,12 @@ pnpm screenshots           # Capture screenshots (headless)
 pnpm test-csv-import
 pnpm test-full-import
 pnpm test-error-handling
+
+# Self-Hosted SQL Backend (optional)
+pnpm db:migrate          # apply schema to your Postgres/MySQL database
+pnpm db:seed             # seed default categories/projects
+pnpm server:dev          # run the backend API in watch mode
+pnpm server:start        # run the backend API
 ```
 
 ---
@@ -129,6 +136,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 
 - **Keyboard shortcuts** — global `N`/`Cmd/Ctrl+S`/`Cmd/Ctrl+K` shortcuts and a `?` help dialog in the web/PWA build, plus native `Cmd/Ctrl+N`/`Cmd/Ctrl+S`/`Cmd/Ctrl+K` menu accelerators in the Electron build
 - **Guest-mode data durability** — schema-mismatch backups, write-failure toasts, undo for hard deletes, Electron disk-based backup snapshots (independent of `localStorage`, including a final flush on app quit), and an in-app "Data Recovery" UI in Settings to preview and restore those backups
+- **Self-hosted SQL backend** — opt-in PostgreSQL/MySQL support via a small REST API (`server/`), alongside the existing Supabase and local storage modes
 - **Backdated entry creation** — "Add Past Entry" button on Archive page opens a multi-step dialog to log tasks for any past date
 - **Kanban planning board** — drag-and-drop task planning view (`KanbanBoard`, `KanbanColumn`, `PlannedTaskCard`)
 - Persistent report summaries saved to localStorage; markdown preview/export in the report output panel

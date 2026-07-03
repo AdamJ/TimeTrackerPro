@@ -148,6 +148,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Self-hosted SQL backend (opt-in, additive) — lets local deployments use their own PostgreSQL or MySQL database instead of Supabase or `localStorage`. Browsers can't open a raw SQL connection, so this adds a small Express + Knex REST API (`server/`) that the frontend talks to over HTTP when `VITE_DATA_BACKEND=sql` is set. Supabase and `localStorage` modes are unchanged when this var is unset. `planned_tasks` stores `time_entries`/`time_spent` (Kanban board time tracking) the same way `SupabaseService` does.
+  — `server/` (new: `db.ts`, `schema.ts`, `app.ts`, `index.ts`, `migrate.ts`, `seed.ts`, `repositories/*.ts`, `types.ts`), `src/services/sqlApiService.ts` (new), `src/services/dataService.ts` (factory branch), `package.json` (`db:migrate`, `db:seed`, `server:dev`, `server:start` scripts; `express`, `knex`, `pg`, `mysql2`, `cors`, `dotenv`, `tsx` deps), `.env.example`, `docs/SQL_BACKEND.md` (new)
+
 - `AppSidebar` — new collapsible sidebar navigation component replacing the top `SiteNavigationMenu`. Uses shadcn/ui `Sidebar` primitives; groups nav items into Planning/Manage/Reports sections; shows live session timer in the footer alongside sync status, auth, and export actions.
   — `src/components/AppSidebar.tsx` (new), `src/App.tsx` (wrapped in `SidebarProvider`, renders `AppSidebar`)
 
