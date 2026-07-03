@@ -144,6 +144,7 @@
       "dist/**/*",
       "dist-electron/**/*"
     ],
+    "icon": "public/icon.png",
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
