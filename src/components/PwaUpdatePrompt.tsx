@@ -1,7 +1,6 @@
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 
 export const PwaUpdatePrompt = () => {
   const {

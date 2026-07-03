@@ -7,7 +7,6 @@ import {
   Printer,
   CalendarClock,
   Kanban,
-  LayoutDashboard,
   FolderOpen,
   Tag,
   Users,
@@ -41,7 +40,6 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
-import { GitHubLogoIcon } from "@radix-ui/react-icons"
 import { Separator } from "./ui/separator"
 
 const navItems = {

@@ -1,5 +1,5 @@
 import { useState, useEffect, memo, useCallback } from 'react';
-import { Cloud, CloudOff, RefreshCw, Save, AlertCircle } from 'lucide-react';
+import { CloudOff, RefreshCw, Save, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -18,7 +18,6 @@ interface SyncStatusProps {
 
 export const SyncStatus = memo(function SyncStatus({
   isAuthenticated,
-  lastSyncTime,
   isSyncing = false,
   onRefresh,
   hasUnsavedChanges = false

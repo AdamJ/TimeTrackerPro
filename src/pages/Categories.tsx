@@ -12,7 +12,7 @@ import {
   AlertDialogMedia,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, Tag, TagIcon, Trash2Icon } from "lucide-react";
+import { Plus, Edit, Trash2, Tag, Trash2Icon } from "lucide-react";
 import { TaskCategory } from "@/config/categories";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { PageLayout } from "@/components/PageLayout";

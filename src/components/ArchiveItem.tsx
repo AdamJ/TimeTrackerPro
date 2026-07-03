@@ -24,7 +24,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Calendar, Clock, Edit, RotateCcw, FileText } from "lucide-react";
+import { Clock, Edit, RotateCcw, FileText } from "lucide-react";
 import {
 	formatDuration,
 	formatDurationLong,
