@@ -105,8 +105,9 @@ export class LocalStorageService implements DataService {
 		return deletePlannedTask(id);
 	}
 
-	async migrateFromLocalStorage(): Promise<void> {
+	async migrateFromLocalStorage(): Promise<boolean> {
 		// No-op for localStorage service
+		return true;
 	}
 
 	async migrateToLocalStorage(): Promise<void> {

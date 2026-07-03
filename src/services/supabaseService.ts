@@ -980,7 +980,7 @@ export class SupabaseService implements DataService {
 		}));
 	}
 
-	async migrateFromLocalStorage(): Promise<void> {
+	async migrateFromLocalStorage(): Promise<boolean> {
 		try {
 			const localService = new LocalStorageService();
 
@@ -1002,7 +1002,7 @@ export class SupabaseService implements DataService {
 			const hasClients = clients.length > 0;
 
 			if (!hasProjects && !hasCategories && !hasCurrentDay && !hasArchivedDays && !hasTodos && !hasPlannedTasks && !hasClients) {
-				return;
+				return true;
 			}
 
 			const existingCurrentDay = await this.getCurrentDay();
@@ -1080,8 +1080,10 @@ export class SupabaseService implements DataService {
 				}
 			}
 
+			return true;
 		} catch (error) {
 			console.error("❌ Error migrating data from localStorage:", error);
+			return false;
 		}
 	}
 
