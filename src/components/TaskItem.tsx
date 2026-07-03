@@ -39,7 +39,7 @@ interface TaskItemProps {
   onDelete: (taskId: string) => void;
 }
 
-export const TaskItem: React.FC<TaskItemProps> = ({
+const TaskItemComponent: React.FC<TaskItemProps> = ({
   task,
   isActive,
   currentDuration = 0,
@@ -209,3 +209,5 @@ export const TaskItem: React.FC<TaskItemProps> = ({
     </>
   );
 };
+
+export const TaskItem = React.memo(TaskItemComponent);

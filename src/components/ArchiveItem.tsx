@@ -43,7 +43,7 @@ interface ArchiveItemProps {
 	onEdit: (day: DayRecord) => void;
 }
 
-export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
+const ArchiveItemComponent: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 	const {
 		restoreArchivedDay,
 		isDayStarted,
@@ -334,3 +334,5 @@ export const ArchiveItem: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 		</Card>
 	);
 };
+
+export const ArchiveItem = React.memo(ArchiveItemComponent);

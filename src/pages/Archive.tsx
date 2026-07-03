@@ -91,9 +91,9 @@ const ArchiveContent: React.FC = () => {
     );
   }, [filteredDays, projects, categories]);
 
-  const handleEdit = (day: DayRecord) => {
+  const handleEdit = useCallback((day: DayRecord) => {
     setEditingDay(day);
-  };
+  }, []);
 
   const handleCloseEdit = () => {
     setEditingDay(null);
