@@ -1,9 +1,23 @@
 import { autoUpdater } from "electron-updater";
-import { app, BrowserWindow, dialog } from "electron";
+import { app, BrowserWindow, dialog, shell } from "electron";
 import fs from "fs/promises";
 import path from "path";
 
 let initialized = false;
+
+// Set right before quitAndInstall() and checked by the "error" listener below —
+// distinguishes an install failure (needs a visible dialog) from a routine
+// background check failure (handled silently via the backoff counter).
+let installInFlight = false;
+
+// Squirrel.Mac (macOS's native auto-updater, which quitAndInstall() hands off
+// to) refuses to apply an update unless the app is code-signed — see
+// https://www.electronjs.org/docs/latest/api/auto-updater#macos. Builds here
+// are intentionally unsigned (AGENTS.md Electron section / issue #220), so
+// quitAndInstall() fails on macOS with no visible symptom beyond a logged
+// "error" event: the user clicks "Restart Now" and nothing happens. Point
+// them at a manual download instead of failing silently.
+const RELEASES_URL = "https://github.com/AdamJ/TimeTrackerPro/releases/latest";
 
 const BASE_BACKOFF_MS = 60 * 60 * 1000; // 1 hour
 const MAX_BACKOFF_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -98,12 +112,33 @@ export function initAutoUpdater(): void {
 			message: `Timetraked ${info.version} has been downloaded.`,
 			detail: "Restart the app to apply the update.",
 		}).then(({ response }) => {
-			if (response === 0) autoUpdater.quitAndInstall();
+			if (response === 0) {
+				installInFlight = true;
+				autoUpdater.quitAndInstall();
+			}
 		});
 	});
 
 	autoUpdater.on("error", (error) => {
 		console.error("Auto-update check failed:", error);
+
+		if (installInFlight) {
+			installInFlight = false;
+			const win = focusedOrFirstWindow();
+			void showMessageBox(win, {
+				type: "error",
+				buttons: ["Open Releases Page", "Close"],
+				defaultId: 0,
+				cancelId: 1,
+				title: "Update install failed",
+				message: "Timetraked couldn't automatically install the update.",
+				detail: "This can happen because release builds aren't code-signed. Download and install the latest release manually to finish updating.",
+			}).then(({ response }) => {
+				if (response === 0) void shell.openExternal(RELEASES_URL);
+			});
+			return;
+		}
+
 		void readBackoffState().then((state) =>
 			writeBackoffState({
 				consecutiveFailures: state.consecutiveFailures + 1,
