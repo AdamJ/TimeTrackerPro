@@ -66,7 +66,7 @@ const formatDuration = (ms: number): string => {
   return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
 };
 
-export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
+const PlannedTaskCardComponent: React.FC<PlannedTaskCardProps> = ({
   task,
   isDayStarted,
   isDayStale,
@@ -327,3 +327,5 @@ export const PlannedTaskCard: React.FC<PlannedTaskCardProps> = ({
     </>
   );
 };
+
+export const PlannedTaskCard = React.memo(PlannedTaskCardComponent);

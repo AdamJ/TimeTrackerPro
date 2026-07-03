@@ -92,6 +92,30 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src")
     }
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("recharts") || id.includes("d3-")) return "vendor-recharts";
+          if (id.includes("@supabase")) return "vendor-supabase";
+          if (id.includes("@radix-ui")) return "vendor-radix";
+          if (id.includes("/motion/") || id.includes("framer-motion")) return "vendor-motion";
+          if (
+            id.includes("react-markdown") ||
+            id.includes("remark") ||
+            id.includes("rehype") ||
+            id.includes("mdast") ||
+            id.includes("hast") ||
+            id.includes("micromark") ||
+            id.includes("unified") ||
+            id.includes("vfile") ||
+            id.includes("unist")
+          ) return "vendor-markdown";
+        }
+      }
+    }
+  },
   test: {
     globals: true,
     environment: "jsdom",

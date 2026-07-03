@@ -14,7 +14,7 @@ import {
   PanelRight,
   Info,
 } from "lucide-react";
-import { getBillableHoursForDay, getNonBillableHoursForDay, getTotalDayDuration, getCurrentTaskDuration } from "@/utils/calculationUtils";
+import { getDayStats, getTotalDayDuration, getCurrentTaskDuration } from "@/utils/calculationUtils";
 import { useCurrentTime } from "@/hooks/useCurrentTime";
 import { DashboardIcon } from "@radix-ui/react-icons";
 import { PageLayout } from "@/components/PageLayout";
@@ -103,15 +103,25 @@ const TimeTrackerContent = () => {
 
   const { todoItems, projects, categories, clients, archiveClient, archiveProject } = useTimeTracking();
 
-  const billableHours = useMemo(
-    () => archivedDays.reduce((sum, day) => sum + getBillableHoursForDay(day, projects, categories), 0),
-    [archivedDays, projects, categories],
+  const projectMap = useMemo(
+    () => new Map(projects.map(p => [p.name, p])),
+    [projects],
+  );
+  const categoryMap = useMemo(
+    () => new Map(categories.map(c => [c.id, c])),
+    [categories],
   );
 
-  const nonBillableHours = useMemo(
-    () => archivedDays.reduce((sum, day) => sum + getNonBillableHoursForDay(day, projects, categories), 0),
-    [archivedDays, projects, categories],
-  );
+  const { billableHours, nonBillableHours } = useMemo(() => {
+    let billable = 0;
+    let nonBillable = 0;
+    archivedDays.forEach(day => {
+      const stats = getDayStats(day, projectMap, categoryMap);
+      billable += stats.billableHours;
+      nonBillable += stats.nonBillableHours;
+    });
+    return { billableHours: billable, nonBillableHours: nonBillable };
+  }, [archivedDays, projectMap, categoryMap]);
 
   const sortedDays = useMemo(
     () =>
