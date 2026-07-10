@@ -41,6 +41,20 @@ export const formatHoursDecimal = (milliseconds: number): number => {
   return Math.round((milliseconds / (1000 * 60 * 60)) * 100) / 100;
 };
 
+export const roundToNearest15Minutes = (date: Date): Date => {
+  const rounded = new Date(date);
+  const minutes = rounded.getMinutes();
+  rounded.setMinutes(Math.round(minutes / 15) * 15, 0, 0);
+  return rounded;
+};
+
+export const formatTimeForInput = (date: Date): string => {
+  const rounded = roundToNearest15Minutes(date);
+  const hours = rounded.getHours().toString().padStart(2, "0");
+  const minutes = rounded.getMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
+
 export const calculateHourlyRate = (
 	totalDuration: number,
 	rate: number

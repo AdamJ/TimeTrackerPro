@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { formatDuration, formatDate, formatTime, formatHoursDecimal } from "./timeUtil";
+import {
+  formatDuration,
+  formatDate,
+  formatTime,
+  formatHoursDecimal,
+  roundToNearest15Minutes,
+  formatTimeForInput,
+} from "./timeUtil";
 
 describe("timeUtil", () => {
 	describe("formatDuration", () => {
@@ -88,6 +95,66 @@ describe("timeUtil", () => {
 			const formatted = formatTime(date);
 
 			expect(formatted).toBeTruthy();
+		});
+	});
+
+	describe("roundToNearest15Minutes", () => {
+		it("rounds down to the previous quarter hour", () => {
+			const date = new Date(2026, 5, 15, 17, 7, 30);
+			const rounded = roundToNearest15Minutes(date);
+			expect(rounded.getHours()).toBe(17);
+			expect(rounded.getMinutes()).toBe(0);
+		});
+
+		it("rounds up to the next quarter hour", () => {
+			const date = new Date(2026, 5, 15, 17, 8, 0);
+			const rounded = roundToNearest15Minutes(date);
+			expect(rounded.getHours()).toBe(17);
+			expect(rounded.getMinutes()).toBe(15);
+		});
+
+		it("leaves an exact quarter hour unchanged", () => {
+			const date = new Date(2026, 5, 15, 17, 30, 0);
+			const rounded = roundToNearest15Minutes(date);
+			expect(rounded.getHours()).toBe(17);
+			expect(rounded.getMinutes()).toBe(30);
+		});
+
+		it("rolls over into the next hour", () => {
+			const date = new Date(2026, 5, 15, 10, 53, 0);
+			const rounded = roundToNearest15Minutes(date);
+			expect(rounded.getHours()).toBe(11);
+			expect(rounded.getMinutes()).toBe(0);
+		});
+
+		it("zeroes out seconds and milliseconds", () => {
+			const date = new Date(2026, 5, 15, 17, 30, 45, 500);
+			const rounded = roundToNearest15Minutes(date);
+			expect(rounded.getSeconds()).toBe(0);
+			expect(rounded.getMilliseconds()).toBe(0);
+		});
+
+		it("does not mutate the input date", () => {
+			const date = new Date(2026, 5, 15, 17, 7, 0);
+			roundToNearest15Minutes(date);
+			expect(date.getMinutes()).toBe(7);
+		});
+	});
+
+	describe("formatTimeForInput", () => {
+		it("formats a rounded time as zero-padded HH:MM", () => {
+			const date = new Date(2026, 5, 15, 9, 8, 0);
+			expect(formatTimeForInput(date)).toBe("09:15");
+		});
+
+		it("zero-pads single-digit hours and minutes", () => {
+			const date = new Date(2026, 5, 15, 1, 0, 0);
+			expect(formatTimeForInput(date)).toBe("01:00");
+		});
+
+		it("rolls over into the next hour when formatting", () => {
+			const date = new Date(2026, 5, 15, 10, 53, 0);
+			expect(formatTimeForInput(date)).toBe("11:00");
 		});
 	});
 });
