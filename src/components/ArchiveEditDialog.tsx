@@ -43,7 +43,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -58,10 +57,15 @@ import {
   AlertTriangle,
   RotateCcw,
 } from "lucide-react";
-import { formatDuration, formatDate } from "@/utils/timeUtil";
+import {
+  formatDuration,
+  formatDate,
+  roundToNearest15Minutes,
+  formatTimeForInput,
+} from "@/utils/timeUtil";
 import { DayRecord, Task } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
-import { TaskEditInArchiveDialog } from "@/components/TaskEditInArchiveDialog";
+import { ArchivedTaskRow } from "@/components/ArchivedTaskRow";
 import { useToast } from "@/hooks/use-toast";
 import { useUndoableDelete } from "@/hooks/useUndoableDelete";
 
@@ -72,23 +76,6 @@ interface ArchiveEditDialogProps {
 }
 
 // Helper functions
-function roundToNearest15Minutes(date: Date): Date {
-  const rounded = new Date(date);
-  const minutes = rounded.getMinutes();
-  const roundedMinutes = Math.round(minutes / 15) * 15;
-  rounded.setMinutes(roundedMinutes);
-  rounded.setSeconds(0);
-  rounded.setMilliseconds(0);
-  return rounded;
-}
-
-function formatTimeForInput(date: Date): string {
-  const rounded = roundToNearest15Minutes(date);
-  const hours = rounded.getHours().toString().padStart(2, "0");
-  const minutes = rounded.getMinutes().toString().padStart(2, "0");
-  return `${hours}:${minutes}`;
-}
-
 function formatDateForInput(date: Date): string {
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -130,16 +117,16 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
     restoreArchivedDay,
     restoreDeletedArchivedDay,
     categories,
+    projects,
     isDayStarted,
   } = useTimeTracking();
   const { toast } = useToast();
   const { confirmDelete } = useUndoableDelete<DayRecord>();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isSummaryEditing, setIsSummaryEditing] = useState(false);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const dayForm = useForm<DayFormValues>({
     resolver: zodResolver(dayFormSchema),
@@ -150,34 +137,61 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 
   const [tasks, setTasks] = useState<Task[]>([]);
 
+  // Finds the task whose endTime is latest — i.e. the last task worked in the
+  // day — so its end time can be kept in sync with the day's rounded end time.
+  const findLastTask = (taskList: Task[]): Task | undefined =>
+    taskList.reduce<Task | undefined>((latest, t) => {
+      if (!t.endTime) return latest;
+      if (!latest || !latest.endTime || t.endTime > latest.endTime) return t;
+      return latest;
+    }, undefined);
+
+  // Applies the same last-task-end-time rounding used for the day-form's own
+  // end time, so both land on the same value. This is the resting baseline
+  // tasks are compared against for dirty-checking — matching how dayForm's
+  // reset() below makes the rounded day time the new baseline rather than
+  // something that shows as an unsaved change on its own.
+  const getRoundedTasks = (taskList: Task[]): Task[] => {
+    const lastTask = findLastTask(taskList);
+    return taskList.map((t) =>
+      lastTask && t.id === lastTask.id && t.endTime
+        ? { ...t, endTime: roundToNearest15Minutes(t.endTime) }
+        : t,
+    );
+  };
+
+  // Resets the form/tasks back to the saved day. Only the displayed/staged
+  // last-task end time is rounded — its duration is left untouched (no
+  // silent recompute).
+  const resetFormState = () => {
+    dayForm.reset({
+      date: formatDateForInput(day.startTime),
+      startTime: formatTimeForInput(day.startTime),
+      endTime: formatTimeForInput(day.endTime),
+      notes: day.notes || "",
+    });
+    setTasks(getRoundedTasks(day.tasks));
+    setIsSummaryEditing(false);
+    setExpandedTaskId(null);
+    setShowDeleteConfirm(false);
+  };
+
   // Initialize form data when dialog opens
   useEffect(() => {
     if (isOpen && day) {
-      dayForm.reset({
-        date: formatDateForInput(day.startTime),
-        startTime: formatTimeForInput(day.startTime),
-        endTime: formatTimeForInput(day.endTime),
-        notes: day.notes || "",
-      });
-      setTasks([...day.tasks]);
-      setIsEditing(false);
-      setHasChanges(false);
-      setEditingTask(null);
-      setShowDeleteConfirm(false);
+      resetFormState();
     }
-    // dayForm is stable across renders; only re-run when the dialog/day changes
+    // dayForm/resetFormState are stable across renders; only re-run when the dialog/day changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [day, isOpen]);
 
-  // Track whether the form differs from the saved day
-  useEffect(() => {
-    if (!isEditing || !day) {
-      setHasChanges(false);
-      return;
-    }
-    const tasksChanged = JSON.stringify(tasks) !== JSON.stringify(day.tasks);
-    setHasChanges(dayFormIsDirty || tasksChanged);
-  }, [dayFormIsDirty, tasks, isEditing, day]);
+  // Any staged edit — day form or task rows — enables Save Changes, regardless
+  // of whether the day-summary editor was ever opened. Tasks are compared
+  // against the rounded baseline (not the raw day.tasks) so the automatic
+  // last-task rounding alone doesn't look like an unsaved change.
+  const tasksChanged =
+    JSON.stringify(tasks) !== JSON.stringify(getRoundedTasks(day.tasks));
+  const hasChanges = dayFormIsDirty || tasksChanged;
 
   const parseTimeInput = (timeStr: string, baseDate: Date): Date => {
     if (!timeStr || !timeStr.includes(":")) {
@@ -217,38 +231,29 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
     newEndTime.setMonth(selectedDate.getMonth());
     newEndTime.setDate(selectedDate.getDate());
 
-    // Determine whether tasks need to be included in the update payload.
-    // A date change shifts every task's timestamps, so always send tasks then.
-    // Otherwise only send tasks if the user explicitly edited them.
-    const dateChanged = dayData.date !== formatDateForInput(day.startTime);
-    const tasksContentChanged =
-      JSON.stringify(tasks) !== JSON.stringify(day.tasks);
-    const needsTaskUpdate = dateChanged || tasksContentChanged;
+    // Re-stamp every task's date to match the day (a no-op for Y/M/D when the
+    // date hasn't changed) and always send the full staged tasks array — the
+    // currently-staged tasks include the last task's rounded end time, which
+    // must persist together with the day even if only the day fields changed.
+    const updatedTasks = tasks.map((task) => {
+      const newTaskStartTime = new Date(task.startTime);
+      newTaskStartTime.setFullYear(selectedDate.getFullYear());
+      newTaskStartTime.setMonth(selectedDate.getMonth());
+      newTaskStartTime.setDate(selectedDate.getDate());
 
-    // Re-stamp task timestamps only when necessary
-    const updatedTasks = needsTaskUpdate
-      ? tasks.map((task) => {
-          const newTaskStartTime = new Date(task.startTime);
-          newTaskStartTime.setFullYear(selectedDate.getFullYear());
-          newTaskStartTime.setMonth(selectedDate.getMonth());
-          newTaskStartTime.setDate(selectedDate.getDate());
+      const newTaskEndTime = task.endTime ? new Date(task.endTime) : undefined;
+      if (newTaskEndTime) {
+        newTaskEndTime.setFullYear(selectedDate.getFullYear());
+        newTaskEndTime.setMonth(selectedDate.getMonth());
+        newTaskEndTime.setDate(selectedDate.getDate());
+      }
 
-          const newTaskEndTime = task.endTime
-            ? new Date(task.endTime)
-            : undefined;
-          if (newTaskEndTime) {
-            newTaskEndTime.setFullYear(selectedDate.getFullYear());
-            newTaskEndTime.setMonth(selectedDate.getMonth());
-            newTaskEndTime.setDate(selectedDate.getDate());
-          }
-
-          return {
-            ...task,
-            startTime: newTaskStartTime,
-            endTime: newTaskEndTime,
-          };
-        })
-      : tasks;
+      return {
+        ...task,
+        startTime: newTaskStartTime,
+        endTime: newTaskEndTime,
+      };
+    });
 
     const updatedDay: Partial<DayRecord> = {
       date: newStartTime.toDateString(),
@@ -256,13 +261,14 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
       endTime: newEndTime,
       notes: dayData.notes || undefined,
       totalDuration: calculateTotalDuration(updatedTasks),
-      ...(needsTaskUpdate ? { tasks: updatedTasks } : {}),
+      tasks: updatedTasks,
     };
 
     setIsSaving(true);
     try {
       await updateArchivedDay(day.id, updatedDay);
-      setIsEditing(false);
+      setIsSummaryEditing(false);
+      setExpandedTaskId(null);
     } catch (error) {
       console.error("Failed to save archived day:", error);
       toast({
@@ -279,7 +285,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
     deleteArchivedDay(day.id);
     confirmDelete(day, restoreDeletedArchivedDay, {
       title: "Archived day deleted",
-      description: `"${formatDate(day.date)}" has been removed.`,
+      description: `"${formatDate(day.startTime)}" has been removed.`,
     });
     onClose();
   };
@@ -299,16 +305,12 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
     onClose();
   };
 
-  const handleTaskEdit = (task: Task) => {
-    setEditingTask(task);
-  };
-
   const handleTaskSave = (updatedTask: Task) => {
     const updatedTasks = tasks.map((t) =>
       t.id === updatedTask.id ? updatedTask : t,
     );
     setTasks(updatedTasks);
-    setEditingTask(null);
+    setExpandedTaskId(null);
   };
 
   const handleTaskDelete = (taskId: string) => {
@@ -317,16 +319,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   };
 
   const handleCancel = () => {
-    // Reset to original values
-    dayForm.reset({
-      date: formatDateForInput(day.startTime),
-      startTime: formatTimeForInput(day.startTime),
-      endTime: formatTimeForInput(day.endTime),
-      notes: day.notes || "",
-    });
-    setTasks([...day.tasks]);
-    setIsEditing(false);
-    setEditingTask(null);
+    resetFormState();
   };
 
   return (
@@ -343,80 +336,63 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 
         <div className="space-y-6 overflow-x-hidden">
           <div className="flex flex-wrap justify-center sm:justify-end items-center gap-3 my-4">
-            {!isEditing ? (
-              <>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      onClick={handleRestoreDay}
-                      variant="outline"
-                      size="sm"
-                      aria-label="Restore this day"
-                      className="text-blue-11 hover:text-blue-12"
-                      autoFocus
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                      <span className="hidden md:block md:ml-2">Restore</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Restore this day</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      onClick={() => setShowDeleteConfirm(true)}
-                      variant="destructive"
-                      size="sm"
-                      aria-label="Delete this day"
-                      className="text-white"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span className="hidden md:block md:ml-2">Delete</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Delete this day</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      onClick={() => setIsEditing(true)}
-                      variant="default"
-                      size="sm"
-                      aria-label="Edit this day"
-                    >
-                      <Edit className="w-4 h-4" />
-                      <span className="hidden md:block md:ml-2">Edit</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Edit this day</TooltipContent>
-                </Tooltip>
-              </>
-            ) : (
-              <>
-                <Button onClick={handleCancel} variant="outline" size="sm">
-                  Cancel
-                </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
-                  onClick={dayForm.handleSubmit(handleSaveDay)}
+                  onClick={handleRestoreDay}
+                  variant="outline"
                   size="sm"
-                  disabled={!hasChanges || isSaving}
+                  aria-label="Restore this day"
+                  className="text-blue-11 hover:text-blue-12"
+                  autoFocus
                 >
-                  {isSaving ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4 mr-2" />
-                  )}
-                  {isSaving
-                    ? "Saving..."
-                    : hasChanges
-                      ? "Save Changes"
-                      : "No Changes"}
+                  <RotateCcw className="w-4 h-4" />
+                  <span className="hidden md:block md:ml-2">Restore</span>
                 </Button>
-              </>
-            )}
+              </TooltipTrigger>
+              <TooltipContent>Restore this day</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  variant="destructive"
+                  size="sm"
+                  aria-label="Delete this day"
+                  className="text-white"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="hidden md:block md:ml-2">Delete</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Delete this day</TooltipContent>
+            </Tooltip>
+            <Button
+              onClick={handleCancel}
+              variant="outline"
+              size="sm"
+              disabled={!hasChanges}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={dayForm.handleSubmit(handleSaveDay)}
+              size="sm"
+              disabled={!hasChanges || isSaving}
+            >
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              {isSaving
+                ? "Saving..."
+                : hasChanges
+                  ? "Save Changes"
+                  : "No Changes"}
+            </Button>
           </div>
-          {/* Day Summary */}
-          {isEditing && (
+          {(isSummaryEditing || expandedTaskId !== null) && (
             <Callout.Root size="1" variant="soft">
               <Callout.Icon>
                 <InfoCircledIcon />
@@ -428,12 +404,44 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
               </Callout.Text>
             </Callout.Root>
           )}
+          {hasChanges && (
+            <Callout.Root size="1" variant="warning">
+              <Callout.Icon>
+                <InfoCircledIcon />
+              </Callout.Icon>
+              <Callout.Text>
+                You have unsaved changes. Click "Save Changes" to persist
+                them, or "Cancel" to discard.
+              </Callout.Text>
+            </Callout.Root>
+          )}
           <Card className="mb-4">
             <CardHeader>
-              <CardTitle className="text-lg">Summary of Day</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Summary of Day</CardTitle>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => setIsSummaryEditing((prev) => !prev)}
+                      variant="outline"
+                      size="sm"
+                      aria-label={
+                        isSummaryEditing
+                          ? "Close day summary editor"
+                          : "Edit day summary"
+                      }
+                    >
+                      <Edit className="w-3 h-3" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {isSummaryEditing ? "Close" : "Edit day summary"}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
             </CardHeader>
             <CardContent>
-              {isEditing ? (
+              {isSummaryEditing ? (
                 <Form {...dayForm}>
                   <div className="space-y-4">
                     <FormField
@@ -588,102 +596,24 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                       <TableHead>Start Time</TableHead>
                       <TableHead>End Time</TableHead>
                       <TableHead>Duration</TableHead>
-                      {isEditing && <TableHead>Actions</TableHead>}
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {tasks.map((task) => {
-                      const category = categories.find(
-                        (c) => c.id === task.category,
-                      );
-                      return (
-                        <TableRow key={task.id}>
-                          <TableCell className="font-medium">
-                            <div className="min-w-[150px]">
-                              <div>{task.title}</div>
-                              <span className="hidden lg:block">
-                                {task.description && (
-                                  <div className="text-sm text-muted-foreground mt-1">
-                                    <MarkdownDisplay
-                                      content={task.description}
-                                    />
-                                  </div>
-                                )}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {category && (
-                              <div className="flex items-center space-x-2 min-w-[120px]">
-                                <div
-                                  className="w-3 h-3 rounded-full"
-                                  style={{ backgroundColor: category.color }}
-                                />
-                                <span className="text-sm">{category.name}</span>
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {task.project && (
-                              <div className="min-w-[120px]">
-                                <div className="text-sm font-medium">
-                                  {task.project}
-                                </div>
-                                {task.client && (
-                                  <div className="text-xs text-muted-foreground">
-                                    {task.client}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell className="whitespace-nowrap">
-                            {formatTime12Hour(task.startTime)}
-                          </TableCell>
-                          <TableCell className="whitespace-nowrap">
-                            {task.endTime
-                              ? formatTime12Hour(task.endTime)
-                              : "-"}
-                          </TableCell>
-                          <TableCell className="whitespace-nowrap">
-                            {formatDuration(task.duration || 0)}
-                          </TableCell>
-                          {isEditing && (
-                            <TableCell>
-                              <div className="flex space-x-2">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      onClick={() => handleTaskEdit(task)}
-                                      size="sm"
-                                      variant="outline"
-                                      aria-label="Edit task"
-                                    >
-                                      <Edit className="w-3 h-3" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Edit task</TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      onClick={() => handleTaskDelete(task.id)}
-                                      size="sm"
-                                      variant="destructive"
-                                      aria-label="Delete task"
-                                      className="text-white"
-                                    >
-                                      <Trash2 className="w-3 h-3" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Delete task</TooltipContent>
-                                </Tooltip>
-                              </div>
-                            </TableCell>
-                          )}
-                        </TableRow>
-                      );
-                    })}
+                    {tasks.map((task) => (
+                      <ArchivedTaskRow
+                        key={task.id}
+                        task={task}
+                        isExpanded={expandedTaskId === task.id}
+                        onToggleExpand={(id) =>
+                          setExpandedTaskId((cur) => (cur === id ? null : id))
+                        }
+                        onSave={handleTaskSave}
+                        onDelete={handleTaskDelete}
+                        categories={categories}
+                        projects={projects}
+                      />
+                    ))}
                   </TableBody>
                 </Table>
               </div>
@@ -727,16 +657,6 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
             </Card>
           )}
         </div>
-
-        {/* Task Edit Dialog */}
-        {editingTask && (
-          <TaskEditInArchiveDialog
-            task={editingTask}
-            isOpen={!!editingTask}
-            onClose={() => setEditingTask(null)}
-            onSave={handleTaskSave}
-          />
-        )}
 
         <AlertDialog
           open={showRestoreDialog}

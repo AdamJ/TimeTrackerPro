@@ -28,6 +28,7 @@ import {
   parseCSVImport
 } from '@/utils/exportUtils';
 import { parseTaskChecklist } from '@/utils/checklistUtils';
+import { roundToNearest15Minutes } from '@/utils/timeUtil';
 import { SCHEMA_VERSION } from '@/services/localStorageService';
 import { useElectronBackup } from '@/hooks/useElectronBackup';
 
@@ -733,12 +734,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const startDay = useCallback((startDateTime?: Date) => {
     const now = startDateTime || new Date();
-
-    // Round to nearest 15 minutes
-    const minutes = now.getMinutes();
-    const roundedMinutes = Math.round(minutes / 15) * 15;
-    const roundedTime = new Date(now);
-    roundedTime.setMinutes(roundedMinutes, 0, 0);
+    const roundedTime = roundToNearest15Minutes(now);
 
     setIsDayStarted(true);
     setDayStartTime(roundedTime);
@@ -1354,16 +1350,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Time adjustment function (rounds to nearest 15 minutes)
   const adjustTaskTime = useCallback((taskId: string, startTime: Date, endTime?: Date) => {
-    const roundToNearestQuarter = (date: Date): Date => {
-      const minutes = date.getMinutes();
-      const roundedMinutes = Math.round(minutes / 15) * 15;
-      const newDate = new Date(date);
-      newDate.setMinutes(roundedMinutes, 0, 0);
-      return newDate;
-    };
-
-    const roundedStartTime = roundToNearestQuarter(startTime);
-    const roundedEndTime = endTime ? roundToNearestQuarter(endTime) : undefined;
+    const roundedStartTime = roundToNearest15Minutes(startTime);
+    const roundedEndTime = endTime ? roundToNearest15Minutes(endTime) : undefined;
 
     setTasks(prev =>
       prev.map(task => {

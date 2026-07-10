@@ -373,6 +373,7 @@ src/
 │   ├── ArchiveEditDialog.tsx
 │   ├── ArchiveFilter.tsx
 │   ├── ArchiveItem.tsx
+│   ├── ArchivedTaskRow.tsx        # Inline expandable task-edit row used by ArchiveEditDialog
 │   ├── AuthDialog.tsx
 │   ├── BackdatedEntryDialog.tsx
 │   ├── CategoryManagement.tsx
@@ -402,7 +403,6 @@ src/
 │   ├── SummaryOutput.tsx
 │   ├── SyncStatus.tsx
 │   ├── TaskEditDialog.tsx
-│   ├── TaskItemInArchiveDialog.tsx
 │   ├── TaskItem.tsx
 │   ├── TaskTrackingPanel.tsx
 │   ├── UpdateNotification.tsx

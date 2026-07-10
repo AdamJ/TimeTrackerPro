@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Archived-day task editing moved from a separate modal (`TaskEditInArchiveDialog`) to inline expandable rows (`ArchivedTaskRow`) within `ArchiveEditDialog`, and the whole-day Edit/view toggle was replaced with always-editable form fields plus a per-row expand — Save/Cancel are enabled whenever any staged edit (day fields or task rows) differs from the saved day, rather than only after entering a dedicated edit mode. Also fixed a rounding inconsistency where the day's end time was rounded to the nearest 15 minutes but the last task's end time was not, leaving a gap between the two; the last task's end time is now rounded to match, both when staging edits and when displaying the resting (unedited) state, via a shared `roundToNearest15Minutes` helper moved to `src/utils/timeUtil.ts`
+  — `src/components/ArchivedTaskRow.tsx` (new), `src/components/ArchivedTaskRow.test.tsx` (new), `src/components/ArchiveEditDialog.tsx`, `src/components/ArchiveEditDialog.test.tsx`, `src/components/TaskEditInArchiveDialog.tsx` (removed), `src/utils/timeUtil.ts`, `src/utils/timeUtil.test.ts`, `src/contexts/TimeTrackingContext.tsx`
+
 ### Security
 
 - `ai-proxy` Edge Function accepted requests from any origin (`Access-Control-Allow-Origin: "*"`) with no auth check, letting any site consume the project's Gemini quota. Replaced the wildcard with an origin allowlist (production domain, Cloudflare Pages default + branch-preview domains, local dev, the Electron `app://localhost` origin); requests from other origins now get a 403 before any model call is made. Auth wasn't made a hard requirement since the AI summary feature is also used in guest (unauthenticated) mode
