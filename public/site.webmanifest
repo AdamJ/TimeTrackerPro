@@ -10,13 +10,13 @@
   "scope": "/",
   "icons": [
     {
-      "src": "/web-app-manifest-192x192.png",
+      "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/web-app-manifest-512x512.png",
+      "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -25,18 +25,60 @@
   "categories": ["productivity", "business", "utilities"],
   "screenshots": [
     {
-      "src": "/screenshots/desktop-1.png",
+      "src": "/screenshots/TimeTrackerPro-1920x1080.png",
       "sizes": "1920x1080",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Timetraked Dashboard"
     },
     {
-      "src": "/screenshots/mobile-1.png",
+      "src": "/screenshots/TimeTrackerPro-750x1334.png",
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Timetraked Mobile View"
+    },
+    {
+      "src": "/screenshots/EnteredTime-1920x1080.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tracking time with Timetraked"
+    },
+    {
+      "src": "/screenshots/EnteredTime-750x1334.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tracking time with Timetraked Mobile View"
+    },
+    {
+      "src": "/screenshots/Categories-1920x1080.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Categories available in Timetraked"
+    },
+    {
+      "src": "/screenshots/Categories-750x1334.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Categories available in Timetraked Mobile View"
+    },
+    {
+      "src": "/screenshots/Settings-1920x1080.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Settings page in Timetraked"
+    },
+    {
+      "src": "/screenshots/Settings-750x1334.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Settings page in Timetraked Mobile View"
     }
   ],
   "shortcuts": [

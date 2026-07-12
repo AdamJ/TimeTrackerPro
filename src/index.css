@@ -331,9 +331,6 @@
   }
 }
 
-@layer utilities {
-}
-
 @layer base {
   :root {
     --background: oklch(1 0 0);
@@ -353,8 +350,6 @@
     --destructive: oklch(0.577 0.245 27.325);
     --destructive-foreground: oklch(0.977 0.013 236.62);
     --text-destructive: var(--destructive);
-    --bg-destructive: var(--destructive);
-    --text-foreground-destructive: var(--secondary);
     --border: oklch(0.925 0.005 214.3);
     --input: oklch(0.925 0.005 214.3);
     --ring: oklch(0.723 0.014 214.4);
@@ -418,14 +413,6 @@
   .text-destructive {
     color: var(--text-destructive);
   }
-
-  .bg-foreground-destructive {
-    background-color: var(--bg-destructive);
-  }
-
-  .text-foreground-destructive {
-    color: var(--text-foreground-destructive);
-  }
 }
 
 @layer base {
@@ -443,20 +430,4 @@
     border: none !important;
     border-width: 0 !important;
   }
-}
-
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-.-mx-\(--card-spacing\) {
-  margin-inline: calc(var(--card-spacing) * -1);
-}
-
-.text-inverted-foreground {
-  color: var(--inverted-foreground);
 }
