@@ -87,14 +87,6 @@ body {
   overscroll-behavior-y: contain;
 }
 
-/* Restore native rubber-band bounce on iOS — body is fixed/overflow:hidden there
-   so this applies to #root (the actual scroll container). */
-@supports (-webkit-touch-callout: none) {
-  #root {
-    overscroll-behavior-y: auto;
-  }
-}
-
 /* Improve button touch targets on mobile */
 @media (max-width: 768px) {
   button:not([aria-hidden='true']) {
@@ -163,82 +155,10 @@ body {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Ensure focused inputs scroll into view above the keyboard with enough clearance */
-@supports (-webkit-touch-callout: none) {
-  input:focus,
-  textarea:focus,
-  select:focus {
-    scroll-margin-bottom: 24px;
-  }
-}
-
-/* iOS specific fixes */
-@supports (-webkit-touch-callout: none) {
-  /* Fix iOS safari bounce */
-  body {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
-
-  #root {
-    overflow-y: auto;
-    height: 100%;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Fix iOS input zoom */
-  input[type='text'],
-  input[type='email'],
-  input[type='password'],
-  input[type='number'],
-  select,
-  textarea {
-    font-size: 16px !important;
-  }
-
-  /* iOS PWA bottom navigation fix */
-  .mobile-nav-ios {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 9999;
-    padding-bottom: env(safe-area-inset-bottom);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    background-color: rgba(255, 255, 255, 0.95);
-  }
-
-  /* Dark mode support for iOS navigation */
-  .dark .mobile-nav-ios {
-    background-color: rgba(9, 9, 11, 0.95);
-  }
-
-  /* Ensure body padding accounts for nav + safe area */
-  @media (max-width: 768px) {
-    body {
-      padding-bottom: 0 !important;
-    }
-
-    #root {
-      padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
-    }
-  }
-}
-
 /* Prevent scroll from leaking through open bottom sheets to the page beneath */
 [data-vaul-drawer] {
   touch-action: pan-y;
   overscroll-behavior: contain;
-}
-
-/* Lift the floating action button above the mobile nav + home indicator */
-@supports (-webkit-touch-callout: none) {
-  .fab-nav-offset {
-    bottom: calc(4rem + env(safe-area-inset-bottom, 0px)) !important;
-  }
 }
 
 /* Page transitions via CSS View Transitions API */
