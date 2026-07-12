@@ -22,12 +22,6 @@ body {
   }
 }
 
-/* Touch-friendly minimum sizes */
-.touch-target {
-  min-width: 44px;
-  min-height: 44px;
-}
-
 /* Smooth scrolling for PWA */
 html {
   scroll-behavior: smooth;
@@ -54,12 +48,6 @@ button,
   header {
     height: 48px;
   }
-
-  /* Reduce vertical padding in landscape */
-  .landscape-compact {
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-  }
 }
 
 /* Standalone mode specific styles (when app is installed) */
@@ -74,11 +62,6 @@ button,
     height: 2px;
     background: linear-gradient(90deg, #3b82f6, #8b5cf6);
     z-index: 9999;
-  }
-
-  /* Hide browser UI elements */
-  .browser-only {
-    display: none !important;
   }
 }
 
@@ -109,58 +92,12 @@ body {
 
 /* Improve input targets on mobile */
 @media (max-width: 768px) {
-  input:not([aria-hidden='true']),
-  textarea:not([aria-hidden='true']),
-  select:not([aria-hidden='true']) {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  button[role="checkbox"] {
-    min-height: 24px;
-    min-width: 24px;
-  }
-}
-
-/* Improve input targets on mobile */
-@media (max-width: 768px) {
   input:not([aria-hidden="true"]),
   textarea:not([aria-hidden="true"]),
   select:not([aria-hidden="true"]) {
     min-height: 44px;
     min-width: 44px;
   }
-}
-
-/* Loading states for PWA */
-.pwa-loading {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
-}
-
-/* Offline indicator */
-.offline-badge {
-  position: fixed;
-  top: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #ef4444;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  z-index: 9999;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 /* Ensure focused inputs scroll into view above the keyboard with enough clearance */
@@ -196,24 +133,6 @@ body {
   select,
   textarea {
     font-size: 16px !important;
-  }
-
-  /* iOS PWA bottom navigation fix */
-  .mobile-nav-ios {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 9999;
-    padding-bottom: env(safe-area-inset-bottom);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    background-color: rgba(255, 255, 255, 0.95);
-  }
-
-  /* Dark mode support for iOS navigation */
-  .dark .mobile-nav-ios {
-    background-color: rgba(9, 9, 11, 0.95);
   }
 
   /* Ensure body padding accounts for nav + safe area */
@@ -260,14 +179,5 @@ body {
 
   ::view-transition-old(root) {
     animation: none;
-  }
-}
-
-/* Android specific fixes */
-@media (max-width: 768px) {
-  /* Prevent address bar from covering content */
-  .mobile-viewport {
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
   }
 }

@@ -19,33 +19,10 @@ export default defineConfig({
         "favicon.ico",
         "apple-touch-icon.png",
         "robots.txt",
-        "print.css"
+        "print.css",
+        "site.webmanifest"
       ],
-      manifest: {
-        name: "Timetraked",
-        short_name: "Timetraked",
-        description: "Professional time tracking for freelancers and consultants",
-        theme_color: "#3b82f6",
-        background_color: "#ffffff",
-        display: "standalone",
-        orientation: "any",
-        scope: "/",
-        start_url: "/",
-        icons: [
-          {
-            "src": "/web-app-manifest-192x192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "any maskable"
-          },
-          {
-            "src": "/web-app-manifest-512x512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any maskable"
-          }
-        ]
-      },
+      manifest: false,
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,woff,woff2}"],
         cleanupOutdatedCaches: true,

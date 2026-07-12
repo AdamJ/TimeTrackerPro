@@ -405,7 +405,6 @@ src/
 │   ├── TaskEditDialog.tsx
 │   ├── TaskItem.tsx
 │   ├── TaskTrackingPanel.tsx
-│   ├── UpdateNotification.tsx
 │   └── UserMenu.tsx
 ├── config/
 │   ├── categories.ts             # Default categories
