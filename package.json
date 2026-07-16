@@ -1,7 +1,7 @@
 {
   "name": "timetraked",
   "private": true,
-  "version": "1.9.3",
+  "version": "1.10.0",
   "author": "Adam Jolicoeur",
   "description": "A time tracking application built for freelancers, consultants, and professionals who need to track time, manage projects, and generate invoices.",
   "type": "module",
