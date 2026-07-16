@@ -748,7 +748,13 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [dataService, tasks]);
 
   const endDay = useCallback((endDateTime?: Date) => {
-    const effectiveEndTime = endDateTime ?? new Date();
+    // Round the same way startDay rounds dayStartTime — otherwise the
+    // archived day's end time (and the last task's endTime, which mirrors
+    // it here) stays at the exact clock-out timestamp while every place
+    // that displays it (ArchiveEditDialog, TaskEditDialog, etc.) rounds to
+    // the nearest 15 minutes, producing a mismatch between what's shown
+    // and what was actually persisted.
+    const effectiveEndTime = roundToNearest15Minutes(endDateTime ?? new Date());
     let finalTasks = tasks;
     if (currentTask) {
       const duration = effectiveEndTime.getTime() - currentTask.startTime.getTime();
