@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Manual save now shows a toast confirming the save succeeded, or reporting failure so it isn't silently swallowed. Applies to all three manual-save entry points that share the same handler: the `Cmd/Ctrl+S` keyboard shortcut, the Command Palette's "Save Changes" action, and the Electron menu's Save item. `forceSyncToDatabase` now resolves a `boolean` (`true` on full success, `false` if any save failed) instead of `void`, so callers can react to the outcome
+  — `src/contexts/TimeTrackingContext.tsx`, `src/App.tsx`, `src/contexts/TimeTrackingContext.forceSync.test.tsx` (new)
+
 ### Changed
 
 - Archived-day task editing moved from a separate modal (`TaskEditInArchiveDialog`) to inline expandable rows (`ArchivedTaskRow`) within `ArchiveEditDialog`, and the whole-day Edit/view toggle was replaced with always-editable form fields plus a per-row expand — Save/Cancel are enabled whenever any staged edit (day fields or task rows) differs from the saved day, rather than only after entering a dedicated edit mode. Also fixed a rounding inconsistency where the day's end time was rounded to the nearest 15 minutes but the last task's end time was not, leaving a gap between the two; the last task's end time is now rounded to match, both when staging edits and when displaying the resting (unedited) state, via a shared `roundToNearest15Minutes` helper moved to `src/utils/timeUtil.ts`

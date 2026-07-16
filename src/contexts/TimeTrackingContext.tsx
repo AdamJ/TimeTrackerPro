@@ -152,7 +152,7 @@ interface TimeTrackingContextType {
   lastSyncTime: Date | null;
   hasUnsavedChanges: boolean;
   refreshFromDatabase: () => void;
-  forceSyncToDatabase: () => void; // Manual sync function
+  forceSyncToDatabase: () => Promise<boolean>; // Manual sync function; resolves false on any save failure
 
   // Archive state
   archivedDays: DayRecord[];
@@ -601,7 +601,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   // Manual sync function - saves ALL data types
   const forceSyncToDatabase = useCallback(async () => {
     if (!dataService) {
-      return;
+      return false;
     }
 
     setIsSyncing(true);
@@ -625,14 +625,16 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           failed.map((f) => (f as PromiseRejectedResult).reason)
         );
         // Do not mark sync as successful when any save failed
-        return;
+        return false;
       }
 
       setLastSyncTime(new Date());
       setHasUnsavedChanges(false);
       writeBackupDebounced(buildFullSnapshot());
+      return true;
     } catch (error) {
       console.error('❌ Manual sync failed:', error);
+      return false;
     } finally {
       setIsSyncing(false);
     }
