@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `endDay` persisted the exact clock-out timestamp instead of rounding it to the nearest 15 minutes the way `startDay` already rounds the day's start time, so the archived day's `endTime` (and the last task's mirrored `endTime`) kept its raw seconds-precise value while `ArchiveEditDialog`'s Tasks table and day-summary form independently rounded the same values for display — producing a visible mismatch between the "posted"/persisted end time and what the edit dialog showed. `endDay` now rounds the effective end time at the source, so archived data and its display agree
+  — `src/contexts/TimeTrackingContext.tsx`, `src/contexts/TimeTracking.test.tsx`
 - PWA manifest was duplicated three ways: `public/manifest.json` was an orphaned copy nothing linked to, and VitePWA's `manifest` option in `vite.config.ts` generated a second `manifest.webmanifest` that got injected into `dist/index.html` alongside the hand-maintained `<link rel="manifest" href="/site.webmanifest">`, leaving two manifest links in the built page. The actually-used `site.webmanifest` also pointed at screenshot files that don't exist (`desktop-1.png`/`mobile-1.png`). Deleted the orphaned JSON, set `manifest: false` on the VitePWA plugin, and fixed `site.webmanifest`'s screenshot list to reference the real files
   — `public/manifest.json` (removed), `public/site.webmanifest`, `vite.config.ts`
 - `public/web-app-manifest-192x192.png`/`512x512.png` were byte-identical duplicates of `public/icons/icon-192x192.png`/`icon-512x512.png`. Removed the top-level duplicates and pointed the manifest's icons at `icons/`

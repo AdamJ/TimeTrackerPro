@@ -72,6 +72,47 @@ describe("TimeTrackingContext", () => {
 			});
 		});
 
+		it("should round the day end time and the last task's end time to the nearest 15 minutes, matching startDay's rounding", async () => {
+			const { result } = renderHook(() => useTimeTracking(), { wrapper });
+
+			await act(async () => {
+				const startTime = new Date("2024-12-03T09:00:00.000Z");
+				result.current.startDay(startTime);
+			});
+
+			await waitFor(() => {
+				expect(result.current.isDayStarted).toBe(true);
+			});
+
+			await act(async () => {
+				result.current.startNewTask("Test Task", "Testing");
+			});
+
+			await act(async () => {
+				// 17:07 should round down to 17:00, same as roundToNearest15Minutes
+				result.current.endDay(new Date("2024-12-03T17:07:00.000Z"));
+			});
+
+			await waitFor(() => {
+				expect(result.current.isDayStarted).toBe(false);
+			});
+
+			await act(async () => {
+				result.current.postDay("Test notes");
+			});
+
+			await waitFor(() => {
+				expect(result.current.archivedDays.length).toBeGreaterThan(0);
+			});
+
+			const archived =
+				result.current.archivedDays[result.current.archivedDays.length - 1];
+			expect(archived.endTime.toISOString()).toBe("2024-12-03T17:00:00.000Z");
+			expect(archived.tasks[0].endTime?.toISOString()).toBe(
+				"2024-12-03T17:00:00.000Z",
+			);
+		});
+
 		it("should calculate total day duration correctly", async () => {
 			const { result } = renderHook(() => useTimeTracking(), { wrapper });
 
