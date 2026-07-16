@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { useElectronMenuActions } from "@/hooks/useElectronMenuActions";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useCallback, useState } from "react";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { PwaUpdatePrompt } from "@/components/PwaUpdatePrompt";
 import { BackgroundTimerNotifier } from "@/components/BackgroundTimerNotifier";
@@ -28,6 +28,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "./components/ui/separator";
+import { toast } from "@/hooks/use-toast";
 
 // Lazy load pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -64,13 +65,29 @@ const AppShell = () => {
   const openCommandPalette = () => setShowCommandPalette(true);
   const openShortcutsHelp = () => setShowShortcutsHelp(true);
 
+  const handleSave = useCallback(async () => {
+    const success = await forceSyncToDatabase();
+    if (success) {
+      toast({
+        title: "Saved",
+        description: "Your changes have been saved.",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Save failed",
+        description: "Your changes could not be saved. Please try again.",
+      });
+    }
+  }, [forceSyncToDatabase]);
+
   useElectronMenuActions({
-    onSave: forceSyncToDatabase,
+    onSave: handleSave,
     onOpenCommandPalette: openCommandPalette,
     onOpenShortcutsHelp: openShortcutsHelp,
   });
   useKeyboardShortcuts({
-    onSave: forceSyncToDatabase,
+    onSave: handleSave,
     onOpenCommandPalette: openCommandPalette,
     onOpenShortcutsHelp: openShortcutsHelp,
   });
@@ -134,7 +151,7 @@ const AppShell = () => {
       <CommandPalette
         open={showCommandPalette}
         onOpenChange={setShowCommandPalette}
-        onSave={forceSyncToDatabase}
+        onSave={handleSave}
       />
       <KeyboardShortcutsDialog open={showShortcutsHelp} onOpenChange={setShowShortcutsHelp} />
     </SidebarProvider>
