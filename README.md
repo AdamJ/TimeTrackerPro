@@ -60,7 +60,7 @@ pnpm preview             # Preview production build
 
 # Code Quality
 pnpm lint                # ESLint
-pnpm test                # Vitest unit tests (187 tests across 14 files)
+pnpm test                # Vitest unit tests (395 tests across 38 files)
 
 # PWA Screenshots
 pnpm screenshots:install   # Install Playwright (first time)
