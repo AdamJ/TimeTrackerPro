@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Sheet,
   SheetContent,
@@ -6,9 +9,16 @@ import {
   SheetTitle,
   SheetFooter,
 } from "@/components/ui/sheet";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { Client } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
@@ -21,6 +31,34 @@ interface ClientSheetProps {
   client?: Client;
 }
 
+const clientFormSchema = z.object({
+  name: z.string().trim().min(1, "Client name is required"),
+  addressStreet: z.string().trim(),
+  addressCity: z.string().trim(),
+  addressState: z.string().trim(),
+  addressZip: z.string().trim(),
+  addressCountry: z.string().trim(),
+  contactName: z.string().trim(),
+  contactEmail: z.string().trim().refine((val) => !val || z.string().email().safeParse(val).success, {
+    message: "Enter a valid email address",
+  }),
+  contactWebsite: z.string().trim(),
+});
+
+type ClientFormValues = z.infer<typeof clientFormSchema>;
+
+const defaultFormValues: ClientFormValues = {
+  name: "",
+  addressStreet: "",
+  addressCity: "",
+  addressState: "",
+  addressZip: "",
+  addressCountry: "",
+  contactName: "",
+  contactEmail: "",
+  contactWebsite: "",
+};
+
 export const ClientSheet: React.FC<ClientSheetProps> = ({
   open,
   onOpenChange,
@@ -29,58 +67,45 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
 }) => {
   const { addClient, updateClient, persistClient } = useTimeTracking();
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [name, setName] = useState("");
-  const [addressStreet, setAddressStreet] = useState("");
-  const [addressCity, setAddressCity] = useState("");
-  const [addressState, setAddressState] = useState("");
-  const [addressZip, setAddressZip] = useState("");
-  const [addressCountry, setAddressCountry] = useState("");
-  const [contactName, setContactName] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
-  const [contactWebsite, setContactWebsite] = useState("");
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  const form = useForm<ClientFormValues>({
+    resolver: zodResolver(clientFormSchema),
+    mode: "onBlur",
+    defaultValues: defaultFormValues,
+  });
 
   useEffect(() => {
     if (!open) return;
     if (mode === "edit" && client) {
-      setName(client.name);
-      setAddressStreet(client.addressStreet ?? "");
-      setAddressCity(client.addressCity ?? "");
-      setAddressState(client.addressState ?? "");
-      setAddressZip(client.addressZip ?? "");
-      setAddressCountry(client.addressCountry ?? "");
-      setContactName(client.contactName ?? "");
-      setContactEmail(client.contactEmail ?? "");
-      setContactWebsite(client.contactWebsite ?? "");
+      form.reset({
+        name: client.name,
+        addressStreet: client.addressStreet ?? "",
+        addressCity: client.addressCity ?? "",
+        addressState: client.addressState ?? "",
+        addressZip: client.addressZip ?? "",
+        addressCountry: client.addressCountry ?? "",
+        contactName: client.contactName ?? "",
+        contactEmail: client.contactEmail ?? "",
+        contactWebsite: client.contactWebsite ?? "",
+      });
     } else {
-      setName("");
-      setAddressStreet("");
-      setAddressCity("");
-      setAddressState("");
-      setAddressZip("");
-      setAddressCountry("");
-      setContactName("");
-      setContactEmail("");
-      setContactWebsite("");
+      form.reset(defaultFormValues);
     }
     setIsSaving(false);
-  }, [open, mode, client]);
+  }, [open, mode, client, form]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) return;
-
+  const onSubmit = async (values: ClientFormValues) => {
     const data = {
-      name: trimmed,
-      addressStreet: addressStreet.trim() || undefined,
-      addressCity: addressCity.trim() || undefined,
-      addressState: addressState.trim() || undefined,
-      addressZip: addressZip.trim() || undefined,
-      addressCountry: addressCountry.trim() || undefined,
-      contactName: contactName.trim() || undefined,
-      contactEmail: contactEmail.trim() || undefined,
-      contactWebsite: contactWebsite.trim() || undefined,
+      name: values.name,
+      addressStreet: values.addressStreet || undefined,
+      addressCity: values.addressCity || undefined,
+      addressState: values.addressState || undefined,
+      addressZip: values.addressZip || undefined,
+      addressCountry: values.addressCountry || undefined,
+      contactName: values.contactName || undefined,
+      contactEmail: values.contactEmail || undefined,
+      contactWebsite: values.contactWebsite || undefined,
     };
 
     setIsSaving(true);
@@ -90,14 +115,14 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
         if (created) await persistClient(created);
         toast({
           title: "Client added",
-          description: `"${trimmed}" has been added.`,
+          description: `"${values.name}" has been added.`,
         });
       } else if (mode === "edit" && client) {
         const updated = updateClient(client.id, data);
         if (updated) await persistClient(updated);
         toast({
           title: "Client saved",
-          description: `"${trimmed}" has been saved.`,
+          description: `"${values.name}" has been saved.`,
         });
       }
       onOpenChange(false);
@@ -115,121 +140,159 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
           </SheetTitle>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          <div>
-            <Label htmlFor="client-name">
-              Client Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="client-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter client name"
-              required
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6 py-4"
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Client Name <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter client name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-3">
-            <p className="text-sm font-medium border-b">Address</p>
-            <div>
-              <Label htmlFor="address-street">Street</Label>
-              <Input
-                id="address-street"
-                value={addressStreet}
-                onChange={(e) => setAddressStreet(e.target.value)}
-                placeholder="123 Main St"
+            <div className="space-y-3">
+              <p className="text-sm font-medium border-b">Address</p>
+              <FormField
+                control={form.control}
+                name="addressStreet"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Street</FormLabel>
+                    <FormControl>
+                      <Input placeholder="123 Main St" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="addressCity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Springfield" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="addressState"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State / Province</FormLabel>
+                      <FormControl>
+                        <Input placeholder="IL" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="addressZip"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ZIP / Postal Code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="62701" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="addressCountry"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Country</FormLabel>
+                      <FormControl>
+                        <Input placeholder="USA" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="address-city">City</Label>
-                <Input
-                  id="address-city"
-                  value={addressCity}
-                  onChange={(e) => setAddressCity(e.target.value)}
-                  placeholder="Springfield"
-                />
-              </div>
-              <div>
-                <Label htmlFor="address-state">State / Province</Label>
-                <Input
-                  id="address-state"
-                  value={addressState}
-                  onChange={(e) => setAddressState(e.target.value)}
-                  placeholder="IL"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="address-zip">ZIP / Postal Code</Label>
-                <Input
-                  id="address-zip"
-                  value={addressZip}
-                  onChange={(e) => setAddressZip(e.target.value)}
-                  placeholder="62701"
-                />
-              </div>
-              <div>
-                <Label htmlFor="address-country">Country</Label>
-                <Input
-                  id="address-country"
-                  value={addressCountry}
-                  onChange={(e) => setAddressCountry(e.target.value)}
-                  placeholder="USA"
-                />
-              </div>
-            </div>
-          </div>
 
-          <div className="space-y-3">
-            <p className="text-sm font-medium border-b">Contact</p>
-            <div>
-              <Label htmlFor="contact-name">Name</Label>
-              <Input
-                id="contact-name"
-                value={contactName}
-                onChange={(e) => setContactName(e.target.value)}
-                placeholder="Jane Doe"
+            <div className="space-y-3">
+              <p className="text-sm font-medium border-b">Contact</p>
+              <FormField
+                control={form.control}
+                name="contactName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Jane Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="contactEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="jane@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="contactWebsite"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Website</FormLabel>
+                    <FormControl>
+                      <Input type="url" placeholder="https://example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-            <div>
-              <Label htmlFor="contact-email">Email</Label>
-              <Input
-                id="contact-email"
-                type="email"
-                value={contactEmail}
-                onChange={(e) => setContactEmail(e.target.value)}
-                placeholder="jane@example.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="contact-website">Website</Label>
-              <Input
-                id="contact-website"
-                type="url"
-                value={contactWebsite}
-                onChange={(e) => setContactWebsite(e.target.value)}
-                placeholder="https://example.com"
-              />
-            </div>
-          </div>
 
-          <SheetFooter className="flex gap-2 pt-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-              disabled={isSaving}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {isSaving ? "Saving..." : mode === "add" ? "Add" : "Save"}
-            </Button>
-          </SheetFooter>
-        </form>
+            <SheetFooter className="flex gap-2 pt-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => onOpenChange(false)}
+                disabled={isSaving}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {isSaving ? "Saving..." : mode === "add" ? "Add" : "Save"}
+              </Button>
+            </SheetFooter>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

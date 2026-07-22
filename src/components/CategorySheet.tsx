@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Sheet,
   SheetContent,
@@ -6,6 +9,14 @@ import {
   SheetTitle,
   SheetFooter,
 } from "@/components/ui/sheet";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +47,22 @@ const predefinedColors = [
   "#EC4899",
 ];
 
+const categoryFormSchema = z.object({
+  name: z.string().trim().min(1, "Category name is required"),
+  description: z.string().trim(),
+  color: z.string().min(1, "Color is required"),
+  isBillable: z.boolean(),
+});
+
+type CategoryFormValues = z.infer<typeof categoryFormSchema>;
+
+const defaultFormValues: CategoryFormValues = {
+  name: "",
+  description: "",
+  color: "#3B82F6",
+  isBillable: true,
+};
+
 export const CategorySheet: React.FC<CategorySheetProps> = ({
   open,
   onOpenChange,
@@ -44,38 +71,37 @@ export const CategorySheet: React.FC<CategorySheetProps> = ({
 }) => {
   const { addCategory, updateCategory, forceSyncToDatabase } = useTimeTracking();
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [color, setColor] = useState("#3B82F6");
-  const [isBillable, setIsBillable] = useState(true);
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  const form = useForm<CategoryFormValues>({
+    resolver: zodResolver(categoryFormSchema),
+    mode: "onBlur",
+    defaultValues: defaultFormValues,
+  });
+
+  const colorValue = form.watch("color");
 
   useEffect(() => {
     if (!open) return;
     if (mode === "edit" && category) {
-      setName(category.name);
-      setDescription(category.description || "");
-      setColor(category.color);
-      setIsBillable(category.isBillable !== false);
+      form.reset({
+        name: category.name,
+        description: category.description || "",
+        color: category.color,
+        isBillable: category.isBillable !== false,
+      });
     } else {
-      setName("");
-      setDescription("");
-      setColor("#3B82F6");
-      setIsBillable(true);
+      form.reset(defaultFormValues);
     }
     setIsSaving(false);
-  }, [open, mode, category]);
+  }, [open, mode, category, form]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) return;
-
+  const onSubmit = async (values: CategoryFormValues) => {
     const data = {
-      name: trimmed,
-      description: description.trim() || undefined,
-      color,
-      isBillable,
+      name: values.name,
+      description: values.description || undefined,
+      color: values.color,
+      isBillable: values.isBillable,
     };
 
     setIsSaving(true);
@@ -84,13 +110,13 @@ export const CategorySheet: React.FC<CategorySheetProps> = ({
         addCategory(data);
         toast({
           title: "Category added",
-          description: `"${trimmed}" has been added.`,
+          description: `"${values.name}" has been added.`,
         });
       } else if (mode === "edit" && category) {
         updateCategory(category.id, data);
         toast({
           title: "Category updated",
-          description: `"${trimmed}" has been updated.`,
+          description: `"${values.name}" has been updated.`,
         });
       }
 
@@ -110,105 +136,137 @@ export const CategorySheet: React.FC<CategorySheetProps> = ({
           </SheetTitle>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          <div>
-            <Label htmlFor="category-name">
-              Category Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="category-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter category name"
-              required
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6 py-4"
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Category Name <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter category name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div>
-            <Label htmlFor="category-description">Description</Label>
-            <Textarea
-              id="category-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter category description (optional)"
-              className="min-h-[80px] resize-none"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="category-color">Category Color</Label>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <Input
-                  id="category-color"
-                  type="color"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="w-16 h-10"
-                />
-                <span className="text-sm text-muted-foreground">{color}</span>
-                <div
-                  className="w-8 h-8 rounded-full border-2 border-border"
-                  style={{ backgroundColor: color }}
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <span className="text-sm text-muted-foreground w-full">
-                  Quick colors:
-                </span>
-                {predefinedColors.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setColor(c)}
-                    aria-label={`Set color to ${c}`}
-                    aria-pressed={color === c}
-                    className="w-11 h-11 flex items-center justify-center rounded-full"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${
-                        color === c ? "border-foreground" : "border-border"
-                      }`}
-                      style={{ backgroundColor: c }}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter category description (optional)"
+                      className="min-h-[80px] resize-none"
+                      {...field}
                     />
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="category-billable"
-              checked={isBillable}
-              onCheckedChange={(checked) => setIsBillable(checked === true)}
-              aria-describedby="category-billable-hint"
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            <Label htmlFor="category-billable" className="text-sm font-medium">
-              Billable category
-            </Label>
-            <span id="category-billable-hint" className="text-xs text-muted-foreground">
-              (Tasks in this category can generate revenue)
-            </span>
-          </div>
 
-          <SheetFooter className="flex gap-2 pt-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-              disabled={isSaving}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {isSaving ? "Saving..." : mode === "add" ? "Add" : "Save"}
-            </Button>
-          </SheetFooter>
-        </form>
+            <FormField
+              control={form.control}
+              name="color"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category Color</FormLabel>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <FormControl>
+                        <Input
+                          type="color"
+                          className="w-16 h-10"
+                          {...field}
+                        />
+                      </FormControl>
+                      <span className="text-sm text-muted-foreground">{colorValue}</span>
+                      <div
+                        className="w-8 h-8 rounded-full border-2 border-border"
+                        style={{ backgroundColor: colorValue }}
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-sm text-muted-foreground w-full">
+                        Quick colors:
+                      </span>
+                      {predefinedColors.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => field.onChange(c)}
+                          aria-label={`Set color to ${c}`}
+                          aria-pressed={colorValue === c}
+                          className="w-11 h-11 flex items-center justify-center rounded-full"
+                        >
+                          <span
+                            aria-hidden="true"
+                            className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${
+                              colorValue === c ? "border-foreground" : "border-border"
+                            }`}
+                            style={{ backgroundColor: c }}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="isBillable"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center space-x-2">
+                    <FormControl>
+                      <Checkbox
+                        id="category-billable"
+                        checked={field.value}
+                        onCheckedChange={(checked) => field.onChange(checked === true)}
+                        aria-describedby="category-billable-hint"
+                      />
+                    </FormControl>
+                    <Label htmlFor="category-billable" className="text-sm font-medium">
+                      Billable category
+                    </Label>
+                    <span id="category-billable-hint" className="text-xs text-muted-foreground">
+                      (Tasks in this category can generate revenue)
+                    </span>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <SheetFooter className="flex gap-2 pt-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => onOpenChange(false)}
+                disabled={isSaving}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {isSaving ? "Saving..." : mode === "add" ? "Add" : "Save"}
+              </Button>
+            </SheetFooter>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

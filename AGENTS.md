@@ -22,7 +22,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (~338 tests across 31 files)
+### Test File Inventory (~395 tests across 38 files)
 
 | File | Coverage |
 |---|---|
@@ -32,8 +32,9 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/utils/reportUtils.test.ts` | Report generation utilities |
 | `src/utils/timeUtil.test.ts` | Time formatting utilities |
 | `src/contexts/TimeTracking.test.tsx` | Full context: day/task/archive management, todos, planned tasks, project CRUD, category CRUD, `discardDay`, `adjustTaskTime`, `addBackdatedDay`, client archive/restore |
+| `src/contexts/TimeTrackingContext.forceSync.test.tsx` | `forceSyncToDatabase` behavior |
 | `src/services/dataService.test.ts` | `LocalStorageService` save/load round-trips |
-| `src/services/supabaseService.test.ts` | Upsert-only bulk saves and single-row deletes (`saveProjects`, `deleteProject`, `saveCategories`, `deleteCategory`, `saveTodos`) — partial coverage of the 1100+ line service; `getCurrentDay`/`saveCurrentDay`/`migrateFromLocalStorage`/schema detection are not yet covered |
+| `src/services/supabaseService.test.ts` | Upsert-only bulk saves and single-row deletes (`saveProjects`, `deleteProject`, `saveCategories`, `deleteCategory`, `saveTodos`), plus `getCurrentDay`/`saveCurrentDay`, `checkNewSchema` schema detection, and `migrateFromLocalStorage` (no-op/no-existing-data/client-name-reconcile/error-swallow paths) |
 | `src/services/localStorageService/recovery.test.ts` | Listing/summarizing/restoring localStorage schema-mismatch backups and full-snapshot disk backups |
 | `src/services/localStorageService/utils.test.ts` | Versioned read/write helpers, stale-key backup, write-failure notification |
 | `src/hooks/useReportStorage.test.ts` | Report storage hook |
@@ -48,6 +49,8 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/components/SummaryOutput.test.tsx` | Summary output rendering |
 | `src/components/NewTaskForm.test.tsx` | Form render, submit, validation, cancel, FAB toggle |
 | `src/components/TaskItem.test.tsx` | Badge render, delete confirm, edit dialog |
+| `src/components/ArchiveEditDialog.test.tsx` | Archive edit dialog render and task editing flow |
+| `src/components/ArchivedTaskRow.test.tsx` | Inline expandable archived task row editing |
 | `src/components/dateParsing.test.ts` | Date parsing utilities |
 | `src/components/BackgroundTimerNotifier.test.tsx` | Document title/OS notification updates while a timer runs in the background |
 | `src/components/CommandPalette.test.tsx` | `Cmd/Ctrl+K` command palette actions and navigation |
@@ -58,6 +61,8 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/lib/supabase.test.ts` | Per-user data cache keying (projects/categories/clients) |
 | `src/lib/electronMenuActions.test.ts` | Electron menu action pending-action/navigate pattern |
 | `electron/main.test.ts` | Backup-write IPC handler, quit-flush timeout fallback |
+| `electron/menu.test.ts` | `buildApplicationMenu` IPC dispatch (new-task/save/command-palette/shortcuts-help), platform-conditional Preferences vs Settings placement |
+| `electron/preload.test.ts` | `contextBridge`-exposed `electronAPI` surface (`writeBackup`, `listBackups`, `readBackup`, `requestFlushBeforeQuit`, `onMenuAction`) |
 | `electron/updater.test.ts` | Auto-updater event handling |
 
 ### Context Test Pattern
