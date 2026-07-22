@@ -14,8 +14,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `ClientSheet` and `CategorySheet` migrated from hand-rolled `useState`-per-field forms (duplicated reset-on-open `useEffect`, duplicated `isSaving` try/finally, no per-field validation) to React Hook Form + Zod, matching the pattern `ProjectSheet` already used. Both now show inline field-level error messages instead of relying on HTML5 `required`; `ClientSheet`'s contact email field gained real email-format validation
+  — `src/components/ClientSheet.tsx`, `src/components/CategorySheet.tsx`
 - Archived-day task editing moved from a separate modal (`TaskEditInArchiveDialog`) to inline expandable rows (`ArchivedTaskRow`) within `ArchiveEditDialog`, and the whole-day Edit/view toggle was replaced with always-editable form fields plus a per-row expand — Save/Cancel are enabled whenever any staged edit (day fields or task rows) differs from the saved day, rather than only after entering a dedicated edit mode. Also fixed a rounding inconsistency where the day's end time was rounded to the nearest 15 minutes but the last task's end time was not, leaving a gap between the two; the last task's end time is now rounded to match, both when staging edits and when displaying the resting (unedited) state, via a shared `roundToNearest15Minutes` helper moved to `src/utils/timeUtil.ts`
   — `src/components/ArchivedTaskRow.tsx` (new), `src/components/ArchivedTaskRow.test.tsx` (new), `src/components/ArchiveEditDialog.tsx`, `src/components/ArchiveEditDialog.test.tsx`, `src/components/TaskEditInArchiveDialog.tsx` (removed), `src/utils/timeUtil.ts`, `src/utils/timeUtil.test.ts`, `src/contexts/TimeTrackingContext.tsx`
+
+### Code Quality
+
+- Added `electron/menu.test.ts` and `electron/preload.test.ts` — the only two files under `electron/` without test coverage. Covers `buildApplicationMenu`'s IPC dispatch per menu item and its macOS-vs-non-macOS Preferences/Settings placement, and the `contextBridge`-exposed `electronAPI` surface (`writeBackup`, `listBackups`, `readBackup`, `requestFlushBeforeQuit`, `onMenuAction`)
+  — `electron/menu.test.ts` (new), `electron/preload.test.ts` (new)
+- Expanded `supabaseService.test.ts` (15 → 30 tests) to cover `getCurrentDay`/`saveCurrentDay`, the `checkNewSchema` schema-detection cache, and `migrateFromLocalStorage`'s no-op/no-existing-data/client-name-reconcile/error-swallow paths — previously untested on a 1100+ line service that had only upsert/delete coverage
+  — `src/services/supabaseService.test.ts`
+- Regenerated AGENTS.md's test file inventory table, which was missing 3 test files that already existed on disk (`ArchiveEditDialog.test.tsx`, `ArchivedTaskRow.test.tsx`, `TimeTrackingContext.forceSync.test.tsx`); now lists 38 files / 395 tests
+  — `AGENTS.md`
 
 ### Security
 
