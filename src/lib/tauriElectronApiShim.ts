@@ -26,7 +26,13 @@ export function installTauriElectronApiShim(): void {
     },
 
     onMenuAction: (callback: (action: string) => void) => {
+      // Guards against a real race, not just style: if the caller unsubscribes
+      // before listen()'s promise resolves (e.g. React Strict Mode's dev-only
+      // mount->cleanup->mount), an unguarded assignment would leave `unlisten`
+      // undefined at cleanup time, so the first listener never gets removed and
+      // menu actions fire once per accumulated listener.
       let unlisten: (() => void) | undefined;
+      let cancelled = false;
       void listen<string>("menu:action", (event) => {
         if (event.payload === "check-updates") {
           void checkForUpdatesManual();
@@ -34,9 +40,16 @@ export function installTauriElectronApiShim(): void {
         }
         callback(event.payload);
       }).then((fn) => {
+        if (cancelled) {
+          fn();
+          return;
+        }
         unlisten = fn;
       });
-      return () => unlisten?.();
+      return () => {
+        cancelled = true;
+        unlisten?.();
+      };
     },
   };
 

@@ -125,4 +125,33 @@ describe("installTauriElectronApiShim", () => {
     expect(checkForUpdatesManualMock).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenCalledTimes(1); // not forwarded
   });
+
+  it("onMenuAction unsubscribe race: cancels pending listen before it resolves", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).__TAURI_INTERNALS__ = {};
+    let resolveListenPromise: ((fn: () => void) => void) | undefined;
+    const unlistenMock = vi.fn();
+    listenMock.mockImplementation(
+      (_event: string, _handler: (event: { payload: string }) => void) =>
+        new Promise((resolve) => {
+          resolveListenPromise = () => resolve(unlistenMock);
+        }),
+    );
+    const install = await loadShim();
+    install();
+
+    const callback = vi.fn();
+    const unsubscribe = window.electronAPI!.onMenuAction(callback);
+
+    // Unsubscribe before listen() resolves (the race condition)
+    unsubscribe();
+
+    // Now let the listen() promise resolve and wait for the then() to run
+    resolveListenPromise?.();
+    await new Promise((r) => setImmediate(r));
+
+    // The real Tauri unlisten function should have been called immediately
+    // to clean up the listener before it was even stored
+    expect(unlistenMock).toHaveBeenCalledTimes(1);
+  });
 });
