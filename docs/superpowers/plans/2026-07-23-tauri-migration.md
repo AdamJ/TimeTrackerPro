@@ -6,7 +6,7 @@
 
 **Architecture:** Tauri's Rust backend (`src-tauri/`) replaces Electron's main process. The renderer (`src/`) stays almost untouched: a new bridge module (`src/lib/tauriElectronApiShim.ts`) populates the same `window.electronAPI` shape that `electron/preload.ts` used to expose, so `useElectronBackup.ts` and `useElectronMenuActions.ts` require **zero changes**. Auto-update moves from Electron's main-process `electron-updater` to Tauri's official `tauri-plugin-updater`, driven from the frontend (dialogs via `tauri-plugin-dialog`, restart via `tauri-plugin-process`), with signed release artifacts (a real keypair, no more "intentionally unsigned").
 
-**Tech Stack:** Tauri v2 (Rust), `@tauri-apps/api` + `tauri-plugin-updater`/`tauri-plugin-dialog`/`tauri-plugin-shell`/`tauri-plugin-process`, existing Vite/React/TypeScript/Vitest stack, `tauri-apps/tauri-action` for CI.
+**Tech Stack:** Tauri v2 (Rust), `@tauri-apps/api` + `tauri-plugin-updater`/`tauri-plugin-dialog`/`tauri-plugin-process`, `tauri-plugin-opener` (Rust-only, no JS package needed — see Task 5 amendment), existing Vite/React/TypeScript/Vitest stack, `tauri-apps/tauri-action` for CI.
 
 ## Global Constraints
 
@@ -102,7 +102,7 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 tauri-plugin-updater = "2"
 tauri-plugin-dialog = "2"
-tauri-plugin-shell = "2"
+tauri-plugin-opener = "2"
 tauri-plugin-process = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -256,7 +256,7 @@ pnpm add -D @tauri-apps/cli
 - [ ] **Step 2: Install the frontend Tauri API and plugin packages**
 
 ```bash
-pnpm add @tauri-apps/api @tauri-apps/plugin-updater @tauri-apps/plugin-dialog @tauri-apps/plugin-shell @tauri-apps/plugin-process
+pnpm add @tauri-apps/api @tauri-apps/plugin-updater @tauri-apps/plugin-dialog @tauri-apps/plugin-process
 ```
 
 - [ ] **Step 3: Add scripts to `package.json`** (next to the existing `electron:*` scripts)
@@ -593,12 +593,14 @@ git commit -m "feat: port disk-backup write/list/read to Tauri commands"
 
 This mirrors `electron/menu.ts` and its test `electron/menu.test.ts`.
 
+> **Amendment (post-review):** the first implementation of this task used `tauri_plugin_shell::ShellExt::open()`, which task review found is deprecated in Tauri v2 in favor of `tauri-plugin-opener`. Fixed in the same task rather than deferred — the code below already reflects `tauri_plugin_opener::OpenerExt::open_url()`. `tauri-plugin-shell` is dropped entirely (nothing else in this app used it); `tauri-plugin-opener` is Rust-only — no `@tauri-apps/plugin-opener` JS package is needed since the frontend never calls it directly. This changes Task 3's npm install list, Task 6's and Task 9's `main.rs` listings, and Task 9's capabilities file below — each is updated in place.
+
 - [ ] **Step 1: Write `src-tauri/src/menu.rs`**
 
 ```rust
 use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder};
 use tauri::{App, AppHandle, Emitter, Wry};
-use tauri_plugin_shell::ShellExt;
+use tauri_plugin_opener::OpenerExt;
 
 pub fn build_menu(app: &App) -> tauri::Result<Menu<Wry>> {
     let is_mac = cfg!(target_os = "macos");
@@ -691,7 +693,7 @@ pub fn build_menu(app: &App) -> tauri::Result<Menu<Wry>> {
 pub fn handle_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
     let id = event.id().0.as_str();
     if id == "open-github" {
-        let _ = app.shell().open("https://github.com/AdamJ/TimeTrackerPro", None::<String>);
+        let _ = app.opener().open_url("https://github.com/AdamJ/TimeTrackerPro", None::<String>);
         return;
     }
     let _ = app.emit("menu:action", id);
@@ -710,7 +712,7 @@ use backup::BackupState;
 
 fn main() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_opener::init())
         .manage(BackupState::default())
         .invoke_handler(tauri::generate_handler![
             backup::backup_write,
@@ -863,7 +865,7 @@ use quit_flush::QuitState;
 
 fn main() {
     let app = tauri::Builder::default()
-        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_opener::init())
         .manage(BackupState::default())
         .manage(QuitState::default())
         .invoke_handler(tauri::generate_handler![
@@ -1387,7 +1389,7 @@ use quit_flush::QuitState;
 
 fn main() {
     let app = tauri::Builder::default()
-        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -1423,7 +1425,7 @@ fn main() {
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "shell:allow-open",
+    "opener:default",
     "dialog:default",
     "updater:default",
     "process:allow-relaunch"
@@ -1440,7 +1442,7 @@ Expected: `Finished` with no errors.
 
 ```bash
 git add src-tauri/src/main.rs src-tauri/capabilities/default.json
-git commit -m "chore: register updater/dialog/process/shell Tauri plugins"
+git commit -m "chore: register updater/dialog/process/opener Tauri plugins"
 ```
 
 ---
