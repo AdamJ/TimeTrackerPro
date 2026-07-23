@@ -40,8 +40,99 @@ afterEach(() => {
 	cleanup();
 });
 
-// jsdom provides a real Storage-backed localStorage (proper Storage.prototype
-// inheritance, real key enumeration) — no custom mock needed.
+// Vitest's built-in jsdom environment does not expose jsdom's native
+// Storage object onto the global scope handed to tests — window.localStorage
+// is `undefined` here even though raw jsdom provides a working one. This is a
+// known vitest+jsdom limitation, not fixable via vite.config.ts. A hand-rolled
+// mock is required; it wraps a Map in a Proxy so both method calls
+// (localStorage.getItem(...)) and property-style access/enumeration
+// (Object.keys(localStorage), for...in, localStorage.foo = "bar") behave like
+// the real Storage interface — several tests filter Object.keys(localStorage)
+// to find backup keys, which a plain object with get/set methods can't support.
+//
+// The actual read/write logic is patched onto the global Storage.prototype
+// (which jsdom does provide, unpopulated) rather than owned directly by the
+// mock instance, so `vi.spyOn(Storage.prototype, "setItem")` — used by
+// quota-error tests — intercepts real calls instead of being shadowed by an
+// own property. There is only ever one localStorage instance for the whole
+// run, so the backing Map is safely closed over rather than keyed by `this`.
+const localStorageStore = new Map<string, string>();
+
+Storage.prototype.getItem = function (key: string): string | null {
+	return localStorageStore.has(key) ? localStorageStore.get(key)! : null;
+};
+Storage.prototype.setItem = function (key: string, value: string): void {
+	localStorageStore.set(key, String(value));
+};
+Storage.prototype.removeItem = function (key: string): void {
+	localStorageStore.delete(key);
+};
+Storage.prototype.clear = function (): void {
+	localStorageStore.clear();
+};
+Storage.prototype.key = function (index: number): string | null {
+	return Array.from(localStorageStore.keys())[index] ?? null;
+};
+Object.defineProperty(Storage.prototype, "length", {
+	configurable: true,
+	get(): number {
+		return localStorageStore.size;
+	},
+});
+
+function createLocalStorageMock(): Storage {
+	const instance = Object.create(Storage.prototype) as Storage;
+
+	return new Proxy(instance, {
+		get(t, prop, receiver) {
+			if (typeof prop === "string" && !(prop in t) && localStorageStore.has(prop)) {
+				return localStorageStore.get(prop);
+			}
+			return Reflect.get(t, prop, receiver);
+		},
+		set(t, prop, value) {
+			if (typeof prop === "string" && !(prop in t)) {
+				localStorageStore.set(prop, String(value));
+				return true;
+			}
+			return Reflect.set(t, prop, value);
+		},
+		has(t, prop) {
+			if (typeof prop === "string" && localStorageStore.has(prop)) return true;
+			return Reflect.has(t, prop);
+		},
+		deleteProperty(t, prop) {
+			if (typeof prop === "string" && localStorageStore.has(prop)) {
+				localStorageStore.delete(prop);
+				return true;
+			}
+			return Reflect.deleteProperty(t, prop);
+		},
+		ownKeys() {
+			return Array.from(localStorageStore.keys());
+		},
+		getOwnPropertyDescriptor(t, prop) {
+			if (typeof prop === "string" && !(prop in t) && localStorageStore.has(prop)) {
+				return {
+					value: localStorageStore.get(prop),
+					writable: true,
+					enumerable: true,
+					configurable: true,
+				};
+			}
+			return Reflect.getOwnPropertyDescriptor(t, prop);
+		},
+	});
+}
+
+// Installed unconditionally (not gated on typeof localStorage === "undefined")
+// — confirmed always undefined in this vitest/jsdom setup, so a conditional
+// would just be misleading dead-code framing.
+Object.defineProperty(window, "localStorage", {
+	writable: true,
+	configurable: true,
+	value: createLocalStorageMock(),
+});
 
 // Mock URL.createObjectURL / revokeObjectURL (not available in jsdom)
 if (typeof URL.createObjectURL === "undefined") {

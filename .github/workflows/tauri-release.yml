@@ -1,4 +1,4 @@
-name: Electron Release
+name: Tauri Release
 
 on:
   workflow_run:
@@ -43,12 +43,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
-            build_script: electron:build -- --mac
-          - os: windows-latest
-            build_script: electron:build -- --win
+          - platform: macos-latest
+          - platform: windows-latest
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.platform }}
 
     permissions:
       contents: write
@@ -56,7 +54,8 @@ jobs:
     env:
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-      CSC_IDENTITY_AUTO_DISCOVERY: false
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
     steps:
       - name: Checkout code
@@ -72,21 +71,16 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build Electron app
-        run: pnpm run ${{ matrix.build_script }}
-
-      - name: Upload release assets
-        uses: softprops/action-gh-release@v2
+      - name: Build and publish Tauri app
+        uses: tauri-apps/tauri-action@v0
         with:
-          tag_name: ${{ needs.check.outputs.tag }}
-          files: |
-            dist-electron-build/*.dmg
-            dist-electron-build/*.zip
-            dist-electron-build/*.exe
-            dist-electron-build/*.blockmap
-            dist-electron-build/latest.yml
-            dist-electron-build/latest-mac.yml
-          token: ${{ secrets.GITHUB_TOKEN }}
+          tagName: ${{ needs.check.outputs.tag }}
+          releaseName: "Timetraked ${{ needs.check.outputs.tag }}"
+          releaseDraft: false
+          prerelease: false
