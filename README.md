@@ -6,7 +6,7 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
 
-![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white) ![Electron](https://img.shields.io/badge/Electron-Enabled-393?style=for-the-badge&logo=electron&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-Enabled-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white) ![Tauri](https://img.shields.io/badge/Tauri-Enabled-FFC131?style=for-the-badge&logo=tauri&logoColor=white)
 
 ![GitHub Release](https://img.shields.io/github/v/release/AdamJ/TimeTrackerPro?style=for-the-badge) ![GitHub Release Date](https://img.shields.io/github/release-date/AdamJ/TimeTrackerPro?style=for-the-badge) ![W3C Validation](https://img.shields.io/w3c-validation/default?targetUrl=https%3A%2F%2Ftimetrackerpro.adamjolicoeur.me&style=for-the-badge)
 
@@ -26,7 +26,7 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 - **Backdated Entry Creation** — log work for past days directly from the Archive page via "Add Past Entry"
 - **CSV Import** — bring in existing time data from other tools
 - **Weekly Report** — AI-generated work summaries (standup, client, or retrospective tone)
-- **Keyboard Shortcuts** — `N` new task, `Cmd/Ctrl+S` save, `Cmd/Ctrl+K` command palette, `?` for the shortcuts help dialog (web and Electron; Electron's native menu also offers `Cmd/Ctrl+N` for new task)
+- **Keyboard Shortcuts** — `N` new task, `Cmd/Ctrl+S` save, `Cmd/Ctrl+K` command palette, `?` for the shortcuts help dialog (web and Tauri desktop; the desktop app's native menu also offers `Cmd/Ctrl+N` for new task)
 - **No Account Required** — full functionality with local storage; optional cloud sync via Supabase
 - **Self-Hosted SQL Backend** — optionally run against your own PostgreSQL or MySQL database instead of Supabase or local storage (see [docs/SQL_BACKEND.md](docs/SQL_BACKEND.md))
 - **PWA** — installable on desktop/mobile
@@ -134,8 +134,8 @@ See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 
 **Recent highlights:**
 
-- **Keyboard shortcuts** — global `N`/`Cmd/Ctrl+S`/`Cmd/Ctrl+K` shortcuts and a `?` help dialog in the web/PWA build, plus native `Cmd/Ctrl+N`/`Cmd/Ctrl+S`/`Cmd/Ctrl+K` menu accelerators in the Electron build
-- **Guest-mode data durability** — schema-mismatch backups, write-failure toasts, undo for hard deletes, Electron disk-based backup snapshots (independent of `localStorage`, including a final flush on app quit), and an in-app "Data Recovery" UI in Settings to preview and restore those backups
+- **Keyboard shortcuts** — global `N`/`Cmd/Ctrl+S`/`Cmd/Ctrl+K` shortcuts and a `?` help dialog in the web/PWA build, plus native `Cmd/Ctrl+N`/`Cmd/Ctrl+S`/`Cmd/Ctrl+K` menu accelerators in the Tauri desktop build
+- **Guest-mode data durability** — schema-mismatch backups, write-failure toasts, undo for hard deletes, Tauri desktop disk-based backup snapshots (independent of `localStorage`, including a final flush on app quit), and an in-app "Data Recovery" UI in Settings to preview and restore those backups
 - **Self-hosted SQL backend** — opt-in PostgreSQL/MySQL support via a small REST API (`server/`), alongside the existing Supabase and local storage modes
 - **Backdated entry creation** — "Add Past Entry" button on Archive page opens a multi-step dialog to log tasks for any past date
 - **Kanban planning board** — drag-and-drop task planning view (`KanbanBoard`, `KanbanColumn`, `PlannedTaskCard`)

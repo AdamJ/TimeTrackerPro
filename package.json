@@ -6,7 +6,6 @@
   "description": "A time tracking application built for freelancers, consultants, and professionals who need to track time, manage projects, and generate invoices.",
   "type": "module",
   "packageManager": "pnpm@10.33.0",
-  "main": "dist-electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -20,11 +19,9 @@
     "screenshots": "playwright test screenshots.spec.ts",
     "screenshots:install": "playwright install chromium",
     "screenshots:headed": "playwright test screenshots.spec.ts --headed",
-    "typecheck:electron": "tsc -p electron/tsconfig.json",
-    "electron:build:main": "pnpm run typecheck:electron && vite build --config vite.electron.config.ts",
-    "electron:dev": "pnpm run electron:build:main && concurrently \"pnpm run dev\" \"wait-on http://localhost:8080 && ELECTRON_DEV=true electron dist-electron/main.cjs\"",
-    "electron:preview": "pnpm run build && pnpm run electron:build:main && electron dist-electron/main.cjs",
-    "electron:build": "pnpm run build && pnpm run electron:build:main && electron-builder --publish never",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
     "db:migrate": "tsx server/migrate.ts",
     "db:seed": "tsx server/seed.ts",
     "server:dev": "tsx watch server/index.ts",
@@ -62,12 +59,15 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@supabase/supabase-js": "^2.104.1",
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-dialog": "^2.7.2",
+    "@tauri-apps/plugin-process": "^2.3.1",
+    "@tauri-apps/plugin-updater": "^2.10.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "electron-updater": "^6.8.9",
     "embla-carousel-react": "^8.6.0",
     "express": "^5.2.1",
     "knex": "^3.2.10",
@@ -101,6 +101,7 @@
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.3.0",
     "@tailwindcss/typography": "^0.5.15",
+    "@tauri-apps/cli": "^2.11.4",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.1",
@@ -112,8 +113,6 @@
     "@vitejs/plugin-react-swc": "^3.11.0",
     "baseline-browser-mapping": "^2.9.19",
     "concurrently": "^10.0.3",
-    "electron": "^42.3.3",
-    "electron-builder": "^26.15.0",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.26",
@@ -133,32 +132,5 @@
     "vitest": "^3.2.6",
     "wait-on": "^9.0.10",
     "workbox-window": "^7.4.0"
-  },
-  "build": {
-    "appId": "com.brimfieldlabs.timetraked",
-    "productName": "Timetraked",
-    "directories": {
-      "output": "dist-electron-build"
-    },
-    "files": [
-      "dist/**/*",
-      "dist-electron/**/*"
-    ],
-    "icon": "public/icon.png",
-    "mac": {
-      "category": "public.app-category.productivity",
-      "target": [
-        "dmg",
-        "zip"
-      ]
-    },
-    "win": {
-      "target": "nsis"
-    },
-    "publish": {
-      "provider": "github",
-      "owner": "AdamJ",
-      "repo": "TimeTrackerPro"
-    }
   }
 }

@@ -10,9 +10,9 @@ dev-dist/sw.js
 .env.production.local
 .claude/settings.local.json
 
-# Electron build outputs
-dist-electron/
-dist-electron-build/
+# Tauri build outputs
+src-tauri/target/
+src-tauri/gen/
 
 # Playwright
 /test-results/

@@ -18,9 +18,8 @@ automation:
   - agents/**
 frontend:
   - src/**
-electron:
-  - electron/**
-  - vite.electron.config.ts
+desktop:
+  - src-tauri/**
 supabase:
   - supabase/**
 

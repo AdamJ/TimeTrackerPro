@@ -74,7 +74,7 @@ For the main overview, see [README.md](README.md).
 
 ### Keyboard Shortcuts
 
-Available in both the web/PWA build and the Electron desktop app:
+Available in both the web/PWA build and the Tauri desktop app:
 
 | Shortcut | Action |
 | --- | --- |
@@ -85,7 +85,7 @@ Available in both the web/PWA build and the Electron desktop app:
 
 New Task uses a plain `N` rather than `Cmd/Ctrl+N` in the web/PWA build because Chrome and Firefox reserve that combination for opening a new browser window and never deliver it to page JavaScript from a regular tab — it's unpreventable outside of an installed PWA. The command palette and help dialog are also reachable from the keyboard icon in the page header.
 
-On Electron, `Cmd/Ctrl+S`/`Cmd/Ctrl+K` are native menu accelerators (File/View menus) dispatched to the renderer over the existing `menu:action` IPC channel; New Task keeps the native `Cmd/Ctrl+N` accelerator there too, since Electron doesn't have the browser's reservation. `?` has no native accelerator but works identically on both platforms since it isn't intercepted by the OS menu layer.
+On the Tauri desktop build, `Cmd/Ctrl+S`/`Cmd/Ctrl+K` are native menu accelerators (File/View menus, built in Rust) dispatched to the frontend as a `menu:action` event; New Task keeps the native `Cmd/Ctrl+N` accelerator there too, since a native app menu doesn't have the browser's reservation. `?` has no native accelerator but works identically on both platforms since it isn't intercepted by the OS menu layer.
 
 ### Project Management
 
@@ -211,7 +211,7 @@ Timetraked uses an **action-triggered save** approach optimized for single-devic
 2. **Action Saves** — every task mutation (start, update, delete) and day lifecycle event (start day, end day) triggers an immediate `saveCurrentDay()` call with the freshly computed state, keeping localStorage and Supabase in sync without a debounce delay.
 3. **Emergency Backups** — on web, `visibilitychange` and `beforeunload` write a synchronous localStorage snapshot as a last-resort fallback before JavaScript execution is suspended.
 4. **Manual Sync** — the sync button in the navigation saves all data types (tasks, projects, categories, archived days, todos) in one batch, useful after recovering from an error. Bulk saves are upsert-only and never delete rows missing from the local snapshot — deleting a project, category, or todo persists immediately as its own explicit single-row delete, so a stale snapshot on one device can't wipe out data added from another.
-5. **Electron Disk Backups** — on the desktop build, the same save events (plus the app's `before-quit` lifecycle) additionally write a JSON snapshot to a disk file under the OS user-data directory (pruned to the most recent 20), a failure domain independent of `localStorage`. No-ops on web/PWA builds.
+5. **Desktop Disk Backups** — on the Tauri desktop build, the same save events (plus the app's quit-flush handshake) additionally write a JSON snapshot to a disk file under the OS app-data directory (pruned to the most recent 20), a failure domain independent of `localStorage`. No-ops on web/PWA builds.
 6. **In-App Recovery** — in guest mode, Settings → "Data Recovery" lists the schema-mismatch `localStorage` backups and (on desktop) the disk snapshots above, with an entity-count preview before restoring. Restoring writes the backup back into the live storage keys and reloads the app.
 
 When you sign in, your `localStorage` data automatically migrates to Supabase (timestamps compared to prevent overwriting newer data, no data loss). When you sign out, Supabase data syncs back to `localStorage`.
@@ -353,7 +353,7 @@ DataService.save()
 localStorage OR Supabase
 ```
 
-**Save triggers:** every task mutation and day lifecycle event calls `dataService.saveCurrentDay()` directly; `postDay()` additionally saves archived days and todos; `visibilitychange` and `beforeunload` write synchronous localStorage backups; `forceSyncToDatabase()` (manual sync) saves all data types in parallel. On the Electron desktop build, `postDay()` and `forceSyncToDatabase()` also write a disk-based JSON backup via IPC, plus a final one on app quit — see "Electron Disk Backups" above.
+**Save triggers:** every task mutation and day lifecycle event calls `dataService.saveCurrentDay()` directly; `postDay()` additionally saves archived days and todos; `visibilitychange` and `beforeunload` write synchronous localStorage backups; `forceSyncToDatabase()` (manual sync) saves all data types in parallel. On the Tauri desktop build, `postDay()` and `forceSyncToDatabase()` also write a disk-based JSON backup via a Tauri command, plus a final one on app quit — see "Desktop Disk Backups" above.
 
 **Service Worker caching:**
 
@@ -418,7 +418,7 @@ src/
 │   ├── use-mobile.tsx            # Mobile-specific state management
 │   ├── use-toast.tsx             # Toast notification state management
 │   ├── useAuth.tsx               # Authentication state management
-│   ├── useElectronMenuActions.ts # Electron menu:action IPC → navigate/save/command-palette/help
+│   ├── useElectronMenuActions.ts # menu:action event (Tauri-bridged) → navigate/save/command-palette/help
 │   ├── useKeyboardShortcuts.ts   # Global web/PWA keyboard shortcuts (N, Cmd/Ctrl+S/K, ?)
 │   ├── useLongPress.ts           # 500 ms hold detector
 │   ├── usePageTitle.ts           # Page title state management
