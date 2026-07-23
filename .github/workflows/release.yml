@@ -241,7 +241,7 @@ jobs:
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Save release info for Electron build
+      - name: Save release info for desktop build
         run: echo "TAG=v${{ steps.new_version.outputs.version }}" > release-info.txt
 
       - name: Upload release info artifact
