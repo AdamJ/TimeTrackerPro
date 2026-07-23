@@ -22,7 +22,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (~395 tests across 38 files)
+### Test File Inventory (~376 tests across 36 files, plus Rust unit tests under `src-tauri/src/` run via `cargo test`)
 
 | File | Coverage |
 |---|---|
@@ -40,9 +40,9 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/hooks/useReportStorage.test.ts` | Report storage hook |
 | `src/hooks/useReportSummary.test.ts` | Report summary hook |
 | `src/hooks/useBackgroundNotificationSetting.test.ts` | Background timer notification setting persistence |
-| `src/hooks/useDataRecovery.test.ts` | Unified browser + Electron disk backup listing/preview/restore |
-| `src/hooks/useElectronBackup.test.ts` | `writeBackupDebounced` and the renderer-side Electron backup bridge |
-| `src/hooks/useElectronMenuActions.test.ts` | Electron `menu:action` IPC listener dispatch |
+| `src/hooks/useDataRecovery.test.ts` | Unified browser + desktop (Tauri) disk backup listing/preview/restore |
+| `src/hooks/useElectronBackup.test.ts` | `writeBackupDebounced` and the renderer-side desktop backup bridge (Tauri-backed via `tauriElectronApiShim.ts`; hook keeps its historical `Electron` name) |
+| `src/hooks/useElectronMenuActions.test.ts` | `menu:action` listener dispatch (event bridged from the Rust menu, not IPC; hook keeps its historical `Electron` name) |
 | `src/hooks/useKeyboardShortcuts.test.ts` | Global keyboard shortcut handling (new task, save, command palette, help) |
 | `src/hooks/useUndoableDelete.test.ts` | Undo-delete toast/timeout hook |
 | `src/components/PageLayout.test.tsx` | `PageLayout` renders children, delegates title/actions to context |
@@ -59,11 +59,10 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/components/TimerLiveRegion.test.tsx` | Screen-reader `aria-live` announcements for day/task start-stop transitions |
 | `src/pages/Settings.test.tsx` | Background notifications toggle, data recovery section visibility |
 | `src/lib/supabase.test.ts` | Per-user data cache keying (projects/categories/clients) |
-| `src/lib/electronMenuActions.test.ts` | Electron menu action pending-action/navigate pattern |
-| `electron/main.test.ts` | Backup-write IPC handler, quit-flush timeout fallback |
-| `electron/menu.test.ts` | `buildApplicationMenu` IPC dispatch (new-task/save/command-palette/shortcuts-help), platform-conditional Preferences vs Settings placement |
-| `electron/preload.test.ts` | `contextBridge`-exposed `electronAPI` surface (`writeBackup`, `listBackups`, `readBackup`, `requestFlushBeforeQuit`, `onMenuAction`) |
-| `electron/updater.test.ts` | Auto-updater event handling |
+| `src/lib/electronMenuActions.test.ts` | Menu action pending-action/navigate pattern (name predates the Tauri migration; still applies to both web and desktop menu actions) |
+| `src/lib/tauriElectronApiShim.test.ts` | `installTauriElectronApiShim` — populates `window.electronAPI` from Tauri `invoke`/`listen`, `onMenuAction` unsubscribe race guard |
+| `src/lib/tauriUpdater.test.ts` | `checkForUpdatesSilent`/`checkForUpdatesManual` — exponential backoff, download/install/relaunch prompts |
+| `src-tauri/src/backup.rs` (`cargo test`, inline `#[cfg(test)] mod tests`) | Backup filename validation, disk write/list/read and prune-threshold logic |
 
 ### Context Test Pattern
 
@@ -171,16 +170,16 @@ export const MyComponent = () => {
 | `src/hooks/useLongPress.ts`                   | 500 ms hold detector for context menu trigger on touch                             |
 | `src/components/ui/responsive-select.tsx`     | `ResponsiveSelect` — branches on `useIsMobile()` to render a native `<select>` on mobile (OS picker) vs the Radix `Select` on desktop; flat `options` array API shared by `NewTaskForm`, `ProjectSheet`, `BackdatedEntryDialog`, `PlannedTaskDialog`, `ArchivedTaskRow` |
 | `src/components/ArchivedTaskRow.tsx`          | Inline expandable row for editing a single task within `ArchiveEditDialog` (replaces the old `TaskEditInArchiveDialog` modal) |
-| `src/services/localStorageService/recovery.ts` | Lists/previews/restores localStorage schema-mismatch backup keys and Electron disk-backup snapshots; the read side of the write-only backup safety nets |
-| `src/hooks/useDataRecovery.ts`                | Unifies browser (`recovery.ts`) and desktop (`useElectronBackup`'s `listDiskBackups`/`readDiskBackup`) backup sources behind one list/preview/restore API |
+| `src/services/localStorageService/recovery.ts` | Lists/previews/restores localStorage schema-mismatch backup keys and desktop (Tauri) disk-backup snapshots; the read side of the write-only backup safety nets |
+| `src/hooks/useDataRecovery.ts`                | Unifies browser (`recovery.ts`) and desktop (`useElectronBackup`'s `listDiskBackups`/`readDiskBackup`, Tauri-backed) backup sources behind one list/preview/restore API |
 | `src/components/DataRecoveryDialog.tsx`       | Settings → "Data Recovery" (guest mode only): lists backups, previews entity-count diffs against current state, restores and reloads |
 | `src/hooks/useKeyboardShortcuts.ts`           | Global web/PWA `keydown` listener: `N` new task (plain key — `Cmd/Ctrl+N` is unpreventable in a regular browser tab), `Cmd/Ctrl+S` save, `Cmd/Ctrl+K` command palette, `?` shortcuts help; ignores typing targets except save/palette |
-| `src/hooks/useElectronMenuActions.ts`         | Electron `menu:action` IPC listener; `new-task`/`export`/`settings` use the navigate+pending-action pattern, `save`/`command-palette`/`shortcuts-help` call their callback directly (no page to mount into) |
+| `src/hooks/useElectronMenuActions.ts`         | `menu:action` event listener (bridged from the Rust-built native menu by `tauriElectronApiShim.ts`; hook keeps its historical `Electron` name — see "Tauri Desktop Build" below); `new-task`/`export`/`settings` use the navigate+pending-action pattern, `save`/`command-palette`/`shortcuts-help` call their callback directly (no page to mount into) |
 | `src/components/CommandPalette.tsx`           | `Cmd/Ctrl+K` dialog (shadcn `Command`/`cmdk`) listing New Task/Save actions and page navigation destinations |
 | `src/components/KeyboardShortcutsDialog.tsx`  | `?` help dialog listing all shortcuts via the `Kbd`/`KbdGroup` components |
 | `src/components/ui/kbd.tsx`                   | shadcn `Kbd`/`KbdGroup` components — key-cap styling used by the command palette and shortcuts help dialog |
 | `src/lib/platform.ts`                         | `isMac`/`modKey` — platform-appropriate shortcut glyph (`⌘` vs `Ctrl`) for the UI above |
-| `electron/menu.ts`                            | Builds the Electron app menu; `File` has New Task/Save Changes accelerators, `View` has the Command Palette accelerator, `Help` has a Keyboard Shortcuts entry — all dispatched via `sendMenuAction` over the `menu:action` IPC channel |
+| `src-tauri/src/menu.rs`                       | Builds the native app menu; `File` has New Task/Save Changes accelerators, `View` has the Command Palette accelerator, `Help` has a Keyboard Shortcuts entry — all dispatched as a `menu:action` event picked up by `tauriElectronApiShim.ts` |
 
 ---
 
@@ -201,43 +200,46 @@ Clients are a managed entity (added in the client-management feature) that backs
 
 ---
 
-## Electron Desktop Build
+## Tauri Desktop Build
 
-The app can also be packaged as a native Mac (DMG) or Windows (NSIS) desktop app via Electron.
+The app can also be packaged as a native Mac (DMG) or Windows (NSIS) desktop app via Tauri 2 (a Rust-backed native shell, replacing the earlier Electron build — see `docs/superpowers/plans/2026-07-23-tauri-migration.md` for the migration plan).
 
 **Key files:**
 
 | File | Purpose |
 | ---- | ------- |
-| `electron/main.ts` | Electron main process — BrowserWindow, CSP header, dev/prod load logic, IPC backup-write handler, `before-quit` flush handshake |
-| `electron/preload.ts` | `contextBridge`-exposed `window.electronAPI` (`writeBackup`, `requestFlushBeforeQuit`) — the renderer's only bridge to Node/Electron APIs |
-| `electron/tsconfig.json` | Compiles `electron/` to CJS in `dist-electron/` (isolated from the app tsconfig) |
-| `vite.electron.config.ts` | Dedicated Vite config bundling the main process and preload script (no VitePWA, no React) |
-| `src/hooks/useElectronBackup.ts` | Renderer-side hook wrapping `window.electronAPI`; no-ops entirely on web/PWA builds where it's absent |
-| `src/types/electron.d.ts` | Ambient `Window.electronAPI` type |
+| `src-tauri/Cargo.toml` | Rust crate manifest — `tauri` core plus the `updater`, `dialog`, `opener`, and `process` plugins; `regex`/`chrono`/`tokio` for backup/menu/quit-flush logic |
+| `src-tauri/src/main.rs` | Entry point — registers plugins, manages `BackupState`/`QuitState`, wires the `invoke_handler` (backup commands + `before_quit_flush_done`), builds the native menu, and hooks `on_menu_event`/`on_window_event` |
+| `src-tauri/src/backup.rs` | `backup_write`/`backup_list`/`backup_read` Tauri commands — disk snapshots under the OS app-data dir, pruned to the most recent 20, filename-pattern validated against path traversal; has inline `#[cfg(test)]` unit tests run via `cargo test` |
+| `src-tauri/src/menu.rs` | Builds the native app menu (`File`/`Edit`/`View`/`Window`/`Help`) with `tauri::menu` builders; menu clicks are emitted as a `menu:action` event rather than dispatched over IPC |
+| `src-tauri/src/quit_flush.rs` | Intercepts window close (`WindowEvent::CloseRequested`) to emit a `before-quit-flush` event and hold the close (3s timeout fallback) until the renderer acks via `before_quit_flush_done`, then re-issues a real quit — mirrors the old Electron `before-quit` handshake |
+| `src-tauri/tauri.conf.json` | App config — window size, dev/build commands (`pnpm dev`/`pnpm build`), CSP (`security.csp`, replacing the Electron main-process CSP header), bundle targets (`dmg`, `nsis`) and icons, and the `updater` plugin's release-feed endpoint + public key |
+| `src/lib/tauriElectronApiShim.ts` | Populates `window.electronAPI` from `@tauri-apps/api` `invoke`/`listen` calls, matching the shape `electron/preload.ts` used to expose — so `useElectronBackup.ts`/`useElectronMenuActions.ts`/`electron.d.ts` needed **no changes** and keep their historical `Electron` names. No-ops when `__TAURI_INTERNALS__` isn't present (web/PWA builds) |
+| `src/lib/tauriUpdater.ts` | Frontend-driven signed auto-update: `checkForUpdatesSilent()` (called on prod desktop startup, exponential backoff up to 24h on repeated failures) and `checkForUpdatesManual()` (Help menu → "check-updates"), both using `@tauri-apps/plugin-updater`'s `check()` + `downloadAndInstall()` and `@tauri-apps/plugin-dialog`/`@tauri-apps/plugin-process` for the confirm/relaunch prompts |
+| `src-tauri/capabilities/default.json` | Permission grants for the main window (`core:default`, `opener:default`, `dialog:default`, `updater:default`, `process:allow-restart`) — Tauri's allow-list replacement for Electron's all-or-nothing `nodeIntegration`/`contextIsolation` flags |
 
 **npm scripts:**
 
 ```bash
-pnpm run electron:build:main   # compile electron/main.ts → dist-electron/main.cjs
-pnpm run electron:dev          # build main + start vite dev + launch Electron (waits for port 8080)
-pnpm run electron:preview      # build app + main, open in Electron without packaging
-pnpm run electron:build        # full production build + package via electron-builder (DMG/NSIS)
+pnpm tauri            # raw Tauri CLI passthrough (e.g. `pnpm tauri icon`)
+pnpm tauri:dev         # start vite dev + launch the Tauri window (runs `pnpm dev` as beforeDevCommand)
+pnpm tauri:build       # full production build + package signed DMG/NSIS installers (runs `pnpm build` as beforeBuildCommand)
 ```
 
 **Architecture notes:**
 
-- `"type": "module"` is in `package.json`, so the compiled main process uses the `.cjs` extension (`dist-electron/main.cjs`) — Electron's main process does not support ES modules natively
-- The app uses `BrowserRouter` (not `HashRouter`). Production loads via a registered `app://` custom protocol (using `protocol.handle`) that serves `dist/` and falls back to `index.html` for unknown paths, giving pushState routing a real origin to work against. Dev mode loads `http://localhost:8080` directly — no protocol handler needed
-- The electron-builder config lives in the `"build"` key of `package.json`; output goes to `dist-electron-build/` (gitignored)
-- `dist-electron/` (compiled main) and `dist-electron-build/` (packaged app) are both gitignored
-- `.github/workflows/electron-release.yml` builds macOS (DMG) and Windows (NSIS) installers and attaches them to the GitHub Release whenever `release.yml` publishes a new version-bump release
+- The app uses `BrowserRouter` (not `HashRouter`), same as under Electron. Dev mode loads `http://localhost:8080` (`devUrl` in `tauri.conf.json`); production serves `dist/` (`frontendDist`) through Tauri's own asset protocol — no custom `app://` protocol registration needed, unlike the old Electron main process
+- All privileged logic lives in Rust (`src-tauri/src/`) instead of a Node main process; the frontend never gets Node APIs — it only reaches Rust through `@tauri-apps/api`'s `invoke`/`listen`, gated by `src-tauri/capabilities/default.json`
+- Signed auto-updates are frontend-driven (`tauriUpdater.ts` + `tauri-plugin-updater`) rather than main-process-driven (`electron-updater`); the updater's release feed and Ed25519 public key live in `tauri.conf.json`'s `plugins.updater` block, with the matching private key held in CI secrets for `tauri:build` signing
+- `src-tauri/target/` (Rust build output) and `src-tauri/gen/` (generated schemas/bindings) are both gitignored
+- `.github/workflows/tauri-release.yml` builds macOS (DMG) and Windows (NSIS) installers and attaches them to the GitHub Release whenever `release.yml` publishes a new version-bump release (same `workflow_run`-triggered pattern as the old `electron-release.yml`)
 
-**When adding Electron-specific features:**
+**When adding Tauri-specific features:**
 
-- Gate Electron-only code on `process.env.ELECTRON_DEV` or check `app.isPackaged` in the main process
-- Do not add `nodeIntegration: true` — use `contextBridge` + `ipcRenderer` if the renderer needs Node access
-- Never modify `electron/tsconfig.json`'s `"module": "commonjs"` — it must stay CJS
+- Add new privileged operations as `#[tauri::command]` functions in a `src-tauri/src/*.rs` module and register them in `main.rs`'s `invoke_handler` — never reach for Node-style IPC
+- Grant any new plugin/command permission in `src-tauri/capabilities/default.json`; nothing is available to the frontend by default
+- The frontend never imports `@tauri-apps/api` directly outside `src/lib/tauriElectronApiShim.ts` and `src/lib/tauriUpdater.ts` — extend those two files (or add a sibling `src/lib/tauri*.ts` file) rather than sprinkling `invoke`/`listen` calls through components
+- Keep `useElectronBackup.ts`/`useElectronMenuActions.ts`/`electron.d.ts` named as-is; renaming them would be a pure churn diff since the shim's whole purpose is presenting the pre-migration `window.electronAPI` shape unchanged
 
 ---
 
