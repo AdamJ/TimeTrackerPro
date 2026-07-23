@@ -40,8 +40,27 @@ afterEach(() => {
 	cleanup();
 });
 
-// jsdom provides a real Storage-backed localStorage (proper Storage.prototype
-// inheritance, real key enumeration) — no custom mock needed.
+// Ensure localStorage is available (jsdom should provide it, but fallback to mock)
+if (typeof localStorage === "undefined") {
+	const store: Record<string, string> = {};
+	Object.defineProperty(window, "localStorage", {
+		writable: true,
+		value: {
+			getItem: (key: string) => store[key] || null,
+			setItem: (key: string, value: string) => {
+				store[key] = value;
+			},
+			removeItem: (key: string) => {
+				delete store[key];
+			},
+			clear: () => {
+				Object.keys(store).forEach(key => delete store[key]);
+			},
+			key: (index: number) => Object.keys(store)[index] || null,
+			length: Object.keys(store).length,
+		},
+	});
+}
 
 // Mock URL.createObjectURL / revokeObjectURL (not available in jsdom)
 if (typeof URL.createObjectURL === "undefined") {
