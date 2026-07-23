@@ -7,7 +7,7 @@ use backup::BackupState;
 
 fn main() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_opener::init())
         .manage(BackupState::default())
         .invoke_handler(tauri::generate_handler![
             backup::backup_write,

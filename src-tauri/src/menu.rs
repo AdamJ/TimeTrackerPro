@@ -1,6 +1,6 @@
 use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder};
 use tauri::{App, AppHandle, Emitter, Wry};
-use tauri_plugin_shell::ShellExt;
+use tauri_plugin_opener::OpenerExt;
 
 pub fn build_menu(app: &App) -> tauri::Result<Menu<Wry>> {
     let is_mac = cfg!(target_os = "macos");
@@ -93,7 +93,7 @@ pub fn build_menu(app: &App) -> tauri::Result<Menu<Wry>> {
 pub fn handle_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
     let id = event.id().0.as_str();
     if id == "open-github" {
-        let _ = app.shell().open("https://github.com/AdamJ/TimeTrackerPro", None);
+        let _ = app.opener().open_url("https://github.com/AdamJ/TimeTrackerPro", None::<String>);
         return;
     }
     let _ = app.emit("menu:action", id);
