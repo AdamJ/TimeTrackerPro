@@ -14,6 +14,10 @@ dev-dist/sw.js
 dist-electron/
 dist-electron-build/
 
+# Tauri build outputs
+src-tauri/target/
+src-tauri/gen/
+
 # Playwright
 /test-results/
 /playwright-report/
