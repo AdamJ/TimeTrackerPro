@@ -22,7 +22,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (~376 tests across 36 files, plus Rust unit tests under `src-tauri/src/` run via `cargo test`)
+### Test File Inventory (~376 JS/TS tests across 36 files, plus 17 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
 
 | File | Coverage |
 |---|---|
@@ -211,8 +211,8 @@ The app can also be packaged as a native Mac (DMG) or Windows (NSIS) desktop app
 | `src-tauri/Cargo.toml` | Rust crate manifest — `tauri` core plus the `updater`, `dialog`, `opener`, and `process` plugins; `regex`/`chrono`/`tokio` for backup/menu/quit-flush logic |
 | `src-tauri/src/main.rs` | Entry point — registers plugins, manages `BackupState`/`QuitState`, wires the `invoke_handler` (backup commands + `before_quit_flush_done`), builds the native menu, and hooks `on_menu_event`/`on_window_event` |
 | `src-tauri/src/backup.rs` | `backup_write`/`backup_list`/`backup_read` Tauri commands — disk snapshots under the OS app-data dir, pruned to the most recent 20, filename-pattern validated against path traversal; has inline `#[cfg(test)]` unit tests run via `cargo test` |
-| `src-tauri/src/menu.rs` | Builds the native app menu (`File`/`Edit`/`View`/`Window`/`Help`) with `tauri::menu` builders; menu clicks are emitted as a `menu:action` event rather than dispatched over IPC |
-| `src-tauri/src/quit_flush.rs` | Intercepts window close (`WindowEvent::CloseRequested`) to emit a `before-quit-flush` event and hold the close (3s timeout fallback) until the renderer acks via `before_quit_flush_done`, then re-issues a real quit — mirrors the old Electron `before-quit` handshake |
+| `src-tauri/src/menu.rs` | Builds the native app menu (`File`/`Edit`/`View`/`Help`, plus a macOS-only `Timetraked` app-name submenu — no separate `Window` menu) with `tauri::menu` builders; menu clicks are emitted as a `menu:action` event rather than dispatched over IPC (except macOS's custom "quit" item, which calls `AppHandle::exit()` directly so it reliably fires `RunEvent::ExitRequested` instead of bypassing Tauri via the native `terminate:` selector) |
+| `src-tauri/src/quit_flush.rs` | Intercepts window close (`WindowEvent::CloseRequested`) *and* app-level exit (`RunEvent::ExitRequested` — Cmd+Q, the Quit menu item, any `AppHandle::exit()`) to emit a `before-quit-flush` event and hold the quit (3s timeout fallback) until the renderer acks via `before_quit_flush_done`, then re-issues a real quit — mirrors the old Electron `before-quit` handshake, but unlike Electron needs its own trigger on both paths (see the module's doc comments for why) |
 | `src-tauri/tauri.conf.json` | App config — window size, dev/build commands (`pnpm dev`/`pnpm build`), CSP (`security.csp`, replacing the Electron main-process CSP header), bundle targets (`dmg`, `nsis`) and icons, and the `updater` plugin's release-feed endpoint + public key |
 | `src/lib/tauriElectronApiShim.ts` | Populates `window.electronAPI` from `@tauri-apps/api` `invoke`/`listen` calls, matching the shape `electron/preload.ts` used to expose — so `useElectronBackup.ts`/`useElectronMenuActions.ts`/`electron.d.ts` needed **no changes** and keep their historical `Electron` names. No-ops when `__TAURI_INTERNALS__` isn't present (web/PWA builds) |
 | `src/lib/tauriUpdater.ts` | Frontend-driven signed auto-update: `checkForUpdatesSilent()` (called on prod desktop startup, exponential backoff up to 24h on repeated failures) and `checkForUpdatesManual()` (Help menu → "check-updates"), both using `@tauri-apps/plugin-updater`'s `check()` + `downloadAndInstall()` and `@tauri-apps/plugin-dialog`/`@tauri-apps/plugin-process` for the confirm/relaunch prompts |

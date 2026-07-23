@@ -26,6 +26,7 @@ pub struct WriteResult {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BackupInfo {
     pub name: String,
     pub timestamp: String,
