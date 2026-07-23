@@ -1441,7 +1441,7 @@ fn main() {
     "opener:default",
     "dialog:default",
     "updater:default",
-    "process:allow-relaunch"
+    "process:allow-restart"
   ]
 }
 ```
