@@ -232,7 +232,7 @@ pnpm tauri:build       # full production build + package signed DMG/NSIS install
 - All privileged logic lives in Rust (`src-tauri/src/`) instead of a Node main process; the frontend never gets Node APIs — it only reaches Rust through `@tauri-apps/api`'s `invoke`/`listen`, gated by `src-tauri/capabilities/default.json`
 - Signed auto-updates are frontend-driven (`tauriUpdater.ts` + `tauri-plugin-updater`) rather than main-process-driven (`electron-updater`); the updater's release feed and Ed25519 public key live in `tauri.conf.json`'s `plugins.updater` block, with the matching private key held in CI secrets for `tauri:build` signing
 - `src-tauri/target/` (Rust build output) and `src-tauri/gen/` (generated schemas/bindings) are both gitignored
-- `.github/workflows/tauri-release.yml` builds macOS (DMG) and Windows (NSIS) installers and attaches them to the GitHub Release whenever `release.yml` publishes a new version-bump release (same `workflow_run`-triggered pattern as the old `electron-release.yml`)
+- `.github/workflows/release.yml` handles the whole release in one workflow: `detect` (bump type from PR/commit titles) → `approve-major` (gated environment) → `release` (version bump, tag, changelog, GitHub Release) → `desktop` (matrix of `macos-latest`/`windows-latest` building signed DMG/NSIS installers via `tauri-apps/tauri-action` and attaching them to that same release). The `desktop` job checks out the new tag, so `tauri.conf.json`'s `"version": "../package.json"` picks up the bumped version. Replaces the old separate `tauri-release.yml`/`electron-release.yml` `workflow_run` chain
 
 **When adding Tauri-specific features:**
 

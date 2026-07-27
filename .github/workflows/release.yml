@@ -125,6 +125,10 @@ jobs:
       contents: write
       pull-requests: read
 
+    outputs:
+      version: ${{ steps.new_version.outputs.version }}
+      tag: v${{ steps.new_version.outputs.version }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -241,16 +245,6 @@ jobs:
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Save release info for desktop build
-        run: echo "TAG=v${{ steps.new_version.outputs.version }}" > release-info.txt
-
-      - name: Upload release info artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-info
-          path: release-info.txt
-          retention-days: 1
-
       - name: Summary
         run: |
           echo "## Release Summary" >> "$GITHUB_STEP_SUMMARY"
@@ -267,3 +261,60 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "### Changelog" >> "$GITHUB_STEP_SUMMARY"
           echo "${{ steps.changelog.outputs.content }}" >> "$GITHUB_STEP_SUMMARY"
+
+  desktop:
+    needs: release
+    if: needs.release.result == 'success'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+          - platform: windows-latest
+
+    runs-on: ${{ matrix.platform }}
+
+    permissions:
+      contents: write
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and publish Tauri app
+        uses: tauri-apps/tauri-action@v0
+        with:
+          tagName: ${{ needs.release.outputs.tag }}
+          releaseName: "Timetraked ${{ needs.release.outputs.tag }}"
+          releaseDraft: false
+          prerelease: false
+
+      - name: Summary
+        run: |
+          echo "## Desktop Build (${{ matrix.platform }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Tag:** ${{ needs.release.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Installers attached to release:** v${{ needs.release.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
