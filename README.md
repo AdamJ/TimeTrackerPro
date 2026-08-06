@@ -10,7 +10,6 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 
 ![GitHub Release](https://img.shields.io/github/v/release/AdamJ/TimeTrackerPro?style=for-the-badge) ![GitHub Release Date](https://img.shields.io/github/release-date/AdamJ/TimeTrackerPro?style=for-the-badge) ![W3C Validation](https://img.shields.io/w3c-validation/default?targetUrl=https%3A%2F%2Ftimetrackerpro.adamjolicoeur.me&style=for-the-badge)
 
-
 ---
 
 ## Features
@@ -157,3 +156,5 @@ MIT License — open source and free to use.
 - UI components from [shadcn/ui](https://ui.shadcn.com) on [Radix UI](https://www.radix-ui.com)
 - Icons from [Radix Icons](https://www.radix-ui.com/icons) and [Lucide](https://lucide.dev)
 - Built with [React](https://react.dev), [Vite](https://vitejs.dev), and [Supabase](https://supabase.com)
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/L4L01NVNCN)
