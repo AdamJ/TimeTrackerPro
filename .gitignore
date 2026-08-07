@@ -26,11 +26,13 @@ public/.DS_Store
 public/icons/.DS_Store
 public/screenshots/.DS_Store
 src/.DS_Store
-supabase/.DS_Store
+
+"Icon\r"
 
 # Supabase
 supabase/*
 supabase/**
+supabase/.DS_Store
 
 # Claude
 .claude/launch.json
