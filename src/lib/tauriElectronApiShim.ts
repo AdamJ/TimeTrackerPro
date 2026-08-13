@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { checkForUpdatesManual, checkForUpdatesSilent } from "@/lib/tauriUpdater";
+import { isIOS } from "@/lib/platform";
 
 // Populates window.electronAPI with the same shape electron/preload.ts used
 // to expose, so useElectronBackup.ts and useElectronMenuActions.ts work
@@ -53,7 +54,9 @@ export function installTauriElectronApiShim(): void {
     },
   };
 
-  if (import.meta.env.PROD) {
+  // Self-hosted updates have no iOS equivalent — App Store review requires
+  // distribution/updates to go through the App Store instead.
+  if (import.meta.env.PROD && !isIOS) {
     void checkForUpdatesSilent();
   }
 }

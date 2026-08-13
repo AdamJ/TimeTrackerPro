@@ -35,17 +35,23 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="application-name" content="Timetraked" />
 
-    <!-- Content Security Policy -->
-    <!-- capacitor://localhost is included for WKWebView (iOS Capacitor) -->
+    <!-- Content Security Policy for the web/PWA build. The Tauri desktop/iOS
+         builds are served over the app's own origin (tauri://localhost on
+         macOS/iOS, http://tauri.localhost on Windows), which 'self' already
+         covers — Tauri also injects its own CSP header (from
+         src-tauri/tauri.conf.json's app.security.csp) at runtime, so no
+         Tauri-specific scheme needs to be listed here. (This previously
+         allowlisted capacitor://localhost, left over from an earlier
+         Capacitor-based plan; this project ships via Tauri, not Capacitor.) -->
     <meta
       http-equiv="Content-Security-Policy"
       content="
-        default-src 'self' capacitor://localhost;
-        script-src 'self' 'unsafe-inline' capacitor://localhost;
-        style-src 'self' 'unsafe-inline' capacitor://localhost;
-        connect-src 'self' capacitor://localhost https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com;
-        font-src 'self' data: capacitor://localhost;
-        img-src 'self' data: blob: capacitor://localhost;
+        default-src 'self';
+        script-src 'self' 'unsafe-inline';
+        style-src 'self' 'unsafe-inline';
+        connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com;
+        font-src 'self' data:;
+        img-src 'self' data: blob:;
         frame-src 'none';
         object-src 'none';
         base-uri 'self';

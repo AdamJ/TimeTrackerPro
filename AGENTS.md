@@ -1,7 +1,7 @@
 # AGENTS.md - AI Assistant Codebase Guide
 
-**Last Updated:** 2026-07-16
-**Version:** 2.6.2
+**Last Updated:** 2026-08-13
+**Version:** 2.7.0
 
 Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and consultants, with dual storage (localStorage guest mode and optional Supabase cloud sync).
 
@@ -178,8 +178,8 @@ export const MyComponent = () => {
 | `src/components/CommandPalette.tsx`           | `Cmd/Ctrl+K` dialog (shadcn `Command`/`cmdk`) listing New Task/Save actions and page navigation destinations |
 | `src/components/KeyboardShortcutsDialog.tsx`  | `?` help dialog listing all shortcuts via the `Kbd`/`KbdGroup` components |
 | `src/components/ui/kbd.tsx`                   | shadcn `Kbd`/`KbdGroup` components — key-cap styling used by the command palette and shortcuts help dialog |
-| `src/lib/platform.ts`                         | `isMac`/`modKey` — platform-appropriate shortcut glyph (`⌘` vs `Ctrl`) for the UI above |
-| `src-tauri/src/menu.rs`                       | Builds the native app menu; `File` has New Task/Save Changes accelerators, `View` has the Command Palette accelerator, `Help` has a Keyboard Shortcuts entry — all dispatched as a `menu:action` event picked up by `tauriElectronApiShim.ts` |
+| `src/lib/platform.ts`                         | `isMac`/`modKey` — platform-appropriate shortcut glyph (`⌘` vs `Ctrl`) for the UI above; `isIOS` — distinguishes iPadOS (which spoofs a "Macintosh" user agent since iPadOS 13, detected via touch-point count) from a real Mac, used to gate desktop-only Tauri behavior (native menu, self-hosted updater) |
+| `src-tauri/src/menu.rs`                       | Builds the native app menu; `File` has New Task/Save Changes accelerators, `View` has the Command Palette accelerator, `Help` has a Keyboard Shortcuts entry — all dispatched as a `menu:action` event picked up by `tauriElectronApiShim.ts`. Desktop-only (`#[cfg(desktop)]`) — no menu bar concept on iOS |
 
 ---
 
@@ -200,44 +200,52 @@ Clients are a managed entity (added in the client-management feature) that backs
 
 ---
 
-## Tauri Desktop Build
+## Tauri Desktop & iOS Build
 
-The app can also be packaged as a native Mac (DMG) or Windows (NSIS) desktop app via Tauri 2 (a Rust-backed native shell, replacing the earlier Electron build — see `docs/superpowers/plans/2026-07-23-tauri-migration.md` for the migration plan).
+The app can also be packaged as a native Mac (DMG), Windows (NSIS), or iOS app via Tauri 2 (a Rust-backed native shell, replacing the earlier Electron build — see `docs/superpowers/plans/2026-07-23-tauri-migration.md` for the desktop migration plan). The Rust app logic lives in a shared library crate (`src-tauri/src/lib.rs`) so the same backup/quit-flush code runs on desktop and iOS; desktop-only pieces (native menu, self-hosted updater, updater-triggered restart) are compiled out on mobile via `#[cfg(desktop)]`, since iOS has no menu bar and App Store review requires distribution/updates to go through the App Store rather than a self-hosted updater.
 
 **Key files:**
 
 | File | Purpose |
 | ---- | ------- |
-| `src-tauri/Cargo.toml` | Rust crate manifest — `tauri` core plus the `updater`, `dialog`, `opener`, and `process` plugins; `regex`/`chrono`/`tokio` for backup/menu/quit-flush logic |
-| `src-tauri/src/main.rs` | Entry point — registers plugins, manages `BackupState`/`QuitState`, wires the `invoke_handler` (backup commands + `before_quit_flush_done`), builds the native menu, and hooks `on_menu_event`/`on_window_event` |
-| `src-tauri/src/backup.rs` | `backup_write`/`backup_list`/`backup_read` Tauri commands — disk snapshots under the OS app-data dir, pruned to the most recent 20, filename-pattern validated against path traversal; has inline `#[cfg(test)]` unit tests run via `cargo test` |
-| `src-tauri/src/menu.rs` | Builds the native app menu (`File`/`Edit`/`View`/`Help`, plus a macOS-only `Timetraked` app-name submenu — no separate `Window` menu) with `tauri::menu` builders; menu clicks are emitted as a `menu:action` event rather than dispatched over IPC (except macOS's custom "quit" item, which calls `AppHandle::exit()` directly so it reliably fires `RunEvent::ExitRequested` instead of bypassing Tauri via the native `terminate:` selector) |
+| `src-tauri/Cargo.toml` | Rust crate manifest — declares both a `[lib]` (`timetraked_lib`, `crate-type = ["staticlib", "cdylib", "rlib"]`, required for `tauri ios`/`tauri android` builds) and the default binary. `tauri` core plus the `dialog`/`opener` plugins are cross-platform deps; `tauri-plugin-updater`/`tauri-plugin-process` are scoped to `[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]` since neither applies on mobile. `regex`/`chrono`/`tokio` back the backup/menu/quit-flush logic |
+| `src-tauri/src/lib.rs` | `pub fn run()`, annotated `#[cfg_attr(mobile, tauri::mobile_entry_point)]` — builds the Tauri app: registers plugins, manages `BackupState`/`QuitState`, wires the `invoke_handler` (backup commands + `before_quit_flush_done`), hooks `on_window_event`, and always calls `app.run(quit_flush::handle_run_event)`. The native menu build/`set_menu`/`on_menu_event`, plus the updater and process plugins, are gated `#[cfg(desktop)]` |
+| `src-tauri/src/main.rs` | Thin entry point — `fn main() { timetraked_lib::run(); }` plus the Windows-only `windows_subsystem` attribute |
+| `src-tauri/src/backup.rs` | `backup_write`/`backup_list`/`backup_read` Tauri commands — disk snapshots under the OS app-data dir (cross-platform via `app.path().app_data_dir()`, including iOS's sandboxed container), pruned to the most recent 20, filename-pattern validated against path traversal; has inline `#[cfg(test)]` unit tests run via `cargo test` |
+| `src-tauri/src/menu.rs` | Builds the native app menu (`File`/`Edit`/`View`/`Help`, plus a macOS-only `Timetraked` app-name submenu — no separate `Window` menu) with `tauri::menu` builders; menu clicks are emitted as a `menu:action` event rather than dispatched over IPC (except macOS's custom "quit" item, which calls `AppHandle::exit()` directly so it reliably fires `RunEvent::ExitRequested` instead of bypassing Tauri via the native `terminate:` selector). Only compiled on desktop (`#[cfg(desktop)]` in `lib.rs`) — iOS has no menu bar |
 | `src-tauri/src/quit_flush.rs` | Intercepts window close (`WindowEvent::CloseRequested`) *and* app-level exit (`RunEvent::ExitRequested` — Cmd+Q, the Quit menu item, any `AppHandle::exit()`) to emit a `before-quit-flush` event and hold the quit (3s timeout fallback) until the renderer acks via `before_quit_flush_done`, then re-issues a real quit — mirrors the old Electron `before-quit` handshake, but unlike Electron needs its own trigger on both paths (see the module's doc comments for why) |
-| `src-tauri/tauri.conf.json` | App config — window size, dev/build commands (`pnpm dev`/`pnpm build`), CSP (`security.csp`, replacing the Electron main-process CSP header), bundle targets (`dmg`, `nsis`) and icons, and the `updater` plugin's release-feed endpoint + public key |
-| `src/lib/tauriElectronApiShim.ts` | Populates `window.electronAPI` from `@tauri-apps/api` `invoke`/`listen` calls, matching the shape `electron/preload.ts` used to expose — so `useElectronBackup.ts`/`useElectronMenuActions.ts`/`electron.d.ts` needed **no changes** and keep their historical `Electron` names. No-ops when `__TAURI_INTERNALS__` isn't present (web/PWA builds) |
-| `src/lib/tauriUpdater.ts` | Frontend-driven signed auto-update: `checkForUpdatesSilent()` (called on prod desktop startup, exponential backoff up to 24h on repeated failures) and `checkForUpdatesManual()` (Help menu → "check-updates"), both using `@tauri-apps/plugin-updater`'s `check()` + `downloadAndInstall()` and `@tauri-apps/plugin-dialog`/`@tauri-apps/plugin-process` for the confirm/relaunch prompts |
-| `src-tauri/capabilities/default.json` | Permission grants for the main window (`core:default`, `opener:default`, `dialog:default`, `updater:default`, `process:allow-restart`) — Tauri's allow-list replacement for Electron's all-or-nothing `nodeIntegration`/`contextIsolation` flags |
+| `src-tauri/tauri.conf.json` | Base app config — window size, dev/build commands (`pnpm dev`/`pnpm build`), CSP (`security.csp`, replacing the Electron main-process CSP header), bundle targets (`dmg`, `nsis`) and icons, and the `updater` plugin's release-feed endpoint + public key. Desktop-only `identifier` (`com.brimfieldlabs.timetraked`) |
+| `src-tauri/tauri.ios.conf.json` | iOS platform-override config (Tauri deep-merges `tauri.<platform>.conf.json` over the base file for that target) — overrides `identifier` to the App Store bundle ID `com.adamjolicoeur.timetraked`, kept separate from the desktop identifier so existing desktop installs' app-data dir/keychain/updater identity are undisturbed |
+| `src/lib/tauriElectronApiShim.ts` | Populates `window.electronAPI` from `@tauri-apps/api` `invoke`/`listen` calls, matching the shape `electron/preload.ts` used to expose — so `useElectronBackup.ts`/`useElectronMenuActions.ts`/`electron.d.ts` needed **no changes** and keep their historical `Electron` names. No-ops when `__TAURI_INTERNALS__` isn't present (web/PWA builds); the silent startup update check is further gated off on iOS (`!isIOS`) since self-hosted updates have no App Store equivalent |
+| `src/lib/tauriUpdater.ts` | Frontend-driven signed auto-update: `checkForUpdatesSilent()` (called on prod desktop startup, exponential backoff up to 24h on repeated failures) and `checkForUpdatesManual()` (Help menu → "check-updates"), both using `@tauri-apps/plugin-updater`'s `check()` + `downloadAndInstall()` and `@tauri-apps/plugin-dialog`/`@tauri-apps/plugin-process` for the confirm/relaunch prompts. Desktop-only in practice — the Help menu that triggers the manual check doesn't exist on iOS |
+| `src-tauri/capabilities/default.json` | Cross-platform permission grants for the main window (`core:default`, `opener:default`, `dialog:default`) — Tauri's allow-list replacement for Electron's all-or-nothing `nodeIntegration`/`contextIsolation` flags |
+| `src-tauri/capabilities/desktop.json` | Desktop-only permissions (`updater:default`, `process:allow-restart`), scoped via `"platforms": ["macOS", "windows", "linux"]` so iOS doesn't request permissions for plugins it doesn't register |
 
 **npm scripts:**
 
 ```bash
-pnpm tauri            # raw Tauri CLI passthrough (e.g. `pnpm tauri icon`)
-pnpm tauri:dev         # start vite dev + launch the Tauri window (runs `pnpm dev` as beforeDevCommand)
-pnpm tauri:build       # full production build + package signed DMG/NSIS installers (runs `pnpm build` as beforeBuildCommand)
+pnpm tauri             # raw Tauri CLI passthrough (e.g. `pnpm tauri icon`)
+pnpm tauri:dev          # start vite dev + launch the Tauri window (runs `pnpm dev` as beforeDevCommand)
+pnpm tauri:build        # full production build + package signed DMG/NSIS installers (runs `pnpm build` as beforeBuildCommand)
+pnpm tauri:ios:init     # scaffold the Xcode project under src-tauri/gen/apple (gitignored, regenerate as needed)
+pnpm tauri:ios:dev      # launch in iOS Simulator (or a connected device) with hot reload
+pnpm tauri:ios:build    # build the iOS app bundle — requires Xcode + an Apple Developer signing identity, macOS only
 ```
 
 **Architecture notes:**
 
 - The app uses `BrowserRouter` (not `HashRouter`), same as under Electron. Dev mode loads `http://localhost:8080` (`devUrl` in `tauri.conf.json`); production serves `dist/` (`frontendDist`) through Tauri's own asset protocol — no custom `app://` protocol registration needed, unlike the old Electron main process
-- All privileged logic lives in Rust (`src-tauri/src/`) instead of a Node main process; the frontend never gets Node APIs — it only reaches Rust through `@tauri-apps/api`'s `invoke`/`listen`, gated by `src-tauri/capabilities/default.json`
-- Signed auto-updates are frontend-driven (`tauriUpdater.ts` + `tauri-plugin-updater`) rather than main-process-driven (`electron-updater`); the updater's release feed and Ed25519 public key live in `tauri.conf.json`'s `plugins.updater` block, with the matching private key held in CI secrets for `tauri:build` signing
-- `src-tauri/target/` (Rust build output) and `src-tauri/gen/` (generated schemas/bindings) are both gitignored
-- `.github/workflows/release.yml` handles the whole release in one workflow: `detect` (bump type from PR/commit titles) → `approve-major` (gated environment) → `release` (version bump, tag, changelog, GitHub Release) → `desktop` (matrix of `macos-latest`/`windows-latest` building signed DMG/NSIS installers via `tauri-apps/tauri-action` and attaching them to that same release). The `desktop` job checks out the new tag, so `tauri.conf.json`'s `"version": "../package.json"` picks up the bumped version. Replaces the old separate `tauri-release.yml`/`electron-release.yml` `workflow_run` chain
+- All privileged logic lives in Rust (`src-tauri/src/`) instead of a Node main process; the frontend never gets Node APIs — it only reaches Rust through `@tauri-apps/api`'s `invoke`/`listen`, gated by the `src-tauri/capabilities/*.json` files
+- Signed auto-updates are frontend-driven (`tauriUpdater.ts` + `tauri-plugin-updater`) rather than main-process-driven (`electron-updater`); the updater's release feed and Ed25519 public key live in `tauri.conf.json`'s `plugins.updater` block, with the matching private key held in CI secrets for `tauri:build` signing. Desktop only — not registered on iOS
+- `src-tauri/target/` (Rust build output) and `src-tauri/gen/` (generated schemas/bindings, including `gen/apple` — the `tauri ios init`-generated Xcode project) are both gitignored
+- `.github/workflows/release.yml` handles the whole release in one workflow: `detect` (bump type from PR/commit titles) → `approve-major` (gated environment) → `release` (version bump, tag, changelog, GitHub Release) → `desktop` (matrix of `macos-latest`/`windows-latest` building signed DMG/NSIS installers via `tauri-apps/tauri-action` and attaching them to that same release). The `desktop` job checks out the new tag, so `tauri.conf.json`'s `"version": "../package.json"` picks up the bumped version. Replaces the old separate `tauri-release.yml`/`electron-release.yml` `workflow_run` chain. **iOS is not yet part of CI** — App Store Connect signing/submission automation is a deliberate follow-up, not wired up; `pnpm tauri:ios:build` is a local-only flow for now
+- `src/lib/platform.ts`'s `isIOS` (touch-point-qualified user-agent check, since iPadOS spoofs a "Macintosh" UA) is the frontend's one platform-gating signal for iOS-specific behavior — prefer extending it over ad hoc `navigator.userAgent` checks elsewhere
 
 **When adding Tauri-specific features:**
 
-- Add new privileged operations as `#[tauri::command]` functions in a `src-tauri/src/*.rs` module and register them in `main.rs`'s `invoke_handler` — never reach for Node-style IPC
-- Grant any new plugin/command permission in `src-tauri/capabilities/default.json`; nothing is available to the frontend by default
+- Add new privileged operations as `#[tauri::command]` functions in a `src-tauri/src/*.rs` module and register them in `lib.rs`'s `invoke_handler` — never reach for Node-style IPC
+- Grant any new plugin/command permission in `src-tauri/capabilities/default.json` (cross-platform) or `capabilities/desktop.json` (desktop-only, via `"platforms"`); nothing is available to the frontend by default
+- If a new feature is desktop-only (native menu, window management, self-hosted updates), gate its registration in `lib.rs` with `#[cfg(desktop)]` rather than letting it fail silently or error at runtime on iOS
 - The frontend never imports `@tauri-apps/api` directly outside `src/lib/tauriElectronApiShim.ts` and `src/lib/tauriUpdater.ts` — extend those two files (or add a sibling `src/lib/tauri*.ts` file) rather than sprinkling `invoke`/`listen` calls through components
 - Keep `useElectronBackup.ts`/`useElectronMenuActions.ts`/`electron.d.ts` named as-is; renaming them would be a pure churn diff since the shim's whole purpose is presenting the pre-migration `window.electronAPI` shape unchanged
 

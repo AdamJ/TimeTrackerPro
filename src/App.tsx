@@ -21,7 +21,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { CommandPalette } from "@/components/CommandPalette";
 import { KeyboardShortcutsDialog } from "@/components/KeyboardShortcutsDialog";
 import { Button } from "@/components/ui/button";
-import { Keyboard } from "lucide-react";
+import { Keyboard, Search } from "lucide-react";
 import {
   SidebarInset,
   SidebarProvider,
@@ -114,6 +114,16 @@ const AppShell = () => {
           {badge}
           <div className="ml-auto flex items-center gap-2">
             {actions}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7"
+              onClick={openCommandPalette}
+              aria-label="Command palette"
+              title="Command palette (Cmd/Ctrl+K)"
+            >
+              <Search className="size-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
