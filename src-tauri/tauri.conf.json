@@ -25,6 +25,9 @@
     }
   },
   "bundle": {
+    "iOS": {
+      "bundleVersion": "100"
+    },
     "active": true,
     "targets": ["dmg", "nsis"],
     "icon": [

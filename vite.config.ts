@@ -24,6 +24,7 @@ export default defineConfig({
       ],
       manifest: false,
       workbox: {
+        maximumFileSizeToCacheInBytes: 4000000,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,woff,woff2}"],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
