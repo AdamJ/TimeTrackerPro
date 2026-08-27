@@ -10,6 +10,8 @@ export default tseslint.config(
       "dist-electron",
       "dist-electron-build",
       "src/components/ui",
+      "src-tauri/gen",
+      "src-tauri/target",
       "node_modules",
       "dev-dist/"
     ]

@@ -57,6 +57,7 @@ Open [http://localhost:8080](http://localhost:8080) in your browser.
 pnpm dev                 # Start dev server (localhost:8080)
 pnpm build               # Production build
 pnpm preview             # Preview production build
+pnpm tauri:ios:dev       # Run iOS dev build; uses --host for physical devices
 
 # Code Quality
 pnpm lint                # ESLint

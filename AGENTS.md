@@ -228,13 +228,13 @@ pnpm tauri             # raw Tauri CLI passthrough (e.g. `pnpm tauri icon`)
 pnpm tauri:dev          # start vite dev + launch the Tauri window (runs `pnpm dev` as beforeDevCommand)
 pnpm tauri:build        # full production build + package signed DMG/NSIS installers (runs `pnpm build` as beforeBuildCommand)
 pnpm tauri:ios:init     # scaffold the Xcode project under src-tauri/gen/apple (gitignored, regenerate as needed)
-pnpm tauri:ios:dev      # launch in iOS Simulator (or a connected device) with hot reload
+pnpm tauri:ios:dev      # launch in iOS Simulator (or a connected device) with hot reload; passes `--host` for physical iPhones
 pnpm tauri:ios:build    # build the iOS app bundle — requires Xcode + an Apple Developer signing identity, macOS only
 ```
 
 **Architecture notes:**
 
-- The app uses `BrowserRouter` (not `HashRouter`), same as under Electron. Dev mode loads `http://localhost:8080` (`devUrl` in `tauri.conf.json`); production serves `dist/` (`frontendDist`) through Tauri's own asset protocol — no custom `app://` protocol registration needed, unlike the old Electron main process
+- The app uses `BrowserRouter` (not `HashRouter`), same as under Electron. Dev mode loads `http://localhost:8080` (`devUrl` in `tauri.conf.json`), but physical iOS devices need Tauri's `--host` flow so the phone receives a Mac-reachable URL instead of resolving `localhost` on the device. `vite.config.ts` consumes `TAURI_DEV_HOST` for the dev server/HMR host and keeps port 8080 strict. Production serves `dist/` (`frontendDist`) through Tauri's own asset protocol — no custom `app://` protocol registration needed, unlike the old Electron main process
 - All privileged logic lives in Rust (`src-tauri/src/`) instead of a Node main process; the frontend never gets Node APIs — it only reaches Rust through `@tauri-apps/api`'s `invoke`/`listen`, gated by the `src-tauri/capabilities/*.json` files
 - Signed auto-updates are frontend-driven (`tauriUpdater.ts` + `tauri-plugin-updater`) rather than main-process-driven (`electron-updater`); the updater's release feed and Ed25519 public key live in `tauri.conf.json`'s `plugins.updater` block, with the matching private key held in CI secrets for `tauri:build` signing. Desktop only — not registered on iOS
 - `src-tauri/target/` (Rust build output) and `src-tauri/gen/` (generated schemas/bindings, including `gen/apple` — the `tauri ios init`-generated Xcode project) are both gitignored

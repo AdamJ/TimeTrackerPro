@@ -496,6 +496,10 @@ To add a new theme color: add the HSL value to `:root`/`.dark`, then map it in `
 
 ## Development Workflow
 
+### iOS Device Development
+
+Use `pnpm tauri:ios:dev` for iOS hot reload. The script passes `--host` so Tauri replaces the `localhost:8080` dev URL with a host the physical iPhone can reach, and `vite.config.ts` binds/HMRs through `TAURI_DEV_HOST`.
+
 ### Git Workflow
 
 **Branch naming:**

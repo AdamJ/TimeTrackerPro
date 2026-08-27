@@ -23,7 +23,7 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "tauri:ios:init": "tauri ios init",
-    "tauri:ios:dev": "tauri ios dev",
+    "tauri:ios:dev": "tauri ios dev --host",
     "tauri:ios:build": "tauri ios build",
     "db:migrate": "tsx server/migrate.ts",
     "db:seed": "tsx server/seed.ts",
