@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ResponsiveSelect } from "@/components/ui/responsive-select";
@@ -36,6 +42,14 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, onCancel, de
     (c) => c.id === selectedCategory
   );
 
+  const resetForm = () => {
+    setTitle("");
+    setTitleTouched(false);
+    setDescription("");
+    setSelectedProject("");
+    setSelectedCategory("");
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setTitleTouched(true);
@@ -47,168 +61,162 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, onCancel, de
         selectedProjectData?.client,
         selectedCategoryData?.id
       );
-      setTitle("");
-      setTitleTouched(false);
-      setDescription("");
-      setSelectedProject("");
-      setSelectedCategory("");
+      resetForm();
       setIsOpen(false);
     }
   };
 
+  const handleCancel = () => {
+    setIsOpen(false);
+    resetForm();
+    onCancel?.();
+  };
+
   const titleError = titleTouched && !title.trim() ? "Task title is required." : "";
 
-  if (!isOpen) {
-    return (
-      <Button
-        variant="default"
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-16 fab-nav-offset md:bottom-6 right-6 w-16 h-16 rounded-full text-white text-md shadow-2xl hover:shadow-3xl transition-all duration-200 flex items-center justify-center z-50 hover:scale-110"
-        aria-label="New Task"
-      >
-        <Plus style={{ fontSize: "1.5rem", width: "1.5rem", height: "1.5rem" }} />
-      </Button>
-    );
-  }
-
   return (
-    <Card className="border-border bg-muted/50">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Start New Task</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="space-y-1">
-            <Label htmlFor="new-task-title">
-              Task Title <span className="text-destructive" aria-hidden="true">*</span>
-            </Label>
-            <Input
-              id="new-task-title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onBlur={() => setTitleTouched(true)}
-              placeholder="What are you working on?"
-              aria-required="true"
-              aria-invalid={!!titleError}
-              aria-describedby={titleError ? "new-task-title-error" : undefined}
-              autoFocus
-            />
-            {titleError && (
-              <p id="new-task-title-error" className="text-sm text-destructive" role="alert">
-                {titleError}
-              </p>
-            )}
-          </div>
+    <>
+      {!isOpen && (
+        <Button
+          variant="default"
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-16 fab-nav-offset md:bottom-6 right-6 w-16 h-16 rounded-full text-white text-md shadow-2xl hover:shadow-3xl transition-all duration-200 flex items-center justify-center z-50 hover:scale-110"
+          aria-label="New Task"
+        >
+          <Plus style={{ fontSize: "1.5rem", width: "1.5rem", height: "1.5rem" }} />
+        </Button>
+      )}
 
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <Label>Description</Label>
-              <span className="text-xs text-muted-foreground">Markdown supported</span>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
+        <DialogContent className="max-w-[90dvw] sm:max-w-[980px] max-h-[90dvh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Start New Task</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="new-task-title">
+                Task Title <span className="text-destructive" aria-hidden="true">*</span>
+              </Label>
+              <Input
+                id="new-task-title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={() => setTitleTouched(true)}
+                placeholder="What are you working on?"
+                aria-required="true"
+                aria-invalid={!!titleError}
+                aria-describedby={titleError ? "new-task-title-error" : undefined}
+                autoFocus
+              />
+              {titleError && (
+                <p id="new-task-title-error" className="text-sm text-destructive" role="alert">
+                  {titleError}
+                </p>
+              )}
             </div>
-          <Tabs defaultValue="edit" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="edit">Edit</TabsTrigger>
-              <TabsTrigger value="preview">Preview</TabsTrigger>
-            </TabsList>
-            <TabsContent value="edit">
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter task description (optional, supports Markdown)"
-                className="w-full min-h-[80px] resize-none"
-              />
-            </TabsContent>
-            <TabsContent value="preview">
-              <div className="w-full min-h-[80px] p-3 border rounded-md bg-background">
-                {description ? (
-                  <MarkdownDisplay content={description} />
-                ) : (
-                  <p className="text-sm text-muted-foreground">No description to preview</p>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {categories.length > 0 && (
-              <div className="space-y-1">
-                <Label htmlFor="new-task-category">Category</Label>
-              <ResponsiveSelect
-                id="new-task-category"
-                className="w-full"
-                aria-label="Select category"
-                value={selectedCategory}
-                onValueChange={setSelectedCategory}
-                placeholder="Select a category"
-                options={categories.map((category) => ({
-                  value: category.id,
-                  textLabel: category.name,
-                  label: (
-                    <div className="flex items-center space-x-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: category.color }}
-                      />
-                      <span>{category.name}</span>
-                    </div>
-                  ),
-                }))}
-              />
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <Label>Description</Label>
+                <span className="text-xs text-muted-foreground">Markdown supported</span>
               </div>
-            )}
+              <Tabs defaultValue="edit" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="edit">Edit</TabsTrigger>
+                  <TabsTrigger value="preview">Preview</TabsTrigger>
+                </TabsList>
+                <TabsContent value="edit">
+                  <Textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Enter task description (optional, supports Markdown)"
+                    className="w-full min-h-[160px] resize-none"
+                  />
+                </TabsContent>
+                <TabsContent value="preview">
+                  <div className="w-full min-h-[160px] p-3 border rounded-md bg-background">
+                    {description ? (
+                      <MarkdownDisplay content={description} />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No description to preview</p>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
 
-            {projects.length > 0 && (
-              <div className="space-y-1">
-                <Label htmlFor="new-task-project">Project</Label>
-              <ResponsiveSelect
-                id="new-task-project"
-                className="w-full"
-                aria-label="Select project"
-                value={selectedProject}
-                onValueChange={setSelectedProject}
-                placeholder="Select a project"
-                options={projects.map((project) => ({
-                  value: project.id,
-                  textLabel: `${project.name} (${project.client})`,
-                  label: (
-                    <div className="flex flex-col">
-                      <span>{project.name}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {project.client}
-                      </span>
-                    </div>
-                  ),
-                }))}
-              />
-              </div>
-            )}
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {categories.length > 0 && (
+                <div className="space-y-1">
+                  <Label htmlFor="new-task-category">Category</Label>
+                  <ResponsiveSelect
+                    id="new-task-category"
+                    className="w-full"
+                    aria-label="Select category"
+                    value={selectedCategory}
+                    onValueChange={setSelectedCategory}
+                    placeholder="Select a category"
+                    options={categories.map((category) => ({
+                      value: category.id,
+                      textLabel: category.name,
+                      label: (
+                        <div className="flex items-center space-x-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: category.color }}
+                          />
+                          <span>{category.name}</span>
+                        </div>
+                      ),
+                    }))}
+                  />
+                </div>
+              )}
 
-          <div className="flex space-x-2">
-            <Button
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => {
-                setIsOpen(false);
-                setTitle("");
-                setTitleTouched(false);
-                setDescription("");
-                setSelectedProject("");
-                setSelectedCategory("");
-                onCancel?.();
-              }}
-              variant="ghost"
-            >
-              Cancel
-            </Button>
-            <Button type="submit" variant="default">
-              Start Task
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+              {projects.length > 0 && (
+                <div className="space-y-1">
+                  <Label htmlFor="new-task-project">Project</Label>
+                  <ResponsiveSelect
+                    id="new-task-project"
+                    className="w-full"
+                    aria-label="Select project"
+                    value={selectedProject}
+                    onValueChange={setSelectedProject}
+                    placeholder="Select a project"
+                    options={projects.map((project) => ({
+                      value: project.id,
+                      textLabel: `${project.name} (${project.client})`,
+                      label: (
+                        <div className="flex flex-col">
+                          <span>{project.name}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {project.client}
+                          </span>
+                        </div>
+                      ),
+                    }))}
+                  />
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={handleCancel}
+                variant="ghost"
+              >
+                Cancel
+              </Button>
+              <Button type="submit" variant="default">
+                Start Task
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
