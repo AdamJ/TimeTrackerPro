@@ -52,7 +52,7 @@ function formatTime12Hour(date: Date | undefined): string {
   return `${hours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
 }
 
-export const ArchivedTaskRow: React.FC<ArchivedTaskRowProps> = ({
+export const ArchivedTaskRow: React.FC<ArchivedTaskRowProps> = React.memo(({
   task,
   isExpanded,
   onToggleExpand,
@@ -68,6 +68,7 @@ export const ArchivedTaskRow: React.FC<ArchivedTaskRowProps> = ({
     category: "none",
   });
   const [timeData, setTimeData] = useState({ startTime: "", endTime: "" });
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   useEffect(() => {
     if (isExpanded) {
@@ -84,6 +85,9 @@ export const ArchivedTaskRow: React.FC<ArchivedTaskRowProps> = ({
         startTime: formatTimeForInput(task.startTime),
         endTime: task.endTime ? formatTimeForInput(task.endTime) : "",
       });
+    }
+    if (!isExpanded) {
+      setConfirmingDelete(false);
     }
   }, [task, projects, isExpanded]);
 
@@ -175,6 +179,8 @@ export const ArchivedTaskRow: React.FC<ArchivedTaskRowProps> = ({
                   size="sm"
                   variant="outline"
                   aria-label={isExpanded ? "Close task editor" : "Edit task"}
+                  aria-expanded={isExpanded}
+                  aria-controls={`archive-task-editor-${task.id}`}
                 >
                   {isExpanded ? (
                     <X className="w-3 h-3" />
@@ -185,26 +191,48 @@ export const ArchivedTaskRow: React.FC<ArchivedTaskRowProps> = ({
               </TooltipTrigger>
               <TooltipContent>{isExpanded ? "Close" : "Edit task"}</TooltipContent>
             </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
+            {confirmingDelete ? (
+              <div className="flex space-x-1">
                 <Button
                   onClick={() => onDelete(task.id)}
                   size="sm"
                   variant="destructive"
-                  aria-label="Delete task"
+                  aria-label="Confirm delete task"
                   className="text-white"
                 >
-                  <Trash2 className="w-3 h-3" />
+                  Confirm
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>Delete task</TooltipContent>
-            </Tooltip>
+                <Button
+                  onClick={() => setConfirmingDelete(false)}
+                  size="sm"
+                  variant="outline"
+                  aria-label="Cancel delete task"
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => setConfirmingDelete(true)}
+                    size="sm"
+                    variant="destructive"
+                    aria-label="Delete task"
+                    className="text-white"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Delete task</TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </TableCell>
       </TableRow>
 
       {isExpanded && (
-        <TableRow>
+        <TableRow id={`archive-task-editor-${task.id}`}>
           <TableCell colSpan={7}>
             <div className="space-y-4 py-2">
               <div>
@@ -370,4 +398,5 @@ export const ArchivedTaskRow: React.FC<ArchivedTaskRowProps> = ({
       )}
     </>
   );
-};
+});
+ArchivedTaskRow.displayName = "ArchivedTaskRow";

@@ -76,6 +76,25 @@ describe("ArchivedTaskRow", () => {
     expect(screen.getByRole("button", { name: "Delete task" })).toBeInTheDocument();
   });
 
+  it("announces expanded state via aria-expanded/aria-controls on the Edit toggle", () => {
+    renderRow({
+      task: baseTask,
+      isExpanded: true,
+      onToggleExpand: vi.fn(),
+      onSave: vi.fn(),
+      onDelete: vi.fn(),
+      categories,
+      projects,
+    });
+
+    const toggle = screen.getByRole("button", { name: "Close task editor" });
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(toggle).toHaveAttribute(
+      "aria-controls",
+      "archive-task-editor-task-1"
+    );
+  });
+
   it("calls onToggleExpand with the task id when Edit is clicked", async () => {
     const onToggleExpand = vi.fn();
     const user = userEvent.setup();
@@ -93,7 +112,7 @@ describe("ArchivedTaskRow", () => {
     expect(onToggleExpand).toHaveBeenCalledWith("task-1");
   });
 
-  it("calls onDelete with the task id when Delete is clicked", async () => {
+  it("requires a confirm step before calling onDelete", async () => {
     const onDelete = vi.fn();
     const user = userEvent.setup();
     renderRow({
@@ -107,7 +126,93 @@ describe("ArchivedTaskRow", () => {
     });
 
     await user.click(screen.getByRole("button", { name: "Delete task" }));
+    expect(onDelete).not.toHaveBeenCalled();
+
+    await user.click(
+      screen.getByRole("button", { name: "Confirm delete task" })
+    );
     expect(onDelete).toHaveBeenCalledWith("task-1");
+  });
+
+  it("reverts to the single delete button when Cancel delete task is clicked", async () => {
+    const onDelete = vi.fn();
+    const user = userEvent.setup();
+    renderRow({
+      task: baseTask,
+      isExpanded: false,
+      onToggleExpand: vi.fn(),
+      onSave: vi.fn(),
+      onDelete,
+      categories,
+      projects,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Delete task" }));
+    await user.click(
+      screen.getByRole("button", { name: "Cancel delete task" })
+    );
+
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "Delete task" })
+    ).toBeInTheDocument();
+  });
+
+  it("resets a mid-confirm delete state when the row collapses", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderRow({
+      task: baseTask,
+      isExpanded: true,
+      onToggleExpand: vi.fn(),
+      onSave: vi.fn(),
+      onDelete: vi.fn(),
+      categories,
+      projects,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Delete task" }));
+    expect(
+      screen.getByRole("button", { name: "Confirm delete task" })
+    ).toBeInTheDocument();
+
+    rerender(
+      <TooltipProvider>
+        <Table>
+          <TableBody>
+            <ArchivedTaskRow
+              task={baseTask}
+              isExpanded={false}
+              onToggleExpand={vi.fn()}
+              onSave={vi.fn()}
+              onDelete={vi.fn()}
+              categories={categories}
+              projects={projects}
+            />
+          </TableBody>
+        </Table>
+      </TooltipProvider>
+    );
+    rerender(
+      <TooltipProvider>
+        <Table>
+          <TableBody>
+            <ArchivedTaskRow
+              task={baseTask}
+              isExpanded={true}
+              onToggleExpand={vi.fn()}
+              onSave={vi.fn()}
+              onDelete={vi.fn()}
+              categories={categories}
+              projects={projects}
+            />
+          </TableBody>
+        </Table>
+      </TooltipProvider>
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Delete task" })
+    ).toBeInTheDocument();
   });
 
   it("pre-fills the expanded editor with times rounded to the nearest 15 minutes", () => {
