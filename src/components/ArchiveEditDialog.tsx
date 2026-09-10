@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -189,8 +189,18 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   // of whether the day-summary editor was ever opened. Tasks are compared
   // against the rounded baseline (not the raw day.tasks) so the automatic
   // last-task rounding alone doesn't look like an unsaved change.
-  const tasksChanged =
-    JSON.stringify(tasks) !== JSON.stringify(getRoundedTasks(day.tasks));
+  // getRoundedTasks is redefined every render; depending on day.tasks alone
+  // still recomputes exactly when the baseline actually changes.
+  const roundedBaselineTasks = useMemo(
+    () => getRoundedTasks(day.tasks),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [day.tasks],
+  );
+
+  const tasksChanged = useMemo(
+    () => JSON.stringify(tasks) !== JSON.stringify(roundedBaselineTasks),
+    [tasks, roundedBaselineTasks],
+  );
   const hasChanges = dayFormIsDirty || tasksChanged;
 
   const parseTimeInput = (timeStr: string, baseDate: Date): Date => {
@@ -305,18 +315,28 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
     onClose();
   };
 
-  const handleTaskSave = (updatedTask: Task) => {
-    const updatedTasks = tasks.map((t) =>
-      t.id === updatedTask.id ? updatedTask : t,
-    );
-    setTasks(updatedTasks);
-    setExpandedTaskId(null);
-  };
+  const handleTaskSave = useCallback(
+    (updatedTask: Task) => {
+      const updatedTasks = tasks.map((t) =>
+        t.id === updatedTask.id ? updatedTask : t,
+      );
+      setTasks(updatedTasks);
+      setExpandedTaskId(null);
+    },
+    [tasks],
+  );
 
-  const handleTaskDelete = (taskId: string) => {
-    const updatedTasks = tasks.filter((t) => t.id !== taskId);
-    setTasks(updatedTasks);
-  };
+  const handleTaskDelete = useCallback(
+    (taskId: string) => {
+      const updatedTasks = tasks.filter((t) => t.id !== taskId);
+      setTasks(updatedTasks);
+    },
+    [tasks],
+  );
+
+  const handleToggleExpand = useCallback((id: string) => {
+    setExpandedTaskId((cur) => (cur === id ? null : id));
+  }, []);
 
   const handleCancel = () => {
     resetFormState();
@@ -344,7 +364,6 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                   size="sm"
                   aria-label="Restore this day"
                   className="text-blue-11 hover:text-blue-12"
-                  autoFocus
                 >
                   <RotateCcw className="w-4 h-4" />
                   <span className="hidden md:block md:ml-2">Restore</span>
@@ -430,6 +449,8 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                           ? "Close day summary editor"
                           : "Edit day summary"
                       }
+                      aria-expanded={isSummaryEditing}
+                      aria-controls="day-summary-editor-region"
                     >
                       <Edit className="w-3 h-3" />
                     </Button>
@@ -440,7 +461,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                 </Tooltip>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent id="day-summary-editor-region">
               {isSummaryEditing ? (
                 <Form {...dayForm}>
                   <div className="space-y-4">
@@ -587,16 +608,16 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <Table>
+                <Table aria-label={`Tasks for ${formatDate(day.startTime)}`}>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Task</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Project/Client</TableHead>
-                      <TableHead>Start Time</TableHead>
-                      <TableHead>End Time</TableHead>
-                      <TableHead>Duration</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead scope="col">Task</TableHead>
+                      <TableHead scope="col">Category</TableHead>
+                      <TableHead scope="col">Project/Client</TableHead>
+                      <TableHead scope="col">Start Time</TableHead>
+                      <TableHead scope="col">End Time</TableHead>
+                      <TableHead scope="col">Duration</TableHead>
+                      <TableHead scope="col">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -605,9 +626,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                         key={task.id}
                         task={task}
                         isExpanded={expandedTaskId === task.id}
-                        onToggleExpand={(id) =>
-                          setExpandedTaskId((cur) => (cur === id ? null : id))
-                        }
+                        onToggleExpand={handleToggleExpand}
                         onSave={handleTaskSave}
                         onDelete={handleTaskDelete}
                         categories={categories}

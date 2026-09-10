@@ -8,7 +8,7 @@ interface MarkdownDisplayProps {
   className?: string;
 }
 
-export const MarkdownDisplay: React.FC<MarkdownDisplayProps> = ({ content, className = "" }) => {
+export const MarkdownDisplay: React.FC<MarkdownDisplayProps> = React.memo(({ content, className = "" }) => {
   return (
     <div className={`prose prose-sm max-w-none dark:prose-invert
       prose-p:leading-relaxed prose-p:my-1
@@ -37,4 +37,5 @@ export const MarkdownDisplay: React.FC<MarkdownDisplayProps> = ({ content, class
       </ReactMarkdown>
     </div>
   );
-};
+});
+MarkdownDisplay.displayName = "MarkdownDisplay";
