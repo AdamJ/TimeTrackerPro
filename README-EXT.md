@@ -44,6 +44,20 @@ For the main overview, see [README.md](README.md).
 
 ### Daily Workflow
 
+**Evening:**
+
+1. Click "End Day" on the Tasks page (or the Dashboard) when finished.
+2. Review your day summary (total time, revenue, task breakdown).
+3. Click "Post Time to Archive" to save permanently.
+
+**Ongoing:**
+
+- View archived days on the **Archive** page.
+- Manage projects and rates via **Archive → Projects**.
+- Customize categories on the **Categories** page.
+- Export data via **Archive → Export**.
+- Print your current day's tasks via the Print button in the sidebar footer (web/PWA and Tauri desktop).
+
 **Morning:**
 
 1. Click "Start Day" on the dashboard to begin tracking. The app navigates to the **Tasks** page automatically.
@@ -86,6 +100,13 @@ Available in both the web/PWA build and the Tauri desktop app:
 New Task uses a plain `N` rather than `Cmd/Ctrl+N` in the web/PWA build because Chrome and Firefox reserve that combination for opening a new browser window and never deliver it to page JavaScript from a regular tab — it's unpreventable outside of an installed PWA. The command palette and help dialog are also reachable from the keyboard icon in the page header.
 
 On the Tauri desktop build, `Cmd/Ctrl+S`/`Cmd/Ctrl+K` are native menu accelerators (File/View menus, built in Rust) dispatched to the frontend as a `menu:action` event; New Task keeps the native `Cmd/Ctrl+N` accelerator there too, since a native app menu doesn't have the browser's reservation. `?` has no native accelerator but works identically on both platforms since it isn't intercepted by the OS menu layer.
+
+### Sidebar Footer
+
+The sidebar footer contains two key elements:
+
+- **Sync Status** — shows sync state (connected/syncing/unsaved) with a refresh button. In guest mode or when changes are saved, it shows a checkmark; when unsaved changes exist, it shows a warning icon and prompts to save. Clicking triggers a manual sync to Supabase.
+- **Print** — triggers `window.print()` for quick printing of the current day's tasks and summary.
 
 ### Project Management
 
@@ -191,6 +212,8 @@ Task descriptions support **GitHub Flavored Markdown (GFM)**:
 
 **Native-Like Experience:** Standalone window, app icon, splash screen on launch.
 
+**Sidebar Footer:** Floating sidebar variant with icon-only collapse; footer contains Sync Status (refresh button with state indicators) and Print button for quick printing.
+
 ---
 
 ## Authentication & Storage
@@ -289,7 +312,7 @@ See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) and [docs/SECURITY.md](docs
 | Category     | Technology                                  |
 | ------------ | ------------------------------------------- |
 | UI Framework | React 18 + TypeScript 5.9                   |
-| Build        | Vite 5 + SWC                                |
+| Build        | Vite 6 + SWC                                |
 | Routing      | React Router 6                              |
 | Styling      | Tailwind CSS 4 + Radix UI + shadcn/ui       |
 | Icons        | Radix Icons (primary), Lucide (fallback)    |
@@ -359,7 +382,6 @@ localStorage OR Supabase
 
 ```javascript
 NetworkFirst:  Supabase API calls (fresh data preferred)
-CacheFirst:    Google Fonts (static assets)
 Precache:      App shell (HTML, CSS, JS, icons)
 ```
 

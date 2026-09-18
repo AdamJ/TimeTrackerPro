@@ -1,7 +1,7 @@
 # AGENTS.md - AI Assistant Codebase Guide
 
-**Last Updated:** 2026-08-13
-**Version:** 2.7.0
+**Last Updated:** 2026-09-18
+**Version:** 2.8.0
 
 Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and consultants, with dual storage (localStorage guest mode and optional Supabase cloud sync).
 
@@ -13,7 +13,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 
 ## Documentation
 
-- After completing a feature, bug fix, or security fix, automatically run the doc-sync workflow to update CLAUDE.md, CHANGELOG.md, and README/README-EXT.md.
+- After completing a feature, bug fix, or security fix, automatically run the doc-sync workflow to update CHANGELOG.md, README.md, README-EXT.md, and AGENTS.md.
 - Use `feat:` / `fix:` / `security:` prefixes on PRs to trigger releases.
 
 ## Testing & Verification
@@ -104,7 +104,7 @@ After implementing changes, run lint and tests before considering a task complet
 | Layer        | Technology                                                                                                                         |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | UI Framework | React 18 + TypeScript 5.9                                                                                                          |
-| Build        | Vite 5 + SWC                                                                                                                       |
+| Build        | Vite 6 + SWC                                                                                                                       |
 | Routing      | React Router 6                                                                                                                     |
 | Styling      | Tailwind CSS 4 + Radix UI + shadcn/ui                                                                                              |
 | Icons        | Radix Icons (primary), Lucide (fallback)                                                                                           |
@@ -161,7 +161,8 @@ export const MyComponent = () => {
 | `src/pages/Clients.tsx`                       | Thin page wrapper around `ClientManagement` (route `/clients`)                     |
 | `src/services/localStorageService/clients.ts` | Client persistence module for guest mode (versioned localStorage blob)             |
 | `supabase/migrations/20260530_clients.sql`    | `clients` table + RLS + one-time backfill from distinct project clients            |
-| `src/components/AppSidebar.tsx`               | Collapsible sidebar nav (Planning/Manage/Reports groups); reads page title/actions from `PageTitleContext`; footer has sync, auth, export |
+| `src/components/AppSidebar.tsx`               | Collapsible sidebar nav (Planning/Manage/Reports groups); reads page title/actions from `PageTitleContext`; footer has print button, sync status, and auth |
+| `src/components/SyncStatus.tsx`               | Footer status indicator showing sync state (connected/syncing/unsaved) with refresh button |
 | `src/contexts/PageTitleContext.tsx`           | `PageTitleProvider` — holds title, badge, actions state for the sidebar header     |
 | `src/contexts/page-title-context.ts`          | Context object + default value + `PageTitleContextType` interface                  |
 | `src/hooks/usePageTitle.ts`                   | `usePageTitle()` hook — consumed by `PageLayout` (write) and sidebar header (read) |

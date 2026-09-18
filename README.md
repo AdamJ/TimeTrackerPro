@@ -26,7 +26,7 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 - **Backdated Entry Creation** — log work for past days directly from the Archive page via "Add Past Entry"
 - **CSV Import** — bring in existing time data from other tools
 - **Weekly Report** — AI-generated work summaries (standup, client, or retrospective tone)
-- **Keyboard Shortcuts** — `N` new task, `Cmd/Ctrl+S` save, `Cmd/Ctrl+K` command palette, `?` for the shortcuts help dialog (web and Tauri desktop; the desktop app's native menu also offers `Cmd/Ctrl+N` for new task)
+- **Keyboard Shortcuts** — `N` new task, `Cmd/Ctrl+S` save, `Cmd/Ctrl+K` command palette, `?` for the shortcuts help dialog (web and Tauri desktop; the desktop app's native menu also offers `Cmd/Ctrl+N` for new task); the sidebar footer now includes a Print button for quick printing
 - **No Account Required** — full functionality with local storage; optional cloud sync via Supabase
 - **Self-Hosted SQL Backend** — optionally run against your own PostgreSQL or MySQL database instead of Supabase or local storage (see [docs/SQL_BACKEND.md](docs/SQL_BACKEND.md))
 - **PWA** — installable on desktop/mobile
