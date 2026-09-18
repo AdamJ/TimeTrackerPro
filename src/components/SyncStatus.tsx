@@ -7,6 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { SidebarMenuButton, SidebarMenuItem } from './ui/sidebar';
 
 interface SyncStatusProps {
   isAuthenticated: boolean;
@@ -61,34 +62,34 @@ export const SyncStatus = memo(function SyncStatus({
   }
 
   return (
-    <div
+    <SidebarMenuItem
       role="status"
       aria-live="polite"
-      className={`flex gap-2 w-full transition-opacity duration-300 ${isSyncing || hasUnsavedChanges || showStatus ? 'opacity-100' : 'opacity-70'
+      className={`transition-opacity duration-300 ${isSyncing || hasUnsavedChanges || showStatus ? 'opacity-100' : 'opacity-70'
         }`}
     >
-      <Button
-        variant="outline"
-        size="default"
-        onClick={handleRefresh}
-        disabled={isSyncing}
-        className="w-full hover:cursor-pointer"
-        aria-label={hasUnsavedChanges ? "Save changes" : "Changes saved"}
-      >
-        {isSyncing ? (
-          <RefreshCw aria-hidden="true" className="h-4 w-4 animate-spin text-blue-9" />
-        ) : hasUnsavedChanges ? (
-          <>
-            <AlertCircle aria-hidden="true" className="h-4 w-4 text-orange-9" />
-            <span>Save</span>
-          </>
-        ) : (
-          <>
-            <Save aria-hidden="true" className="h-4 w-4 text-green-9" />
-            <span>Save</span>
-          </>
-        )}
-      </Button>
-    </div>
+      <SidebarMenuButton asChild>
+        <Button
+          variant="ghost"
+          size="default"
+          onClick={handleRefresh}
+          disabled={isSyncing}
+          className="hover:cursor-pointer"
+          aria-label={hasUnsavedChanges ? "Save changes" : "Changes saved"}
+        >
+          {isSyncing ? (
+            <RefreshCw aria-hidden="true" className="animate-spin text-blue-9" />
+          ) : hasUnsavedChanges ? (
+            <>
+              <AlertCircle aria-hidden="true" className="text-orange-9" />
+            </>
+          ) : (
+            <>
+              <Save aria-hidden="true" className="text-green-9" />
+            </>
+          )}
+        </Button>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 });

@@ -32,7 +32,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onSignInClick }) => {
         className="rounded-xl h-10 hover:cursor-pointer"
       >
         <UserLock className="h-4 w-4" />
-        <span>Sign In</span>
+        <span className="d-none">Sign In</span>
       </Button>
     );
   }
