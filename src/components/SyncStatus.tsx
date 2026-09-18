@@ -1,5 +1,5 @@
 import { useState, useEffect, memo, useCallback } from 'react';
-import { CloudOff, RefreshCw, Save, AlertCircle } from 'lucide-react';
+import { CloudOff, RefreshCw, Save, AlertCircle, DatabaseZap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -39,25 +39,24 @@ export const SyncStatus = memo(function SyncStatus({
 
   if (!isAuthenticated) {
     return (
-      <div className="flex gap-2 w-full">
+      <SidebarMenuItem>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
+              <SidebarMenuButton
                 size="default"
                 className="w-full"
                 aria-label="Offline">
                 <CloudOff aria-hidden="true" className="h-4 w-4 text-violet-9" />
                 Local Storage Only
-              </Button>
+              </SidebarMenuButton>
             </TooltipTrigger>
             <TooltipContent>
               Data saved to local storage only
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-      </div>
+      </SidebarMenuItem>
     );
   }
 
@@ -68,10 +67,7 @@ export const SyncStatus = memo(function SyncStatus({
       className={`transition-opacity duration-300 ${isSyncing || hasUnsavedChanges || showStatus ? 'opacity-100' : 'opacity-70'
         }`}
     >
-      <SidebarMenuButton asChild>
-        <Button
-          variant="ghost"
-          size="default"
+      <SidebarMenuButton
           onClick={handleRefresh}
           disabled={isSyncing}
           className="hover:cursor-pointer"
@@ -85,10 +81,10 @@ export const SyncStatus = memo(function SyncStatus({
             </>
           ) : (
             <>
-              <Save aria-hidden="true" className="text-green-9" />
+                <Save aria-hidden="true" className="text-green-9" />
+                Save changes
             </>
           )}
-        </Button>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );

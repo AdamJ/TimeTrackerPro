@@ -103,8 +103,8 @@ export const StartDayDialog: React.FC<StartDayDialogProps> = ({
             Cancel
           </Button>
           <Button
+            variant="default"
             onClick={handleStartDay}
-            className="bg-blue-9 hover:bg-blue-10"
           >
             <Clock aria-hidden="true" className="w-4 h-4 mr-2" />
             Start Day
