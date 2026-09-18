@@ -60,7 +60,7 @@ export const DaySummary: React.FC<DaySummaryProps> = ({
 
             <Button
               onClick={onPostDay}
-              className="w-full bg-green-9 hover:bg-green-10 text-white"
+              className="w-full bg-primary hover:bg-primary/80"
             >
               Post Time to Archive
             </Button>
