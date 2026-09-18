@@ -21,7 +21,6 @@ import { AuthDialog } from "@/components/AuthDialog"
 import { ExportDialog } from "@/components/ExportDialog"
 import { UserMenu } from "@/components/UserMenu"
 import { SyncStatus } from "@/components/SyncStatus"
-import { Button } from "@/components/ui/button"
 import { formatDuration } from "@/utils/timeUtil"
 import { getTotalDayDuration } from "@/utils/calculationUtils"
 import { useAuth } from "@/hooks/useAuth"
@@ -40,7 +39,6 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
-import { Separator } from "./ui/separator"
 
 const navItems = {
   navMain: [
@@ -117,7 +115,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
                 <Link to="/">
-                  <img src="icon.png" alt="" aria-hidden="true" className="size-8 shrink-0" />
+                  <div className="flex aspect-square size-4 items-center rounded-lg text-sidebar-primary-foreground">
+                    <img src="icon.png" alt="" aria-hidden="true" className="size-4" />
+                  </div>
                   <div className="flex flex-col gap-0.5 leading-none">
                     <span className="font-semibold">Timetraked</span>
                     {isDayStarted && tasks.length > 0 && (
@@ -223,32 +223,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         <SidebarFooter>
           <SidebarSeparator />
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton onClick={() => window.print()}>
-                    <Printer />
-                    <span>Print</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                  <SyncStatus
-                    isAuthenticated={isAuthenticated}
-                    lastSyncTime={lastSyncTime}
-                    isSyncing={isSyncing}
-                    hasUnsavedChanges={hasUnsavedChanges}
-                    onRefresh={forceSyncToDatabase}
-                  />
-              </SidebarMenu>
-          {/* <div className="flex flex-col items-center justify-between gap-2 px-2 py-1">
-            <Button
-              variant="outline"
-              size="default"
-              className="w-full hover:cursor-pointer"
-              onClick={() => window.print()}
-            >
-              <Printer className="size-4" />
-              <span>Print</span>
-            </Button>
-            <Separator />
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => window.print()} className="hover:cursor-pointer">
+                <Printer />
+                <span>Print</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SyncStatus
               isAuthenticated={isAuthenticated}
               lastSyncTime={lastSyncTime}
@@ -256,8 +237,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               hasUnsavedChanges={hasUnsavedChanges}
               onRefresh={forceSyncToDatabase}
             />
-          </div> */}
-          <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
+            <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
+          </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
 
