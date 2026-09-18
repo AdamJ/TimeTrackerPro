@@ -78,6 +78,7 @@ export const SyncStatus = memo(function SyncStatus({
           ) : hasUnsavedChanges ? (
             <>
               <AlertCircle aria-hidden="true" className="text-orange-9" />
+              Unsaved changes
             </>
           ) : (
             <>
