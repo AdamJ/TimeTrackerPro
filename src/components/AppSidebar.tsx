@@ -111,7 +111,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <>
-      <Sidebar variant="inset" {...props}>
+      <Sidebar variant="floating" collapsible="icon" {...props}>
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -223,7 +223,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         <SidebarFooter>
           <SidebarSeparator />
-          <div className="flex flex-col items-center justify-between gap-2 px-2 py-1">
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={() => window.print()}>
+                    <Printer />
+                    <span>Print</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                  <SyncStatus
+                    isAuthenticated={isAuthenticated}
+                    lastSyncTime={lastSyncTime}
+                    isSyncing={isSyncing}
+                    hasUnsavedChanges={hasUnsavedChanges}
+                    onRefresh={forceSyncToDatabase}
+                  />
+              </SidebarMenu>
+          {/* <div className="flex flex-col items-center justify-between gap-2 px-2 py-1">
             <Button
               variant="outline"
               size="default"
@@ -241,7 +256,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               hasUnsavedChanges={hasUnsavedChanges}
               onRefresh={forceSyncToDatabase}
             />
-          </div>
+          </div> */}
           <UserMenu onSignInClick={() => setShowAuthDialog(true)} />
         </SidebarFooter>
       </Sidebar>
