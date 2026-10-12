@@ -830,7 +830,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Create new task
     const newTask: Task = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       title,
       description,
       startTime: taskStartTime,
@@ -901,7 +901,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     const carriedOverIds = new Set(carriedOverItems.map(item => item.id));
 
     const dayRecord: DayRecord = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       date: dayStartTime.toDateString(),
       tasks: tasks,
       totalDuration: calcTotalDayDuration(tasks, currentTask, new Date()),
@@ -1017,7 +1017,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const addProject = useCallback((project: Omit<Project, 'id'>) => {
     const newProject: Project = {
       ...project,
-      id: Date.now().toString()
+      id: crypto.randomUUID()
     };
     const next = [...projectsRef.current, newProject];
     projectsRef.current = next;
@@ -1123,7 +1123,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     const trimmed = data.name.trim();
     if (!trimmed) return null;
     const newClient: Client = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       name: trimmed,
       archived: false,
       createdAt: new Date().toISOString(),
@@ -1315,7 +1315,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const addCategory = useCallback((category: Omit<TaskCategory, 'id'>) => {
     const newCategory: TaskCategory = {
       ...category,
-      id: Date.now().toString()
+      id: crypto.randomUUID()
     };
     setCategories(prev => [...prev, newCategory]);
     setHasUnsavedChanges(true);
