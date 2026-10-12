@@ -39,6 +39,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
+import { ResponsiveSelect } from "@/components/ui/responsive-select";
 import { TimePicker } from "@/components/ui/scroll-time-picker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
