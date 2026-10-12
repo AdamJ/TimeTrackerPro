@@ -34,6 +34,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -56,6 +57,8 @@ import {
   Edit,
   AlertTriangle,
   RotateCcw,
+  Plus,
+  X,
 } from "lucide-react";
 import {
   formatDuration,
@@ -119,14 +122,27 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
     categories,
     projects,
     isDayStarted,
+    addTaskToArchivedDay,
   } = useTimeTracking();
   const { toast } = useToast();
   const { confirmDelete } = useUndoableDelete<DayRecord>();
   const [isSummaryEditing, setIsSummaryEditing] = useState(false);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [isAddingTask, setIsAddingTask] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
+
+  const [newTaskData, setNewTaskData] = useState({
+    title: "",
+    description: "",
+    project: "none" as string,
+    category: "none" as string,
+  });
+  const [newTaskTimes, setNewTaskTimes] = useState({
+    startTime: "",
+    endTime: "",
+  });
 
   const dayForm = useForm<DayFormValues>({
     resolver: zodResolver(dayFormSchema),
@@ -174,6 +190,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
     setIsSummaryEditing(false);
     setExpandedTaskId(null);
     setShowDeleteConfirm(false);
+    handleCancelNewTask();
   };
 
   // Initialize form data when dialog opens
@@ -337,6 +354,53 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
   const handleToggleExpand = useCallback((id: string) => {
     setExpandedTaskId((cur) => (cur === id ? null : id));
   }, []);
+
+  const handleAddTask = () => {
+    const selectedProject =
+      newTaskData.project !== "none"
+        ? projects.find((p) => p.id === newTaskData.project)
+        : undefined;
+    const selectedCategory =
+      newTaskData.category !== "none"
+        ? categories.find((c) => c.id === newTaskData.category)
+        : undefined;
+
+    const baseDate = day.startTime;
+    const startTime = parseTimeInput(newTaskTimes.startTime, baseDate);
+    const endTime = newTaskTimes.endTime
+      ? parseTimeInput(newTaskTimes.endTime, baseDate)
+      : undefined;
+
+    const newTask: Task = {
+      id: crypto.randomUUID(),
+      title: newTaskData.title.trim(),
+      description: newTaskData.description.trim() || undefined,
+      project: selectedProject?.name || undefined,
+      client: selectedProject?.client || undefined,
+      category: selectedCategory?.id || undefined,
+      startTime,
+      endTime,
+      duration: endTime
+        ? endTime.getTime() - startTime.getTime()
+        : undefined,
+    };
+
+    handleCancelNewTask();
+    setIsSaving(true);
+    addTaskToArchivedDay(day.id, newTask)
+      .catch((error) => {
+        console.error("Failed to add task to archived day:", error);
+      })
+      .finally(() => {
+        setIsSaving(false);
+      });
+  };
+
+  const handleCancelNewTask = () => {
+    setNewTaskData({ title: "", description: "", project: "none", category: "none" });
+    setNewTaskTimes({ startTime: "", endTime: "" });
+    setIsAddingTask(false);
+  };
 
   const handleCancel = () => {
     resetFormState();
@@ -604,7 +668,30 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
           {/* Tasks Detail */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Tasks ({tasks.length})</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Tasks ({tasks.length})</CardTitle>
+                <Button
+                  onClick={() => {
+                    if (!isAddingTask) {
+                      const baseDate = day.startTime;
+                      const startTimeStr = formatTimeForInput(baseDate);
+                      const defaultEndTime = new Date(baseDate.getTime() + 3600000);
+                      const endTimeStr = formatTimeForInput(defaultEndTime);
+                      setNewTaskTimes({ startTime: startTimeStr, endTime: endTimeStr });
+                    }
+                    setIsAddingTask((prev) => !prev);
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  {isAddingTask ? (
+                    <X className="w-3 h-3 mr-1" />
+                  ) : (
+                    <Plus className="w-3 h-3 mr-1" />
+                  )}
+                  {isAddingTask ? "Cancel" : "Add Task"}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -633,6 +720,177 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                         projects={projects}
                       />
                     ))}
+                    {isAddingTask && (
+                      <TableRow>
+                        <TableCell colSpan={7}>
+                          <div className="space-y-4 py-2">
+                            <div>
+                              <Label htmlFor="new-task-title">
+                                Task Title <span className="text-destructive">*</span>
+                              </Label>
+                              <Input
+                                id="new-task-title"
+                                value={newTaskData.title}
+                                onChange={(e) =>
+                                  setNewTaskData((prev) => ({ ...prev, title: e.target.value }))
+                                }
+                                placeholder="Enter task title"
+                                autoFocus
+                              />
+                            </div>
+
+                            <div>
+                              <Label htmlFor="new-task-description">
+                                Description
+                              </Label>
+                              <Tabs defaultValue="edit" className="w-full">
+                                <TabsList className="grid w-full grid-cols-2">
+                                  <TabsTrigger value="edit">Edit</TabsTrigger>
+                                  <TabsTrigger value="preview">Preview</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="edit">
+                                  <Textarea
+                                    id="new-task-description"
+                                    value={newTaskData.description}
+                                    onChange={(e) =>
+                                      setNewTaskData((prev) => ({
+                                        ...prev,
+                                        description: e.target.value,
+                                      }))
+                                    }
+                                    placeholder="Enter task description (optional, supports Markdown)"
+                                    className="min-h-[80px] resize-none"
+                                  />
+                                </TabsContent>
+                                <TabsContent value="preview">
+                                  <div className="w-full min-h-[80px] p-3 border rounded-md bg-background">
+                                    {newTaskData.description ? (
+                                      <MarkdownDisplay content={newTaskData.description} />
+                                    ) : (
+                                      <p className="text-sm text-muted-foreground">
+                                        No description to preview
+                                      </p>
+                                    )}
+                                  </div>
+                                </TabsContent>
+                              </Tabs>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <Label htmlFor="new-task-category">
+                                  Category
+                                </Label>
+                                <ResponsiveSelect
+                                  id="new-task-category"
+                                  value={newTaskData.category}
+                                  onValueChange={(value) =>
+                                    setNewTaskData((prev) => ({ ...prev, category: value }))
+                                  }
+                                  placeholder="Select category"
+                                  options={[
+                                    { value: "none", label: "No category" },
+                                    ...categories.map((c) => ({
+                                      value: c.id,
+                                      textLabel: c.name,
+                                      label: (
+                                        <div className="flex items-center space-x-2">
+                                          <div
+                                            className="w-3 h-3 rounded-full"
+                                            style={{ backgroundColor: c.color }}
+                                          />
+                                          <span>{c.name}</span>
+                                        </div>
+                                      ),
+                                    })),
+                                  ]}
+                                />
+                              </div>
+
+                              <div>
+                                <Label htmlFor="new-task-project">
+                                  Project
+                                </Label>
+                                <ResponsiveSelect
+                                  id="new-task-project"
+                                  value={newTaskData.project}
+                                  onValueChange={(value) =>
+                                    setNewTaskData((prev) => ({ ...prev, project: value }))
+                                  }
+                                  placeholder="Select project"
+                                  options={[
+                                    { value: "none", label: "No project" },
+                                    ...projects.map((p) => ({
+                                      value: p.id,
+                                      textLabel: `${p.name} (${p.client})`,
+                                      label: (
+                                        <div className="flex flex-col">
+                                          <span>{p.name}</span>
+                                          <span className="text-sm text-muted-foreground">
+                                            {p.client}
+                                          </span>
+                                        </div>
+                                      ),
+                                    })),
+                                  ]}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <Label htmlFor="new-task-start-time">
+                                  Start Time
+                                </Label>
+                                <TimePicker
+                                  id="new-task-start-time"
+                                  value={newTaskTimes.startTime}
+                                  onValueChange={(value) =>
+                                    setNewTaskTimes((prev) => ({ ...prev, startTime: value }))
+                                  }
+                                  aria-label="Task start time"
+                                />
+                              </div>
+
+                              <div>
+                                <Label htmlFor="new-task-end-time">
+                                  End Time
+                                </Label>
+                                <TimePicker
+                                  id="new-task-end-time"
+                                  value={newTaskTimes.endTime}
+                                  onValueChange={(value) =>
+                                    setNewTaskTimes((prev) => ({ ...prev, endTime: value }))
+                                  }
+                                  aria-label="Task end time"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleCancelNewTask}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={handleAddTask}
+                                disabled={!newTaskData.title.trim() || isSaving}
+                                variant="default"
+                                size="sm"
+                              >
+                                {isSaving ? (
+                                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                ) : null}
+                                Add Task
+                              </Button>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
