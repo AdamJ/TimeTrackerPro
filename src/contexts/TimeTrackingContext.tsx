@@ -28,7 +28,7 @@ import {
   parseCSVImport
 } from '@/utils/exportUtils';
 import { parseTaskChecklist } from '@/utils/checklistUtils';
-import { roundToNearest15Minutes } from '@/utils/timeUtil';
+import { roundToNearest15Minutes, formatDate } from '@/utils/timeUtil';
 import { SCHEMA_VERSION } from '@/services/localStorageService';
 import { useElectronBackup } from '@/hooks/useElectronBackup';
 
@@ -225,6 +225,7 @@ interface TimeTrackingContextType {
   restoreArchivedDay: (dayId: string) => void;
   restoreDeletedArchivedDay: (day: DayRecord) => Promise<void>;
   addBackdatedDay: (day: DayRecord) => Promise<void>;
+  addTaskToArchivedDay: (dayId: string, task: Task) => Promise<void>;
 
   // Export functions
   exportToCSV: (startDate?: Date, endDate?: Date) => string;
@@ -1311,6 +1312,28 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [archivedDays, dataService]);
 
+  const addTaskToArchivedDay = useCallback(async (
+    dayId: string,
+    task: Task
+  ) => {
+    const day = archivedDays.find(d => d.id === dayId);
+    if (!day) return;
+
+    const updatedTasks = [...day.tasks, task];
+    const updatedDay: Partial<DayRecord> = {
+      tasks: updatedTasks,
+      totalDuration: updatedTasks.reduce((total, t) => total + (t.duration || 0), 0),
+    };
+
+    await updateArchivedDay(dayId, updatedDay);
+
+    toast({
+      title: "Task Added",
+      description: `"${task.title}" added to ${formatDate(day.startTime)}`,
+      duration: 5000,
+    });
+  }, [archivedDays, updateArchivedDay]);
+
   // Category management functions - NO AUTOMATIC SAVING
   const addCategory = useCallback((category: Omit<TaskCategory, 'id'>) => {
     const newCategory: TaskCategory = {
@@ -1711,6 +1734,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     restoreArchivedDay,
     restoreDeletedArchivedDay,
     addBackdatedDay,
+    addTaskToArchivedDay,
     adjustTaskTime,
     exportToCSV,
     exportToJSON,
@@ -1780,6 +1804,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     restoreArchivedDay,
     restoreDeletedArchivedDay,
     addBackdatedDay,
+    addTaskToArchivedDay,
     adjustTaskTime,
     exportToCSV,
     exportToJSON,
