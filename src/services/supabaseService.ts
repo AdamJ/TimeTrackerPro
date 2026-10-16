@@ -15,6 +15,25 @@ import { TaskCategory } from "@/config/categories";
 import { DataService, CurrentDayData } from "@/services/dataService";
 import { LocalStorageService } from "@/services/localStorageService";
 
+// Rows per request when paging through `tasks`; matches PostgREST's default
+// max-rows cap, so a full page means there may be more.
+const TASKS_PAGE_SIZE = 1000;
+
+interface TaskRow {
+	id: string;
+	title: string;
+	description: string | null;
+	start_time: string;
+	end_time: string | null;
+	duration: number | null;
+	project_name: string | null;
+	client: string | null;
+	category_id: string | null;
+	day_record_id: string | null;
+	inserted_at?: string | null;
+	updated_at?: string | null;
+}
+
 export class SupabaseService implements DataService {
 	// Schema detection with permanent caching
 	private hasNewSchema: boolean | null = null;
@@ -365,20 +384,32 @@ export class SupabaseService implements DataService {
 			return [];
 		}
 
-		const { data: tasksData, error: tasksError } = await supabase
-			.from("tasks")
-			.select("*")
-			.eq("user_id", user.id)
-			.eq("is_current", false)
-			.order("start_time", { ascending: true });
+		// PostgREST caps a single response at 1000 rows (Supabase default), which
+		// silently truncated the newest archived tasks once the table outgrew it.
+		// Page through with a deterministic order (id breaks start_time ties) so
+		// no row is skipped or repeated across pages.
+		const tasksData: TaskRow[] = [];
+		for (let from = 0; ; from += TASKS_PAGE_SIZE) {
+			const { data: page, error: tasksError } = await supabase
+				.from("tasks")
+				.select("*")
+				.eq("user_id", user.id)
+				.eq("is_current", false)
+				.order("start_time", { ascending: true })
+				.order("id", { ascending: true })
+				.range(from, from + TASKS_PAGE_SIZE - 1);
 
-		if (tasksError) {
-			console.error("❌ Error loading archived tasks:", tasksError);
-			throw tasksError;
+			if (tasksError) {
+				console.error("❌ Error loading archived tasks:", tasksError);
+				throw tasksError;
+			}
+
+			tasksData.push(...(page ?? []));
+			if (!page || page.length < TASKS_PAGE_SIZE) break;
 		}
 
 		const tasksByDay: Record<string, Task[]> = {};
-		(tasksData || []).forEach((task) => {
+		tasksData.forEach((task) => {
 			if (!task.day_record_id) return;
 
 			if (!tasksByDay[task.day_record_id]) {

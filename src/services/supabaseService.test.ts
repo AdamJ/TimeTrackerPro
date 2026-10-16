@@ -18,7 +18,7 @@ const {
 	trackAuthCallMock,
 	localServiceMocks
 } = vi.hoisted(() => {
-	const chainMethods = ["eq", "in", "order", "limit", "select", "upsert", "delete", "update"];
+	const chainMethods = ["eq", "in", "order", "limit", "range", "select", "upsert", "delete", "update"];
 	const builder: Record<string, ReturnType<typeof vi.fn>> = {};
 	chainMethods.forEach((method) => {
 		builder[method] = vi.fn(() => builder);
@@ -389,6 +389,60 @@ function callCheckNewSchema(instance: SupabaseService): Promise<boolean> {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	return (instance as any).checkNewSchema();
 }
+
+describe("SupabaseService — getArchivedDays pagination", () => {
+	let service: SupabaseService;
+
+	const makeTask = (n: number) => ({
+		id: `t${String(n).padStart(5, "0")}`,
+		title: `Task ${n}`,
+		start_time: "2026-10-01T09:00:00.000Z",
+		end_time: null,
+		day_record_id: "day-1"
+	});
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		getCachedUserMock.mockResolvedValue({ id: "user-1" });
+		service = new SupabaseService();
+	});
+
+	// Regression: PostgREST caps a response at 1000 rows, so the unpaginated
+	// tasks query dropped the newest archived tasks once the table exceeded it.
+	it("pages through tasks so archived days keep tasks beyond the 1000-row cap", async () => {
+		const pages = [
+			{ data: [{ id: "day-1", date: "Thu Oct 01 2026", total_duration: 0, start_time: "2026-10-01T09:00:00.000Z", end_time: "2026-10-01T17:00:00.000Z" }], error: null },
+			{ data: Array.from({ length: 1000 }, (_, i) => makeTask(i)), error: null },
+			{ data: Array.from({ length: 29 }, (_, i) => makeTask(1000 + i)), error: null }
+		];
+		let call = 0;
+		(builder as unknown as { then: typeof Promise.prototype.then }).then = (resolve, reject) =>
+			Promise.resolve(pages[call++]).then(resolve, reject);
+
+		const result = await service.getArchivedDays();
+
+		expect(result).toHaveLength(1);
+		expect(result[0].tasks).toHaveLength(1029);
+		expect(builder.range).toHaveBeenCalledWith(0, 999);
+		expect(builder.range).toHaveBeenCalledWith(1000, 1999);
+		expect(builder.range).toHaveBeenCalledTimes(2);
+	});
+
+	it("stops after a single request when the first page is not full", async () => {
+		const pages = [
+			{ data: [{ id: "day-1", date: "Thu Oct 01 2026", total_duration: 0, start_time: "2026-10-01T09:00:00.000Z", end_time: "2026-10-01T17:00:00.000Z" }], error: null },
+			{ data: [makeTask(1)], error: null }
+		];
+		let call = 0;
+		(builder as unknown as { then: typeof Promise.prototype.then }).then = (resolve, reject) =>
+			Promise.resolve(pages[call++]).then(resolve, reject);
+
+		const result = await service.getArchivedDays();
+
+		expect(result[0].tasks).toHaveLength(1);
+		expect(builder.range).toHaveBeenCalledTimes(1);
+	});
+});
 
 describe("SupabaseService — schema detection (checkNewSchema)", () => {
 	let service: SupabaseService;
