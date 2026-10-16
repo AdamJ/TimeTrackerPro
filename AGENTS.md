@@ -34,7 +34,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/contexts/TimeTracking.test.tsx` | Full context: day/task/archive management, todos, planned tasks, project CRUD, category CRUD, `discardDay`, `adjustTaskTime`, `addBackdatedDay`, client archive/restore |
 | `src/contexts/TimeTrackingContext.forceSync.test.tsx` | `forceSyncToDatabase` behavior |
 | `src/services/dataService.test.ts` | `LocalStorageService` save/load round-trips |
-| `src/services/supabaseService.test.ts` | Upsert-only bulk saves and single-row deletes (`saveProjects`, `deleteProject`, `saveCategories`, `deleteCategory`, `saveTodos`), plus `getCurrentDay`/`saveCurrentDay`, `checkNewSchema` schema detection, and `migrateFromLocalStorage` (no-op/no-existing-data/client-name-reconcile/error-swallow paths) |
+| `src/services/supabaseService.test.ts` | Upsert-only bulk saves and single-row deletes (`saveProjects`, `deleteProject`, `saveCategories`, `deleteCategory`, `saveTodos`), plus `getCurrentDay`/`saveCurrentDay`, `getArchivedDays` task pagination past the 1000-row PostgREST cap, `checkNewSchema` schema detection, and `migrateFromLocalStorage` (no-op/no-existing-data/client-name-reconcile/error-swallow paths) |
 | `src/services/localStorageService/recovery.test.ts` | Listing/summarizing/restoring localStorage schema-mismatch backups and full-snapshot disk backups |
 | `src/services/localStorageService/utils.test.ts` | Versioned read/write helpers, stale-key backup, write-failure notification |
 | `src/hooks/useReportStorage.test.ts` | Report storage hook |
