@@ -999,6 +999,137 @@ describe("TimeTrackingContext", () => {
     });
   });
 
+  describe("Start day from task board", () => {
+    it("startDayAndPullPlannedTask starts the day and the task together", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.addPlannedTask({ title: "Morning task" });
+      });
+      let taskId = "";
+      await waitFor(() => { taskId = result.current.plannedTasks[0].id; });
+
+      await act(async () => {
+        result.current.startDayAndPullPlannedTask(taskId);
+      });
+
+      await waitFor(() => {
+        expect(result.current.isDayStarted).toBe(true);
+        expect(result.current.dayStartTime).not.toBeNull();
+        expect(result.current.currentTask?.title).toBe("Morning task");
+        expect(result.current.plannedTasks[0].status).toBe("in_progress");
+        expect(result.current.plannedTasks[0].timeEntries).toHaveLength(1);
+      });
+      // First task of the day is stamped with the day start time
+      expect(result.current.currentTask?.startTime).toEqual(result.current.dayStartTime);
+    });
+
+    it("startDayAndPullPlannedTask resumes an in-progress task without relinking it", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.addPlannedTask({ title: "Carry over" });
+      });
+      let taskId = "";
+      await waitFor(() => { taskId = result.current.plannedTasks[0].id; });
+      await act(async () => {
+        result.current.movePlannedTask(taskId, "in_progress");
+      });
+
+      await act(async () => {
+        result.current.startDayAndPullPlannedTask(taskId);
+      });
+
+      await waitFor(() => {
+        expect(result.current.isDayStarted).toBe(true);
+        expect(result.current.tasks.map(t => t.title)).toEqual(["Carry over"]);
+        expect(result.current.plannedTasks[0].status).toBe("in_progress");
+        expect(result.current.plannedTasks[0].linkedTaskId).toBeUndefined();
+        expect(result.current.plannedTasks[0].timeEntries).toHaveLength(1);
+      });
+    });
+
+    it("startDayAndPullPlannedTask is blocked while an ended day awaits posting", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.addPlannedTask({ title: "Next up" });
+      });
+      let taskId = "";
+      await waitFor(() => { taskId = result.current.plannedTasks[0].id; });
+
+      await act(async () => {
+        result.current.startDay();
+      });
+      await act(async () => {
+        result.current.startNewTask("Earlier work");
+      });
+      await act(async () => {
+        result.current.endDay();
+      });
+
+      await act(async () => {
+        result.current.startDayAndPullPlannedTask(taskId);
+      });
+
+      expect(result.current.isDayStarted).toBe(false);
+      expect(result.current.plannedTasks[0].status).toBe("todo");
+      expect(result.current.tasks).toHaveLength(1);
+    });
+
+    it("startDayAndPullPlannedTask delegates to a normal pull when the day is already started", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.startDay();
+      });
+      await act(async () => {
+        result.current.addPlannedTask({ title: "Already running day" });
+      });
+      let taskId = "";
+      await waitFor(() => { taskId = result.current.plannedTasks[0].id; });
+
+      await act(async () => {
+        result.current.startDayAndPullPlannedTask(taskId);
+      });
+
+      await waitFor(() => {
+        expect(result.current.plannedTasks[0].status).toBe("in_progress");
+        expect(result.current.tasks).toHaveLength(1);
+      });
+    });
+
+    it("addPlannedTaskToDay logs a time entry for an in-progress task", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.startDay();
+      });
+      await act(async () => {
+        result.current.addPlannedTask({ title: "Resume me" });
+      });
+      let taskId = "";
+      await waitFor(() => { taskId = result.current.plannedTasks[0].id; });
+      await act(async () => {
+        result.current.movePlannedTask(taskId, "in_progress");
+      });
+
+      await act(async () => {
+        result.current.addPlannedTaskToDay(taskId);
+      });
+
+      await waitFor(() => {
+        expect(result.current.tasks.some(t => t.title === "Resume me")).toBe(true);
+        expect(result.current.plannedTasks[0].timeEntries).toHaveLength(1);
+      });
+    });
+  });
+
   describe("Project Management", () => {
     it("adds a project", async () => {
       const { result } = renderHook(() => useTimeTracking(), { wrapper });

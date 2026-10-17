@@ -10,25 +10,41 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Plus } from "lucide-react";
+import { CirclePlay, Plus } from "lucide-react";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
+import { toast } from "@/hooks/use-toast";
 
 const TaskList = () => {
   const [showNewTaskSheet, setShowNewTaskSheet] = useState(false);
-  const { plannedTasks } = useTimeTracking();
+  const { plannedTasks, isDayStarted, tasks, startDay } = useTimeTracking();
+  // An ended-but-unposted day (tasks present, not started) must be posted or
+  // discarded from the Dashboard before a new one can begin.
+  const canStartDay = !isDayStarted && tasks.length === 0;
   const pageBadge = useMemo(
     () => <Badge variant="outline">{plannedTasks.length}</Badge>,
     [plannedTasks.length]
   );
   const openNewTaskSheet = useCallback(() => setShowNewTaskSheet(true), []);
+  const handleStartDay = useCallback(() => {
+    startDay();
+    toast({ title: "Day started" });
+  }, [startDay]);
   const pageActions = useMemo(
     () => (
-      <Button onClick={openNewTaskSheet} size="sm">
-        <Plus className="w-4 h-4 mr-1" />
-        New Task
-      </Button>
+      <div className="flex items-center gap-2">
+        {canStartDay && (
+          <Button onClick={handleStartDay} size="sm" variant="outline">
+            <CirclePlay className="w-4 h-4 mr-1" />
+            Start Day
+          </Button>
+        )}
+        <Button onClick={openNewTaskSheet} size="sm">
+          <Plus className="w-4 h-4 mr-1" />
+          New Task
+        </Button>
+      </div>
     ),
-    [openNewTaskSheet]
+    [canStartDay, handleStartDay, openNewTaskSheet]
   );
   return (
     <PageLayout

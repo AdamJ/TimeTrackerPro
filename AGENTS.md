@@ -22,7 +22,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (~376 JS/TS tests across 36 files, plus 17 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
+### Test File Inventory (~390 JS/TS tests across 37 files, plus 17 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
 
 | File | Coverage |
 |---|---|
@@ -49,6 +49,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/components/SummaryOutput.test.tsx` | Summary output rendering |
 | `src/components/NewTaskForm.test.tsx` | Form render, submit, validation, cancel, FAB toggle |
 | `src/components/TaskItem.test.tsx` | Badge render, delete confirm, edit dialog |
+| `src/components/PlannedTaskPicker.test.tsx` | Dashboard empty-day picker: ordering, filtering, start vs resume, list cap |
 | `src/components/ArchiveEditDialog.test.tsx` | Archive edit dialog render and task editing flow |
 | `src/components/ArchivedTaskRow.test.tsx` | Inline expandable archived task row editing |
 | `src/components/dateParsing.test.ts` | Date parsing utilities |
@@ -170,6 +171,7 @@ export const MyComponent = () => {
 | `src/components/BackdatedEntryDialog.tsx`     | Multi-step dialog for logging past workdays; uses `addBackdatedDay` from context   |
 | `src/hooks/useLongPress.ts`                   | 500 ms hold detector for context menu trigger on touch                             |
 | `src/components/ui/responsive-select.tsx`     | `ResponsiveSelect` — branches on `useIsMobile()` to render a native `<select>` on mobile (OS picker) vs the Radix `Select` on desktop; flat `options` array API shared by `NewTaskForm`, `ProjectSheet`, `BackdatedEntryDialog`, `PlannedTaskDialog`, `ArchivedTaskRow` |
+| `src/components/PlannedTaskPicker.tsx`        | Empty started-day card on the Dashboard: lists in-progress/to-do planned tasks with Start (`pullPlannedTaskToDay`) / Resume (`addPlannedTaskToDay`) buttons. Task Board cards and the Tasks page header can also start the day (`startDayAndPullPlannedTask`, "now" rounded to 15 min, no dialog) |
 | `src/components/ArchivedTaskRow.tsx`          | Inline expandable row for editing a single task within `ArchiveEditDialog` (replaces the old `TaskEditInArchiveDialog` modal) |
 | `src/services/localStorageService/recovery.ts` | Lists/previews/restores localStorage schema-mismatch backup keys and desktop (Tauri) disk-backup snapshots; the read side of the write-only backup safety nets |
 | `src/hooks/useDataRecovery.ts`                | Unifies browser (`recovery.ts`) and desktop (`useElectronBackup`'s `listDiskBackups`/`readDiskBackup`, Tauri-backed) backup sources behind one list/preview/restore API |
