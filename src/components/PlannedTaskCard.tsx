@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/sheet";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Play, MoveRight, MoreVertical, PencilIcon, Briefcase, Tag, Users, PlusCircle, Clock } from "lucide-react";
+import { Edit, Trash2, Play, MoveRight, MoreVertical, PencilIcon, Briefcase, Tag, Users, PlusCircle, Clock, CirclePlay } from "lucide-react";
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 interface PlannedTaskCardProps {
@@ -78,6 +78,8 @@ const PlannedTaskCardComponent: React.FC<PlannedTaskCardProps> = ({
     movePlannedTask,
     pullPlannedTaskToDay,
     addPlannedTaskToDay,
+    startDayAndPullPlannedTask,
+    tasks,
   } = useTimeTracking();
   const { confirmDelete } = useUndoableDelete<PlannedTask>();
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
@@ -95,6 +97,9 @@ const PlannedTaskCardComponent: React.FC<PlannedTaskCardProps> = ({
   const category = categories.find((c) => c.id === task.category);
   const canPull = isDayStarted && !isDayStale && task.status !== "done" && task.status !== "in_progress";
   const canAddToDay = isDayStarted && !isDayStale && task.status === "in_progress";
+  // No day running and no ended-but-unposted day waiting: start one from here.
+  const canStartDayAndPull = !isDayStarted && tasks.length === 0 && task.status !== "done";
+  const startDayLabel = task.status === "in_progress" ? "Start Day and Resume" : "Start Day and Pull";
 
   return (
     <>
@@ -191,6 +196,17 @@ const PlannedTaskCardComponent: React.FC<PlannedTaskCardProps> = ({
                             <DropdownMenuSeparator />
                           </DropdownMenuGroup>
                         )}
+                        {canStartDayAndPull && (
+                          <DropdownMenuGroup>
+                            <DropdownMenuItem
+                              onClick={() => startDayAndPullPlannedTask(task.id)}
+                            >
+                              <CirclePlay className="w-3 h-3 mr-1" />
+                              {startDayLabel}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </DropdownMenuGroup>
+                        )}
                         {canAddToDay && (
                           <DropdownMenuGroup>
                             <DropdownMenuItem
@@ -255,6 +271,15 @@ const PlannedTaskCardComponent: React.FC<PlannedTaskCardProps> = ({
               <ContextMenuItem onClick={() => pullPlannedTaskToDay(task.id)}>
                 <Play className="w-4 h-4 mr-2" />
                 Pull to Active Day
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+            </>
+          )}
+          {canStartDayAndPull && (
+            <>
+              <ContextMenuItem onClick={() => startDayAndPullPlannedTask(task.id)}>
+                <CirclePlay className="w-4 h-4 mr-2" />
+                {startDayLabel}
               </ContextMenuItem>
               <ContextMenuSeparator />
             </>

@@ -417,6 +417,7 @@ src/
 │   ├── PageLayout.tsx             # Delegates title/badge/actions to PageTitleContext
 │   ├── PlannedTaskCard.tsx
 │   ├── PlannedTaskDialog.tsx
+│   ├── PlannedTaskPicker.tsx
 │   ├── ProjectManagement.tsx
 │   ├── ProjectSheet.tsx
 │   ├── PwaUpdatePrompt.tsx

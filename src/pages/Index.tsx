@@ -4,6 +4,7 @@ import { StartDayDialog } from "@/components/StartDayDialog";
 import { StaleDayDialog } from "@/components/StaleDayDialog";
 import { TaskItem } from "@/components/TaskItem";
 import { NewTaskForm } from "@/components/NewTaskForm";
+import { PlannedTaskPicker } from "@/components/PlannedTaskPicker";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -358,9 +359,11 @@ const TimeTrackerContent = () => {
                   </CardContent>
                 </Card>
 
-                {(tasks.length === 0 || showAddTaskForm) && (
+                {showAddTaskForm && (
                   <NewTaskForm onSubmit={handleNewTask} onCancel={() => setShowAddTaskForm(false)} defaultOpen={true} />
                 )}
+
+                {tasks.length === 0 && !showAddTaskForm && <PlannedTaskPicker />}
 
                 {tasks.length > 0 && (
                   <div className="space-y-3">

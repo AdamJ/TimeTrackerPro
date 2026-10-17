@@ -244,6 +244,7 @@ interface TimeTrackingContextType {
   movePlannedTask: (id: string, status: PlannedTaskStatus) => void;
   pullPlannedTaskToDay: (id: string) => void;
   addPlannedTaskToDay: (id: string) => void;
+  startDayAndPullPlannedTask: (id: string) => void;
 
   // Calculated values
   getTotalHoursForPeriod: (startDate: Date, endDate: Date) => number;
@@ -802,7 +803,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [dataService]);
 
-  const startNewTask = useCallback((
+  // `day` is passed explicitly (rather than read from state) so a caller can
+  // start a day and its first task in the same tick without a stale closure
+  // persisting `isDayStarted: false`.
+  const beginTask = useCallback((
+    day: { isDayStarted: boolean; dayStartTime: Date | null },
     title: string,
     description?: string,
     project?: string,
@@ -827,7 +832,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Determine start time: use dayStartTime for first task, otherwise use current time
     const taskStartTime =
-      tasks.length === 0 && dayStartTime ? dayStartTime : now;
+      tasks.length === 0 && day.dayStartTime ? day.dayStartTime : now;
 
     // Create new task
     const newTask: Task = {
@@ -846,12 +851,22 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setHasUnsavedChanges(true);
     // Save with freshly computed state to avoid reading from stale latestStateRef
     if (dataService) {
-      dataService.saveCurrentDay({ isDayStarted, dayStartTime, currentTask: newTask, tasks: updatedTasks })
+      dataService.saveCurrentDay({ isDayStarted: day.isDayStarted, dayStartTime: day.dayStartTime, currentTask: newTask, tasks: updatedTasks })
         .then(() => setLastSyncTime(new Date()))
         .catch(error => console.error("❌ Error saving after starting task:", error));
     }
     return newTask.id;
-  }, [tasks, currentTask, dayStartTime, isDayStarted, dataService, accumulatePlannedTaskTime]);
+  }, [tasks, currentTask, dataService, accumulatePlannedTaskTime]);
+
+  const startNewTask = useCallback((
+    title: string,
+    description?: string,
+    project?: string,
+    client?: string,
+    category?: string
+  ): string =>
+    beginTask({ isDayStarted, dayStartTime }, title, description, project, client, category),
+  [beginTask, isDayStarted, dayStartTime]);
 
   const updateTask = useCallback((taskId: string, updates: Partial<Task>) => {
     const updatedTasks = tasks.map(task => (task.id === taskId ? { ...task, ...updates } : task));
@@ -1583,25 +1598,24 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [accumulatePlannedTaskTime]);
 
-  const pullPlannedTaskToDay = useCallback((id: string) => {
-    if (!isDayStarted) {
-      toast({ title: "Start your work day first", description: "Go to the Dashboard and start your day before pulling tasks." });
-      return;
-    }
-    if (isDayStale) {
-      toast({ title: "Resolve your previous day first", description: "Your previous work day is still open. Please end or discard it." });
-      return;
-    }
+  // Shared by pull/add/start-day-and-pull. `day` is explicit so a freshly
+  // started day (not yet reflected in state) is persisted correctly.
+  // "pull" marks the planned task in_progress and links it; "add" only logs a
+  // new time entry against it (resuming an already in-progress task).
+  const startPlannedTaskInDay = useCallback((
+    id: string,
+    mode: "pull" | "add",
+    day: { isDayStarted: boolean; dayStartTime: Date | null }
+  ) => {
     const task = plannedTasksRef.current.find(t => t.id === id);
     if (!task) return;
-    const newTaskId = startNewTask(task.title, task.description, task.project, task.client, task.category);
+    const newTaskId = beginTask(day, task.title, task.description, task.project, task.client, task.category);
     const now = new Date().toISOString();
     const date = now.slice(0, 10);
     const newEntry: PlannedTaskTimeEntry = { taskId: newTaskId, duration: 0, date };
     const updated: PlannedTask = {
       ...task,
-      status: "in_progress" as PlannedTaskStatus,
-      linkedTaskId: newTaskId,
+      ...(mode === "pull" ? { status: "in_progress" as PlannedTaskStatus, linkedTaskId: newTaskId } : {}),
       timeEntries: [...task.timeEntries, newEntry],
       updatedAt: now
     };
@@ -1609,35 +1623,53 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     plannedTasksRef.current = next;
     setPlannedTasks(next);
     if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(updated);
-    toast({ title: `Task started: ${task.title}` });
-  }, [isDayStarted, isDayStale, startNewTask]);
+    toast({ title: mode === "pull" ? `Task started: ${task.title}` : `Resumed: ${task.title}` });
+  }, [beginTask]);
+
+  const pullPlannedTaskToDay = useCallback((id: string) => {
+    if (!isDayStarted) {
+      toast({ title: "Start your work day first", description: "Start your day before pulling tasks." });
+      return;
+    }
+    if (isDayStale) {
+      toast({ title: "Resolve your previous day first", description: "Your previous work day is still open. Please end or discard it." });
+      return;
+    }
+    startPlannedTaskInDay(id, "pull", { isDayStarted, dayStartTime });
+  }, [isDayStarted, isDayStale, dayStartTime, startPlannedTaskInDay]);
 
   const addPlannedTaskToDay = useCallback((id: string) => {
     if (!isDayStarted) {
-      toast({ title: "Start your work day first", description: "Go to the Dashboard and start your day before adding tasks." });
+      toast({ title: "Start your work day first", description: "Start your day before adding tasks." });
       return;
     }
     if (isDayStale) {
       toast({ title: "Resolve your previous day first", description: "Your previous work day is still open. Please end or discard it." });
       return;
     }
-    const task = plannedTasksRef.current.find(t => t.id === id);
-    if (!task) return;
-    const newTaskId = startNewTask(task.title, task.description, task.project, task.client, task.category);
-    const now = new Date().toISOString();
-    const date = now.slice(0, 10);
-    const newEntry: PlannedTaskTimeEntry = { taskId: newTaskId, duration: 0, date };
-    const updated: PlannedTask = {
-      ...task,
-      timeEntries: [...task.timeEntries, newEntry],
-      updatedAt: now
-    };
-    const next = plannedTasksRef.current.map(t => t.id === id ? updated : t);
-    plannedTasksRef.current = next;
-    setPlannedTasks(next);
-    if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(updated);
-    toast({ title: `Resumed: ${task.title}` });
-  }, [isDayStarted, isDayStale, startNewTask]);
+    startPlannedTaskInDay(id, "add", { isDayStarted, dayStartTime });
+  }, [isDayStarted, isDayStale, dayStartTime, startPlannedTaskInDay]);
+
+  // Starts the day at "now" (rounded like startDay) and the planned task in one
+  // step. In-progress tasks resume ("add"); everything else is pulled.
+  const startDayAndPullPlannedTask = useCallback((id: string) => {
+    if (isDayStarted) {
+      const planned = plannedTasksRef.current.find(t => t.id === id);
+      if (planned?.status === "in_progress") addPlannedTaskToDay(id);
+      else pullPlannedTaskToDay(id);
+      return;
+    }
+    if (tasks.length > 0) {
+      toast({ title: "Post or discard your previous day first", description: "Your last work day has ended but hasn't been posted yet." });
+      return;
+    }
+    const planned = plannedTasksRef.current.find(t => t.id === id);
+    if (!planned || planned.status === "done") return;
+    const roundedTime = roundToNearest15Minutes(new Date());
+    setIsDayStarted(true);
+    setDayStartTime(roundedTime);
+    startPlannedTaskInDay(id, planned.status === "in_progress" ? "add" : "pull", { isDayStarted: true, dayStartTime: roundedTime });
+  }, [isDayStarted, tasks.length, addPlannedTaskToDay, pullPlannedTaskToDay, startPlannedTaskInDay]);
 
   const importFromCSV = useCallback(async (
     csvContent: string
@@ -1712,6 +1744,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     movePlannedTask,
     pullPlannedTaskToDay,
     addPlannedTaskToDay,
+    startDayAndPullPlannedTask,
     addProject,
     updateProject,
     deleteProject,
@@ -1782,6 +1815,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     movePlannedTask,
     pullPlannedTaskToDay,
     addPlannedTaskToDay,
+    startDayAndPullPlannedTask,
     addProject,
     updateProject,
     deleteProject,
