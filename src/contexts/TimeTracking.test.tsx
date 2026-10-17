@@ -1454,6 +1454,70 @@ describe("TimeTrackingContext", () => {
     });
   });
 
+  describe("adjustTaskTime and the day start", () => {
+    const setupDayWithTask = async () => {
+      const hook = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(hook.result.current.loading).toBe(false));
+      await act(async () => {
+        hook.result.current.startDay(new Date("2024-12-03T09:00:00Z"));
+      });
+      await act(async () => {
+        hook.result.current.startNewTask("First task");
+      });
+      await waitFor(() => expect(hook.result.current.currentTask).not.toBeNull());
+      return hook;
+    };
+
+    it("pulls the day start earlier when the first task is moved earlier", async () => {
+      const { result } = await setupDayWithTask();
+      const taskId = result.current.currentTask!.id;
+      const earlier = new Date("2024-12-03T08:00:00Z");
+
+      await act(async () => {
+        result.current.adjustTaskTime(taskId, earlier);
+      });
+
+      await waitFor(() => {
+        expect(result.current.dayStartTime?.getTime()).toBe(earlier.getTime());
+      });
+      expect(result.current.tasks[0].startTime.getTime()).toBe(earlier.getTime());
+    });
+
+    it("leaves the day start alone when the first task is moved later", async () => {
+      const { result } = await setupDayWithTask();
+      const taskId = result.current.currentTask!.id;
+      const originalDayStart = result.current.dayStartTime!.getTime();
+
+      await act(async () => {
+        result.current.adjustTaskTime(taskId, new Date("2024-12-03T10:00:00Z"));
+      });
+
+      await waitFor(() => {
+        expect(result.current.tasks[0].startTime.getTime()).toBe(
+          new Date("2024-12-03T10:00:00Z").getTime()
+        );
+      });
+      expect(result.current.dayStartTime?.getTime()).toBe(originalDayStart);
+    });
+
+    it("persists the adjusted task and day start", async () => {
+      const { result } = await setupDayWithTask();
+      const taskId = result.current.currentTask!.id;
+      const earlier = new Date("2024-12-03T08:00:00Z");
+
+      await act(async () => {
+        result.current.adjustTaskTime(taskId, earlier);
+      });
+
+      await waitFor(() => {
+        const saved = JSON.parse(localStorage.getItem("timetracker_current_day") ?? "{}");
+        expect(new Date(saved.dayStartTime).getTime()).toBe(earlier.getTime());
+        expect(new Date(saved.tasks[0].startTime).getTime()).toBe(earlier.getTime());
+        expect(new Date(saved.currentTask.startTime).getTime()).toBe(earlier.getTime());
+      });
+    });
+  });
+
   describe("addBackdatedDay", () => {
     it("adds a backdated day to the archive", async () => {
       const { result } = renderHook(() => useTimeTracking(), { wrapper });

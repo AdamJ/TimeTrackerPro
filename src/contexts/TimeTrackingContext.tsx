@@ -1399,37 +1399,44 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     const roundedStartTime = roundToNearest15Minutes(startTime);
     const roundedEndTime = endTime ? roundToNearest15Minutes(endTime) : undefined;
 
-    setTasks(prev =>
-      prev.map(task => {
-        if (task.id === taskId) {
-          const updatedTask = {
+    const updatedTasks = tasks.map(task =>
+      task.id === taskId
+        ? {
             ...task,
             startTime: roundedStartTime,
             endTime: roundedEndTime,
             duration: roundedEndTime
               ? roundedEndTime.getTime() - roundedStartTime.getTime()
               : task.duration
-          };
-          return updatedTask;
-        }
-        return task;
-      })
+          }
+        : task
     );
-
     // Update current task if it's the one being adjusted
+    const updatedCurrentTask = currentTask?.id === taskId
+      ? { ...currentTask, startTime: roundedStartTime, endTime: roundedEndTime }
+      : currentTask;
+    // A day never starts after its own first task: moving a task earlier than
+    // the day start pulls the day start with it. Moving it later leaves the
+    // day start alone, preserving any gap before the first task.
+    const updatedDayStartTime =
+      dayStartTime && roundedStartTime.getTime() < dayStartTime.getTime()
+        ? roundedStartTime
+        : dayStartTime;
+
+    setTasks(updatedTasks);
     if (currentTask?.id === taskId) {
-      setCurrentTask(prev =>
-        prev
-          ? {
-              ...prev,
-              startTime: roundedStartTime,
-              endTime: roundedEndTime
-            }
-          : null
-      );
+      setCurrentTask(updatedCurrentTask);
+    }
+    if (updatedDayStartTime !== dayStartTime) {
+      setDayStartTime(updatedDayStartTime);
     }
     setHasUnsavedChanges(true);
-  }, [currentTask]);
+    if (dataService) {
+      dataService.saveCurrentDay({ isDayStarted, dayStartTime: updatedDayStartTime, currentTask: updatedCurrentTask, tasks: updatedTasks })
+        .then(() => setLastSyncTime(new Date()))
+        .catch(error => console.error("❌ Error saving after adjusting task time:", error));
+    }
+  }, [tasks, currentTask, dayStartTime, isDayStarted, dataService]);
 
   const getTotalHoursForPeriod = useCallback((startDate: Date, endDate: Date): number =>
     calcTotalHoursForPeriod(archivedDays, startDate, endDate), [archivedDays]);
