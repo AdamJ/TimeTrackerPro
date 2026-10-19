@@ -28,7 +28,7 @@ import {
   parseCSVImport
 } from '@/utils/exportUtils';
 import { parseTaskChecklist } from '@/utils/checklistUtils';
-import { roundToNearest15Minutes, formatDate } from '@/utils/timeUtil';
+import { roundToNearest15Minutes, formatDate, elapsedMs } from '@/utils/timeUtil';
 import { SCHEMA_VERSION } from '@/services/localStorageService';
 import { useElectronBackup } from '@/hooks/useElectronBackup';
 
@@ -758,10 +758,21 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     // that displays it (ArchiveEditDialog, TaskEditDialog, etc.) rounds to
     // the nearest 15 minutes, producing a mismatch between what's shown
     // and what was actually persisted.
-    const effectiveEndTime = roundToNearest15Minutes(endDateTime ?? new Date());
+    //
+    // Rounding can land before the running task's (unrounded) start or the
+    // day start, which would yield a negative duration — never end earlier
+    // than the latest moment already recorded.
+    const roundedEndTime = roundToNearest15Minutes(endDateTime ?? new Date());
+    const earliestEndMs = Math.max(
+      dayStartTime?.getTime() ?? 0,
+      currentTask?.startTime.getTime() ?? 0,
+      ...tasks.map(t => t.endTime?.getTime() ?? 0)
+    );
+    const effectiveEndTime =
+      roundedEndTime.getTime() < earliestEndMs ? new Date(earliestEndMs) : roundedEndTime;
     let finalTasks = tasks;
     if (currentTask) {
-      const duration = effectiveEndTime.getTime() - currentTask.startTime.getTime();
+      const duration = elapsedMs(currentTask.startTime, effectiveEndTime);
       const endedTask = {
         ...currentTask,
         endTime: effectiveEndTime,
@@ -819,7 +830,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     // End current task if exists and compute the updated task list synchronously
     let baseTasks = tasks;
     if (currentTask) {
-      const duration = now.getTime() - currentTask.startTime.getTime();
+      const duration = elapsedMs(currentTask.startTime, now);
       const endedTask = {
         ...currentTask,
         endTime: now,
@@ -1397,7 +1408,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   // Time adjustment function (rounds to nearest 15 minutes)
   const adjustTaskTime = useCallback((taskId: string, startTime: Date, endTime?: Date) => {
     const roundedStartTime = roundToNearest15Minutes(startTime);
-    const roundedEndTime = endTime ? roundToNearest15Minutes(endTime) : undefined;
+    // An end time before the start (typed by the user, or produced by rounding)
+    // collapses to a zero-length task rather than a negative one.
+    const roundedEndTime = endTime
+      ? new Date(Math.max(roundToNearest15Minutes(endTime).getTime(), roundedStartTime.getTime()))
+      : undefined;
 
     const updatedTasks = tasks.map(task =>
       task.id === taskId
@@ -1406,7 +1421,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
             startTime: roundedStartTime,
             endTime: roundedEndTime,
             duration: roundedEndTime
-              ? roundedEndTime.getTime() - roundedStartTime.getTime()
+              ? elapsedMs(roundedStartTime, roundedEndTime)
               : task.duration
           }
         : task
@@ -1576,7 +1591,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         const isLinked = plannedTask?.timeEntries.some(e => e.taskId === activeTask.id);
         if (isLinked) {
           const endTime = new Date();
-          const duration = endTime.getTime() - activeTask.startTime.getTime();
+          const duration = elapsedMs(activeTask.startTime, endTime);
           const endedTask = { ...activeTask, endTime, duration };
           const updatedTasks = latestStateRef.current.tasks.map(t =>
             t.id === activeTask.id ? endedTask : t

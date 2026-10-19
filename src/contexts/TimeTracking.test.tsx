@@ -113,6 +113,47 @@ describe("TimeTrackingContext", () => {
 			);
 		});
 
+		it("never records a negative duration or an end time before the running task's start when rounding pulls the end back", async () => {
+			try {
+				const { result } = renderHook(() => useTimeTracking(), { wrapper });
+				await waitFor(() => expect(result.current.loading).toBe(false));
+
+				vi.setSystemTime(new Date(2024, 11, 3, 9, 0, 0));
+				await act(async () => {
+					result.current.startDay(new Date(2024, 11, 3, 9, 0, 0));
+				});
+				await act(async () => {
+					result.current.startNewTask("First");
+				});
+
+				// The second task starts at an unrounded 09:20:30...
+				vi.setSystemTime(new Date(2024, 11, 3, 9, 20, 30));
+				await act(async () => {
+					result.current.startNewTask("Second");
+				});
+
+				// ...and the day ends at 09:21, which rounds back to 09:15 — before it began.
+				await act(async () => {
+					result.current.endDay(new Date(2024, 11, 3, 9, 21, 0));
+				});
+				await act(async () => {
+					result.current.postDay();
+				});
+				await waitFor(() => expect(result.current.archivedDays.length).toBe(1));
+
+				const archived = result.current.archivedDays[0];
+				archived.tasks.forEach(task => {
+					expect(task.duration ?? 0).toBeGreaterThanOrEqual(0);
+					expect(task.endTime!.getTime()).toBeGreaterThanOrEqual(task.startTime.getTime());
+				});
+				expect(archived.totalDuration).toBeGreaterThanOrEqual(0);
+				expect(archived.endTime.getTime()).toBeGreaterThanOrEqual(archived.tasks[1].startTime.getTime());
+			} finally {
+				// Restore the global mock date from src/test-setup.ts.
+				vi.setSystemTime(new Date("2024-12-03T10:00:00.000Z"));
+			}
+		});
+
 		it("should calculate total day duration correctly", async () => {
 			const { result } = renderHook(() => useTimeTracking(), { wrapper });
 
@@ -1450,6 +1491,33 @@ describe("TimeTrackingContext", () => {
         expect(task?.endTime?.getMinutes()).toBe(45);
         // duration = 10:45 - 09:00 = 6300000ms (1h 45m)
         expect(task?.duration).toBe(6_300_000);
+      });
+    });
+  });
+
+  describe("adjustTaskTime with an end before the start", () => {
+    it("collapses to a zero-length task instead of a negative duration", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.startDay(new Date("2024-12-03T09:00:00Z"));
+        result.current.startNewTask("Backwards task");
+      });
+      const taskId = result.current.currentTask!.id;
+
+      await act(async () => {
+        result.current.adjustTaskTime(
+          taskId,
+          new Date("2024-12-03T10:00:00Z"),
+          new Date("2024-12-03T09:00:00Z")
+        );
+      });
+
+      await waitFor(() => {
+        const task = result.current.tasks.find(t => t.id === taskId);
+        expect(task?.duration).toBe(0);
+        expect(task?.endTime?.getTime()).toBe(task?.startTime.getTime());
       });
     });
   });

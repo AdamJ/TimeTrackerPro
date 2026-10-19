@@ -14,7 +14,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Edit, Trash2, X } from "lucide-react";
-import { formatDuration, formatTimeForInput } from "@/utils/timeUtil";
+import { elapsedMs, formatDuration, formatTimeForInput } from "@/utils/timeUtil";
 import { Task, Project } from "@/contexts/TimeTrackingContext";
 import { TaskCategory } from "@/config/categories";
 
@@ -118,7 +118,7 @@ export const ArchivedTaskRow: React.FC<ArchivedTaskRowProps> = React.memo(({
       startTime: newStartTime,
       endTime: newEndTime,
       duration: newEndTime
-        ? newEndTime.getTime() - newStartTime.getTime()
+        ? elapsedMs(newStartTime, newEndTime)
         : task.duration,
     };
 
