@@ -232,7 +232,7 @@ function formatWeekLabel(start: Date, end: Date): string {
 
 /** Converts milliseconds to a human-readable "Xh Ym" string. */
 export function formatDuration(ms: number): string {
-  const totalMinutes = Math.round(ms / 60000);
+  const totalMinutes = Math.round(Math.max(0, ms) / 60000);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   if (hours === 0) return `${minutes}m`;

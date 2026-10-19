@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
+  elapsedMs,
   formatDuration,
+  formatDurationLong,
   formatDate,
   formatTime,
   formatHoursDecimal,
@@ -32,12 +34,31 @@ describe("timeUtil", () => {
 			expect(formatDuration(-3600000)).toBe("0:00");
 		});
 
+		it("should treat sub-hour negative durations as zero", () => {
+			expect(formatDuration(-1800000)).toBe("0:00");
+			expect(formatDurationLong(-1800000)).toBe("0 minutes");
+		});
+
 		it("should round partial minutes correctly", () => {
 			// 1 hour 30 minutes 30 seconds
 			expect(formatDuration(5430000)).toBe("1:30");
 
 			// 1 hour 30 minutes 59 seconds (should still be 1:30)
 			expect(formatDuration(5459000)).toBe("1:30");
+		});
+	});
+
+	describe("elapsedMs", () => {
+		it("returns the span between two moments", () => {
+			expect(
+				elapsedMs(new Date("2024-12-03T09:00:00Z"), new Date("2024-12-03T10:30:00Z"))
+			).toBe(5_400_000);
+		});
+
+		it("floors at zero when the end precedes the start", () => {
+			expect(
+				elapsedMs(new Date("2024-12-03T09:20:00Z"), new Date("2024-12-03T09:15:00Z"))
+			).toBe(0);
 		});
 	});
 

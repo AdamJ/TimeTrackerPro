@@ -1,5 +1,13 @@
+/**
+ * Elapsed milliseconds between two moments, floored at zero. Rounding one end
+ * of a span (e.g. snapping a day's end time to 15 minutes) can push it before
+ * the other, and tracked time is never negative.
+ */
+export const elapsedMs = (start: Date, end: Date): number =>
+  Math.max(0, end.getTime() - start.getTime());
+
 export const formatDuration = (milliseconds: number): string => {
-  const totalSeconds = Math.floor(milliseconds / 1000);
+  const totalSeconds = Math.floor(Math.max(0, milliseconds) / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
 
@@ -11,7 +19,7 @@ export const formatDuration = (milliseconds: number): string => {
 };
 
 export const formatDurationLong = (milliseconds: number): string => {
-  const totalSeconds = Math.floor(milliseconds / 1000);
+  const totalSeconds = Math.floor(Math.max(0, milliseconds) / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
 

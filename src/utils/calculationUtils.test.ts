@@ -6,7 +6,9 @@ import {
   getBillableHoursForDay,
   getNonBillableHoursForDay,
   getTotalHoursForPeriod,
-  getRevenueForPeriod
+  getRevenueForPeriod,
+  getCurrentTaskDuration,
+  getTotalDayDuration
 } from "@/utils/calculationUtils";
 import type { DayRecord, Project } from "@/contexts/TimeTrackingContext";
 import type { TaskCategory } from "@/config/categories";
@@ -63,6 +65,42 @@ function makeDay(overrides: Partial<DayRecord> = {}): DayRecord {
 }
 
 describe("calculationUtils", () => {
+  describe("negative durations", () => {
+    const negativeTask = {
+      id: "neg",
+      title: "Legacy negative",
+      startTime: new Date("2024-12-01T09:20:00Z"),
+      endTime: new Date("2024-12-01T09:15:00Z"),
+      duration: -300_000,
+      project: "Project A",
+      client: "Client X",
+      category: "cat1"
+    };
+
+    it("getCurrentTaskDuration never goes negative when the task starts after now", () => {
+      const task = { id: "t", title: "T", startTime: new Date("2024-12-01T09:15:00Z") };
+      expect(getCurrentTaskDuration(task, new Date("2024-12-01T09:00:00Z"))).toBe(0);
+    });
+
+    it("getTotalDayDuration ignores stored negative durations", () => {
+      expect(getTotalDayDuration([negativeTask], null, new Date())).toBe(0);
+    });
+
+    it("getHoursWorkedForDay and getDayStats ignore stored negative durations", () => {
+      const day = makeDay({ tasks: [negativeTask] });
+      expect(getHoursWorkedForDay(day)).toBe(0);
+      const stats = getDayStats(day, new Map([[project.name, project]]), new Map([[category.id, category]]));
+      expect(stats).toEqual({ hoursWorked: 0, billableHours: 0, nonBillableHours: 0, revenue: 0 });
+    });
+
+    it("getTotalHoursForPeriod ignores a stored negative day total", () => {
+      const days = [makeDay({ totalDuration: -300_000 })];
+      expect(
+        getTotalHoursForPeriod(days, new Date("2024-11-01"), new Date("2024-12-31"))
+      ).toBe(0);
+    });
+  });
+
   describe("getHoursWorkedForDay", () => {
     it("sums task durations and converts to hours", () => {
       expect(getHoursWorkedForDay(makeDay())).toBe(1);

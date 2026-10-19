@@ -63,6 +63,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  elapsedMs,
   formatDuration,
   formatDate,
   roundToNearest15Minutes,
@@ -383,7 +384,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
       startTime,
       endTime,
       duration: endTime
-        ? endTime.getTime() - startTime.getTime()
+        ? elapsedMs(startTime, endTime)
         : undefined,
     };
 

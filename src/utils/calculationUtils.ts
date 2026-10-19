@@ -1,5 +1,6 @@
 import { Task, DayRecord, Project } from "@/contexts/TimeTrackingContext";
 import { TaskCategory } from "@/config/categories";
+import { elapsedMs } from "@/utils/timeUtil";
 
 /**
  * Returns true if a task is billable based on its project and category settings.
@@ -40,7 +41,7 @@ export function getDayStats(
 	let revenue = 0;
 
 	day.tasks.forEach(task => {
-		if (!task.duration) return;
+		if (!task.duration || task.duration < 0) return;
 		totalMs += task.duration;
 		if (task.project && task.category) {
 			if (isTaskBillable(task, projectMap, categoryMap)) {
@@ -70,7 +71,7 @@ export function getDayStats(
  */
 export function getCurrentTaskDuration(currentTask: Task | null, now: Date): number {
 	if (!currentTask) return 0;
-	return now.getTime() - currentTask.startTime.getTime();
+	return elapsedMs(currentTask.startTime, now);
 }
 
 /**
@@ -79,7 +80,7 @@ export function getCurrentTaskDuration(currentTask: Task | null, now: Date): num
  */
 export function getTotalDayDuration(tasks: Task[], currentTask: Task | null, now: Date): number {
 	const completedTasksDuration = tasks
-		.filter(task => task.duration)
+		.filter(task => task.duration && task.duration > 0)
 		.reduce((total, task) => total + (task.duration || 0), 0);
 
 	return completedTasksDuration + getCurrentTaskDuration(currentTask, now);
@@ -88,7 +89,7 @@ export function getTotalDayDuration(tasks: Task[], currentTask: Task | null, now
 export function getHoursWorkedForDay(day: DayRecord): number {
 	let totalTaskDuration = 0;
 	day.tasks.forEach(task => {
-		if (task.duration) totalTaskDuration += task.duration;
+		if (task.duration && task.duration > 0) totalTaskDuration += task.duration;
 	});
 	return Math.round((totalTaskDuration / (1000 * 60 * 60)) * 100) / 100;
 }
@@ -167,7 +168,7 @@ export function getTotalHoursForPeriod(
 		return dayDate >= startDate && dayDate <= endDate;
 	});
 
-	const totalMs = filteredDays.reduce((total, day) => total + day.totalDuration, 0);
+	const totalMs = filteredDays.reduce((total, day) => total + Math.max(0, day.totalDuration), 0);
 	return Math.round((totalMs / (1000 * 60 * 60)) * 100) / 100;
 }
 
