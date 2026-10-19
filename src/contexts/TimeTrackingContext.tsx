@@ -1451,7 +1451,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         .then(() => setLastSyncTime(new Date()))
         .catch(error => console.error("❌ Error saving after adjusting task time:", error));
     }
-  }, [tasks, currentTask, dayStartTime, isDayStarted, dataService]);
+    if (roundedEndTime) {
+      const updatedTask = updatedTasks.find(t => t.id === taskId);
+      if (updatedTask) accumulatePlannedTaskTime(taskId, updatedTask.duration);
+    }
+  }, [tasks, currentTask, dayStartTime, isDayStarted, dataService, accumulatePlannedTaskTime]);
 
   const getTotalHoursForPeriod = useCallback((startDate: Date, endDate: Date): number =>
     calcTotalHoursForPeriod(archivedDays, startDate, endDate), [archivedDays]);

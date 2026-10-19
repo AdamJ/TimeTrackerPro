@@ -1586,6 +1586,48 @@ describe("TimeTrackingContext", () => {
     });
   });
 
+  describe("adjustTaskTime and a linked planned task", () => {
+    it("resyncs timeSpent after editing the ended task's time", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.startDay(new Date("2024-12-03T09:00:00Z"));
+      });
+      await act(async () => {
+        result.current.addPlannedTask({ title: "Board task" });
+      });
+      let plannedId: string;
+      await waitFor(() => { plannedId = result.current.plannedTasks[0].id; });
+
+      await act(async () => {
+        result.current.pullPlannedTaskToDay(plannedId);
+      });
+      let taskId: string;
+      await waitFor(() => { taskId = result.current.currentTask!.id; });
+
+      await act(async () => {
+        result.current.endDay(new Date("2024-12-03T11:30:00Z"));
+      });
+      await waitFor(() => {
+        expect(result.current.plannedTasks[0].timeSpent).toBe(9_000_000); // 2h30m
+      });
+
+      await act(async () => {
+        result.current.adjustTaskTime(
+          taskId,
+          new Date("2024-12-03T09:00:00Z"),
+          new Date("2024-12-03T11:45:00Z")
+        );
+      });
+
+      await waitFor(() => {
+        expect(result.current.plannedTasks[0].timeSpent).toBe(9_900_000); // 2h45m
+        expect(result.current.plannedTasks[0].timeEntries[0].duration).toBe(9_900_000);
+      });
+    });
+  });
+
   describe("addBackdatedDay", () => {
     it("adds a backdated day to the archive", async () => {
       const { result } = renderHook(() => useTimeTracking(), { wrapper });
