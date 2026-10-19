@@ -16,7 +16,7 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 ## Features
 
 - **Daily Time Tracking** — start/stop your workday with clear daily boundaries
-- **Task Management** — create, edit, and delete tasks with real-time duration tracking
+- **Task Management** — create, edit, and delete tasks with real-time duration tracking; tracked time is never negative, and an end time earlier than its start is rejected in the archive editors
 - **Projects & Clients** — organize work by project with per-project hourly rates; projects and clients can be archived and restored
 - **Client Management** — maintain a managed client list with address and contact details; add, edit, and archive clients (blocked while they still have active projects); pick clients from a dropdown when creating projects
 - **Revenue Tracking** — automatic earnings calculation based on hourly rates
@@ -60,7 +60,7 @@ pnpm preview             # Preview production build
 
 # Code Quality
 pnpm lint                # ESLint
-pnpm test                # Vitest unit tests (395 tests across 38 files)
+pnpm test                # Vitest unit tests (410 tests across 37 files)
 
 # PWA Screenshots
 pnpm screenshots:install   # Install Playwright (first time)

@@ -72,6 +72,19 @@ Any utility that needs archived days must consume the context or accept
 `DayRecord[]` as a parameter. Use `dayRecordsToArchivedDays()` from
 `src/utils/reportUtils.ts` to convert to the `ArchivedDay[]` shape.
 
+### 7. Subtracting Timestamps Directly
+
+```typescript
+// ❌ WRONG — goes negative when rounding moves one end past the other
+const duration = endTime.getTime() - startTime.getTime();
+
+// ✅ CORRECT — zero-floored
+import { elapsedMs } from "@/utils/timeUtil";
+const duration = elapsedMs(startTime, endTime);
+```
+
+Time forms that take a start and an end should also reject an end before the start with `isEndBeforeStart`.
+
 ---
 
 ## Architecture Gotchas

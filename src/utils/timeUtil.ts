@@ -6,6 +6,17 @@
 export const elapsedMs = (start: Date, end: Date): number =>
   Math.max(0, end.getTime() - start.getTime());
 
+export const END_BEFORE_START_MESSAGE = "End time must be after start time.";
+
+/**
+ * True when both "HH:MM" (zero-padded, 24-hour) values are set and the end
+ * falls strictly before the start. An equal pair is allowed: rounding to 15
+ * minutes can collapse a short task to zero length, and that shouldn't block
+ * saving an unrelated edit.
+ */
+export const isEndBeforeStart = (start: string, end: string): boolean =>
+  Boolean(start) && Boolean(end) && end < start;
+
 export const formatDuration = (milliseconds: number): string => {
   const totalSeconds = Math.floor(Math.max(0, milliseconds) / 1000);
   const hours = Math.floor(totalSeconds / 3600);

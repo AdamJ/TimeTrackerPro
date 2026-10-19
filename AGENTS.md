@@ -1,6 +1,6 @@
 # AGENTS.md - AI Assistant Codebase Guide
 
-**Last Updated:** 2026-09-18
+**Last Updated:** 2026-10-19
 **Version:** 2.8.0
 
 Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and consultants, with dual storage (localStorage guest mode and optional Supabase cloud sync).
@@ -22,16 +22,16 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (~400 JS/TS tests across 37 files, plus 17 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
+### Test File Inventory (~410 JS/TS tests across 37 files, plus 17 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
 
 | File | Coverage |
 |---|---|
-| `src/utils/calculationUtils.test.ts` | `getDayStats`, hours/revenue/billable per-day and per-period |
+| `src/utils/calculationUtils.test.ts` | `getDayStats`, hours/revenue/billable per-day and per-period, plus legacy negative durations being ignored |
 | `src/utils/checklistUtils.test.ts` | `parseTaskChecklist`, `toggleDescriptionChecklistItem` |
 | `src/utils/exportUtils.test.ts` | `exportToCSV`, `exportToJSON`, `generateInvoiceData`, `parseCSVImport` |
 | `src/utils/reportUtils.test.ts` | Report generation utilities |
-| `src/utils/timeUtil.test.ts` | Time formatting utilities |
-| `src/contexts/TimeTracking.test.tsx` | Full context: day/task/archive management, todos, planned tasks, project CRUD, category CRUD, `discardDay`, `adjustTaskTime`, `addBackdatedDay`, client archive/restore |
+| `src/utils/timeUtil.test.ts` | Time formatting utilities, `elapsedMs` zero floor, `isEndBeforeStart` |
+| `src/contexts/TimeTracking.test.tsx` | Full context: day/task/archive management, todos, planned tasks, project CRUD, category CRUD, `discardDay`, `adjustTaskTime` (incl. end-before-start clamp), `endDay` never producing negative durations, `addBackdatedDay`, client archive/restore |
 | `src/contexts/TimeTrackingContext.forceSync.test.tsx` | `forceSyncToDatabase` behavior |
 | `src/services/dataService.test.ts` | `LocalStorageService` save/load round-trips |
 | `src/services/supabaseService.test.ts` | Upsert-only bulk saves and single-row deletes (`saveProjects`, `deleteProject`, `saveCategories`, `deleteCategory`, `saveTodos`), plus `getCurrentDay`/`saveCurrentDay`, `getArchivedDays` task pagination past the 1000-row PostgREST cap, `checkNewSchema` schema detection, and `migrateFromLocalStorage` (no-op/no-existing-data/client-name-reconcile/error-swallow paths) |
@@ -50,8 +50,8 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/components/NewTaskForm.test.tsx` | Form render, submit, validation, cancel, FAB toggle |
 | `src/components/TaskItem.test.tsx` | Badge render, delete confirm, edit dialog |
 | `src/components/PlannedTaskPicker.test.tsx` | Dashboard empty-day picker: ordering, filtering, start vs resume, list cap |
-| `src/components/ArchiveEditDialog.test.tsx` | Archive edit dialog render and task editing flow |
-| `src/components/ArchivedTaskRow.test.tsx` | Inline expandable archived task row editing |
+| `src/components/ArchiveEditDialog.test.tsx` | Archive edit dialog render, task editing flow, and end-before-start validation (day form and Add Task) |
+| `src/components/ArchivedTaskRow.test.tsx` | Inline expandable archived task row editing, including end-before-start validation |
 | `src/components/dateParsing.test.ts` | Date parsing utilities |
 | `src/components/BackgroundTimerNotifier.test.tsx` | Document title/OS notification updates while a timer runs in the background |
 | `src/components/CommandPalette.test.tsx` | `Cmd/Ctrl+K` command palette actions and navigation |
@@ -172,7 +172,7 @@ export const MyComponent = () => {
 | `src/hooks/useLongPress.ts`                   | 500 ms hold detector for context menu trigger on touch                             |
 | `src/components/ui/responsive-select.tsx`     | `ResponsiveSelect` — branches on `useIsMobile()` to render a native `<select>` on mobile (OS picker) vs the Radix `Select` on desktop; flat `options` array API shared by `NewTaskForm`, `ProjectSheet`, `BackdatedEntryDialog`, `PlannedTaskDialog`, `ArchivedTaskRow` |
 | `src/components/PlannedTaskPicker.tsx`        | Empty started-day card on the Dashboard: lists in-progress/to-do planned tasks with Start (`pullPlannedTaskToDay`) / Resume (`addPlannedTaskToDay`) buttons. Task Board cards and the Tasks page header can also start the day (`startDayAndPullPlannedTask`, "now" rounded to 15 min, no dialog) |
-| `src/components/ArchivedTaskRow.tsx`          | Inline expandable row for editing a single task within `ArchiveEditDialog` (replaces the old `TaskEditInArchiveDialog` modal) |
+| `src/components/ArchivedTaskRow.tsx`          | Inline expandable row for editing a single task within `ArchiveEditDialog` (replaces the old `TaskEditInArchiveDialog` modal); disables Save and shows an inline alert when the end time is before the start |
 | `src/services/localStorageService/recovery.ts` | Lists/previews/restores localStorage schema-mismatch backup keys and desktop (Tauri) disk-backup snapshots; the read side of the write-only backup safety nets |
 | `src/hooks/useDataRecovery.ts`                | Unifies browser (`recovery.ts`) and desktop (`useElectronBackup`'s `listDiskBackups`/`readDiskBackup`, Tauri-backed) backup sources behind one list/preview/restore API |
 | `src/components/DataRecoveryDialog.tsx`       | Settings → "Data Recovery" (guest mode only): lists backups, previews entity-count diffs against current state, restores and reloads |
@@ -183,6 +183,15 @@ export const MyComponent = () => {
 | `src/components/ui/kbd.tsx`                   | shadcn `Kbd`/`KbdGroup` components — key-cap styling used by the command palette and shortcuts help dialog |
 | `src/lib/platform.ts`                         | `isMac`/`modKey` — platform-appropriate shortcut glyph (`⌘` vs `Ctrl`) for the UI above; `isIOS` — distinguishes iPadOS (which spoofs a "Macintosh" user agent since iPadOS 13, detected via touch-point count) from a real Mac, used to gate desktop-only Tauri behavior (native menu, self-hosted updater) |
 | `src-tauri/src/menu.rs`                       | Builds the native app menu; `File` has New Task/Save Changes accelerators, `View` has the Command Palette accelerator, `Help` has a Keyboard Shortcuts entry — all dispatched as a `menu:action` event picked up by `tauriElectronApiShim.ts`. Desktop-only (`#[cfg(desktop)]`) — no menu bar concept on iOS |
+
+---
+
+## Time Tracking Invariants
+
+- **Tracked time is never negative.** Compute durations with `elapsedMs(start, end)` from `@/utils/timeUtil` (zero-floored), never a bare `end.getTime() - start.getTime()`. Rounding one end of a span to 15 minutes can push it before the other.
+- `endDay` clamps its rounded end time to the latest of the day start, the running task's start, and the latest recorded task end.
+- `adjustTaskTime` collapses an end-before-start edit to a zero-length task; calculation and format helpers ignore or zero any negative value already in storage.
+- Archive editors (`ArchivedTaskRow`, the `ArchiveEditDialog` day form and Add Task form) reject an end before the start via `isEndBeforeStart` and `END_BEFORE_START_MESSAGE`. Equal times are allowed, since rounding can collapse a short task to zero length.
 
 ---
 

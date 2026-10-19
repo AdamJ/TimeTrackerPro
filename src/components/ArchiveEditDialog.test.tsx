@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ArchiveEditDialog } from "@/components/ArchiveEditDialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -184,5 +184,71 @@ describe("ArchiveEditDialog", () => {
     // Time-of-day survives re-stamping: rounded from 17:52 to 17:45.
     expect(lastTask.endTime.getHours()).toBe(17);
     expect(lastTask.endTime.getMinutes()).toBe(45);
+  });
+
+  it("rejects a day end time before the start time and keeps the editor open with the error", async () => {
+    const user = userEvent.setup();
+    renderDialog({ day: buildDay(), isOpen: true, onClose: vi.fn() });
+
+    await user.click(screen.getByRole("button", { name: "Edit day summary" }));
+    fireEvent.change(screen.getByLabelText("Day end time"), {
+      target: { value: "08:00" },
+    });
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    expect(
+      await screen.findByText("End time must be after start time.")
+    ).toBeInTheDocument();
+    expect(updateArchivedDay).not.toHaveBeenCalled();
+  });
+
+  it("opens the day-summary editor to show the error when a collapsed day is invalid", async () => {
+    const user = userEvent.setup();
+    const day = buildDay();
+    // Legacy bad data: the day ends before it starts.
+    day.endTime = new Date(2026, 5, 15, 8, 0, 0);
+    renderDialog({ day, isOpen: true, onClose: vi.fn() });
+
+    // Stage an unrelated task edit so Save Changes is enabled.
+    const taskTwoRow = screen.getByText("Task Two").closest("tr")!;
+    await user.click(within(taskTwoRow).getByRole("button", { name: "Edit task" }));
+    const titleInput = screen.getByLabelText(/Task Title/);
+    await user.clear(titleInput);
+    await user.type(titleInput, "Task Two Updated");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(screen.queryByLabelText("Day end time")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    expect(await screen.findByLabelText("Day end time")).toBeInTheDocument();
+    expect(
+      screen.getByText("End time must be after start time.")
+    ).toBeInTheDocument();
+    expect(updateArchivedDay).not.toHaveBeenCalled();
+  });
+
+  it("disables Add Task and shows an error when the new task ends before it starts", async () => {
+    const user = userEvent.setup();
+    renderDialog({ day: buildDay(), isOpen: true, onClose: vi.fn() });
+
+    await user.click(screen.getByRole("button", { name: "Add Task" }));
+    await user.type(screen.getByLabelText(/Task Title/), "Late task");
+    fireEvent.change(screen.getByLabelText("Task start time"), {
+      target: { value: "14:00" },
+    });
+    fireEvent.change(screen.getByLabelText("Task end time"), {
+      target: { value: "13:00" },
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "End time must be after start time."
+    );
+    expect(screen.getByRole("button", { name: "Add Task" })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText("Task end time"), {
+      target: { value: "15:00" },
+    });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add Task" })).toBeEnabled();
   });
 });

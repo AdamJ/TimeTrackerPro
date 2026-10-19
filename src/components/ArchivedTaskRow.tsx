@@ -14,7 +14,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Edit, Trash2, X } from "lucide-react";
-import { elapsedMs, formatDuration, formatTimeForInput } from "@/utils/timeUtil";
+import {
+  elapsedMs,
+  END_BEFORE_START_MESSAGE,
+  formatDuration,
+  formatTimeForInput,
+  isEndBeforeStart,
+} from "@/utils/timeUtil";
 import { Task, Project } from "@/contexts/TimeTrackingContext";
 import { TaskCategory } from "@/config/categories";
 
@@ -92,6 +98,8 @@ export const ArchivedTaskRow: React.FC<ArchivedTaskRowProps> = React.memo(({
   }, [task, projects, isExpanded]);
 
   const category = categories.find((c) => c.id === task.category);
+  const endBeforeStart = isEndBeforeStart(timeData.startTime, timeData.endTime);
+  const endErrorId = `archive-task-end-error-${task.id}`;
 
   const handleSave = () => {
     const selectedProject =
@@ -371,7 +379,14 @@ export const ArchivedTaskRow: React.FC<ArchivedTaskRowProps> = React.memo(({
                       setTimeData((prev) => ({ ...prev, endTime: value }))
                     }
                     aria-label="Task end time"
+                    aria-invalid={endBeforeStart}
+                    aria-describedby={endBeforeStart ? endErrorId : undefined}
                   />
+                  {endBeforeStart && (
+                    <p id={endErrorId} role="alert" className="mt-1 text-sm text-destructive">
+                      {END_BEFORE_START_MESSAGE}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -385,7 +400,7 @@ export const ArchivedTaskRow: React.FC<ArchivedTaskRowProps> = React.memo(({
                 </Button>
                 <Button
                   onClick={handleSave}
-                  disabled={!formData.title.trim()}
+                  disabled={!formData.title.trim() || endBeforeStart}
                   variant="default"
                   size="sm"
                 >
