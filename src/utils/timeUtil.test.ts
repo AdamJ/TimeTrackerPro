@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   elapsedMs,
+  isEndBeforeStart,
   formatDuration,
   formatDurationLong,
   formatDate,
@@ -59,6 +60,22 @@ describe("timeUtil", () => {
 			expect(
 				elapsedMs(new Date("2024-12-03T09:20:00Z"), new Date("2024-12-03T09:15:00Z"))
 			).toBe(0);
+		});
+	});
+
+	describe("isEndBeforeStart", () => {
+		it("flags an end strictly before the start", () => {
+			expect(isEndBeforeStart("14:00", "13:45")).toBe(true);
+		});
+
+		it("allows an equal or later end", () => {
+			expect(isEndBeforeStart("09:00", "09:00")).toBe(false);
+			expect(isEndBeforeStart("09:00", "17:30")).toBe(false);
+		});
+
+		it("ignores an unset start or end", () => {
+			expect(isEndBeforeStart("", "08:00")).toBe(false);
+			expect(isEndBeforeStart("09:00", "")).toBe(false);
 		});
 	});
 

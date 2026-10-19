@@ -9,6 +9,7 @@ interface TimePickerProps {
   id?: string;
   'aria-label'?: string;
   'aria-describedby'?: string;
+  'aria-invalid'?: boolean;
 }
 
 /**

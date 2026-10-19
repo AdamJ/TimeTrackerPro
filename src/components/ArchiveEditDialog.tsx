@@ -64,6 +64,8 @@ import {
 } from "lucide-react";
 import {
   elapsedMs,
+  END_BEFORE_START_MESSAGE,
+  isEndBeforeStart,
   formatDuration,
   formatDate,
   roundToNearest15Minutes,
@@ -108,6 +110,9 @@ const dayFormSchema = z.object({
     .string()
     .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Enter a valid time"),
   notes: z.string().optional(),
+}).refine((values) => !isEndBeforeStart(values.startTime, values.endTime), {
+  message: END_BEFORE_START_MESSAGE,
+  path: ["endTime"],
 });
 
 type DayFormValues = z.infer<typeof dayFormSchema>;
@@ -358,6 +363,8 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
     setExpandedTaskId((cur) => (cur === id ? null : id));
   }, []);
 
+  const newTaskEndBeforeStart = isEndBeforeStart(newTaskTimes.startTime, newTaskTimes.endTime);
+
   const handleAddTask = () => {
     const selectedProject =
       newTaskData.project !== "none"
@@ -462,7 +469,10 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
               Cancel
             </Button>
             <Button
-              onClick={dayForm.handleSubmit(handleSaveDay)}
+              onClick={dayForm.handleSubmit(handleSaveDay, () =>
+                // Surface the error message even if the summary editor is collapsed
+                setIsSummaryEditing(true),
+              )}
               size="sm"
               disabled={!hasChanges || isSaving}
             >
@@ -866,7 +876,14 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                                     setNewTaskTimes((prev) => ({ ...prev, endTime: value }))
                                   }
                                   aria-label="Task end time"
+                                  aria-invalid={newTaskEndBeforeStart}
+                                  aria-describedby={newTaskEndBeforeStart ? "new-task-end-error" : undefined}
                                 />
+                                {newTaskEndBeforeStart && (
+                                  <p id="new-task-end-error" role="alert" className="mt-1 text-sm text-destructive">
+                                    {END_BEFORE_START_MESSAGE}
+                                  </p>
+                                )}
                               </div>
                             </div>
 
@@ -880,7 +897,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                               </Button>
                               <Button
                                 onClick={handleAddTask}
-                                disabled={!newTaskData.title.trim() || isSaving}
+                                disabled={!newTaskData.title.trim() || newTaskEndBeforeStart || isSaving}
                                 variant="default"
                                 size="sm"
                               >

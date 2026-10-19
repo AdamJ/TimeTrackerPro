@@ -52,7 +52,7 @@ For the main overview, see [README.md](README.md).
 
 **Ongoing:**
 
-- View archived days on the **Archive** page.
+- View archived days on the **Archive** page. When editing an archived day, task, or new task, an end time before the start time is flagged inline and Save/Add Task stays disabled until it is corrected.
 - Manage projects and rates via **Archive → Projects**.
 - Customize categories on the **Categories** page.
 - Export data via **Archive → Export**.
@@ -70,7 +70,7 @@ For the main overview, see [README.md](README.md).
    - **Description** (optional) — detailed notes with markdown support
    - **Project** (optional) — assign to a client/project
    - **Category** (optional) — categorize the work type
-3. Task duration calculates automatically.
+3. Task duration calculates automatically. Durations are never negative: ending a day snaps its end time to the nearest 15 minutes but never earlier than the running task's start, and editing a task so it ends before it starts collapses it to zero length.
 4. Create new tasks as you switch between work items.
 
 **Evening:**
@@ -473,7 +473,7 @@ src/
 │   ├── checklistUtils.ts         # GFM checklist extraction
 │   ├── exportUtils.ts            # CSV import/export
 │   ├── reportUtils.ts            # Report grouping and formatting
-│   └── timeUtil.ts               # Time formatting
+│   └── timeUtil.ts               # Time formatting, 15-minute rounding, zero-floored `elapsedMs`, end-before-start check
 ├── App.css
 ├── App.tsx
 ├── index.css

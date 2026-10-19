@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Table, TableBody } from "@/components/ui/table";
@@ -294,5 +294,60 @@ describe("ArchivedTaskRow", () => {
     await user.clear(titleInput);
 
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+  });
+
+  it("blocks saving and announces an error when the end time is before the start time", () => {
+    const onSave = vi.fn();
+    renderRow({
+      task: baseTask,
+      isExpanded: true,
+      onToggleExpand: vi.fn(),
+      onSave,
+      onDelete: vi.fn(),
+      categories,
+      projects,
+    });
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+    // Pre-filled 09:00 to 10:45; move the end before the start.
+    fireEvent.change(screen.getByLabelText("Task end time"), {
+      target: { value: "08:00" },
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "End time must be after start time."
+    );
+    expect(screen.getByLabelText("Task end time")).toHaveAttribute(
+      "aria-invalid",
+      "true"
+    );
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+
+    // Correcting the end time clears the error and re-enables Save.
+    fireEvent.change(screen.getByLabelText("Task end time"), {
+      target: { value: "11:00" },
+    });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  });
+
+  it("allows saving when the rounded start and end times are equal", () => {
+    renderRow({
+      task: baseTask,
+      isExpanded: true,
+      onToggleExpand: vi.fn(),
+      onSave: vi.fn(),
+      onDelete: vi.fn(),
+      categories,
+      projects,
+    });
+
+    fireEvent.change(screen.getByLabelText("Task end time"), {
+      target: { value: "09:00" },
+    });
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
   });
 });
