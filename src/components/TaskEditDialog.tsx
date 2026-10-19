@@ -25,7 +25,6 @@ import { Clock, Save } from 'lucide-react';
 import { Task } from '@/contexts/TimeTrackingContext';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { formatTime, formatDate } from '@/utils/timeUtil';
-import { toast } from '@/hooks/use-toast';
 
 interface TaskEditDialogProps {
   task: Task;
@@ -61,6 +60,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
   });
 
   const [hasChanges, setHasChanges] = useState(false);
+  const [titleTouched, setTitleTouched] = useState(false);
 
   // Reset form when task changes or dialog opens
   useEffect(() => {
@@ -81,6 +81,7 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
       });
 
       setHasChanges(false);
+      setTitleTouched(false);
     }
   }, [task, projects, isOpen]);
 
@@ -150,13 +151,8 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
   };
 
   const handleSave = () => {
-    // Validate required fields
     if (!formData.title.trim()) {
-      toast({
-        title: 'Title required',
-        description: 'Please enter a task title before saving.',
-        variant: 'destructive'
-      });
+      setTitleTouched(true);
       return;
     }
 
@@ -205,6 +201,8 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
     onClose();
   };
 
+  const titleError = titleTouched && !formData.title.trim() ? 'Task title is required.' : '';
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
@@ -243,9 +241,17 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
                           title: e.target.value
                         }))
                       }
+                      onBlur={() => setTitleTouched(true)}
                       placeholder="Enter task title"
                       aria-required="true"
+                      aria-invalid={!!titleError}
+                      aria-describedby={titleError ? 'task-edit-title-error' : undefined}
                     />
+                    {titleError && (
+                      <p id="task-edit-title-error" className="text-sm text-destructive" role="alert">
+                        {titleError}
+                      </p>
+                    )}
                   </div>
 
                   <div>
