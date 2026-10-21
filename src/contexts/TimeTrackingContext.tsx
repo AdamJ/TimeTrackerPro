@@ -187,6 +187,7 @@ interface TimeTrackingContextType {
   ) => string;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
   deleteTask: (taskId: string) => void;
+  reopenTask: (taskId: string) => void;
   postDay: (notes?: string) => void;
 
   // Project management
@@ -908,6 +909,23 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         .catch(error => console.error("❌ Error saving after deleting task:", error));
     }
   }, [tasks, currentTask, dayStartTime, isDayStarted, dataService]);
+
+  // Reopens a previously completed task as the current task (clears endTime/duration).
+  // Used when the active task is deleted and the user chooses to resume the one before it.
+  const reopenTask = useCallback((taskId: string) => {
+    const target = tasks.find(t => t.id === taskId);
+    if (!target) return;
+    const { endTime, duration, ...reopened } = target;
+    const updatedTasks = tasks.map(t => (t.id === taskId ? reopened : t));
+    setTasks(updatedTasks);
+    setCurrentTask(reopened);
+    setHasUnsavedChanges(true);
+    if (dataService) {
+      dataService.saveCurrentDay({ isDayStarted, dayStartTime, currentTask: reopened, tasks: updatedTasks })
+        .then(() => setLastSyncTime(new Date()))
+        .catch(error => console.error("❌ Error saving after reopening task:", error));
+    }
+  }, [tasks, dayStartTime, isDayStarted, dataService]);
 
   const postDay = useCallback(async (notes?: string) => {
     if (!dayStartTime) return;
@@ -1761,6 +1779,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     startNewTask,
     updateTask,
     deleteTask,
+    reopenTask,
     postDay,
     plannedTasks,
     addPlannedTask,
@@ -1832,6 +1851,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     startNewTask,
     updateTask,
     deleteTask,
+    reopenTask,
     postDay,
     plannedTasks,
     addPlannedTask,
