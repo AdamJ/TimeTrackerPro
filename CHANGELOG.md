@@ -57,6 +57,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Deleting the active task used to leave the day with no running task and no way to resume the one before it. `deleteTask` now surfaces an "Resume previous task?" prompt on the Dashboard when the deleted task was active and an earlier task exists, letting the user resume it (via new `reopenTask`, which clears its `endTime`/`duration` and makes it current again) or start a new task instead
+  — `src/contexts/TimeTrackingContext.tsx`, `src/pages/Index.tsx`
 - Manually editing a current-day task's end time (via `TaskEditDialog`) no longer leaves a linked planned task's "Time Spent" stale. `adjustTaskTime` previously updated only the day task's own `duration`; it now also calls `accumulatePlannedTaskTime` so the planned task's `timeSpent` and matching `timeEntries` duration resync to the edited time
   — `src/contexts/TimeTrackingContext.tsx`, `src/contexts/TimeTracking.test.tsx`
 - Archive editors now reject an end time before the start time instead of silently saving a zero-length task. `ArchivedTaskRow` and the Add Task form in `ArchiveEditDialog` show an inline `role="alert"` message, set `aria-invalid`/`aria-describedby` on the end-time input, and disable Save/Add Task until corrected; the day summary form rejects it through its zod schema, and Save Changes reopens a collapsed summary editor so the error is visible. Equal start and end times remain allowed because 15-minute rounding can collapse a short task to zero length. New shared `isEndBeforeStart` and `END_BEFORE_START_MESSAGE` in `timeUtil`; `TimePicker` accepts `aria-invalid`
