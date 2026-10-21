@@ -30,6 +30,17 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverHeader, PopoverTrigger, PopoverTitle } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import type { Task } from "@/contexts/TimeTrackingContext";
 
 // Stable epoch constant — avoids creating new Date(0) on every render
 const EPOCH = new Date(0);
@@ -47,6 +58,7 @@ const TimeTrackerContent = () => {
     discardDay,
     postDay,
     deleteTask,
+    reopenTask,
     startNewTask,
     getTotalHoursForPeriod,
   } = useTimeTracking();
@@ -54,6 +66,7 @@ const TimeTrackerContent = () => {
 
   const [showStartDayDialog, setShowStartDayDialog] = useState(false);
   const [showAddTaskForm, setShowAddTaskForm] = useState(false);
+  const [resumeCandidate, setResumeCandidate] = useState<Task | null>(null);
 
   useEffect(() => {
     if (consumePendingMenuAction("new-task")) {
@@ -80,6 +93,15 @@ const TimeTrackerContent = () => {
 
   const handleDiscardDay = () => {
     discardDay();
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    const wasActive = currentTask?.id === taskId;
+    const remaining = tasks.filter(t => t.id !== taskId);
+    deleteTask(taskId);
+    if (wasActive && remaining.length > 0) {
+      setResumeCandidate(remaining[remaining.length - 1]);
+    }
   };
 
   const handleNewTask = (
@@ -385,7 +407,7 @@ const TimeTrackerContent = () => {
                                 ? getCurrentTaskDuration(currentTask, now)
                                 : 0
                             }
-                            onDelete={deleteTask}
+                            onDelete={handleDeleteTask}
                           />
                         </motion.div>
                       ))}
@@ -406,6 +428,30 @@ const TimeTrackerContent = () => {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={resumeCandidate !== null} onOpenChange={(open) => !open && setResumeCandidate(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Resume previous task?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The active task was deleted. Resume "{resumeCandidate?.title}" or start a new task?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setResumeCandidate(null)}>
+              Start New Task
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (resumeCandidate) reopenTask(resumeCandidate.id);
+                setResumeCandidate(null);
+              }}
+            >
+              Resume "{resumeCandidate?.title}"
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageLayout>
   );
 };
