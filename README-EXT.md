@@ -408,6 +408,7 @@ src/
 │   ├── ExportDialog.tsx
 │   ├── InstallPrompt.tsx
 │   ├── KanbanBoard.tsx            # Kanban planning board
+│   ├── KanbanBoardControls.tsx    # Sort/filter bar above the board, backed by useTaskBoardView
 │   ├── KanbanColumn.tsx
 │   ├── KeyboardShortcutsDialog.tsx # "?" help dialog listing shortcuts (uses ui/kbd)
 │   ├── MarkdownDisplay.tsx
@@ -447,6 +448,7 @@ src/
 │   ├── usePageTitle.ts           # Page title state management
 │   ├── useReportStorage.ts       # Persist generated report summaries
 │   ├── useReportSummary.ts       # Gemini AI summary generation
+│   ├── useTaskBoardView.ts       # Kanban board sort/filter state, persisted to localStorage
 │   └── useTimeTracking.tsx       # Time tracking state management
 ├── lib/
 │   ├── electronMenuActions.ts     # Pending menu-action stash consumed by page-mount effects
