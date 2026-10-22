@@ -5,6 +5,15 @@
 
 Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and consultants, with dual storage (localStorage guest mode and optional Supabase cloud sync).
 
+---
+
+## Rules
+
+- NEVER add any "Co-Authored-By:" text to commits
+- ALWAYS run the `pnpm check:design-tokens`, `pnpm lint:markdown`, and `pnpm check:a11y` before committing any code
+
+---
+
 ## Output Style
 
 - Be terse and direct. Avoid walls of text and verbose explanations.
