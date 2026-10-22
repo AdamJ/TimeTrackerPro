@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Task board now has sort (Priority, Title A–Z, Newest first, Oldest first) and filter (project, client, category) controls above the columns, applying to all four status columns at once. Choices persist to `localStorage` (`timetracker_task_board_view`), not Supabase, so they're per-browser only. New `useTaskBoardView` hook holds the sort/filter state and reconciles it with `plannedTasks`
+  — `src/hooks/useTaskBoardView.ts` (new), `src/components/KanbanBoardControls.tsx` (new), `src/components/KanbanBoard.tsx`
 - Starting a day from the task board no longer requires a detour through the Dashboard. The Tasks page header has a "Start Day" button (starts at the current time, rounded to 15 minutes, without the start-time dialog), and each planned task's menu offers "Start Day and Pull" (or "Start Day and Resume" for in-progress tasks) when no day is running. New context method `startDayAndPullPlannedTask` starts the day and the task in one step; it is blocked while an ended day is still awaiting posting. Pull/add/start-day-and-pull share one internal helper, and `startNewTask` now delegates to an internal `beginTask` that takes the day state explicitly so a day and its first task can be created in the same tick without a stale-closure save
   — `src/contexts/TimeTrackingContext.tsx`, `src/components/PlannedTaskCard.tsx`, `src/pages/TaskList.tsx`
 - A started day with no tasks now shows a "Pick up a planned task" card on the Dashboard (up to five in-progress or to-do planned tasks with Start/Resume buttons, plus a link to the Task Board) instead of force-opening the new task form

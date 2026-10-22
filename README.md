@@ -138,7 +138,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 - **Guest-mode data durability** — schema-mismatch backups, write-failure toasts, undo for hard deletes, Tauri desktop disk-based backup snapshots (independent of `localStorage`, including a final flush on app quit), and an in-app "Data Recovery" UI in Settings to preview and restore those backups
 - **Self-hosted SQL backend** — opt-in PostgreSQL/MySQL support via a small REST API (`server/`), alongside the existing Supabase and local storage modes
 - **Backdated entry creation** — "Add Past Entry" button on Archive page opens a multi-step dialog to log tasks for any past date
-- **Kanban planning board** — drag-and-drop task planning view (`KanbanBoard`, `KanbanColumn`, `PlannedTaskCard`); start the day (and a task) straight from the board, or pick a planned task from the Dashboard's empty-day card (`PlannedTaskPicker`)
+- **Kanban planning board** — drag-and-drop task planning view (`KanbanBoard`, `KanbanColumn`, `PlannedTaskCard`); start the day (and a task) straight from the board, or pick a planned task from the Dashboard's empty-day card (`PlannedTaskPicker`); sort and filter controls (by priority/title/date, and by project/client/category) apply across all columns and persist to `localStorage`
 - Persistent report summaries saved to localStorage; markdown preview/export in the report output panel
 - `AppSidebar` collapsible sidebar navigation with live session timer; `PageTitleContext` decouples page header state from layout
 
