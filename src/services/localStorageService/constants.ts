@@ -5,7 +5,8 @@ export const STORAGE_KEYS = {
 	CATEGORIES: "timetracker_categories",
 	TODOS: "timetracker_todos",
 	PLANNED_TASKS: "timetracker_planned_tasks",
-	CLIENTS: "timetracker_clients"
+	CLIENTS: "timetracker_clients",
+	INITIATIVES: "timetracker_initiatives"
 };
 
 // Increment this when the stored data format changes in a breaking way.

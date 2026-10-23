@@ -244,6 +244,57 @@ describe('DataService', () => {
     });
   });
 
+  describe("initiatives", () => {
+    it("round-trips an initiative with a date deadline", async () => {
+      const service = createDataService(false);
+      const initiative: import("@/contexts/TimeTrackingContext").Initiative = {
+        id: "init-1", projectId: "proj-1", name: "Redesign onboarding",
+        goal: "Cut signup drop-off in half", status: "in_progress",
+        deadlineType: "date", deadlineDate: "2026-12-15",
+        createdAt: "2026-10-01T00:00:00.000Z", updatedAt: "2026-10-01T00:00:00.000Z"
+      };
+
+      await service.saveInitiatives([initiative]);
+      const loaded = await service.getInitiatives();
+
+      expect(loaded).toHaveLength(1);
+      expect(loaded[0].name).toBe("Redesign onboarding");
+      expect(loaded[0].deadlineDate).toBe("2026-12-15");
+    });
+
+    it("upsertInitiative inserts, then updates in place", async () => {
+      const service = createDataService(false);
+      const base: import("@/contexts/TimeTrackingContext").Initiative = {
+        id: "init-2", projectId: "proj-1", name: "Design system v3",
+        goal: "Ship v3 tokens", status: "not_started",
+        deadlineType: "quarter", deadlineQuarter: 1, deadlineYear: 2027,
+        createdAt: "2026-10-01T00:00:00.000Z", updatedAt: "2026-10-01T00:00:00.000Z"
+      };
+
+      await service.upsertInitiative(base);
+      await service.upsertInitiative({ ...base, status: "in_progress" });
+      const loaded = await service.getInitiatives();
+
+      expect(loaded).toHaveLength(1);
+      expect(loaded[0].status).toBe("in_progress");
+    });
+
+    it("deleteInitiative removes a single row", async () => {
+      const service = createDataService(false);
+      const initiative: import("@/contexts/TimeTrackingContext").Initiative = {
+        id: "init-3", projectId: "proj-1", name: "To delete",
+        goal: "g", status: "not_started", deadlineType: "date", deadlineDate: "2026-11-01",
+        createdAt: "2026-10-01T00:00:00.000Z", updatedAt: "2026-10-01T00:00:00.000Z"
+      };
+
+      await service.upsertInitiative(initiative);
+      await service.deleteInitiative("init-3");
+      const loaded = await service.getInitiatives();
+
+      expect(loaded).toHaveLength(0);
+    });
+  });
+
   describe('createDataService', () => {
     it('should create service for guest mode', () => {
       const service = createDataService(false);

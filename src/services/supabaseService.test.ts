@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import type { Project, Client, TodoItem, DayRecord } from "@/contexts/TimeTrackingContext";
+import type { Project, Client, TodoItem, DayRecord, Initiative } from "@/contexts/TimeTrackingContext";
 import type { TaskCategory } from "@/config/categories";
 import type { CurrentDayData } from "@/services/dataService";
 
@@ -47,7 +47,8 @@ const {
 			getArchivedDays: vi.fn(async () => [] as DayRecord[]),
 			getTodos: vi.fn(async () => [] as TodoItem[]),
 			getPlannedTasks: vi.fn(async () => []),
-			getClients: vi.fn(async () => [] as Client[])
+			getClients: vi.fn(async () => [] as Client[]),
+			getInitiatives: vi.fn(async () => [] as Initiative[])
 		}
 	};
 });
@@ -263,6 +264,51 @@ describe("SupabaseService — upsert-only bulk saves (#215)", () => {
 		it("is a no-op for an empty array", async () => {
 			await service.savePlannedTasks([]);
 			expect(fromMock).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("saveInitiatives", () => {
+		it("upserts a stale/partial snapshot without deleting rows missing from it", async () => {
+			const initiatives: Initiative[] = [{
+				id: "i1", projectId: "proj-1", name: "Redesign onboarding", goal: "g",
+				status: "in_progress", deadlineType: "date", deadlineDate: "2026-12-15",
+				createdAt: "2026-10-01T00:00:00.000Z", updatedAt: "2026-10-01T00:00:00.000Z"
+			}];
+			await service.saveInitiatives(initiatives);
+
+			expect(fromMock).toHaveBeenCalledWith("planning_initiatives");
+			expect(builder.delete).not.toHaveBeenCalled();
+			expect(builder.upsert).toHaveBeenCalledWith(
+				[expect.objectContaining({ id: "i1", user_id: "user-1", project_id: "proj-1", name: "Redesign onboarding" })],
+				{ onConflict: "id" }
+			);
+		});
+
+		it("is a no-op for an empty array", async () => {
+			await service.saveInitiatives([]);
+			expect(fromMock).not.toHaveBeenCalledWith("planning_initiatives");
+		});
+	});
+
+	describe("upsertInitiative / deleteInitiative", () => {
+		it("upserts a single initiative row", async () => {
+			const initiative: Initiative = {
+				id: "i2", projectId: "proj-1", name: "Design system v3", goal: "g",
+				status: "not_started", deadlineType: "quarter", deadlineQuarter: 1, deadlineYear: 2027,
+				createdAt: "2026-10-01T00:00:00.000Z", updatedAt: "2026-10-01T00:00:00.000Z"
+			};
+			await service.upsertInitiative(initiative);
+
+			expect(builder.upsert).toHaveBeenCalledWith(
+				expect.objectContaining({ id: "i2", deadline_quarter: 1, deadline_year: 2027 }),
+				{ onConflict: "id" }
+			);
+		});
+
+		it("deletes a single initiative row scoped to the user", async () => {
+			await service.deleteInitiative("i2");
+			expect(builder.delete).toHaveBeenCalled();
+			expect(builder.eq).toHaveBeenCalledWith("id", "i2");
 		});
 	});
 });

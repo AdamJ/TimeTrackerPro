@@ -1,4 +1,4 @@
-import type { DayRecord, Project, Client, TodoItem, PlannedTask } from "@/contexts/TimeTrackingContext";
+import type { DayRecord, Project, Client, TodoItem, PlannedTask, Initiative } from "@/contexts/TimeTrackingContext";
 import type { TaskCategory } from "@/config/categories";
 import type { DataService, CurrentDayData } from "@/services/dataService";
 import { saveCurrentDay, getCurrentDay } from "./currentDay";
@@ -13,6 +13,7 @@ import { saveClients, getClients, upsertClient } from "./clients";
 import { saveCategories, getCategories, deleteCategory } from "./categories";
 import { saveTodos, getTodos, deleteTodo } from "./todos";
 import { savePlannedTasks, getPlannedTasks, upsertPlannedTask, deletePlannedTask } from "./plannedTasks";
+import { saveInitiatives, getInitiatives, upsertInitiative, deleteInitiative } from "./initiatives";
 
 export { STORAGE_KEYS, SCHEMA_VERSION } from "./constants";
 
@@ -103,6 +104,22 @@ export class LocalStorageService implements DataService {
 
 	deletePlannedTask(id: string): Promise<void> {
 		return deletePlannedTask(id);
+	}
+
+	saveInitiatives(initiatives: Initiative[]): Promise<void> {
+		return saveInitiatives(initiatives);
+	}
+
+	getInitiatives(): Promise<Initiative[]> {
+		return getInitiatives();
+	}
+
+	upsertInitiative(initiative: Initiative): Promise<void> {
+		return upsertInitiative(initiative);
+	}
+
+	deleteInitiative(id: string): Promise<void> {
+		return deleteInitiative(id);
 	}
 
 	async migrateFromLocalStorage(): Promise<boolean> {

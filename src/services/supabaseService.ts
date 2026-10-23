@@ -10,7 +10,7 @@ import {
 	setCachedClients,
 	trackAuthCall
 } from "@/lib/supabase";
-import { Task, DayRecord, Project, Client, TodoItem, PlannedTask } from "@/contexts/TimeTrackingContext";
+import { Task, DayRecord, Project, Client, TodoItem, PlannedTask, Initiative } from "@/contexts/TimeTrackingContext";
 import { TaskCategory } from "@/config/categories";
 import { DataService, CurrentDayData } from "@/services/dataService";
 import { LocalStorageService } from "@/services/localStorageService";
@@ -1011,6 +1011,106 @@ export class SupabaseService implements DataService {
 		}));
 	}
 
+	// Upsert-only: never deletes a row absent from `initiatives`, same rationale
+	// as savePlannedTasks above. Deletion happens via deleteInitiative.
+	async saveInitiatives(initiatives: Initiative[]): Promise<void> {
+		if (initiatives.length === 0) return;
+
+		const user = await this.requireUser();
+
+		const toUpsert = initiatives.map((i) => ({
+			id: i.id,
+			user_id: user.id,
+			project_id: i.projectId,
+			name: i.name,
+			goal: i.goal,
+			status: i.status,
+			deadline_type: i.deadlineType,
+			deadline_date: i.deadlineDate ?? null,
+			deadline_quarter: i.deadlineQuarter ?? null,
+			deadline_year: i.deadlineYear ?? null,
+			created_at: i.createdAt
+		}));
+
+		const { error } = await supabase
+			.from("planning_initiatives")
+			.upsert(toUpsert, { onConflict: "id" });
+		trackDbCall("upsert", "planning_initiatives");
+		if (error) throw error;
+	}
+
+	async upsertInitiative(initiative: Initiative): Promise<void> {
+		const user = await this.requireUser();
+		const { error } = await supabase.from("planning_initiatives").upsert({
+			id: initiative.id,
+			user_id: user.id,
+			project_id: initiative.projectId,
+			name: initiative.name,
+			goal: initiative.goal,
+			status: initiative.status,
+			deadline_type: initiative.deadlineType,
+			deadline_date: initiative.deadlineDate ?? null,
+			deadline_quarter: initiative.deadlineQuarter ?? null,
+			deadline_year: initiative.deadlineYear ?? null,
+			created_at: initiative.createdAt
+		}, { onConflict: "id" });
+		trackDbCall("upsert", "planning_initiatives");
+		if (error) throw error;
+	}
+
+	async deleteInitiative(id: string): Promise<void> {
+		const user = await this.requireUser();
+		const { error } = await supabase
+			.from("planning_initiatives")
+			.delete()
+			.eq("user_id", user.id)
+			.eq("id", id);
+		trackDbCall("delete", "planning_initiatives");
+		if (error) throw error;
+	}
+
+	async getInitiatives(): Promise<Initiative[]> {
+		const user = await this.requireUser();
+
+		const { data, error } = await supabase
+			.from("planning_initiatives")
+			.select("*")
+			.eq("user_id", user.id)
+			.order("created_at", { ascending: true });
+		trackDbCall("select", "planning_initiatives");
+
+		if (error) {
+			console.error("❌ Error loading initiatives:", error);
+			throw error;
+		}
+
+		return (data || []).map((row: {
+			id: string;
+			project_id: string;
+			name: string;
+			goal: string;
+			status: string;
+			deadline_type: string;
+			deadline_date: string | null;
+			deadline_quarter: number | null;
+			deadline_year: number | null;
+			created_at: string;
+			updated_at: string;
+		}) => ({
+			id: row.id,
+			projectId: row.project_id,
+			name: row.name,
+			goal: row.goal,
+			status: row.status as Initiative["status"],
+			deadlineType: row.deadline_type as Initiative["deadlineType"],
+			deadlineDate: row.deadline_date ?? undefined,
+			deadlineQuarter: row.deadline_quarter ?? undefined,
+			deadlineYear: row.deadline_year ?? undefined,
+			createdAt: row.created_at,
+			updatedAt: row.updated_at
+		}));
+	}
+
 	async migrateFromLocalStorage(): Promise<boolean> {
 		try {
 			const localService = new LocalStorageService();
@@ -1022,6 +1122,7 @@ export class SupabaseService implements DataService {
 			const todos = await localService.getTodos();
 			const plannedTasks = await localService.getPlannedTasks();
 			const clients = await localService.getClients();
+			const initiatives = await localService.getInitiatives();
 
 			const hasProjects = projects.length > 0;
 			const hasCategories = categories.length > 0;
@@ -1031,8 +1132,9 @@ export class SupabaseService implements DataService {
 			const hasTodos = todos.length > 0;
 			const hasPlannedTasks = plannedTasks.length > 0;
 			const hasClients = clients.length > 0;
+			const hasInitiatives = initiatives.length > 0;
 
-			if (!hasProjects && !hasCategories && !hasCurrentDay && !hasArchivedDays && !hasTodos && !hasPlannedTasks && !hasClients) {
+			if (!hasProjects && !hasCategories && !hasCurrentDay && !hasArchivedDays && !hasTodos && !hasPlannedTasks && !hasClients && !hasInitiatives) {
 				return true;
 			}
 
@@ -1088,6 +1190,12 @@ export class SupabaseService implements DataService {
 				if (hasPlannedTasks && existingPlannedTasks.length === 0) {
 					await this.savePlannedTasks(plannedTasks);
 				}
+
+				// Same stale-overwrite guard as planned tasks above.
+				const existingInitiatives = await this.getInitiatives();
+				if (hasInitiatives && existingInitiatives.length === 0) {
+					await this.saveInitiatives(initiatives);
+				}
 			} else {
 
 				if (hasProjects) await this.saveProjects(projects);
@@ -1096,6 +1204,7 @@ export class SupabaseService implements DataService {
 				if (hasArchivedDays) await this.saveArchivedDays(archivedDays);
 				if (hasTodos) await this.saveTodos(todos);
 				if (hasPlannedTasks) await this.savePlannedTasks(plannedTasks);
+				if (hasInitiatives) await this.saveInitiatives(initiatives);
 			}
 
 			// Migrate clients last, non-destructively: upsert only the guest
@@ -1129,6 +1238,7 @@ export class SupabaseService implements DataService {
 			const todos = await this.getTodos();
 			const plannedTasks = await this.getPlannedTasks();
 			const clients = await this.getClients();
+			const initiatives = await this.getInitiatives();
 
 			if (currentDay) {
 				await localService.saveCurrentDay(currentDay);
@@ -1156,6 +1266,10 @@ export class SupabaseService implements DataService {
 
 			if (clients.length > 0) {
 				await localService.saveClients(clients);
+			}
+
+			if (initiatives.length > 0) {
+				await localService.saveInitiatives(initiatives);
 			}
 
 		} catch (error) {

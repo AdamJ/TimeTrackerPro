@@ -40,6 +40,7 @@ const Categories = lazy(() => import("./pages/Categories"));
 const Clients = lazy(() => import("./pages/Clients"));
 const Report = lazy(() => import("./pages/Report"));
 const TaskList = lazy(() => import("./pages/TaskList"));
+const ProjectPlanning = lazy(() => import("./pages/ProjectPlanning"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -141,6 +142,7 @@ const AppShell = () => {
             <Route path="/" element={<Index />} />
             <Route path="/tasks" element={<TaskList />} />
             <Route path="/projectlist" element={<ProjectList />} />
+            <Route path="/projects/:id/planning" element={<ProjectPlanning />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/clients" element={<Clients />} />
             <Route path="/archive" element={<Archive />} />

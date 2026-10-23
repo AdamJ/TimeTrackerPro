@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { TimeTrackingProvider } from "./TimeTrackingContext";
-import type { Project, DayRecord, PlannedTask } from "./TimeTrackingContext";
+import type { Project, DayRecord, PlannedTask, Initiative } from "./TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import type { TaskCategory } from "@/config/categories";
 
@@ -1334,6 +1334,31 @@ describe("TimeTrackingContext", () => {
         expect(result.current.projects.length).toBeGreaterThan(0);
       });
     });
+
+    it("resetProjectsToDefaults removes initiatives belonging to the removed custom projects too", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      let customProjectId: string;
+      await act(async () => {
+        result.current.addProject({ name: "Custom With Initiative", client: "Me", color: "#000", isBillable: true });
+      });
+      await waitFor(() => {
+        customProjectId = result.current.projects.find(p => p.name === "Custom With Initiative")!.id;
+      });
+
+      await act(async () => {
+        result.current.addInitiative({
+          projectId: customProjectId, name: "Orphan risk", goal: "g",
+          deadlineType: "date", deadlineDate: "2026-11-01"
+        });
+      });
+      await waitFor(() => { expect(result.current.initiatives).toHaveLength(1); });
+
+      await act(async () => { result.current.resetProjectsToDefaults(); });
+
+      await waitFor(() => { expect(result.current.initiatives).toHaveLength(0); });
+    });
   });
 
   describe("Category Management", () => {
@@ -1726,6 +1751,135 @@ describe("TimeTrackingContext", () => {
       await waitFor(() => {
         expect(result.current.clients.find(c => c.id === clientId)?.archived).toBe(false);
       });
+    });
+  });
+
+  describe("Initiatives", () => {
+    it("adds an initiative with status not_started", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.addInitiative({
+          projectId: "proj-1", name: "Redesign onboarding", goal: "Cut drop-off",
+          deadlineType: "date", deadlineDate: "2026-12-15"
+        });
+      });
+
+      await waitFor(() => {
+        expect(result.current.initiatives).toHaveLength(1);
+        expect(result.current.initiatives[0].status).toBe("not_started");
+        expect(result.current.initiatives[0].id).toBeTruthy();
+      });
+    });
+
+    it("updates an initiative's status", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.addInitiative({
+          projectId: "proj-1", name: "Design system v3", goal: "g",
+          deadlineType: "quarter", deadlineQuarter: 1, deadlineYear: 2027
+        });
+      });
+      let id: string;
+      await waitFor(() => { id = result.current.initiatives[0].id; });
+
+      await act(async () => {
+        result.current.updateInitiative(id, { status: "in_progress" });
+      });
+
+      await waitFor(() => {
+        expect(result.current.initiatives[0].status).toBe("in_progress");
+      });
+    });
+
+    it("deletes an initiative", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.addInitiative({
+          projectId: "proj-1", name: "To delete", goal: "g",
+          deadlineType: "date", deadlineDate: "2026-11-01"
+        });
+      });
+      let id: string;
+      await waitFor(() => { id = result.current.initiatives[0].id; });
+
+      await act(async () => { result.current.deleteInitiative(id); });
+
+      await waitFor(() => { expect(result.current.initiatives).toHaveLength(0); });
+    });
+
+    it("restores a deleted initiative with its original id preserved", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.addInitiative({
+          projectId: "proj-1", name: "To delete and restore", goal: "g",
+          deadlineType: "date", deadlineDate: "2026-11-01"
+        });
+      });
+      let deleted: Initiative;
+      await waitFor(() => { deleted = result.current.initiatives[0]; });
+      await act(async () => { result.current.deleteInitiative(deleted.id); });
+      await waitFor(() => { expect(result.current.initiatives).toHaveLength(0); });
+
+      await act(async () => { result.current.restoreDeletedInitiative(deleted); });
+
+      await waitFor(() => {
+        expect(result.current.initiatives).toHaveLength(1);
+        expect(result.current.initiatives[0].id).toBe(deleted.id);
+      });
+    });
+
+    it("deleteProject removes that project's initiatives too", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.addProject({ name: "Temp Project", client: "Acme" });
+      });
+      let projectId: string;
+      await waitFor(() => { projectId = result.current.projects.find(p => p.name === "Temp Project")!.id; });
+
+      await act(async () => {
+        result.current.addInitiative({
+          projectId, name: "Orphan risk", goal: "g", deadlineType: "date", deadlineDate: "2026-11-01"
+        });
+      });
+      await waitFor(() => { expect(result.current.initiatives).toHaveLength(1); });
+
+      await act(async () => { result.current.deleteProject(projectId); });
+
+      await waitFor(() => { expect(result.current.initiatives).toHaveLength(0); });
+    });
+
+    it("still enables todo/planned-task saves even if loading initiatives fails", async () => {
+      const { LocalStorageService } = await import("@/services/localStorageService");
+      const spy = vi.spyOn(LocalStorageService.prototype, "getInitiatives").mockRejectedValueOnce(new Error("boom"));
+
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      expect(result.current.initiatives).toEqual([]);
+
+      await act(async () => {
+        result.current.addTodoItem("Should still save");
+      });
+
+      await waitFor(() => {
+        const saved = localStorage.getItem("timetracker_todos");
+        expect(saved).toBeTruthy();
+        const parsed = JSON.parse(saved!);
+        const todos = Array.isArray(parsed) ? parsed : parsed.data;
+        expect(todos[0].text).toBe("Should still save");
+      });
+
+      spy.mockRestore();
     });
   });
 });
