@@ -17,11 +17,16 @@ const STATUS_LABELS: Record<InitiativeStatus, string> = {
   done: "Done",
 };
 
+// CSS var references, not Tailwind classes: this project's Tailwind theme
+// (src/index.css) never wires up a Radix 1-12 color scale, so bg-blue-9 /
+// bg-green-9 / etc. match no generated utility and render fully transparent.
+// --chart-1..5 are real tokens defined in that file for exactly this kind
+// of categorical use, just without matching Tailwind utility classes.
 const STATUS_BAR_COLOR: Record<InitiativeStatus, string> = {
-  in_progress: "bg-blue-9",
-  done: "bg-green-9",
-  blocked: "bg-red-9",
-  not_started: "bg-mauve-9",
+  in_progress: "var(--chart-1)",
+  done: "var(--chart-4)",
+  blocked: "var(--destructive)",
+  not_started: "var(--chart-5)",
 };
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -135,8 +140,8 @@ export const InitiativeTimeline: React.FC<InitiativeTimelineProps> = ({ initiati
                     <div className="w-48 shrink-0 text-sm">{initiative.name}</div>
                     <div className="relative flex-1 h-6">
                       <div
-                        className={`absolute h-6 rounded ${STATUS_BAR_COLOR[status]} text-primary-foreground text-xs flex items-center px-2 whitespace-nowrap overflow-hidden`}
-                        style={{ left: `${left}%`, width: `${width}%` }}
+                        className="absolute h-6 rounded text-primary-foreground text-xs flex items-center px-2 whitespace-nowrap overflow-hidden"
+                        style={{ left: `${left}%`, width: `${width}%`, backgroundColor: STATUS_BAR_COLOR[status] }}
                       >
                         {initiative.name} · {formatDeadlineLabel(initiative)}
                       </div>

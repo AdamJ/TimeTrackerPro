@@ -31,6 +31,16 @@ const ProjectPlanning: React.FC = () => {
     setSheetOpen(true);
   }, []);
 
+  const pageActions = useMemo(
+    () => (
+      <Button onClick={handleOpenAdd} size="sm">
+        <Plus className="w-4 h-4 sm:mr-1" />
+        <span className="hidden sm:block">New Initiative</span>
+      </Button>
+    ),
+    [handleOpenAdd]
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -51,15 +61,7 @@ const ProjectPlanning: React.FC = () => {
   }
 
   return (
-    <PageLayout
-      title={project.name}
-      actions={
-        <Button onClick={handleOpenAdd} size="sm">
-          <Plus className="w-4 h-4 sm:mr-1" />
-          <span className="hidden sm:block">New Initiative</span>
-        </Button>
-      }
-    >
+    <PageLayout title={project.name} actions={pageActions}>
       <div className="max-w-6xl mx-auto p-6 print:p-4">
         <InitiativeTimeline initiatives={projectInitiatives} onSelect={handleSelect} />
       </div>
