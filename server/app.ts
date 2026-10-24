@@ -5,6 +5,7 @@ import * as categories from "./repositories/categories";
 import * as clients from "./repositories/clients";
 import * as currentDay from "./repositories/currentDay";
 import * as plannedTasks from "./repositories/plannedTasks";
+import * as initiatives from "./repositories/initiatives";
 import * as projects from "./repositories/projects";
 import * as todos from "./repositories/todos";
 
@@ -152,6 +153,34 @@ export function createApp() {
 		"/api/planned-tasks/:id",
 		wrap(async (req, res) => {
 			await plannedTasks.deletePlannedTask(String(req.params.id));
+			res.status(204).end();
+		})
+	);
+
+	app.get(
+		"/api/initiatives",
+		wrap(async (_req, res) => {
+			res.json(await initiatives.getInitiatives());
+		})
+	);
+	app.put(
+		"/api/initiatives",
+		wrap(async (req, res) => {
+			await initiatives.saveInitiatives(req.body);
+			res.status(204).end();
+		})
+	);
+	app.put(
+		"/api/initiatives/:id",
+		wrap(async (req, res) => {
+			await initiatives.upsertInitiative(req.body);
+			res.status(204).end();
+		})
+	);
+	app.delete(
+		"/api/initiatives/:id",
+		wrap(async (req, res) => {
+			await initiatives.deleteInitiative(String(req.params.id));
 			res.status(204).end();
 		})
 	);

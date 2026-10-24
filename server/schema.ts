@@ -117,4 +117,24 @@ export async function ensureSchema(db: Knex): Promise<void> {
 			t.timestamp("updated_at").notNullable().defaultTo(db.fn.now());
 		});
 	}
+
+	if (!(await db.schema.hasTable("planning_initiatives"))) {
+		await db.schema.createTable("planning_initiatives", (t) => {
+			t.string("id").primary();
+			t.string("project_id");
+			t.string("name").notNullable();
+			t.text("goal");
+			t.string("status").notNullable().defaultTo("not_started");
+			t.string("deadline_type").notNullable().defaultTo("date");
+			// text, not a SQL date column: node-postgres/mysql2 return a DATE
+			// column as a JS Date/timestamp rather than "YYYY-MM-DD", which both
+			// breaks <input type="date"> and reintroduces the UTC-midnight day
+			// shift the client-side date parsing was fixed to avoid.
+			t.string("deadline_date");
+			t.integer("deadline_quarter");
+			t.integer("deadline_year");
+			t.timestamp("created_at").notNullable();
+			t.timestamp("updated_at").notNullable().defaultTo(db.fn.now());
+		});
+	}
 }

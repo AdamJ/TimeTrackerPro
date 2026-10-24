@@ -83,6 +83,23 @@ export interface Client {
   contactWebsite?: string;
 }
 
+export type InitiativeStatus = "not_started" | "in_progress" | "done" | "blocked";
+export type InitiativeDeadlineType = "date" | "quarter";
+
+export interface Initiative {
+  id: string;
+  projectId: string;
+  name: string;
+  goal: string;
+  status: InitiativeStatus;
+  deadlineType: InitiativeDeadlineType;
+  deadlineDate?: string;      // ISO date string; set when deadlineType === "date"
+  deadlineQuarter?: number;   // 1-4; set when deadlineType === "quarter"
+  deadlineYear?: number;      // set when deadlineType === "quarter"
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface TodoItem {
   id: string;
   text: string;
@@ -247,6 +264,13 @@ interface TimeTrackingContextType {
   addPlannedTaskToDay: (id: string) => void;
   startDayAndPullPlannedTask: (id: string) => void;
 
+  // Initiatives (planning view)
+  initiatives: Initiative[];
+  addInitiative: (data: Omit<Initiative, "id" | "status" | "createdAt" | "updatedAt">) => Initiative;
+  updateInitiative: (id: string, updates: Partial<Initiative>) => Initiative | null;
+  deleteInitiative: (id: string) => void;
+  restoreDeletedInitiative: (initiative: Initiative) => void;
+
   // Calculated values
   getTotalHoursForPeriod: (startDate: Date, endDate: Date) => number;
   getRevenueForPeriod: (startDate: Date, endDate: Date) => number;
@@ -304,6 +328,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [dayEndTime, setDayEndTime] = useState<Date | null>(null);
   const [plannedTasks, setPlannedTasks] = useState<PlannedTask[]>([]);
+  const [initiatives, setInitiatives] = useState<Initiative[]>([]);
 
   // Debounce refs to manage timeouts
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -317,8 +342,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   // Guards against saving todos/planned tasks during the initial data load.
   const todoLoadedRef = useRef(false);
   const plannedLoadedRef = useRef(false);
+  const initiativesLoadedRef = useRef(false);
   // Tracks current plannedTasks for use in callbacks without closing over state.
   const plannedTasksRef = useRef<PlannedTask[]>([]);
+  const initiativesRef = useRef<Initiative[]>([]);
   // Mirrors the latest projects list so forceSyncToDatabase() saves fresh data
   // even when called immediately after a mutation (before React re-renders).
   const projectsRef = useRef<Project[]>(convertDefaultProjects(DEFAULT_PROJECTS));
@@ -369,6 +396,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       // Block mutations from firing against the new service until load completes.
       todoLoadedRef.current = false;
       plannedLoadedRef.current = false;
+      initiativesLoadedRef.current = false;
       setLoading(true);
       try {
         // Load current day
@@ -480,6 +508,17 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         plannedTasksRef.current = loadedPlannedTasks;
         setPlannedTasks(loadedPlannedTasks);
 
+        // Load initiatives (planning view) — isolated so a failure here (e.g.
+        // the table/migration isn't present yet) doesn't block todo/planned-task
+        // loading or the guest-data migration below.
+        try {
+          const loadedInitiatives = await dataService.getInitiatives();
+          initiativesRef.current = loadedInitiatives;
+          setInitiatives(loadedInitiatives);
+        } catch (error) {
+          console.error('Error loading initiatives:', error);
+        }
+
         // On login: migrate any guest data into Supabase, then reload planned
         // tasks so the current session reflects what migration just wrote.
         if (currentAuthStateRef.current && dataService) {
@@ -499,11 +538,20 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
           }));
           plannedTasksRef.current = postMigrationTasks;
           setPlannedTasks(postMigrationTasks);
+
+          try {
+            const postMigrationInitiatives = await dataService.getInitiatives();
+            initiativesRef.current = postMigrationInitiatives;
+            setInitiatives(postMigrationInitiatives);
+          } catch (error) {
+            console.error('Error reloading initiatives after migration:', error);
+          }
         }
 
         // Allow todo/planned-task save effects to fire for user-initiated changes
         todoLoadedRef.current = true;
         plannedLoadedRef.current = true;
+        initiativesLoadedRef.current = true;
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -1083,13 +1131,28 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   // forceSyncToDatabase()'s saveProjects() to infer the removal from a
   // full-list diff — that diff is gone (see supabaseService.saveProjects),
   // so deletion must be a single-row operation triggered by this action.
+  // Removes initiatives belonging to any of the given (now-deleted) project
+  // ids. Guest-mode localStorage has no DB-level cascade to rely on, so every
+  // project-removal path (single delete, reset-to-defaults) must call this.
+  const cascadeDeleteInitiativesForProjects = useCallback((projectIds: string[]) => {
+    if (projectIds.length === 0) return;
+    const idSet = new Set(projectIds);
+    const orphanedInitiatives = initiativesRef.current.filter(i => idSet.has(i.projectId));
+    if (orphanedInitiatives.length === 0) return;
+    const remainingInitiatives = initiativesRef.current.filter(i => !idSet.has(i.projectId));
+    initiativesRef.current = remainingInitiatives;
+    setInitiatives(remainingInitiatives);
+    orphanedInitiatives.forEach(i => void dataServiceRef.current?.deleteInitiative(i.id));
+  }, []);
+
   const deleteProject = useCallback((projectId: string) => {
     const next = projectsRef.current.filter(project => project.id !== projectId);
     projectsRef.current = next;
     setProjects(next);
     setHasUnsavedChanges(true);
     void dataServiceRef.current?.deleteProject(projectId);
-  }, []);
+    cascadeDeleteInitiativesForProjects([projectId]);
+  }, [cascadeDeleteInitiativesForProjects]);
 
   // Re-inserts a project removed by deleteProject (Undo). Persists
   // immediately via upsert so the row reappears even if it was already
@@ -1115,7 +1178,8 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     setHasUnsavedChanges(true);
     idsToDelete.forEach(id => void dataServiceRef.current?.deleteProject(id));
     void dataServiceRef.current?.saveProjects(defaultProjects);
-  }, []);
+    cascadeDeleteInitiativesForProjects(idsToDelete);
+  }, [cascadeDeleteInitiativesForProjects]);
 
   const archiveProject = useCallback((projectId: string) => {
     const next = projectsRef.current.map(project =>
@@ -1603,6 +1667,52 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     if (plannedLoadedRef.current) void dataServiceRef.current?.upsertPlannedTask(task);
   }, []);
 
+  // === INITIATIVES (planning view) ===
+
+  const addInitiative = useCallback((data: Omit<Initiative, "id" | "status" | "createdAt" | "updatedAt">): Initiative => {
+    const now = new Date().toISOString();
+    const newInitiative: Initiative = {
+      ...data,
+      id: `initiative-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      status: "not_started",
+      createdAt: now,
+      updatedAt: now
+    };
+    const next = [...initiativesRef.current, newInitiative];
+    initiativesRef.current = next;
+    setInitiatives(next);
+    if (initiativesLoadedRef.current) void dataServiceRef.current?.upsertInitiative(newInitiative);
+    return newInitiative;
+  }, []);
+
+  const updateInitiative = useCallback((id: string, updates: Partial<Initiative>): Initiative | null => {
+    const existing = initiativesRef.current.find(i => i.id === id);
+    if (!existing) return null;
+    const now = new Date().toISOString();
+    const updated: Initiative = { ...existing, ...updates, updatedAt: now };
+    const next = initiativesRef.current.map(i => i.id === id ? updated : i);
+    initiativesRef.current = next;
+    setInitiatives(next);
+    if (initiativesLoadedRef.current) void dataServiceRef.current?.upsertInitiative(updated);
+    return updated;
+  }, []);
+
+  const deleteInitiative = useCallback((id: string) => {
+    const next = initiativesRef.current.filter(i => i.id !== id);
+    initiativesRef.current = next;
+    setInitiatives(next);
+    if (initiativesLoadedRef.current) void dataServiceRef.current?.deleteInitiative(id);
+  }, []);
+
+  // Re-inserts an initiative removed by deleteInitiative (Undo), preserving
+  // its original id/timestamps rather than minting a new one via addInitiative.
+  const restoreDeletedInitiative = useCallback((initiative: Initiative) => {
+    const next = [...initiativesRef.current, initiative];
+    initiativesRef.current = next;
+    setInitiatives(next);
+    if (initiativesLoadedRef.current) void dataServiceRef.current?.upsertInitiative(initiative);
+  }, []);
+
   const movePlannedTask = useCallback((id: string, status: PlannedTaskStatus) => {
     const now = new Date().toISOString();
     // If marking done and the active timed task is linked to this planned task, end it first.
@@ -1790,6 +1900,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     pullPlannedTaskToDay,
     addPlannedTaskToDay,
     startDayAndPullPlannedTask,
+    initiatives,
+    addInitiative,
+    updateInitiative,
+    deleteInitiative,
+    restoreDeletedInitiative,
     addProject,
     updateProject,
     deleteProject,
@@ -1862,6 +1977,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     pullPlannedTaskToDay,
     addPlannedTaskToDay,
     startDayAndPullPlannedTask,
+    initiatives,
+    addInitiative,
+    updateInitiative,
+    deleteInitiative,
+    restoreDeletedInitiative,
     addProject,
     updateProject,
     deleteProject,

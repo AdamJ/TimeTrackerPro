@@ -29,6 +29,7 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 - **Keyboard Shortcuts** — `N` new task, `Cmd/Ctrl+S` save, `Cmd/Ctrl+K` command palette, `?` for the shortcuts help dialog (web and Tauri desktop; the desktop app's native menu also offers `Cmd/Ctrl+N` for new task); the sidebar footer now includes a Print button for quick printing
 - **No Account Required** — full functionality with local storage; optional cloud sync via Supabase
 - **Self-Hosted SQL Backend** — optionally run against your own PostgreSQL or MySQL database instead of Supabase or local storage (see [docs/SQL_BACKEND.md](docs/SQL_BACKEND.md))
+- **Project Planning View** — set a goal, status, and deadline (date or quarter) for initiatives scoped to a project, visualized as a Roadmap-style timeline
 - **PWA** — installable on desktop/mobile
 
 ---
@@ -134,6 +135,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 
 **Recent highlights:**
 
+- **Project planning view** — per-project goal/deadline/status "Initiatives" shown on a GitHub-Projects-style Roadmap timeline (status swimlanes, month-scale header, "Today" line)
 - **Keyboard shortcuts** — global `N`/`Cmd/Ctrl+S`/`Cmd/Ctrl+K` shortcuts and a `?` help dialog in the web/PWA build, plus native `Cmd/Ctrl+N`/`Cmd/Ctrl+S`/`Cmd/Ctrl+K` menu accelerators in the Tauri desktop build
 - **Guest-mode data durability** — schema-mismatch backups, write-failure toasts, undo for hard deletes, Tauri desktop disk-based backup snapshots (independent of `localStorage`, including a final flush on app quit), and an in-app "Data Recovery" UI in Settings to preview and restore those backups
 - **Self-hosted SQL backend** — opt-in PostgreSQL/MySQL support via a small REST API (`server/`), alongside the existing Supabase and local storage modes

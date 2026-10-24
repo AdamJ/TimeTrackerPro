@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { Project } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ import {
   ChevronDown,
   ChevronRight,
   Trash2Icon,
+  CalendarRange,
 } from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
 import { toast } from "@/hooks/use-toast";
@@ -186,6 +188,16 @@ const ProjectContent: React.FC = () => {
                       </ItemDescription>
                     </ItemContent>
                     <ItemActions>
+                      <Button
+                        variant="outline"
+                        aria-label="Project planning"
+                        asChild
+                      >
+                        <Link to={`/projects/${project.id}/planning`}>
+                          <CalendarRange className="w-4 h-4 mr-1" />
+                          <span className="hidden sm:block">Planning</span>
+                        </Link>
+                      </Button>
                       <Button
                         variant="outline"
                         aria-label="Edit project"

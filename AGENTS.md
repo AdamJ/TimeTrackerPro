@@ -169,6 +169,10 @@ export const MyComponent = () => {
 | `src/components/ProjectSheet.tsx`             | Shared Sheet (drawer) for add and edit project forms; handles both modes via `mode` prop |
 | `src/components/CategorySheet.tsx`            | Shared Sheet (drawer) for add and edit category forms; handles both modes via `mode` prop |
 | `src/pages/Clients.tsx`                       | Thin page wrapper around `ClientManagement` (route `/clients`)                     |
+| `src/pages/ProjectPlanning.tsx`               | Per-project Initiative planning view (route `/projects/:id/planning`); shows `InitiativeTimeline` and the add/edit `InitiativeSheet` |
+| `src/components/InitiativeSheet.tsx`          | Shared Sheet (drawer) for add/edit/delete of a planning `Initiative`; deadline is a specific date or a calendar quarter |
+| `src/components/InitiativeTimeline.tsx`       | Roadmap-style timeline for a project's Initiatives — status-grouped collapsible swimlanes, month-scale header, "Today" line |
+| `src/utils/initiativeUtils.ts`                | `resolveInitiativeDeadline`/`parseLocalDate` — date-vs-quarter deadline resolution without the UTC-midnight day-shift bug |
 | `src/services/localStorageService/clients.ts` | Client persistence module for guest mode (versioned localStorage blob)             |
 | `supabase/migrations/20260530_clients.sql`    | `clients` table + RLS + one-time backfill from distinct project clients            |
 | `src/components/AppSidebar.tsx`               | Collapsible sidebar nav (Planning/Manage/Reports groups); reads page title/actions from `PageTitleContext`; footer has print button, sync status, and auth |

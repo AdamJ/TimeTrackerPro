@@ -7,7 +7,10 @@ export type {
 	Client,
 	TodoItem,
 	PlannedTask,
-	PlannedTaskStatus
+	PlannedTaskStatus,
+	Initiative,
+	InitiativeStatus,
+	InitiativeDeadlineType
 } from "../src/contexts/TimeTrackingContext";
 export type { TaskCategory } from "../src/config/categories";
 

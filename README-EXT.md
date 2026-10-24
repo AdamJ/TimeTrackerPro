@@ -11,6 +11,7 @@ For the main overview, see [README.md](README.md).
   - [Daily Workflow](#daily-workflow)
   - [Keyboard Shortcuts](#keyboard-shortcuts)
   - [Project Management](#project-management)
+  - [Project Planning](#project-planning)
   - [Client Management](#client-management)
   - [Category Management](#category-management)
   - [Data Export & Import](#data-export--import)
@@ -120,6 +121,17 @@ The sidebar footer contains two key elements:
 4. **Archive / Restore** — use the archive action on a project row to move it into the collapsed **Archived** section; restore it from there at any time. Archiving keeps historical data intact while hiding the project from the active list.
 
 Projects enable automatic revenue calculation, per-client invoice exports, and archive filtering.
+
+### Project Planning
+
+Each project has its own Planning view (the "Planning" link on its project card) for tracking goals and timelines, separate from day-to-day task tracking.
+
+1. Click **New Initiative** and enter a name, an optional goal, and a deadline — either a specific date or a calendar quarter (shown on the timeline as that quarter's last day).
+2. Status (Not started / In progress / Done / Blocked) is set manually; new initiatives start as Not started and the status field is editable once an initiative exists.
+3. The timeline groups initiatives into collapsible, status-grouped swimlanes on a six-month, month-scale window with a "Today" line, styled after GitHub Projects' Roadmap view. Each bar spans from the initiative's creation date to its deadline.
+4. Click an initiative's row to edit it, or delete it from the edit sheet (undoable, like other deletes in the app).
+
+Initiatives are scoped to one project — there is no cross-project planning view. Deleting a project deletes its initiatives too.
 
 ### Client Management
 
@@ -406,6 +418,8 @@ src/
 │   ├── DaySummary.tsx
 │   ├── DeleteConfirmationDialog.tsx
 │   ├── ExportDialog.tsx
+│   ├── InitiativeSheet.tsx        # Add/edit/delete sheet for a project's planning Initiatives
+│   ├── InitiativeTimeline.tsx     # Roadmap-style status swimlanes for a project's Initiatives
 │   ├── InstallPrompt.tsx
 │   ├── KanbanBoard.tsx            # Kanban planning board
 │   ├── KanbanBoardControls.tsx    # Sort/filter bar above the board, backed by useTaskBoardView
@@ -462,6 +476,7 @@ src/
 │   ├── Index.tsx                 # Dashboard (start/end day, stats)
 │   ├── NotFound.tsx              # 404 page
 │   ├── ProjectList.tsx           # Project management
+│   ├── ProjectPlanning.tsx       # Per-project Initiative timeline ("Planning" link on a project card)
 │   ├── Report.tsx                # AI weekly summary
 │   ├── Settings.tsx              # App settings
 │   └── TaskList.tsx              # Active task list and NewTaskForm
@@ -474,6 +489,7 @@ src/
 │   ├── calculationUtils.ts       # Revenue and hours calculations
 │   ├── checklistUtils.ts         # GFM checklist extraction
 │   ├── exportUtils.ts            # CSV import/export
+│   ├── initiativeUtils.ts        # Initiative deadline resolution (date/quarter) and local-date parsing
 │   ├── reportUtils.ts            # Report grouping and formatting
 │   └── timeUtil.ts               # Time formatting, 15-minute rounding, zero-floored `elapsedMs`, end-before-start check
 ├── App.css

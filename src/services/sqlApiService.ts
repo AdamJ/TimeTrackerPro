@@ -1,4 +1,4 @@
-import { Task, DayRecord, Project, Client, TodoItem, PlannedTask } from "@/contexts/TimeTrackingContext";
+import { Task, DayRecord, Project, Client, TodoItem, PlannedTask, Initiative } from "@/contexts/TimeTrackingContext";
 import { TaskCategory } from "@/config/categories";
 import { DataService, CurrentDayData } from "@/services/dataService";
 import { LocalStorageService } from "@/services/localStorageService";
@@ -163,6 +163,25 @@ export class SqlApiService implements DataService {
 		await request(`/planned-tasks/${encodeURIComponent(id)}`, { method: "DELETE" });
 	}
 
+	async saveInitiatives(initiatives: Initiative[]): Promise<void> {
+		await request("/initiatives", { method: "PUT", body: JSON.stringify(initiatives) });
+	}
+
+	async getInitiatives(): Promise<Initiative[]> {
+		return request<Initiative[]>("/initiatives");
+	}
+
+	async upsertInitiative(initiative: Initiative): Promise<void> {
+		await request(`/initiatives/${encodeURIComponent(initiative.id)}`, {
+			method: "PUT",
+			body: JSON.stringify(initiative)
+		});
+	}
+
+	async deleteInitiative(id: string): Promise<void> {
+		await request(`/initiatives/${encodeURIComponent(id)}`, { method: "DELETE" });
+	}
+
 	// Reuses the same one-time-merge strategy as SupabaseService: only pull
 	// guest localStorage data in if the SQL backend doesn't already have it.
 	async migrateFromLocalStorage(): Promise<boolean> {
@@ -176,6 +195,7 @@ export class SqlApiService implements DataService {
 			const todos = await localService.getTodos();
 			const plannedTasksData = await localService.getPlannedTasks();
 			const clients = await localService.getClients();
+			const initiativesData = await localService.getInitiatives();
 
 			const hasProjects = projects.length > 0;
 			const hasCategories = categories.length > 0;
@@ -184,8 +204,9 @@ export class SqlApiService implements DataService {
 			const hasTodos = todos.length > 0;
 			const hasPlannedTasks = plannedTasksData.length > 0;
 			const hasClients = clients.length > 0;
+			const hasInitiatives = initiativesData.length > 0;
 
-			if (!hasProjects && !hasCategories && !hasCurrentDay && !hasArchivedDays && !hasTodos && !hasPlannedTasks && !hasClients) {
+			if (!hasProjects && !hasCategories && !hasCurrentDay && !hasArchivedDays && !hasTodos && !hasPlannedTasks && !hasClients && !hasInitiatives) {
 				return true;
 			}
 
@@ -194,6 +215,7 @@ export class SqlApiService implements DataService {
 			const existingArchivedDays = await this.getArchivedDays();
 			const existingPlannedTasks = await this.getPlannedTasks();
 			const existingClients = await this.getClients();
+			const existingInitiatives = await this.getInitiatives();
 
 			if (hasProjects && existingProjects.length === 0) await this.saveProjects(projects);
 			if (hasCategories && existingCategories.length === 0) await this.saveCategories(categories);
@@ -201,6 +223,7 @@ export class SqlApiService implements DataService {
 			if (hasArchivedDays && existingArchivedDays.length === 0) await this.saveArchivedDays(archivedDaysData);
 			if (hasTodos) await this.saveTodos(todos);
 			if (hasPlannedTasks && existingPlannedTasks.length === 0) await this.savePlannedTasks(plannedTasksData);
+			if (hasInitiatives && existingInitiatives.length === 0) await this.saveInitiatives(initiativesData);
 
 			if (hasClients) {
 				const existingNames = new Set(existingClients.map((client) => client.name));
@@ -228,6 +251,7 @@ export class SqlApiService implements DataService {
 			const todos = await this.getTodos();
 			const plannedTasksData = await this.getPlannedTasks();
 			const clients = await this.getClients();
+			const initiativesData = await this.getInitiatives();
 
 			if (currentDay) await localService.saveCurrentDay(currentDay);
 			if (archivedDaysData.length > 0) await localService.saveArchivedDays(archivedDaysData);
@@ -236,6 +260,7 @@ export class SqlApiService implements DataService {
 			if (todos.length > 0) await localService.saveTodos(todos);
 			if (plannedTasksData.length > 0) await localService.savePlannedTasks(plannedTasksData);
 			if (clients.length > 0) await localService.saveClients(clients);
+			if (initiativesData.length > 0) await localService.saveInitiatives(initiativesData);
 		} catch (error) {
 			console.error("❌ Error migrating data from SQL backend to localStorage:", error);
 		}
