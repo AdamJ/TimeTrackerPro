@@ -14,6 +14,14 @@ export function parseLocalDate(dateStr: string): Date {
   return new Date(year, month - 1, day);
 }
 
+// Formats a Date as the local calendar day "YYYY-MM-DD" (the value format of
+// <input type="date">). toISOString() would give the UTC day, which is
+// tomorrow's date for an evening user west of UTC.
+export function toLocalDateString(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
 export function resolveInitiativeDeadline(initiative: Initiative): Date | null {
   if (initiative.deadlineType === "date") {
     return initiative.deadlineDate ? parseLocalDate(initiative.deadlineDate) : null;

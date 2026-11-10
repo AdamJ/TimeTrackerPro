@@ -3,8 +3,10 @@ import {
   getQuarterEndDate,
   resolveInitiativeDeadline,
   resolveInitiativeStart,
+  parseLocalDate,
   isDeadlineBeforeCreation,
-  isDeadlineBeforeStart
+  isDeadlineBeforeStart,
+  toLocalDateString
 } from "./initiativeUtils";
 import type { Initiative } from "@/contexts/TimeTrackingContext";
 
@@ -130,5 +132,20 @@ describe("isDeadlineBeforeStart", () => {
 
   it("is false when the deadline is after the start", () => {
     expect(isDeadlineBeforeStart(new Date(2026, 10, 10), new Date(2026, 11, 1))).toBe(false);
+  });
+});
+
+describe("toLocalDateString", () => {
+  it("zero-pads month and day", () => {
+    expect(toLocalDateString(new Date(2026, 0, 5))).toBe("2026-01-05");
+  });
+
+  it("uses the local calendar day, not the UTC day, late in the evening", () => {
+    // 23:30 local is already the next day in UTC for any timezone west of it.
+    expect(toLocalDateString(new Date(2026, 10, 10, 23, 30))).toBe("2026-11-10");
+  });
+
+  it("round-trips with parseLocalDate", () => {
+    expect(toLocalDateString(parseLocalDate("2026-12-15"))).toBe("2026-12-15");
   });
 });

@@ -31,6 +31,7 @@ import {
   isDeadlineBeforeCreation,
   isDeadlineBeforeStart,
   parseLocalDate,
+  toLocalDateString,
 } from "@/utils/initiativeUtils";
 
 interface InitiativeSheetProps {
@@ -131,15 +132,21 @@ export const InitiativeSheet: React.FC<InitiativeSheetProps> = ({
 
   type InitiativeFormValues = z.infer<typeof initiativeFormSchema>;
 
+  // Deadline pickers open pre-filled with today / the current year. The
+  // quarter itself is left for the user to choose.
+  const today = new Date();
+  const todayString = toLocalDateString(today);
+  const currentYearString = String(today.getFullYear());
+
   const defaultFormValues: InitiativeFormValues = {
     name: "",
     goal: "",
     status: "not_started",
     startDate: "",
     deadlineType: "date",
-    deadlineDate: "",
+    deadlineDate: todayString,
     deadlineQuarter: "",
-    deadlineYear: "",
+    deadlineYear: currentYearString,
   };
 
   const form = useForm<InitiativeFormValues>({
@@ -157,9 +164,11 @@ export const InitiativeSheet: React.FC<InitiativeSheetProps> = ({
         status: initiative.status,
         startDate: initiative.startDate ?? "",
         deadlineType: initiative.deadlineType,
-        deadlineDate: initiative.deadlineDate ?? "",
+        // Fall back to the add-mode defaults so switching deadline type on an
+        // existing initiative also opens pre-filled.
+        deadlineDate: initiative.deadlineDate ?? defaultFormValues.deadlineDate,
         deadlineQuarter: initiative.deadlineQuarter ? String(initiative.deadlineQuarter) : "",
-        deadlineYear: initiative.deadlineYear ? String(initiative.deadlineYear) : "",
+        deadlineYear: initiative.deadlineYear ? String(initiative.deadlineYear) : defaultFormValues.deadlineYear,
       });
     } else {
       form.reset(defaultFormValues);
