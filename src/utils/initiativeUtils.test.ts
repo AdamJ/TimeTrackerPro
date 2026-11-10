@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { getQuarterEndDate, resolveInitiativeDeadline, isDeadlineBeforeCreation } from "./initiativeUtils";
+import {
+  getQuarterEndDate,
+  resolveInitiativeDeadline,
+  resolveInitiativeStart,
+  isDeadlineBeforeCreation,
+  isDeadlineBeforeStart
+} from "./initiativeUtils";
 import type { Initiative } from "@/contexts/TimeTrackingContext";
 
 describe("getQuarterEndDate", () => {
@@ -91,5 +97,38 @@ describe("isDeadlineBeforeCreation", () => {
       createdAt, updatedAt: createdAt
     })!;
     expect(isDeadlineBeforeCreation(createdAt, todayAsResolvedDeadline)).toBe(false);
+  });
+});
+
+describe("resolveInitiativeStart", () => {
+  const base: Initiative = {
+    id: "i1", projectId: "p1", name: "n", goal: "g",
+    status: "not_started", deadlineType: "date", deadlineDate: "2026-12-15",
+    createdAt: "2026-10-01T12:00:00.000Z", updatedAt: "2026-10-01T12:00:00.000Z"
+  };
+
+  it("falls back to the creation timestamp when no start date is set", () => {
+    expect(resolveInitiativeStart(base).toISOString()).toBe("2026-10-01T12:00:00.000Z");
+  });
+
+  it("resolves an explicit start date to the exact local calendar day entered", () => {
+    const result = resolveInitiativeStart({ ...base, startDate: "2026-11-03" });
+    expect(result.getFullYear()).toBe(2026);
+    expect(result.getMonth()).toBe(10);
+    expect(result.getDate()).toBe(3);
+  });
+});
+
+describe("isDeadlineBeforeStart", () => {
+  it("is true when the deadline falls on an earlier day than the start", () => {
+    expect(isDeadlineBeforeStart(new Date(2026, 10, 10), new Date(2026, 10, 9))).toBe(true);
+  });
+
+  it("is false when the deadline is the same day as the start, regardless of time of day", () => {
+    expect(isDeadlineBeforeStart(new Date(2026, 10, 10, 17, 0), new Date(2026, 10, 10, 0, 0))).toBe(false);
+  });
+
+  it("is false when the deadline is after the start", () => {
+    expect(isDeadlineBeforeStart(new Date(2026, 10, 10), new Date(2026, 11, 1))).toBe(false);
   });
 });

@@ -97,6 +97,76 @@ describe("InitiativeSheet", () => {
     });
   });
 
+  it("submits an optional start date alongside the deadline", async () => {
+    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "With start" } });
+    fireEvent.change(screen.getByLabelText(/start date/i), { target: { value: "2099-11-01" } });
+    fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "2099-12-15" } });
+    fireEvent.click(screen.getByRole("button", { name: /add/i }));
+    await waitFor(() => {
+      expect(addInitiativeMock).toHaveBeenCalledWith(expect.objectContaining({
+        startDate: "2099-11-01", deadlineDate: "2099-12-15"
+      }));
+    });
+  });
+
+  it("leaves startDate undefined when the start date is left blank", async () => {
+    addInitiativeMock.mockClear();
+    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "No start" } });
+    fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "2099-12-15" } });
+    fireEvent.click(screen.getByRole("button", { name: /add/i }));
+    await waitFor(() => expect(addInitiativeMock).toHaveBeenCalled());
+    expect(addInitiativeMock.mock.calls[0][0]).toEqual(expect.objectContaining({ startDate: undefined }));
+  });
+
+  it("rejects a deadline before the start date", async () => {
+    addInitiativeMock.mockClear();
+    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "Inverted" } });
+    fireEvent.change(screen.getByLabelText(/start date/i), { target: { value: "2099-12-15" } });
+    fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "2099-11-01" } });
+    fireEvent.click(screen.getByRole("button", { name: /add/i }));
+    await waitFor(() => {
+      expect(screen.getByText(/deadline must be on or after the start date/i)).toBeInTheDocument();
+    });
+    expect(addInitiativeMock).not.toHaveBeenCalled();
+  });
+
+  it("allows a backdated start and deadline, since an explicit start supersedes the creation floor", async () => {
+    addInitiativeMock.mockClear();
+    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "Past work" } });
+    fireEvent.change(screen.getByLabelText(/start date/i), { target: { value: "2000-01-01" } });
+    fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "2000-02-01" } });
+    fireEvent.click(screen.getByRole("button", { name: /add/i }));
+    await waitFor(() => {
+      expect(addInitiativeMock).toHaveBeenCalledWith(expect.objectContaining({
+        startDate: "2000-01-01", deadlineDate: "2000-02-01"
+      }));
+    });
+  });
+
+  it("pre-fills the start date in edit mode and clears it when emptied", async () => {
+    updateInitiativeMock.mockClear();
+    render(
+      <InitiativeSheet
+        open
+        onOpenChange={() => {}}
+        mode="edit"
+        projectId="proj-1"
+        initiative={{ ...EXISTING_INITIATIVE, startDate: "2098-06-01" }}
+      />
+    );
+    const input = screen.getByLabelText(/start date/i) as HTMLInputElement;
+    expect(input.value).toBe("2098-06-01");
+    fireEvent.change(input, { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    await waitFor(() => {
+      expect(updateInitiativeMock).toHaveBeenCalledWith("init-1", expect.objectContaining({ startDate: undefined }));
+    });
+  });
+
   it("does not render a Delete button in add mode", () => {
     render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();

@@ -7,6 +7,7 @@ interface InitiativeRow {
 	name: string;
 	goal: string | null;
 	status: string;
+	start_date: string | null;
 	deadline_type: string;
 	deadline_date: string | null;
 	deadline_quarter: number | null;
@@ -22,6 +23,7 @@ function mapRow(row: InitiativeRow): Initiative {
 		name: row.name,
 		goal: row.goal ?? "",
 		status: row.status as InitiativeStatus,
+		startDate: row.start_date ?? undefined,
 		deadlineType: row.deadline_type as InitiativeDeadlineType,
 		deadlineDate: row.deadline_date ?? undefined,
 		deadlineQuarter: row.deadline_quarter ?? undefined,
@@ -38,6 +40,7 @@ function initiativeToRow(initiative: Initiative) {
 		name: initiative.name,
 		goal: initiative.goal,
 		status: initiative.status,
+		start_date: initiative.startDate ?? null,
 		deadline_type: initiative.deadlineType,
 		deadline_date: initiative.deadlineDate ?? null,
 		deadline_quarter: initiative.deadlineQuarter ?? null,

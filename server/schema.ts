@@ -125,6 +125,7 @@ export async function ensureSchema(db: Knex): Promise<void> {
 			t.string("name").notNullable();
 			t.text("goal");
 			t.string("status").notNullable().defaultTo("not_started");
+			t.string("start_date"); // text, same reasoning as deadline_date below
 			t.string("deadline_type").notNullable().defaultTo("date");
 			// text, not a SQL date column: node-postgres/mysql2 return a DATE
 			// column as a JS Date/timestamp rather than "YYYY-MM-DD", which both
@@ -135,6 +136,11 @@ export async function ensureSchema(db: Knex): Promise<void> {
 			t.integer("deadline_year");
 			t.timestamp("created_at").notNullable();
 			t.timestamp("updated_at").notNullable().defaultTo(db.fn.now());
+		});
+	} else if (!(await db.schema.hasColumn("planning_initiatives", "start_date"))) {
+		// Databases created before start dates were introduced.
+		await db.schema.alterTable("planning_initiatives", (t) => {
+			t.string("start_date");
 		});
 	}
 }

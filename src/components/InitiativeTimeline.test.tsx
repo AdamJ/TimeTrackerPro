@@ -36,6 +36,35 @@ describe("InitiativeTimeline", () => {
     expect(screen.getByText(/q1 2027/i)).toBeInTheDocument();
   });
 
+  it("shows the start date in the bar label when one is set", () => {
+    render(<InitiativeTimeline initiatives={[
+      make({ id: "s", name: "Has start", startDate: "2026-11-03", deadlineDate: "2026-12-15" })
+    ]} onSelect={vi.fn()} />);
+    expect(screen.getByText(/Has start · Nov 3, 2026 – Dec 15, 2026/)).toBeInTheDocument();
+  });
+
+  it("omits the start from the bar label when no start date is set", () => {
+    render(<InitiativeTimeline initiatives={[
+      make({ id: "n", name: "No start", deadlineDate: "2026-12-15" })
+    ]} onSelect={vi.fn()} />);
+    expect(screen.getByText(/No start · Dec 15, 2026$/)).toBeInTheDocument();
+  });
+
+  it("positions the bar from the start date rather than the creation date", () => {
+    const early = render(<InitiativeTimeline initiatives={[
+      make({ id: "a", name: "Early", createdAt: "2020-01-01T00:00:00.000Z", startDate: undefined })
+    ]} onSelect={vi.fn()} />);
+    const earlyLeft = (early.getByText(/Early ·/) as HTMLElement).style.left;
+    early.unmount();
+
+    const late = render(<InitiativeTimeline initiatives={[
+      make({ id: "b", name: "Late", createdAt: "2020-01-01T00:00:00.000Z", startDate: "2026-12-01" })
+    ]} onSelect={vi.fn()} />);
+    const lateLeft = (late.getByText(/Late ·/) as HTMLElement).style.left;
+
+    expect(parseFloat(lateLeft)).toBeGreaterThan(parseFloat(earlyLeft));
+  });
+
   it("offsets the Today line past the fixed name column instead of the whole row width", () => {
     // Regression: the line's `left` was a bare percentage of the full row,
     // but the bar track only starts after the w-48 (12rem) name column.

@@ -245,6 +245,17 @@ describe('DataService', () => {
   });
 
   describe("initiatives", () => {
+    it("round-trips an initiative's start date", async () => {
+      const service = createDataService(false);
+      await service.saveInitiatives([{
+        id: "i-start", projectId: "p1", name: "n", goal: "g", status: "not_started",
+        startDate: "2026-11-03", deadlineType: "date", deadlineDate: "2026-12-15",
+        createdAt: "2026-10-01T00:00:00.000Z", updatedAt: "2026-10-01T00:00:00.000Z"
+      }]);
+      const loaded = await service.getInitiatives();
+      expect(loaded[0].startDate).toBe("2026-11-03");
+    });
+
     it("round-trips an initiative with a date deadline", async () => {
       const service = createDataService(false);
       const initiative: import("@/contexts/TimeTrackingContext").Initiative = {

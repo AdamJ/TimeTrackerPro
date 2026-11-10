@@ -15,6 +15,7 @@ import {
   FormItem,
   FormLabel,
   FormControl,
+  FormDescription,
   FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,12 @@ import { Loader2 } from "lucide-react";
 import { Initiative, InitiativeStatus, InitiativeDeadlineType } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { useUndoableDelete } from "@/hooks/useUndoableDelete";
-import { getQuarterEndDate, isDeadlineBeforeCreation, parseLocalDate } from "@/utils/initiativeUtils";
+import {
+  getQuarterEndDate,
+  isDeadlineBeforeCreation,
+  isDeadlineBeforeStart,
+  parseLocalDate,
+} from "@/utils/initiativeUtils";
 
 interface InitiativeSheetProps {
   open: boolean;
@@ -61,6 +67,7 @@ export const InitiativeSheet: React.FC<InitiativeSheetProps> = ({
       name: z.string().trim().min(1, "Name is required."),
       goal: z.string().trim(),
       status: z.enum(["not_started", "in_progress", "done", "blocked"]),
+      startDate: z.string().trim(),
       deadlineType: z.enum(["date", "quarter"]),
       deadlineDate: z.string().trim(),
       deadlineQuarter: z.string().trim(),
@@ -102,11 +109,22 @@ export const InitiativeSheet: React.FC<InitiativeSheetProps> = ({
         const validYear = /^\d{4}$/.test(values.deadlineYear);
         deadline = quarter && validYear ? getQuarterEndDate(quarter, year) : null;
       }
-      if (deadline && isDeadlineBeforeCreation(createdAt, deadline)) {
+      const deadlinePath = values.deadlineType === "date" ? "deadlineDate" : "deadlineYear";
+      if (deadline && values.startDate) {
+        // An explicit start date supersedes the creation-date floor, so past
+        // initiatives can be logged retroactively.
+        if (isDeadlineBeforeStart(parseLocalDate(values.startDate), deadline)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Deadline must be on or after the start date.",
+            path: [deadlinePath],
+          });
+        }
+      } else if (deadline && isDeadlineBeforeCreation(createdAt, deadline)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Deadline must be on or after the initiative's creation date.",
-          path: [values.deadlineType === "date" ? "deadlineDate" : "deadlineYear"],
+          path: [deadlinePath],
         });
       }
     });
@@ -117,6 +135,7 @@ export const InitiativeSheet: React.FC<InitiativeSheetProps> = ({
     name: "",
     goal: "",
     status: "not_started",
+    startDate: "",
     deadlineType: "date",
     deadlineDate: "",
     deadlineQuarter: "",
@@ -136,6 +155,7 @@ export const InitiativeSheet: React.FC<InitiativeSheetProps> = ({
         name: initiative.name,
         goal: initiative.goal,
         status: initiative.status,
+        startDate: initiative.startDate ?? "",
         deadlineType: initiative.deadlineType,
         deadlineDate: initiative.deadlineDate ?? "",
         deadlineQuarter: initiative.deadlineQuarter ? String(initiative.deadlineQuarter) : "",
@@ -179,6 +199,7 @@ export const InitiativeSheet: React.FC<InitiativeSheetProps> = ({
           projectId,
           name: values.name,
           goal: values.goal,
+          startDate: values.startDate || undefined,
           ...deadlineFields,
         });
       } else if (mode === "edit" && initiative) {
@@ -186,6 +207,7 @@ export const InitiativeSheet: React.FC<InitiativeSheetProps> = ({
           name: values.name,
           goal: values.goal,
           status: values.status,
+          startDate: values.startDate || undefined,
           ...deadlineFields,
         });
       }
@@ -253,6 +275,23 @@ export const InitiativeSheet: React.FC<InitiativeSheetProps> = ({
                       disabled={mode === "add"}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="startDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Optional. Defaults to the date the initiative was created.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

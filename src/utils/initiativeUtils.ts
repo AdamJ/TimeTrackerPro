@@ -22,12 +22,23 @@ export function resolveInitiativeDeadline(initiative: Initiative): Date | null {
   return getQuarterEndDate(initiative.deadlineQuarter, initiative.deadlineYear);
 }
 
+// Start of the initiative's span: the explicit start date when set, otherwise
+// the creation timestamp (the pre-start-date behavior, so legacy rows render
+// unchanged).
+export function resolveInitiativeStart(initiative: Initiative): Date {
+  return initiative.startDate ? parseLocalDate(initiative.startDate) : new Date(initiative.createdAt);
+}
+
 // Compares at local calendar-day granularity rather than exact instant, so
 // choosing "today" as a deadline is never rejected due to the time-of-day
 // already elapsed when the initiative was created.
 export function isDeadlineBeforeCreation(createdAt: string, deadline: Date): boolean {
-  const created = new Date(createdAt);
-  const createdDay = new Date(created.getFullYear(), created.getMonth(), created.getDate());
+  return isDeadlineBeforeStart(new Date(createdAt), deadline);
+}
+
+// True when `deadline` falls on an earlier local calendar day than `start`.
+export function isDeadlineBeforeStart(start: Date, deadline: Date): boolean {
+  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
   const deadlineDay = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate());
-  return deadlineDay < createdDay;
+  return deadlineDay < startDay;
 }
