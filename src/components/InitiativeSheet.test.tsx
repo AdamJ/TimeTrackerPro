@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { InitiativeSheet } from "./InitiativeSheet";
+import { toLocalDateString } from "@/utils/initiativeUtils";
 
 const addInitiativeMock = vi.fn(() => ({ id: "new-id" }));
 const updateInitiativeMock = vi.fn();
@@ -51,6 +52,7 @@ describe("InitiativeSheet", () => {
   it("requires a deadline date when the deadline type is date", async () => {
     render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "No deadline date" } });
+    fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "" } });
     fireEvent.click(screen.getByRole("button", { name: /add/i }));
     await waitFor(() => {
       expect(screen.getByText(/deadline date is required/i)).toBeInTheDocument();
@@ -95,6 +97,43 @@ describe("InitiativeSheet", () => {
       }));
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
+  });
+
+  it("pre-fills the deadline date with today's local date in add mode", () => {
+    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    const input = screen.getByLabelText(/deadline date/i) as HTMLInputElement;
+    expect(input.value).toBe(toLocalDateString(new Date()));
+  });
+
+  it("pre-fills the quarter deadline year with the current year, leaving the quarter unset", () => {
+    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    fireEvent.click(screen.getByRole("button", { name: /^quarter$/i }));
+    const year = screen.getByLabelText(/deadline year/i) as HTMLInputElement;
+    expect(year.value).toBe(String(new Date().getFullYear()));
+  });
+
+  it("leaves the optional start date blank by default", () => {
+    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    expect((screen.getByLabelText(/start date/i) as HTMLInputElement).value).toBe("");
+  });
+
+  it("submits with only a name when the pre-filled deadline date is accepted", async () => {
+    addInitiativeMock.mockClear();
+    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "Defaults only" } });
+    fireEvent.click(screen.getByRole("button", { name: /add/i }));
+    await waitFor(() => {
+      expect(addInitiativeMock).toHaveBeenCalledWith(expect.objectContaining({
+        deadlineType: "date", deadlineDate: toLocalDateString(new Date())
+      }));
+    });
+  });
+
+  it("keeps an existing initiative's saved deadline instead of the defaults in edit mode", () => {
+    render(
+      <InitiativeSheet open onOpenChange={() => {}} mode="edit" projectId="proj-1" initiative={EXISTING_INITIATIVE} />
+    );
+    expect((screen.getByLabelText(/deadline date/i) as HTMLInputElement).value).toBe("2099-01-01");
   });
 
   it("submits an optional start date alongside the deadline", async () => {

@@ -126,7 +126,7 @@ Projects enable automatic revenue calculation, per-client invoice exports, and a
 
 Each project has its own Planning view (the "Planning" link on its project card) for tracking goals and timelines, separate from day-to-day task tracking.
 
-1. Click **New Initiative** and enter a name, an optional goal, an optional start date, and a deadline — either a specific date or a calendar quarter (shown on the timeline as that quarter's last day). The deadline can't fall before the start date. Leaving the start date blank uses the date the initiative was created; setting one lets you log past or future-dated work.
+1. Click **New Initiative** and enter a name, an optional goal, an optional start date, and a deadline — either a specific date or a calendar quarter (shown on the timeline as that quarter's last day). The deadline pickers open pre-filled with today's date (specific date) or the current year (quarter), and the start date is left blank. The deadline can't fall before the start date. Leaving the start date blank uses the date the initiative was created; setting one lets you log past or future-dated work.
 2. Status (Not started / In progress / Done / Blocked) is set manually; new initiatives start as Not started and the status field is editable once an initiative exists.
 3. The timeline groups initiatives into collapsible, status-grouped swimlanes on a six-month, month-scale window with a "Today" line, styled after GitHub Projects' Roadmap view. Each bar spans from the initiative's start date (or its creation date, if none was set) to its deadline.
 4. Click an initiative's row to edit it, or delete it from the edit sheet (undoable, like other deletes in the app).
