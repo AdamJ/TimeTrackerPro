@@ -92,6 +92,7 @@ export interface Initiative {
   name: string;
   goal: string;
   status: InitiativeStatus;
+  startDate?: string;         // "YYYY-MM-DD"; optional, falls back to createdAt when unset
   deadlineType: InitiativeDeadlineType;
   deadlineDate?: string;      // ISO date string; set when deadlineType === "date"
   deadlineQuarter?: number;   // 1-4; set when deadlineType === "quarter"

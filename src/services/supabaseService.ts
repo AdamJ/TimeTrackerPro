@@ -1025,6 +1025,7 @@ export class SupabaseService implements DataService {
 			name: i.name,
 			goal: i.goal,
 			status: i.status,
+			start_date: i.startDate ?? null,
 			deadline_type: i.deadlineType,
 			deadline_date: i.deadlineDate ?? null,
 			deadline_quarter: i.deadlineQuarter ?? null,
@@ -1048,6 +1049,7 @@ export class SupabaseService implements DataService {
 			name: initiative.name,
 			goal: initiative.goal,
 			status: initiative.status,
+			start_date: initiative.startDate ?? null,
 			deadline_type: initiative.deadlineType,
 			deadline_date: initiative.deadlineDate ?? null,
 			deadline_quarter: initiative.deadlineQuarter ?? null,
@@ -1090,6 +1092,7 @@ export class SupabaseService implements DataService {
 			name: string;
 			goal: string;
 			status: string;
+			start_date: string | null;
 			deadline_type: string;
 			deadline_date: string | null;
 			deadline_quarter: number | null;
@@ -1102,6 +1105,7 @@ export class SupabaseService implements DataService {
 			name: row.name,
 			goal: row.goal,
 			status: row.status as Initiative["status"],
+			startDate: row.start_date ?? undefined,
 			deadlineType: row.deadline_type as Initiative["deadlineType"],
 			deadlineDate: row.deadline_date ?? undefined,
 			deadlineQuarter: row.deadline_quarter ?? undefined,

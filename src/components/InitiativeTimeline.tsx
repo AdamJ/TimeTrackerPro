@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Initiative, InitiativeStatus } from "@/contexts/TimeTrackingContext";
-import { resolveInitiativeDeadline } from "@/utils/initiativeUtils";
+import { resolveInitiativeDeadline, resolveInitiativeStart } from "@/utils/initiativeUtils";
 
 interface InitiativeTimelineProps {
   initiatives: Initiative[];
@@ -39,6 +39,18 @@ function formatDeadlineLabel(initiative: Initiative): string {
   const deadline = resolveInitiativeDeadline(initiative);
   if (!deadline) return "No deadline";
   return deadline.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+// "Start – Deadline" when an explicit start date is set; deadline alone otherwise.
+function formatSpanLabel(initiative: Initiative): string {
+  const deadlineLabel = formatDeadlineLabel(initiative);
+  if (!initiative.startDate) return deadlineLabel;
+  const startLabel = resolveInitiativeStart(initiative).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  return `${startLabel} – ${deadlineLabel}`;
 }
 
 export const InitiativeTimeline: React.FC<InitiativeTimelineProps> = ({ initiatives, onSelect }) => {
@@ -117,7 +129,7 @@ export const InitiativeTimeline: React.FC<InitiativeTimelineProps> = ({ initiati
                 {STATUS_LABELS[status]} <span className="text-muted-foreground">{items.length}</span>
               </button>
               {!isCollapsed && items.map((initiative) => {
-                const start = new Date(initiative.createdAt);
+                const start = resolveInitiativeStart(initiative);
                 const deadline = resolveInitiativeDeadline(initiative) ?? new Date(start.getTime() + MS_PER_DAY);
                 const left = toPercent(start);
                 const right = toPercent(deadline);
@@ -143,7 +155,7 @@ export const InitiativeTimeline: React.FC<InitiativeTimelineProps> = ({ initiati
                         className="absolute h-6 rounded text-primary-foreground text-xs flex items-center px-2 whitespace-nowrap overflow-hidden"
                         style={{ left: `${left}%`, width: `${width}%`, backgroundColor: STATUS_BAR_COLOR[status] }}
                       >
-                        {initiative.name} · {formatDeadlineLabel(initiative)}
+                        {initiative.name} · {formatSpanLabel(initiative)}
                       </div>
                     </div>
                   </div>

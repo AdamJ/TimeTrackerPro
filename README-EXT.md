@@ -126,9 +126,9 @@ Projects enable automatic revenue calculation, per-client invoice exports, and a
 
 Each project has its own Planning view (the "Planning" link on its project card) for tracking goals and timelines, separate from day-to-day task tracking.
 
-1. Click **New Initiative** and enter a name, an optional goal, and a deadline — either a specific date or a calendar quarter (shown on the timeline as that quarter's last day).
+1. Click **New Initiative** and enter a name, an optional goal, an optional start date, and a deadline — either a specific date or a calendar quarter (shown on the timeline as that quarter's last day). The deadline can't fall before the start date. Leaving the start date blank uses the date the initiative was created; setting one lets you log past or future-dated work.
 2. Status (Not started / In progress / Done / Blocked) is set manually; new initiatives start as Not started and the status field is editable once an initiative exists.
-3. The timeline groups initiatives into collapsible, status-grouped swimlanes on a six-month, month-scale window with a "Today" line, styled after GitHub Projects' Roadmap view. Each bar spans from the initiative's creation date to its deadline.
+3. The timeline groups initiatives into collapsible, status-grouped swimlanes on a six-month, month-scale window with a "Today" line, styled after GitHub Projects' Roadmap view. Each bar spans from the initiative's start date (or its creation date, if none was set) to its deadline.
 4. Click an initiative's row to edit it, or delete it from the edit sheet (undoable, like other deletes in the app).
 
 Initiatives are scoped to one project — there is no cross-project planning view. Deleting a project deletes its initiatives too.
@@ -489,7 +489,7 @@ src/
 │   ├── calculationUtils.ts       # Revenue and hours calculations
 │   ├── checklistUtils.ts         # GFM checklist extraction
 │   ├── exportUtils.ts            # CSV import/export
-│   ├── initiativeUtils.ts        # Initiative deadline resolution (date/quarter) and local-date parsing
+│   ├── initiativeUtils.ts        # Initiative start/deadline resolution (date/quarter) and local-date parsing
 │   ├── reportUtils.ts            # Report grouping and formatting
 │   └── timeUtil.ts               # Time formatting, 15-minute rounding, zero-floored `elapsedMs`, end-before-start check
 ├── App.css

@@ -300,7 +300,19 @@ describe("SupabaseService — upsert-only bulk saves (#215)", () => {
 			await service.upsertInitiative(initiative);
 
 			expect(builder.upsert).toHaveBeenCalledWith(
-				expect.objectContaining({ id: "i2", deadline_quarter: 1, deadline_year: 2027 }),
+				expect.objectContaining({ id: "i2", deadline_quarter: 1, deadline_year: 2027, start_date: null }),
+				{ onConflict: "id" }
+			);
+		});
+
+		it("persists the start date as start_date", async () => {
+			await service.upsertInitiative({
+				id: "i3", projectId: "proj-1", name: "n", goal: "g", status: "not_started",
+				startDate: "2026-11-03", deadlineType: "date", deadlineDate: "2026-12-15",
+				createdAt: "2026-10-01T00:00:00.000Z", updatedAt: "2026-10-01T00:00:00.000Z"
+			});
+			expect(builder.upsert).toHaveBeenCalledWith(
+				expect.objectContaining({ id: "i3", start_date: "2026-11-03" }),
 				{ onConflict: "id" }
 			);
 		});
