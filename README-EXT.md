@@ -298,20 +298,25 @@ VITE_DATA_BACKEND=sql
 VITE_SQL_API_URL=http://localhost:4001/api
 ```
 
+**Access control:** the API listens on `127.0.0.1` and only allows CORS requests from `SQL_ALLOWED_ORIGINS` (default `http://localhost:8080`). Set `SQL_API_TOKEN` on the server and the same value as `VITE_SQL_API_TOKEN` on the frontend to require a bearer token. The server refuses to listen on any other `SQL_SERVER_HOST` without a token. The frontend token is bundled into the client, so this is meant for personal self-hosted setups.
+
 See [docs/SQL_BACKEND.md](docs/SQL_BACKEND.md) for full setup details.
 
 ### Authentication Flow
 
 **Sign In:** Click "Sign In" → enter credentials → data migrates from `localStorage`.
 
-**Sign Out:** Click user menu → "Sign Out" → data syncs back to `localStorage`.
+**Sign Out:** Click user menu → "Sign Out…" → choose "Keep a copy" (data syncs back to `localStorage`) or "Remove from this device" (time-tracking data and saved report summaries are cleared; UI preferences stay). Session expiry always keeps a copy.
 
 ### Security
 
 - All API calls over HTTPS.
 - Row-level security (RLS) enabled on Supabase — users access only their own data.
 - Passwords hashed and salted by Supabase Auth (minimum 8 characters).
-- No sensitive data stored in `localStorage`.
+- Account data stays in `localStorage` after sign-out only if the user chooses "Keep a copy".
+- The service worker does not cache Supabase API responses.
+- Accounts are invite-only: there is no in-app sign-up or password reset (manage passwords in the Supabase dashboard), and self-sign-up should stay disabled in the Supabase dashboard. AI summaries require a signed-in account; the `ai-proxy` function rejects guest (anon-key) requests.
+- The web build sends security headers from `public/_headers` (CSP with `frame-ancestors 'none'`, HSTS, `nosniff`, `Referrer-Policy`, `Permissions-Policy`).
 
 See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) and [docs/SECURITY.md](docs/SECURITY.md) for full details.
 

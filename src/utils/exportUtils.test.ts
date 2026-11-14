@@ -110,6 +110,23 @@ describe("exportUtils", () => {
       expect(dataRow).toContain('"\'-1+1"');
       expect(dataRow).toContain("\"'@SUM(1+1)\"");
     });
+
+    it("neutralizes formulas hidden behind a leading tab", () => {
+      const day = makeDay({
+        tasks: [
+          {
+            id: "task-001",
+            title: "\t=HYPERLINK(\"http://evil.example\")",
+            startTime: new Date("2024-12-01T09:00:00Z"),
+            endTime: new Date("2024-12-01T10:00:00Z"),
+            duration: 3_600_000,
+            category: "cat1"
+          }
+        ]
+      });
+      const csv = exportToCSV([day], [project], [category], "user-1");
+      expect(csv.split("\n")[1]).toContain("\"'\t=HYPERLINK");
+    });
   });
 
   describe("exportToJSON", () => {

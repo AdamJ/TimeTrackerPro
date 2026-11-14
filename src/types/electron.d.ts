@@ -10,6 +10,7 @@ interface ElectronBackupAPI {
 	onMenuAction(callback: (action: string) => void): () => void;
 	listBackups(): Promise<{ ok: boolean; backups?: ElectronDiskBackupInfo[]; error?: string }>;
 	readBackup(name: string): Promise<{ ok: boolean; content?: string; error?: string }>;
+	clearBackups(): Promise<{ ok: boolean; error?: string }>;
 }
 
 declare global {

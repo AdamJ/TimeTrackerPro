@@ -17,7 +17,7 @@ Timetraked uses GitHub Actions for continuous integration and continuous deploym
 
 1. **Checkout code** - Retrieves the repository code
 2. **Setup Node.js** - Configures Node.js 20.x environment
-3. **Install dependencies** - Runs `npm ci` for clean install
+3. **Install dependencies** - Runs `pnpm install --frozen-lockfile` for clean install
 4. **Run linter** - Executes ESLint to check code quality
 5. **Run tests** - Runs the Vitest test suite (41 tests) with mock Supabase environment
 6. **Build project** - Verifies the production build succeeds with mock Supabase environment
@@ -135,7 +135,7 @@ npm run lint && npm run test -- --run && npm run build
 ### Tests Fail Locally but Pass in CI (or vice versa)
 
 1. **Node version mismatch** - CI uses Node 20.x, ensure you're using the same
-2. **Dependency differences** - Run `npm ci` instead of `npm install`
+2. **Dependency differences** - Run `pnpm install --frozen-lockfile` instead of `pnpm install`
 3. **Environment variables** - Check if tests depend on env vars
 4. **Timezone issues** - Tests use mocked dates to avoid timezone problems
 

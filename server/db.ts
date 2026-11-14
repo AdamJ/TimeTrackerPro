@@ -1,5 +1,17 @@
 import "dotenv/config";
+import { readFileSync } from "node:fs";
 import knex, { Knex } from "knex";
+
+// TLS to the database verifies the server certificate by default. DB_SSL_CA
+// points at a PEM bundle for a private CA or self-signed server certificate.
+function buildSslConfig(): { rejectUnauthorized: boolean; ca?: string } | undefined {
+	if (process.env.DB_SSL !== "true") return undefined;
+	const caPath = process.env.DB_SSL_CA;
+	return {
+		rejectUnauthorized: true,
+		...(caPath ? { ca: readFileSync(caPath, "utf8") } : {})
+	};
+}
 
 // DB_CLIENT selects the self-hosted SQL engine. Accepts friendly aliases
 // ("postgres"/"postgresql"/"mysql") as well as the underlying knex client names.
@@ -21,7 +33,7 @@ const connection: Knex.Config["connection"] = isMysql
 			user: process.env.DB_USER ?? "postgres",
 			password: process.env.DB_PASSWORD ?? "",
 			database: process.env.DB_NAME ?? "timetraked",
-			ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined
+			ssl: buildSslConfig()
 		};
 
 export const db: Knex = knex({

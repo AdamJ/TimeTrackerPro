@@ -33,6 +33,7 @@ src/.DS_Store
 supabase/*
 supabase/**
 supabase/.DS_Store
+/supabase/.temp/
 
 # Claude
 .claude/launch.json
