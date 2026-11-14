@@ -5,3 +5,5 @@ allowBuilds:
 overrides:
   body-parser: ">=2.4.0"
   qs: ">=6.16.1"
+  fast-uri: "^3.1.9"
+  joi: "^18.3.1"
