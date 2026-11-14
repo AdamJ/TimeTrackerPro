@@ -8,6 +8,7 @@ assignees:
 ---
 
 **Is this a new component or an extension of an existing one?**
+
 - [ ] New component
 - [ ] Extension of existing component
 

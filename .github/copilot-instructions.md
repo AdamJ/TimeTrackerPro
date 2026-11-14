@@ -6,10 +6,10 @@ This repository uses **GitHub Copilot** to assist with code generation, refactor
 
 | Guideline | What it means | Why it matters |
 |-----------|---------------|----------------|
-| **Use Copilot as a helper, not a replacement** | Treat Copilot suggestions as *ideas* that you review and adapt. | Prevents accidental bugs or insecure patterns.
-| **Verify all generated code** | Run tests, linting, and type checks after accepting a suggestion. | Ensures the code compiles and passes existing tests.
-| **Keep security in mind** | Avoid generating code that handles credentials, file paths, or external input without validation. | Protects against injection and other vulnerabilities.
-| **Respect project style** | Copilot may produce code that diverges from the project's style guide. | Maintains readability and consistency.
+| **Use Copilot as a helper, not a replacement** | Treat Copilot suggestions as *ideas* that you review and adapt. | Prevents accidental bugs or insecure patterns. |
+| **Verify all generated code** | Run tests, linting, and type checks after accepting a suggestion. | Ensures the code compiles and passes existing tests. |
+| **Keep security in mind** | Avoid generating code that handles credentials, file paths, or external input without validation. | Protects against injection and other vulnerabilities. |
+| **Respect project style** | Copilot may produce code that diverges from the project's style guide. | Maintains readability and consistency. |
 
 ## 2. Working with Copilot in VS Code
 
@@ -31,12 +31,12 @@ When reviewing Copilot‑generated code, check:
 
 ## 4. Common Patterns in This Project
 
-| Feature | Typical Copilot usage | Example
-|---------|-----------------------|--------
-| Context API | Generate provider skeletons | `createContext<...>()` + `useContext` hook
-| React Router | Generate route components | `const Page = () => <div>...</div>`
-| Tailwind CSS | Generate class strings | `cn('bg-blue-500', 'text-white')`
-| Utility functions | Generate formatting helpers | `formatDuration(ms)`
+| Feature | Typical Copilot usage | Example |
+|---------|-----------------------|-------- |
+| Context API | Generate provider skeletons | `createContext<...>()` + `useContext` hook |
+| React Router | Generate route components | `const Page = () => <div>...</div>` |
+| Tailwind CSS | Generate class strings | `cn("bg-primary", "text-primary-foreground")` |
+| Utility functions | Generate formatting helpers | `formatDuration(ms)` |
 
 ## 5. Security & Privacy
 

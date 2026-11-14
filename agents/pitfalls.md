@@ -7,7 +7,7 @@
 ```typescript
 // ❌ WRONG
 export const Component = () => {
-	return <div>Content</div>; // tabs
+ return <div>Content</div>; // tabs
 };
 
 // ✅ CORRECT

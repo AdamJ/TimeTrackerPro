@@ -107,6 +107,8 @@ const PlannedTaskCardComponent: React.FC<PlannedTaskCardProps> = ({
         <ContextMenuTrigger asChild>
           <div
             ref={contextMenuTriggerRef}
+            // Focusable so keyboard users can open the context menu (Shift+F10 / Menu key).
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
             tabIndex={0}
             className="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
             {...longPressHandlers}
@@ -115,11 +117,15 @@ const PlannedTaskCardComponent: React.FC<PlannedTaskCardProps> = ({
               <CardContent>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3
-                      onClick={() => setShowEditDialog(true)}
-                      className="font-semibold text-foreground text-sm leading-snug cursor-pointer hover:underline"
-                    >
-                      {task.title}
+                    <h3 className="font-semibold text-foreground text-sm leading-snug">
+                      <Button
+                        type="button"
+                        variant="link"
+                        onClick={() => setShowEditDialog(true)}
+                        className="h-auto p-0 font-semibold text-foreground text-sm leading-snug text-left whitespace-normal"
+                      >
+                        {task.title}
+                      </Button>
                     </h3>
 
                     {task.description && (

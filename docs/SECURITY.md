@@ -166,7 +166,7 @@ All `target="_blank"` links include `rel="noopener noreferrer"` to prevent the o
 
 The Electron build sets a `Content-Security-Policy` response header via `session.defaultSession.webRequest.onHeadersReceived`. Key directives:
 
-```
+```text
 default-src 'self' app: data: https://*.supabase.co
 script-src 'self'
 style-src 'self' 'unsafe-inline'

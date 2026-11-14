@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import globals from "globals";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
@@ -11,7 +12,9 @@ export default tseslint.config(
       "dist-electron-build",
       "src/components/ui",
       "node_modules",
-      "dev-dist/"
+      "dev-dist/",
+      "src-tauri/target",
+      ".claude/worktrees"
     ]
   },
   {
@@ -24,6 +27,8 @@ export default tseslint.config(
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
+      // Rules run via `pnpm check:a11y`; registered so its disable comments resolve here.
+      "jsx-a11y": jsxA11y,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,

@@ -52,7 +52,8 @@ This template shows the exact format required for importing time tracking data i
 ### Duration Calculation
 
 If `end_time` is provided, duration should match:
-```
+
+```text
 duration = end_time - start_time (in milliseconds)
 ```
 

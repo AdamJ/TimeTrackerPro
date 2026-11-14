@@ -287,9 +287,12 @@ pnpm tauri:ios:build    # build the iOS app bundle — requires Xcode + an Apple
 ## Pre-Commit Checklist
 
 1. `pnpm lint` — fix all errors
-2. `pnpm build` — ensure no type errors
-3. Test changed functionality manually
-4. Verify tabs (not spaces) and double quotes throughout
+2. `pnpm check:design-tokens` — no default Tailwind palette (`bg-blue-500`) or hex (`text-[#fff]`) classes in `src/` (skips `src/components/ui`; suppress a line with a `design-allow` comment)
+3. `pnpm check:a11y` — `eslint-plugin-jsx-a11y` recommended rules via `eslint.a11y.config.js`
+4. `pnpm lint:markdown` — `markdownlint-cli2` per `.markdownlint-cli2.jsonc` (`pnpm exec markdownlint-cli2 --fix` autofixes most issues)
+5. `pnpm build` — ensure no type errors
+6. Test changed functionality manually
+7. Verify spaces (not tabs) and double quotes throughout
 
 ---
 

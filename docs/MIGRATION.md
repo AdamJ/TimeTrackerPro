@@ -2,7 +2,7 @@
 
 If you already have a Supabase project with the old schema, you'll need to run this migration to update to the new relational structure.
 
-## ⚠️ Important: Backup Your Data First!
+## ⚠️ Important: Backup Your Data First
 
 Before running this migration, make sure to:
 
