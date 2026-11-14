@@ -43,9 +43,15 @@ DB_PORT=5432          # 3306 for MySQL
 DB_USER=timetraked
 DB_PASSWORD=your_db_password_here
 DB_NAME=timetraked
-DB_SSL=false           # set true if your database requires SSL
+DB_SSL=false           # set true if your database requires SSL (the server certificate is verified)
+DB_SSL_CA=/path/to/ca.pem   # optional: CA bundle for a private or self-signed database certificate
 SQL_SERVER_PORT=4001   # port the server/ API listens on
+SQL_SERVER_HOST=127.0.0.1   # interface to listen on; anything other than loopback requires SQL_API_TOKEN
+SQL_API_TOKEN=             # optional shared secret, required as "Authorization: Bearer <token>"
+SQL_ALLOWED_ORIGINS=http://localhost:8080   # comma-separated browser origins allowed by CORS
 ```
+
+See [Access control](#access-control) for how `SQL_SERVER_HOST`, `SQL_API_TOKEN` and `SQL_ALLOWED_ORIGINS` work together.
 
 ### 3. Apply the schema
 
@@ -77,9 +83,31 @@ Add to `.env`:
 ```bash
 VITE_DATA_BACKEND=sql
 VITE_SQL_API_URL=http://localhost:4001/api
+VITE_SQL_API_TOKEN=        # same value as SQL_API_TOKEN, if you set one
 ```
 
 Restart the Vite dev server (or rebuild) so the new env vars are picked up.
+
+## Access control
+
+The API has no user accounts, so access is limited at the network and HTTP level:
+
+| Variable | Default | Effect |
+| --- | --- | --- |
+| `SQL_SERVER_HOST` | `127.0.0.1` | Interface the API listens on. With the default, only processes on the same machine can connect. |
+| `SQL_API_TOKEN` | unset | When set, every route except `/api/health` requires `Authorization: Bearer <token>` and returns `401` otherwise. The server refuses to start on a non-loopback `SQL_SERVER_HOST` without it. |
+| `SQL_ALLOWED_ORIGINS` | `http://localhost:8080` | Comma-separated browser origins that receive CORS headers. Other websites open in the same browser can't read responses. Add your deployed frontend's origin (and `tauri://localhost`, `http://tauri.localhost` for the desktop app) when not running on the Vite dev server. |
+| `VITE_SQL_API_TOKEN` | unset | Frontend copy of `SQL_API_TOKEN`, sent as the bearer token. |
+
+`VITE_SQL_API_TOKEN` is bundled into the browser build, so anyone who can load the frontend can read it. That's acceptable for a personal deployment, where the person running the app owns the server. For a shared deployment, put the API behind a reverse proxy that adds the token server-side, and leave `VITE_SQL_API_TOKEN` unset.
+
+Generate a token with:
+
+```bash
+openssl rand -hex 32
+```
+
+Errors return a generic `{ "error": "Internal error" }` body; the detail is logged on the server only.
 
 ## Migrating existing data
 
@@ -87,6 +115,9 @@ Restart the Vite dev server (or rebuild) so the new env vars are picked up.
 
 ## Troubleshooting
 
-- **Frontend can't reach the backend**: confirm `VITE_SQL_API_URL` matches where `server/index.ts` is actually listening, and that CORS isn't being blocked (the server enables CORS for all origins by default).
+- **Frontend can't reach the backend**: confirm `VITE_SQL_API_URL` matches where `server/index.ts` is actually listening (the startup log prints the host, port and allowed origins). A CORS error in the browser console means the frontend's origin isn't in `SQL_ALLOWED_ORIGINS`.
+- **Requests fail with `401 Unauthorized`**: `SQL_API_TOKEN` is set on the server but `VITE_SQL_API_TOKEN` is missing or different. Set both to the same value and restart both processes.
+- **Server exits with "Refusing to listen on … without SQL_API_TOKEN"**: `SQL_SERVER_HOST` is set to a non-loopback address. Set `SQL_API_TOKEN`, or remove `SQL_SERVER_HOST` to listen on `127.0.0.1`.
+- **TLS errors connecting to the database with `DB_SSL=true`**: the database certificate isn't trusted. Point `DB_SSL_CA` at the CA bundle that signed it.
 - **`db:migrate` fails to connect**: double-check `DB_HOST`/`DB_PORT`/`DB_USER`/`DB_PASSWORD`/`DB_NAME` and that the database accepts connections from where the script runs.
 - **MySQL errors about key length**: this shouldn't happen with the bundled schema (all indexed columns are `VARCHAR`, not `TEXT`), but if you've hand-edited `server/schema.ts`, remember MySQL requires an explicit length on indexed `TEXT` columns.

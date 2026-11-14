@@ -30,6 +30,7 @@ import {
 import { parseTaskChecklist } from '@/utils/checklistUtils';
 import { roundToNearest15Minutes, formatDate, elapsedMs } from '@/utils/timeUtil';
 import { SCHEMA_VERSION } from '@/services/localStorageService';
+import { clearLocalAppData } from '@/services/localStorageService/clearLocalData';
 import { useElectronBackup } from '@/hooks/useElectronBackup';
 
 export interface Task {
@@ -308,7 +309,7 @@ const convertDefaultProjects = (
 export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   children
 }) => {
-  const { isAuthenticated, loading: authLoading, user } = useAuth();
+  const { isAuthenticated, loading: authLoading, user, shouldKeepLocalCopy, setBeforeSignOut, setOnSignOutFailed } = useAuth();
   const [dataService, setDataService] = useState<DataService | null>(null);
   // Tracks previous auth state for logout detection; ref avoids triggering rerenders.
   const prevAuthRef = useRef<boolean | null>(null);
@@ -356,6 +357,17 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   // still sees the change.
   const clientsRef = useRef<Client[]>([]);
 
+  // Set when the cloud → localStorage copy already ran before a user-initiated
+  // sign-out, so the logout transition below doesn't retry it without a session.
+  const migratedBeforeSignOutRef = useRef(false);
+  // useElectronBackup() is called further down, so the logout transition and
+  // loadData reach its functions through refs (filled in right after the call).
+  const clearDiskBackupsRef = useRef<(() => Promise<{ ok: boolean; error?: string }>) | null>(null);
+  const resumeBackupsRef = useRef<(() => void) | null>(null);
+  // The guest-mode service created after "Remove from this device". Its first
+  // load resets in-memory state and then lets disk backups resume.
+  const removalReloadServiceRef = useRef<DataService | null>(null);
+
   // Initialize data service when auth state changes.
   // On logout: run migrateToLocalStorage BEFORE setDataService so that loadData()
   // (which fires when dataService changes) reads the freshly-written localStorage
@@ -367,19 +379,41 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       const wasAuthenticated = prevAuthRef.current;
 
       if (wasAuthenticated === true && !isAuthenticated) {
-        // Logout path: drain Supabase → localStorage before switching service.
+        const keepLocalCopy = shouldKeepLocalCopy?.() ?? true;
         const currentService = dataServiceRef.current;
-        if (currentService) {
+        if (!keepLocalCopy) {
+          // User chose "Remove my data from this device" at sign-out.
+          clearLocalAppData();
+          // Retry the disk-backup delete in case the pre-sign-out attempt
+          // failed or ran out of time.
+          const cleared = await clearDiskBackupsRef.current?.();
+          if (cleared && !cleared.ok) {
+            console.error('❌ Could not delete desktop backups:', cleared.error);
+            toast({
+              title: "Couldn't delete desktop backups",
+              description: "Your data was removed from the app, but backup files may remain on this device. Sign in and out again to retry.",
+              variant: "destructive"
+            });
+          }
+        } else if (migratedBeforeSignOutRef.current) {
+          // Already copied while the session was valid (user-initiated sign-out).
+        } else if (currentService) {
+          // Sign-out the user didn't start (e.g. session expiry): best effort,
+          // since the session may already be gone.
           try {
             await currentService.migrateToLocalStorage();
           } catch (error) {
-            console.error('❌ Error syncing data to localStorage on logout:', error);
+            console.warn('⚠️ Could not copy account data to this device after the session ended:', error);
           }
         }
+        migratedBeforeSignOutRef.current = false;
       }
 
       // Switch to the appropriate service (after migration on logout).
       const service = createDataService(isAuthenticated);
+      if (wasAuthenticated === true && !isAuthenticated && !(shouldKeepLocalCopy?.() ?? true)) {
+        removalReloadServiceRef.current = service;
+      }
       setDataService(service);
       dataServiceRef.current = service;
       currentAuthStateRef.current = isAuthenticated;
@@ -387,7 +421,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     handleAuthChange();
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated, authLoading, shouldKeepLocalCopy]);
 
   // Load data when data service is available
   useEffect(() => {
@@ -399,6 +433,29 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
       plannedLoadedRef.current = false;
       initiativesLoadedRef.current = false;
       setLoading(true);
+      const isRemovalReload = removalReloadServiceRef.current === dataService;
+      if (isRemovalReload) {
+        // Storage was just wiped. Drop everything the signed-out account left
+        // in memory before any await, so a load that fails partway can't leave
+        // old data behind for the next save or backup.
+        const defaultProjects = convertDefaultProjects(DEFAULT_PROJECTS);
+        setIsDayStarted(false);
+        setDayStartTime(null);
+        setDayEndTime(null);
+        setTasks([]);
+        setCurrentTask(null);
+        setArchivedDays([]);
+        setProjects(defaultProjects);
+        projectsRef.current = defaultProjects;
+        setClients([]);
+        clientsRef.current = [];
+        setCategories(DEFAULT_CATEGORIES);
+        setTodoItems([]);
+        setPlannedTasks([]);
+        plannedTasksRef.current = [];
+        setInitiatives([]);
+        initiativesRef.current = [];
+      }
       try {
         // Load current day
         const currentDay = await dataService.getCurrentDay();
@@ -553,10 +610,22 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
         todoLoadedRef.current = true;
         plannedLoadedRef.current = true;
         initiativesLoadedRef.current = true;
+
+        // Only a clean guest-mode reload after "Remove" lets backups resume.
+        if (isRemovalReload) resumeBackupsRef.current?.();
       } catch (error) {
         console.error('Error loading data:', error);
+        if (isRemovalReload) {
+          // Backups stay paused (fail closed) until the app restarts.
+          toast({
+            title: "Couldn't finish removing your data",
+            description: "Restart the app to make sure nothing from your account is backed up again.",
+            variant: "destructive"
+          });
+        }
       } finally {
         setLoading(false);
+        if (isRemovalReload) removalReloadServiceRef.current = null;
       }
     };
 
@@ -618,7 +687,45 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
   // Electron-only disk backup, a separate failure domain from localStorage.
   // No-ops on web/PWA builds. Fires at the same critical-save points as the
   // existing manual-sync architecture — this is not a new autosave trigger.
-  const { writeBackup, writeBackupDebounced, registerQuitFlush } = useElectronBackup();
+  const { writeBackup, writeBackupDebounced, registerQuitFlush, clearDiskBackups, resumeBackups } = useElectronBackup();
+  clearDiskBackupsRef.current = clearDiskBackups;
+  resumeBackupsRef.current = resumeBackups;
+
+  // Runs right before a user-initiated sign-out, while the session is still
+  // valid. "Keep a copy" copies cloud data to this device (after
+  // supabase.auth.signOut() resolves, SupabaseService reads fail with "User not
+  // authenticated", so this can't wait for the auth change). "Remove from this
+  // device" also deletes the desktop disk backups, which hold full snapshots.
+  useEffect(() => {
+    if (!setBeforeSignOut) return;
+    setBeforeSignOut(async ({ keepLocalCopy }) => {
+      if (!keepLocalCopy) {
+        const result = await clearDiskBackups();
+        if (!result.ok) console.error('❌ Could not delete desktop backups:', result.error);
+        return;
+      }
+      const service = dataServiceRef.current;
+      if (!currentAuthStateRef.current || !service) return;
+      await service.migrateToLocalStorage();
+      // A copy that finishes after the sign-out timeout must not mark the
+      // next sign-out as already copied.
+      if (currentAuthStateRef.current) migratedBeforeSignOutRef.current = true;
+    });
+    return () => setBeforeSignOut(null);
+  }, [setBeforeSignOut, clearDiskBackups]);
+
+  // If Supabase fails to sign out after a "Remove" clear, the user is still
+  // signed in and no guest-mode reload will come to resume backups, so resume
+  // them here. The disk backups themselves stay deleted until the next write.
+  useEffect(() => {
+    if (!setOnSignOutFailed) return;
+    setOnSignOutFailed(() => {
+      migratedBeforeSignOutRef.current = false;
+      resumeBackups();
+    });
+    return () => setOnSignOutFailed(null);
+  }, [setOnSignOutFailed, resumeBackups]);
+
 
   const buildFullSnapshot = useCallback(() => ({
     currentDay: { ...latestStateRef.current, _v: SCHEMA_VERSION },

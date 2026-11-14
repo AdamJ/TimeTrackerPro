@@ -15,6 +15,7 @@ export function installTauriElectronApiShim(): void {
     writeBackup: (json: string) => invoke("backup_write", { json }),
     listBackups: () => invoke("backup_list"),
     readBackup: (name: string) => invoke("backup_read", { name }),
+    clearBackups: () => invoke("backup_clear"),
 
     requestFlushBeforeQuit: (callback: () => void | Promise<void>) => {
       void listen("before-quit-flush", async () => {

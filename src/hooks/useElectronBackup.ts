@@ -28,12 +28,16 @@ export function useElectronBackup() {
 	const quitFlushRef = useRef<() => void | Promise<void>>();
 	const pendingSnapshotRef = useRef<unknown>(null);
 	const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
+	// Set by clearDiskBackups(): until resumeBackups() is called (after the
+	// app reloads in guest mode), no snapshot is written, so data still held in
+	// memory from the signed-out account can't be backed up again.
+	const suppressedRef = useRef(false);
 
 	// Returns the write result so the quit-flush path can await it (so the
 	// "flush done" ack reflects an actual write attempt, not just a fire-and-forget
 	// call); other call sites are free to ignore the returned promise.
 	const writeBackup = useCallback(async (snapshot: unknown): Promise<{ ok: boolean; error?: string } | undefined> => {
-		if (!window.electronAPI) return undefined;
+		if (!window.electronAPI || suppressedRef.current) return undefined;
 		const result = await window.electronAPI.writeBackup(JSON.stringify(snapshot));
 		if (!result.ok) notifyBackupFailure(result.error);
 		return result;
@@ -44,13 +48,15 @@ export function useElectronBackup() {
 	// write of the latest snapshot rather than queuing overlapping writes/prunes.
 	// Not for the quit-flush path — that one must write immediately and be awaited.
 	const writeBackupDebounced = useCallback((snapshot: unknown): void => {
-		if (!window.electronAPI) return;
+		if (!window.electronAPI || suppressedRef.current) return;
 		pendingSnapshotRef.current = snapshot;
 		if (debounceTimerRef.current) return;
 		debounceTimerRef.current = setTimeout(() => {
 			debounceTimerRef.current = undefined;
 			const latest = pendingSnapshotRef.current;
 			pendingSnapshotRef.current = null;
+			// Null when clearDiskBackups() dropped the pending snapshot.
+			if (latest === null) return;
 			void writeBackup(latest);
 		}, WRITE_BACKUP_DEBOUNCE_MS);
 	}, [writeBackup]);
@@ -82,5 +88,22 @@ export function useElectronBackup() {
 		return window.electronAPI.readBackup(name);
 	}, []);
 
-	return { writeBackup, writeBackupDebounced, registerQuitFlush, listDiskBackups, readDiskBackup };
+	// Deletes every disk snapshot ("Remove from this device"). Cancels a pending
+	// debounced write first so the old snapshot can't be written back afterwards.
+	const clearDiskBackups = useCallback(async () => {
+		if (debounceTimerRef.current) {
+			clearTimeout(debounceTimerRef.current);
+			debounceTimerRef.current = undefined;
+		}
+		pendingSnapshotRef.current = null;
+		suppressedRef.current = true;
+		if (!window.electronAPI) return { ok: true };
+		return window.electronAPI.clearBackups();
+	}, []);
+
+	const resumeBackups = useCallback(() => {
+		suppressedRef.current = false;
+	}, []);
+
+	return { writeBackup, writeBackupDebounced, registerQuitFlush, listDiskBackups, readDiskBackup, clearDiskBackups, resumeBackups };
 }

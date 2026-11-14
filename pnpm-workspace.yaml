@@ -1,3 +1,7 @@
 allowBuilds:
   '@swc/core': true
   esbuild: true
+
+overrides:
+  body-parser: ">=2.4.0"
+  qs: ">=6.16.1"

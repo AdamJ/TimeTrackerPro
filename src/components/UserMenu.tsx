@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { UserLock, LogOut, UserCircle, LockOpenIcon, ChevronsUpDown } from 'lucide-react';
 import {
@@ -11,6 +11,8 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenuButton, SidebarMenuItem, useSidebar } from './ui/sidebar';
+import { SignOutDialog } from '@/components/SignOutDialog';
+import { toast } from '@/hooks/use-toast';
 
 interface UserMenuProps {
   onSignInClick: () => void;
@@ -19,8 +21,18 @@ interface UserMenuProps {
 export const UserMenu: React.FC<UserMenuProps> = ({ onSignInClick }) => {
   const { user, signOut, isAuthenticated } = useAuth();
   const { isMobile } = useSidebar()
-  const handleSignOut = async () => {
-    await signOut();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const handleSignOut = async (keepLocalCopy: boolean) => {
+    const { error } = await signOut({ keepLocalCopy });
+    if (error) {
+      toast({
+        title: "Couldn't sign out",
+        description: keepLocalCopy
+          ? "You're still signed in. Check your connection and try again."
+          : "You're still signed in and your data is still on this device. Check your connection and try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (!isAuthenticated) {
@@ -80,15 +92,16 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onSignInClick }) => {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />*/}
             <DropdownMenuItem
-              onClick={handleSignOut}
+              onSelect={() => setConfirmOpen(true)}
               className="flex items-center gap-2 hover:cursor-pointer"
             >
               <LogOut className="h-4 w-4" />
-              Sign Out
+              Sign Out…
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+      <SignOutDialog open={confirmOpen} onOpenChange={setConfirmOpen} onSignOut={handleSignOut} />
     </SidebarMenuItem>
   );
 };

@@ -46,6 +46,7 @@ import {
 import { useReportSummary } from '@/hooks/useReportSummary';
 import { useReportStorage, SavedSummary } from '@/hooks/useReportStorage';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
+import { useAuth } from '@/hooks/useAuth';
 import { PageLayout } from "@/components/PageLayout";
 import SummaryOutput from '@/components/SummaryOutput';
 
@@ -402,6 +403,7 @@ export default function Report() {
 
   const { summary, state, error, generate, load, updateSummary, reset } =
     useReportSummary();
+  const { isAuthenticated } = useAuth();
 
   // Derive the localStorage key for the current week+tone+project.
   // Empty string when no week is selected yet; useReportStorage will return null
@@ -620,11 +622,23 @@ export default function Report() {
 
             {/* Generate button */}
             {filteredWeek && !hasNoData && state !== 'loading' && (
-              <Button className="w-full" onClick={handleGenerate}>
-                {state === 'success'
-                  ? 'Regenerate summary'
-                  : 'Generate summary'}
-              </Button>
+              <>
+                <Button
+                  className="w-full"
+                  onClick={handleGenerate}
+                  disabled={!isAuthenticated}
+                  aria-describedby={!isAuthenticated ? "ai-summary-signin-hint" : undefined}
+                >
+                  {state === 'success'
+                    ? 'Regenerate summary'
+                    : 'Generate summary'}
+                </Button>
+                {!isAuthenticated && (
+                  <p id="ai-summary-signin-hint" className="text-sm text-muted-foreground">
+                    Sign in to generate AI summaries. Saved summaries stay available.
+                  </p>
+                )}
+              </>
             )}
 
             {/* Dev-only prompt preview */}

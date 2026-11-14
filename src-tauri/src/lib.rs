@@ -17,6 +17,7 @@ pub fn run() {
             backup::backup_write,
             backup::backup_list,
             backup::backup_read,
+            backup::backup_clear,
             quit_flush::before_quit_flush_done,
         ])
         .on_window_event(quit_flush::handle_window_event);

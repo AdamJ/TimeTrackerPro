@@ -100,6 +100,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, onCancel, de
               <Input
                 id="new-task-title"
                 type="text"
+                autoComplete="off"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={() => setTitleTouched(true)}

@@ -4,6 +4,7 @@ import { DataService, CurrentDayData } from "@/services/dataService";
 import { LocalStorageService } from "@/services/localStorageService";
 
 const BASE_URL = (import.meta.env.VITE_SQL_API_URL ?? "http://localhost:4001/api").replace(/\/$/, "");
+const API_TOKEN: string | undefined = import.meta.env.VITE_SQL_API_TOKEN;
 
 interface TaskWire extends Omit<Task, "startTime" | "endTime" | "insertedAt" | "updatedAt"> {
 	startTime: string;
@@ -51,7 +52,11 @@ function reviveDay(day: DayRecordWire): DayRecord {
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
 	const response = await fetch(`${BASE_URL}${path}`, {
 		...options,
-		headers: { "Content-Type": "application/json", ...options?.headers }
+		headers: {
+			"Content-Type": "application/json",
+			...(API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {}),
+			...options?.headers
+		}
 	});
 
 	if (!response.ok) {

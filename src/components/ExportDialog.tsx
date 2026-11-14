@@ -92,10 +92,9 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
         mimeType = 'application/json';
         break;
       case 'invoice': {
-        if (!selectedClient || !startDate || !endDate) {
-          alert('Please select a client and date range for invoice generation');
-          return;
-        }
+        // The Export button is disabled until these are set; this only guards
+        // against a programmatic call.
+        if (!selectedClient || !startDate || !endDate) return;
         const invoiceData = generateInvoiceData(
           selectedClient,
           startDate,
@@ -353,6 +352,11 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
+                {(!selectedClient || !startDate || !endDate) && (
+                  <p id="invoice-requirements" className="mt-2 text-sm text-muted-foreground">
+                    Choose a client and a start and end date to generate an invoice.
+                  </p>
+                )}
               </CardContent>
             </Card>
           )}
@@ -476,6 +480,11 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                 disabled={
                   exportType === 'invoice' &&
                   (!selectedClient || !startDate || !endDate)
+                }
+                aria-describedby={
+                  exportType === 'invoice' && (!selectedClient || !startDate || !endDate)
+                    ? "invoice-requirements"
+                    : undefined
                 }
               >
                 <Download className="w-4 h-4 mr-2" />

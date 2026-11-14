@@ -42,7 +42,7 @@ describe("installTauriElectronApiShim", () => {
 
     expect(window.electronAPI).toBeDefined();
     expect(Object.keys(window.electronAPI!).sort()).toEqual(
-      ["listBackups", "onMenuAction", "readBackup", "requestFlushBeforeQuit", "writeBackup"].sort(),
+      ["clearBackups", "listBackups", "onMenuAction", "readBackup", "requestFlushBeforeQuit", "writeBackup"].sort(),
     );
   });
 
@@ -83,6 +83,19 @@ describe("installTauriElectronApiShim", () => {
 
     expect(invokeMock).toHaveBeenCalledWith("backup_read", { name: "backup-1.json" });
     expect(result).toEqual({ ok: true, content: "{}" });
+  });
+
+  it("clearBackups invokes backup_clear", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).__TAURI_INTERNALS__ = {};
+    invokeMock.mockResolvedValueOnce({ ok: true });
+    const install = await loadShim();
+    install();
+
+    const result = await window.electronAPI!.clearBackups();
+
+    expect(invokeMock).toHaveBeenCalledWith("backup_clear");
+    expect(result).toEqual({ ok: true });
   });
 
   it("requestFlushBeforeQuit listens for before-quit-flush and acks via before_quit_flush_done", async () => {

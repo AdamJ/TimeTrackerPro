@@ -154,7 +154,7 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
                     Client Name <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter client name" {...field} />
+                    <Input autoComplete="section-client organization" placeholder="Enter client name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -170,7 +170,7 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
                   <FormItem>
                     <FormLabel>Street</FormLabel>
                     <FormControl>
-                      <Input placeholder="123 Main St" {...field} />
+                      <Input autoComplete="section-client address-line1" placeholder="123 Main St" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -184,7 +184,7 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
                     <FormItem>
                       <FormLabel>City</FormLabel>
                       <FormControl>
-                        <Input placeholder="Springfield" {...field} />
+                        <Input autoComplete="section-client address-level2" placeholder="Springfield" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -197,7 +197,7 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
                     <FormItem>
                       <FormLabel>State / Province</FormLabel>
                       <FormControl>
-                        <Input placeholder="IL" {...field} />
+                        <Input autoComplete="section-client address-level1" placeholder="IL" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -212,7 +212,7 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
                     <FormItem>
                       <FormLabel>ZIP / Postal Code</FormLabel>
                       <FormControl>
-                        <Input placeholder="62701" {...field} />
+                        <Input autoComplete="section-client postal-code" placeholder="62701" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -225,7 +225,7 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
                     <FormItem>
                       <FormLabel>Country</FormLabel>
                       <FormControl>
-                        <Input placeholder="USA" {...field} />
+                        <Input autoComplete="section-client country-name" placeholder="USA" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -243,7 +243,7 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Jane Doe" {...field} />
+                      <Input autoComplete="section-client name" placeholder="Jane Doe" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -256,7 +256,7 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="jane@example.com" {...field} />
+                      <Input type="email" autoComplete="section-client email" spellCheck={false} placeholder="jane@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -269,7 +269,7 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
                   <FormItem>
                     <FormLabel>Website</FormLabel>
                     <FormControl>
-                      <Input type="url" placeholder="https://example.com" {...field} />
+                      <Input type="url" autoComplete="section-client url" spellCheck={false} placeholder="https://example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

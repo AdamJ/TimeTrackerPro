@@ -154,7 +154,7 @@ export const ClientManagement: React.FC = () => {
                         <p>
                           <Button variant="link" className="p-0" asChild>
                             <a
-                              href={`https://www.google.com/maps/search/?api=1&query=${[
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([
                                 client.addressStreet,
                                 client.addressCity,
                                 client.addressState,
@@ -162,7 +162,7 @@ export const ClientManagement: React.FC = () => {
                                 client.addressCountry,
                               ]
                                 .filter(Boolean)
-                                .join(", ")}`}
+                                .join(", "))}`}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -191,7 +191,7 @@ export const ClientManagement: React.FC = () => {
                       {client.contactEmail && (
                         <p>
                           <Button variant="link" className="p-0" asChild>
-                            <a href={`mailto:${client.contactEmail}`}>
+                            <a href={`mailto:${encodeURIComponent(client.contactEmail)}`}>
                               <Mail className="w-4 h-4" />
                               {client.contactEmail}
                             </a>

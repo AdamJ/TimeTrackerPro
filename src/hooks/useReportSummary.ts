@@ -48,19 +48,32 @@ const GEMINI_MODEL = "gemini-2.5-flash"; // Free-tier Gemini model as of June 20
 // ---------------------------------------------------------------------------
 
 interface GeminiErrorBody {
-  error?: {
+  // The ai-proxy Edge Function reports its own failures as a plain string;
+  // Gemini's upstream errors arrive as a structured object.
+  error?: string | {
     code?: number;
     message?: string;
     status?: string;
   };
 }
 
+const PROXY_ERROR_MESSAGES: Record<string, string> = {
+  "Origin not allowed": "AI summaries aren't available in this version of the app.",
+  "Sign in required": "Sign in to generate AI summaries.",
+  "AI service not configured": "AI summaries aren't set up on this server yet.",
+  "Request too large": "This date range is too large to summarize. Choose a shorter range.",
+  "Too many requests": "Too many summary requests. Wait a minute and try again."
+};
+
 /**
  * Maps a Gemini API HTTP status + error body to a human-readable message.
  * Distinguishes between quota exhaustion, rate limiting, overload, and
  * configuration problems so the user knows what action to take.
  */
-function classifyGeminiError(status: number, body: GeminiErrorBody, retryAfter: string | null): string {
+export function classifyGeminiError(status: number, body: GeminiErrorBody, retryAfter: string | null): string {
+  if (typeof body?.error === "string") {
+    return PROXY_ERROR_MESSAGES[body.error] ?? `AI summary request failed: ${body.error}`;
+  }
   const apiStatus = body?.error?.status ?? "";
   const apiMessage = body?.error?.message ?? "";
   const lower = apiMessage.toLowerCase();

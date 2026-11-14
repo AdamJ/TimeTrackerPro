@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import cors from "cors";
 import express, { type NextFunction, type Request, type Response } from "express";
 import * as archivedDays from "./repositories/archivedDays";
@@ -17,12 +18,46 @@ const wrap = (handler: Handler) => (req: Request, res: Response, next: NextFunct
 	handler(req, res).catch(next);
 };
 
-export function createApp() {
+export interface AppOptions {
+	/** Browser origins allowed to call the API. Requests from any other origin get no CORS headers. */
+	allowedOrigins: string[];
+	/** Shared secret required as `Authorization: Bearer <token>` on every route except /api/health. */
+	apiToken?: string;
+}
+
+export const DEFAULT_ALLOWED_ORIGINS = ["http://localhost:8080"];
+
+export function parseAllowedOrigins(raw: string | undefined): string[] {
+	if (!raw) return DEFAULT_ALLOWED_ORIGINS;
+	return raw.split(",").map((origin) => origin.trim()).filter(Boolean);
+}
+
+function tokensMatch(provided: string, expected: string): boolean {
+	const a = Buffer.from(provided);
+	const b = Buffer.from(expected);
+	return a.length === b.length && timingSafeEqual(a, b);
+}
+
+export function createApp(options: AppOptions = { allowedOrigins: DEFAULT_ALLOWED_ORIGINS }) {
 	const app = express();
-	app.use(cors());
+	app.disable("x-powered-by");
+	app.use(cors({ origin: options.allowedOrigins }));
 	app.use(express.json({ limit: "5mb" }));
 
 	app.get("/api/health", (_req, res) => res.json({ ok: true }));
+
+	const { apiToken } = options;
+	if (apiToken) {
+		app.use("/api", (req, res, next) => {
+			const header = req.get("Authorization") ?? "";
+			const provided = header.startsWith("Bearer ") ? header.slice(7) : "";
+			if (!tokensMatch(provided, apiToken)) {
+				res.status(401).json({ error: "Unauthorized" });
+				return;
+			}
+			next();
+		});
+	}
 
 	app.get(
 		"/api/current-day",
@@ -185,9 +220,16 @@ export function createApp() {
 		})
 	);
 
-	app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-		console.error("❌ Request failed:", err);
-		res.status(500).json({ error: err instanceof Error ? err.message : "Internal error" });
+	app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+		// Body-parser errors (malformed JSON, oversized payload) carry a safe status.
+		const status = (err as { status?: number })?.status;
+		if (status && status >= 400 && status < 500) {
+			res.status(status).json({ error: status === 413 ? "Request too large" : "Invalid request body" });
+			return;
+		}
+		// Log the detail server-side only; DB errors can name tables and columns.
+		console.error(`❌ ${req.method} ${req.path} failed:`, err);
+		res.status(500).json({ error: "Internal error" });
 	});
 
 	return app;

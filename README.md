@@ -135,6 +135,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 
 **Recent highlights:**
 
+- **Security and sign-in hardening** — self-hosted SQL API locked to loopback with an optional bearer token, a rate-limited AI proxy, security headers for the web build, and a keep-or-remove choice at sign-out
 - **Project planning view** — per-project goal/start/deadline/status "Initiatives" shown on a GitHub-Projects-style Roadmap timeline (status swimlanes, month-scale header, "Today" line)
 - **Keyboard shortcuts** — global `N`/`Cmd/Ctrl+S`/`Cmd/Ctrl+K` shortcuts and a `?` help dialog in the web/PWA build, plus native `Cmd/Ctrl+N`/`Cmd/Ctrl+S`/`Cmd/Ctrl+K` menu accelerators in the Tauri desktop build
 - **Guest-mode data durability** — schema-mismatch backups, write-failure toasts, undo for hard deletes, Tauri desktop disk-based backup snapshots (independent of `localStorage`, including a final flush on app quit), and an in-app "Data Recovery" UI in Settings to preview and restore those backups

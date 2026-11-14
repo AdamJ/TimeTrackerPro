@@ -4,11 +4,11 @@ import { generateDailySummary } from "@/utils/timeUtil";
 import { getTotalHoursForPeriod, getRevenueForPeriod } from "@/utils/calculationUtils";
 
 // Prefixes cell values that would be interpreted as a formula by Excel/Sheets
-// (starting with =, +, -, or @) with a leading single quote, then quotes the
+// (starting with =, +, -, @, tab or carriage return) with a leading single quote, then quotes the
 // result. Prevents formula injection from task titles/descriptions/etc.
 function csvCell(value: string): string {
 	const escaped = value.replace(/"/g, '""');
-	const safe = /^[=+\-@]/.test(escaped) ? `'${escaped}` : escaped;
+	const safe = /^[=+\-@\t\r]/.test(escaped) ? `'${escaped}` : escaped;
 	return `"${safe}"`;
 }
 
@@ -314,7 +314,7 @@ export function parseCSVImport(
 			headers.forEach((header, index) => {
 				// Strip wrapping quotes, then the leading "'" added on export to
 				// neutralize values that looked like a spreadsheet formula.
-				taskData[header] = values[index].replace(/^"|"$/g, "").replace(/^'([=+\-@])/, "$1");
+				taskData[header] = values[index].replace(/^"|"$/g, "").replace(/^'([=+\-@\t\r])/, "$1");
 			});
 
 			if (!taskData.id || !taskData.title || !taskData.start_time) {

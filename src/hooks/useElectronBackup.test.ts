@@ -168,6 +168,64 @@ describe("useElectronBackup", () => {
 			expect(writeBackup).toHaveBeenCalledWith(JSON.stringify({ value: 3 }));
 		});
 
+		it("clearDiskBackups drops a pending debounced write and clears the disk backups", async () => {
+			const writeBackup = vi.fn().mockResolvedValue({ ok: true });
+			const clearBackups = vi.fn().mockResolvedValue({ ok: true });
+			window.electronAPI = { writeBackup, clearBackups, requestFlushBeforeQuit: vi.fn() };
+			const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
+
+			const { result } = renderHook(() => useElectronBackup());
+
+			act(() => {
+				result.current.writeBackupDebounced({ value: "old account data" });
+			});
+
+			let clearResult: unknown;
+			await act(async () => {
+				clearResult = await result.current.clearDiskBackups();
+			});
+
+			expect(clearTimeoutSpy).toHaveBeenCalled();
+			expect(clearBackups).toHaveBeenCalledTimes(1);
+			expect(clearResult).toEqual({ ok: true });
+
+			// Even if the cancelled timer still fired, nothing is written.
+			timeoutCallback?.();
+			expect(writeBackup).not.toHaveBeenCalled();
+			clearTimeoutSpy.mockRestore();
+		});
+
+		it("suppresses backup writes after clearDiskBackups until resumeBackups", async () => {
+			const writeBackup = vi.fn().mockResolvedValue({ ok: true });
+			const clearBackups = vi.fn().mockResolvedValue({ ok: true });
+			window.electronAPI = { writeBackup, clearBackups, requestFlushBeforeQuit: vi.fn() };
+
+			const { result } = renderHook(() => useElectronBackup());
+
+			await act(async () => {
+				await result.current.clearDiskBackups();
+			});
+
+			// Quit-flush style immediate write and a debounced write are both dropped.
+			await act(async () => {
+				await result.current.writeBackup({ value: "old account data" });
+				result.current.writeBackupDebounced({ value: "old account data" });
+			});
+			expect(writeBackup).not.toHaveBeenCalled();
+			expect(setTimeoutSpy).not.toHaveBeenCalled();
+
+			act(() => result.current.resumeBackups());
+			await act(async () => {
+				await result.current.writeBackup({ value: "guest data" });
+			});
+			expect(writeBackup).toHaveBeenCalledWith(JSON.stringify({ value: "guest data" }));
+		});
+
+		it("clearDiskBackups is a no-op success when window.electronAPI is absent", async () => {
+			const { result } = renderHook(() => useElectronBackup());
+			await expect(result.current.clearDiskBackups()).resolves.toEqual({ ok: true });
+		});
+
 		it("schedules a new timer for a call made after the previous debounce window fires", () => {
 			const writeBackup = vi.fn().mockResolvedValue({ ok: true });
 			window.electronAPI = { writeBackup, requestFlushBeforeQuit: vi.fn() };

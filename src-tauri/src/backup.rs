@@ -128,6 +128,36 @@ pub async fn list_backup_files(dir: &Path) -> std::io::Result<Vec<BackupInfo>> {
     Ok(backups)
 }
 
+// Deletes every backup snapshot (used by "Remove from this device" at
+// sign-out). Only names matching the generated pattern are removed, so any
+// other file in the directory is left alone. One failed delete doesn't stop
+// the rest: every matching file is attempted, then the last error is returned.
+pub async fn clear_backup_files(dir: &Path) -> std::io::Result<usize> {
+    let mut entries = match fs::read_dir(dir).await {
+        Ok(e) => e,
+        Err(_) => return Ok(0),
+    };
+    let mut names = Vec::new();
+    while let Some(entry) = entries.next_entry().await? {
+        let name = entry.file_name().to_string_lossy().to_string();
+        if is_valid_backup_filename(&name) {
+            names.push(name);
+        }
+    }
+    let mut removed = 0;
+    let mut last_err = None;
+    for name in names {
+        match fs::remove_file(dir.join(&name)).await {
+            Ok(()) => removed += 1,
+            Err(e) => last_err = Some(e),
+        }
+    }
+    match last_err {
+        Some(e) => Err(e),
+        None => Ok(removed),
+    }
+}
+
 pub async fn read_backup_file(dir: &Path, name: &str) -> Result<String, String> {
     if !is_valid_backup_filename(name) {
         return Err("Invalid backup filename".to_string());
@@ -179,6 +209,25 @@ pub async fn backup_read(app: AppHandle, name: String) -> Result<ReadResult, ()>
     }
 }
 
+#[tauri::command]
+pub async fn backup_clear(
+    app: AppHandle,
+    state: tauri::State<'_, BackupState>,
+) -> Result<WriteResult, ()> {
+    let dir = match backups_dir(&app) {
+        Ok(d) => d,
+        Err(e) => return Ok(WriteResult { ok: false, error: Some(e) }),
+    };
+    // Hold the write lock so a backup_write already in flight can't land a
+    // fresh snapshot halfway through the clear.
+    let mut writes = state.writes_since_prune.lock().await;
+    *writes = 0;
+    match clear_backup_files(&dir).await {
+        Ok(_) => Ok(WriteResult { ok: true, error: None }),
+        Err(e) => Ok(WriteResult { ok: false, error: Some(e.to_string()) }),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -225,6 +274,47 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let result = read_backup_file(dir.path(), "../../etc/passwd").await;
         assert_eq!(result.unwrap_err(), "Invalid backup filename");
+    }
+
+    #[tokio::test]
+    async fn clear_removes_backups_but_keeps_other_files() {
+        let dir = tempfile::tempdir().unwrap();
+        tokio::fs::write(dir.path().join("random.txt"), "hi").await.unwrap();
+        let mut writes = 0u32;
+        write_backup_file(dir.path(), "{}", &mut writes).await.unwrap();
+        // Distinct millisecond timestamps for the two snapshots.
+        tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+        write_backup_file(dir.path(), "{}", &mut writes).await.unwrap();
+
+        let removed = clear_backup_files(dir.path()).await.unwrap();
+        assert_eq!(removed, 2);
+        assert!(list_backup_files(dir.path()).await.unwrap().is_empty());
+        assert!(dir.path().join("random.txt").exists());
+    }
+
+    #[tokio::test]
+    async fn clear_keeps_going_after_a_failed_delete() {
+        let dir = tempfile::tempdir().unwrap();
+        // A directory with a backup-shaped name can't be removed with
+        // remove_file, standing in for a file that fails to delete.
+        tokio::fs::create_dir(dir.path().join("backup_2026-01-01T00-00-00-000Z.json")).await.unwrap();
+        let mut writes = 0u32;
+        write_backup_file(dir.path(), "{}", &mut writes).await.unwrap();
+
+        let result = clear_backup_files(dir.path()).await;
+        assert!(result.is_err(), "the failed delete is reported");
+        let remaining: Vec<_> = list_backup_files(dir.path()).await.unwrap()
+            .into_iter()
+            .filter(|b| !b.name.starts_with("backup_2026-01-01"))
+            .collect();
+        assert!(remaining.is_empty(), "the deletable snapshot was still removed");
+    }
+
+    #[tokio::test]
+    async fn clear_on_missing_directory_is_a_no_op() {
+        let dir = tempfile::tempdir().unwrap();
+        let removed = clear_backup_files(&dir.path().join("does-not-exist")).await.unwrap();
+        assert_eq!(removed, 0);
     }
 
     #[tokio::test]
