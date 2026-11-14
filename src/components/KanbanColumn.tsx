@@ -22,17 +22,17 @@ interface KanbanColumnProps {
 }
 
 const COLUMN_BADGE_COLORS: Record<PlannedTaskStatus, string> = {
-  todo: "bg-brown-3 text-brown-11 border-brown-6",
-  in_progress: "bg-blue-3 text-blue-11 border-blue-6",
-  done: "bg-green-3 text-green-11 border-green-6",
-  blocked: "bg-red-3 text-red-11 border-red-6",
+  todo: "bg-muted text-muted-foreground border-border/40",
+  in_progress: "bg-chart-1/15 text-foreground border-chart-1/40",
+  done: "bg-chart-2/15 text-chart-2 border-chart-2/40",
+  blocked: "bg-destructive/10 text-destructive border-destructive/40",
 };
 
 const COLUMN_BG_COLOR: Record<PlannedTaskStatus, string> = {
-  todo: "bg-brown-2",
-  in_progress: "bg-blue-2",
-  done: "bg-green-2",
-  blocked: "bg-red-2",
+  todo: "bg-muted/40",
+  in_progress: "bg-chart-1/10",
+  done: "bg-chart-2/10",
+  blocked: "bg-chart-5/10",
 };
 
 export const KanbanColumn: React.FC<KanbanColumnProps> = ({
