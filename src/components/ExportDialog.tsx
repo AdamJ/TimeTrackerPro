@@ -274,7 +274,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label id="export-start-date-label" className="text-sm font-medium">Start Date</label>
+                  <span id="export-start-date-label" className="block text-sm font-medium">Start Date</span>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -301,7 +301,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                 </div>
 
                 <div>
-                  <label id="export-end-date-label" className="text-sm font-medium">End Date</label>
+                  <span id="export-end-date-label" className="block text-sm font-medium">End Date</span>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button

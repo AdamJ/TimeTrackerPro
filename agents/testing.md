@@ -102,6 +102,7 @@ vi.mock("@/components/DeleteConfirmationDialog", () => ({
 ## Test Setup
 
 `src/test-setup.ts` provides globally:
+
 - Supabase client mock (`vi.mock("@/lib/supabase", ...)`)
 - `localStorage` mock (in-memory store)
 - `URL.createObjectURL` / `revokeObjectURL` stubs

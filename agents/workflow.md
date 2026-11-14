@@ -30,6 +30,9 @@ pnpm preview          # Preview production build
 
 # Code Quality
 pnpm lint             # Run ESLint
+pnpm check:design-tokens  # Flag default Tailwind palette / hex color classes in src/
+pnpm check:a11y       # jsx-a11y lint (eslint.a11y.config.js)
+pnpm lint:markdown    # markdownlint-cli2
 pnpm test             # Run Vitest tests
 
 # Testing Scripts

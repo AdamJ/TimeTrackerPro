@@ -77,7 +77,7 @@ I've successfully updated your Timetraked application to ensure all information 
 
 Before: Data was stored as JSON blobs, losing the ability to query individual fields After: Proper relational tables with full data normalization
 
-### New Tables Created:
+### New Tables Created
 
 1. `projects` - Project definitions with hourly rates, clients, colors
 2. `categories` - Category definitions with colors and metadata
@@ -93,11 +93,11 @@ Before: Data was stored as JSON blobs, losing the ability to query individual fi
 - `archived_days` - Day summaries (without embedded task data)
 - `current_day` - Current session state
 
-### 🔍 What's Now Properly Stored:
+### 🔍 What's Now Properly Stored
 
 ✅ Task Details: Title, description, duration, timestamps ✅ Project Information: Project name, client, hourly rate, color ✅ Category Data: Category name, color ✅ Relationships: Tasks linked to projects and categories ✅ Day Records: Complete day summaries with task relationships ✅ Current State: Active day and current task tracking
 
-### 🚀 Benefits of New Structure:
+### 🚀 Benefits of New Structure
 
 1. Queryable Data: Can filter tasks by project, client, category, date ranges
 2. Data Integrity: Foreign key relationships ensure consistency
@@ -106,20 +106,20 @@ Before: Data was stored as JSON blobs, losing the ability to query individual fi
 5. Reporting: Easy to generate detailed reports and analytics
 6. Migration: Automatic data migration from localStorage preserves all existing data
 
-### 🔄 Updated Services:
+### 🔄 Updated Services
 
 - SupabaseService: Completely rewritten to use relational structure
 - Data Migration: Enhanced to migrate projects, categories, and all task metadata
 - LocalStorageService: Unchanged (maintains backward compatibility)
 
-### 📋 Files Updated:
+### 📋 Files Updated
 
 1. `schema.sql` - Complete relational schema with RLS policies
 2. `dataService.ts` - New SupabaseService implementation
 3. `MIGRATION.md` - Guide for existing Supabase users
 4. `AUTHENTICATION.md` - Updated documentation
 
-### 🔒 Security Enhanced:
+### 🔒 Security Enhanced
 
 - Row Level Security (RLS) policies for all tables
 - User data isolation at database level
@@ -208,9 +208,9 @@ Error Prevention: No more 404/406 errors regardless of schema
 
 > The app now gracefully handles both schema versions, preventing all database-related errors while maintaining full functionality. You can continue using the app as-is, or optionally upgrade to the new schema for enhanced capabilities when convenient.
 
-## 🎉 Periodic Database Check & Visual Sync Status Implemented!
+## 🎉 Periodic Database Check & Visual Sync Status Implemented
 
-### ✅ What's Been Added:
+### ✅ What's Been Added
 
 1. Periodic Database Check (120 minutes)
 
@@ -218,7 +218,7 @@ Error Prevention: No more 404/406 errors regardless of schema
 - **Smart loading:** Only triggers when authenticated and not already loading
 - **Console logging:** Shows when periodic checks happen and what data is found
 
-2. Visual Sync Status Component
+1. Visual Sync Status Component
 
 - Real-time status: Shows current sync state in the header
 - Three states:
@@ -228,20 +228,20 @@ Error Prevention: No more 404/406 errors regardless of schema
 
 - Manual refresh button: Click to immediately check for updates from other devices
 
-3. Enhanced Sync Tracking
+1. Enhanced Sync Tracking
 
 - **isSyncing state:** Tracks when sync operations are active
 - **lastSyncTime:** Records when data was last synced
 - **Automatic updates:** Every task change triggers a sync and updates the status
 
-### 🔄 How Cross-Device Syncing Works Now:
+### 🔄 How Cross-Device Syncing Works Now
 
 1. **Device A:** You create/modify tasks → Immediate sync to database → Status shows "Syncing..." then "Synced [time]"
 2. **Device B:** Automatically checks every 120 minutes for updates → If changes found, loads them → Status updates with new sync time
 3. **Manual refresh:** Click the refresh button on any device to immediately check for updates
 4. **Visual feedback:** Always see the current sync status and last sync time
 
-### 🎯 Testing Your New Features:
+### 🎯 Testing Your New Features
 
 1. Open your app: [http://localhost:8080/](http://localhost:8080/)
 2. Sign in: Use your Supabase account
@@ -250,7 +250,7 @@ Error Prevention: No more 404/406 errors regardless of schema
 5. Test cross-device: Open in another browser/incognito, sign in, and see your tasks appear
 6. Manual refresh: Click the refresh button to immediately check for updates
 
-### 📊 Sync Schedule:
+### 📊 Sync Schedule
 
 - Immediate sync: Every task change (create, edit, delete)
 - Periodic check: Every 120 minutes for updates from other devices
@@ -287,9 +287,11 @@ Updating any task: ~4 DB calls
 Projects/categories changes: Additional separate calls
 
 ### 🎯 Database Call Optimization Summary
+
 I've implemented several key optimizations to dramatically reduce unnecessary database calls:
 
 🔧 Major Optimizations Implemented:
+
 1. Debounced Saves (2-3 second delays)
 Before: Every state change triggered immediate database saves
 After: Changes are batched and saved after 2-3 seconds of inactivity
@@ -315,11 +317,11 @@ Added tracking system to monitor all database operations
 Console logs show exactly when and why each DB call is made
 Easy to identify any remaining inefficiencies
 📊 Expected Performance Improvements:
-Scenario	Before	After	Improvement
-Task timer running	~4 calls every few seconds	~4 calls every 2+ seconds	60-80% reduction
-Adding single task	4 immediate calls	4 calls after 2s delay	Same total, better UX
-Multiple rapid changes	4 calls × changes	4 calls total	75-90% reduction
-Background sync	Every 2 hours	Every 5 hours	60% reduction
+Scenario Before After Improvement
+Task timer running ~4 calls every few seconds ~4 calls every 2+ seconds 60-80% reduction
+Adding single task 4 immediate calls 4 calls after 2s delay Same total, better UX
+Multiple rapid changes 4 calls × changes 4 calls total 75-90% reduction
+Background sync Every 2 hours Every 5 hours 60% reduction
 🎮 User Experience Improvements:
 Faster UI: No blocking on every small change
 Better batching: Multiple changes saved together efficiently
@@ -341,6 +343,7 @@ It was noted to the Agent that following:
 > I'm still seeing multiple individual console items of "DB Call #1: getUser on auth", "DB Call #2: upsert on current_day" and "DB Call #3: select on tasks".
 
 ### 🎯 Summary of Database Call Optimization Fixes
+
 I've implemented a comprehensive solution to address the excessive database calls you were seeing. Here's what was fixed:
 
 🔧 Root Cause of the Problem:
@@ -350,6 +353,7 @@ Callback Dependencies: The saveCurrentDay callback was recreating on every state
 Effect Re-runs: This caused the useEffect to re-run immediately, bypassing the debounce
 No Timeout Management: Previous timeouts weren't being properly cleared
 ✅ Solutions Implemented:
+
 1. Stable Callback References
 Used useRef to create a stable reference to the save function
 Prevents the effect from re-running when dependencies change
@@ -379,6 +383,7 @@ Background Activity: Minimal calls during normal usage
 We've successfully implemented comprehensive database call optimizations that will dramatically improve your application's performance:
 
 📊 Key Optimizations Implemented:
+
 1. Enhanced User Authentication Caching 👤
 Before: 12+ getUser() calls per operation cycle
 After: 1 getUser() call per 30-minute session
@@ -424,9 +429,11 @@ Improved reliability - Less network dependency for cached operations
 > Continued to ask why there were so many REST and AUTH requests to the database
 
 ### 🚨 Critical Database Call Reduction - Additional Optimizations
+
 You were absolutely right about the excessive calls! I've implemented several critical fixes:
 
 🔍 Root Causes Identified & Fixed:
+
 1. Unstable Save Function References ⚠️
 Problem: stableSaveCurrentDay was recreating on every state change
 Fix: Used refs to capture latest state without dependency changes
@@ -456,9 +463,11 @@ Added: Call frequency analysis and grouping by operation type
 > Follow-up that time tracking is only done on a single device at a time. If multiple devices will be used I will archive and unarchive.
 
 ### 🎯 MINIMAL DATABASE CALLS - Single Device Optimization ⚡
+
 You asked for minimal database calls for single-device usage, and I've completely restructured the system to achieve this:
 
 🔄 What Changed:
+
 1. Disabled All Automatic Syncing 🚫
 Removed: Every-second timer database calls
 Removed: Automatic debounced saves (2-second, 10-second)
@@ -496,6 +505,7 @@ Single Device Optimized: Perfect for your workflow
 ## Requested further performance improvements and efficiency updates
 
 ### Performance Improvements Achieved
+
 Bundle Size Optimization:
 Before: 716.89 kB (208.33 kB gzipped) - Single monolithic bundle
 After: 428.44 kB main bundle (131.97 kB gzipped) + Multiple smaller chunks
@@ -505,6 +515,7 @@ Key Optimizations Completed:
 Completed (2/6) React Query Integration
 
 🎯 Summary of Improvements
+
 1. Database Call Optimization (✅ Previously Completed)
 Reduced from 366 REST + 145 Auth calls to minimal manual sync
 95%+ reduction in Supabase usage
@@ -526,6 +537,7 @@ Reduced initial bundle size and improved loading performance
 Better caching with smaller, focused chunks
 
 #### 🚀 Additional Recommendations
+
 For further optimizations, consider:
 
 1. Service Worker: Implement for offline functionality and better caching
@@ -635,6 +647,7 @@ The application now supports a complete import/export cycle, allowing users to b
 > I noticed that the Toast notification for imports was hidden by the modal background, so I requested the Agent to update it as an inline alert in the Import section of the modal.
 
 ### Summary
+
 I have successfully updated the ExportDialog component to replace toast notifications with inline alerts for CSV import feedback. Here are the key changes made:
 
 🔄 Changes Made:
@@ -669,7 +682,8 @@ Better UX: Clear success/error states with appropriate colors and icons
 More Information: Success messages now show the count of imported tasks
 Consistent UI: Inline alerts fit better with the dialog's design
 
-### ✅ Test Results Summary:
+### ✅ Test Results Summary
+
 Successful Tests:
 ✅ Basic CSV Import: Successfully imported 2 tasks from the template
 ✅ Header Validation: Correctly rejects CSV with wrong headers
@@ -716,7 +730,7 @@ See clear results through the inline alert system
 
 ## Data was removed from DB once user logs out without ending day
 
-### 🐛 Root Cause Analysis:
+### 🐛 Root Cause Analysis
 
 1. User logs in: Data service switches to SupabaseService
 1. User creates time entries: They get saved to Supabase database ✅
@@ -729,6 +743,7 @@ See clear results through the inline alert system
     migrateFromLocalStorage() runs and might overwrite Supabase data with empty localStorage data! ⚠️
 
 ### 🎉 Solution Summary
+
 I've successfully identified and fixed the critical data loss bug in your Timetraked application! Here's what was happening and how I fixed it:
 
 🐛 The Problem:
@@ -768,6 +783,7 @@ Try working offline after logout - data will be preserved
 ## Show hours worked for each archived time entry
 
 ### 📊 Enhanced Archive Display
+
 Individual Archive Items:
 
 Hours Worked vs Total Time: Shows the distinction between actual work hours and total time (including breaks)
@@ -819,6 +835,7 @@ Task details: Each task shows its duration, hours, and dollar value
 - Update archive displays to show billable vs non-billable breakdown
 
 ### Summary
+
 I've successfully implemented a comprehensive billable categories feature for your Timetraked application! Here's what has been added:
 
 🏷️ Enhanced Category System
@@ -1032,7 +1049,7 @@ The ArchiveItem component was using old logic for calculating individual task va
 ✅ Migration Script: Handles existing databases without breaking changes
 ✅ Service Layer: Correctly maps between isBillable (JS) ↔ is_billable (DB)
 
-3. UI Components Verification
+1. UI Components Verification
 Projects Management:
 
 ✅ ProjectList.tsx: Billable checkbox in form
@@ -1047,19 +1064,21 @@ Categories Management:
 ✅ Form data: Includes isBillable field in all CRUD operations
 ✅ Save functionality: Calls forceSyncToDatabase() after changes
 
-4. Revenue Calculation Functions
+1. Revenue Calculation Functions
+
 ```js
 // Consistent logic across all functions:
 const projectIsBillable = project?.isBillable !== false;
 const categoryIsBillable = category?.isBillable !== false;
 const isBillable = projectIsBillable && categoryIsBillable;
 ```
+
 ✅ getRevenueForDay(): Only billable tasks generate revenue
 ✅ getBillableHoursForDay(): Only counts billable task hours
 ✅ getNonBillableHoursForDay(): Counts any non-billable tasks
 ✅ ArchiveItem: Individual task values use same logic
 
-5. Default Configuration
+1. Default Configuration
 Projects (config/projects.ts):
 
 ✅ "Product and Design" → isBillable: true
@@ -1106,7 +1125,7 @@ The billable time tracking system is fully implemented and consistent across:
 
 When a task was assigned a non-billable category, it was still being shown as billable due to the project itself being a billable entity.
 
-### ✅ Billable Logic Fixed!
+### ✅ Billable Logic Fixed
 
 3 bugs were found:
 

@@ -185,7 +185,7 @@ Your screenshots meet PWA standards:
 
 ## 🎯 Best Practices
 
-### ✅ DO:
+### ✅ DO
 
 - Show real data (realistic tasks, projects)
 - Capture app in use (active timer, tasks visible)
@@ -193,7 +193,7 @@ Your screenshots meet PWA standards:
 - Show key features (navigation, main dashboard)
 - Keep UI clean (no debug tools visible)
 
-### ❌ DON'T:
+### ❌ DON'T
 
 - Show empty states or placeholders
 - Include sensitive client data

@@ -199,6 +199,7 @@ const taskData = {
 Clients are a managed entity (added in client-management feature) that backs the project form's client dropdown.
 
 **Client type** (`src/contexts/TimeTrackingContext.tsx`):
+
 ```typescript
 { id: string; name: string; archived: boolean; createdAt: string; 
   addressStreet?: string; addressCity?: string; addressState?: string; 
@@ -207,15 +208,18 @@ Clients are a managed entity (added in client-management feature) that backs the
 ```
 
 **Storage**:
+
 - Guest mode: localStorage via `localStorageService/clients.ts`
 - Authenticated: Supabase `clients` table (`supabase/migrations/20260530_clients.sql`)
 
 **Reconciliation** (runs silently on app load):
+
 - Automatically adds any project client names not in the client list
 - Idempotent and backwards-compatible
 - Covers both first-run and CSV-imported clients
 
 **Context methods**:
+
 - `addClient(data)` → `Client | null`
 - `updateClient(id, data)` → `Client | null`
 - `archiveClient(id)` → error message (if blocking projects) or `null` (success)
@@ -229,12 +233,14 @@ Clients are a managed entity (added in client-management feature) that backs the
 Ship as native Mac (DMG) or Windows (NSIS) app via Electron 30+.
 
 **Key files**:
+
 - `electron/main.ts` — Electron main process
 - `electron/tsconfig.json` — CJS compilation
 - `vite.electron.config.ts` — main process bundling
 - `package.json` `"build"` key — electron-builder config
 
 **npm scripts**:
+
 ```bash
 pnpm electron:build:main   # compile electron/main.ts → dist-electron/main.cjs
 pnpm electron:dev          # dev + Electron
@@ -243,6 +249,7 @@ pnpm electron:build        # full production build + package (DMG/NSIS)
 ```
 
 **Architecture notes**:
+
 - Main process compiled to CJS (`dist-electron/main.cjs`), outputs in `dist-electron-build/`
 - Production uses `BrowserRouter` with custom `app://` protocol (not HashRouter)
 - Dev loads from `http://localhost:8080`

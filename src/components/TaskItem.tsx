@@ -67,6 +67,8 @@ const TaskItemComponent: React.FC<TaskItemProps> = ({
         <ContextMenuTrigger asChild>
           <div
             ref={contextMenuTriggerRef}
+            // Focusable so keyboard users can open the context menu (Shift+F10 / Menu key).
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
             tabIndex={0}
             className="focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
             {...longPressHandlers}
@@ -144,7 +146,7 @@ const TaskItemComponent: React.FC<TaskItemProps> = ({
                     size="sm"
                     variant="outline"
                     aria-label={`Delete task: ${task.title}`}
-                    className="flex items-center space-x-1 min-h-[44px] min-w-[44px] text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="flex items-center space-x-1 min-h-[44px] min-w-[44px] text-destructive hover:text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 className="w-3 h-3" />
                     <span className="hidden sm:block">Delete</span>

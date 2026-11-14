@@ -10,7 +10,6 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 
 ![GitHub Release](https://img.shields.io/github/v/release/AdamJ/TimeTrackerPro?style=for-the-badge) ![GitHub Release Date](https://img.shields.io/github/release-date/AdamJ/TimeTrackerPro?style=for-the-badge) ![W3C Validation](https://img.shields.io/w3c-validation/default?targetUrl=https%3A%2F%2Ftimetrackerpro.adamjolicoeur.me&style=for-the-badge)
 
-
 ---
 
 ## Features
@@ -61,6 +60,9 @@ pnpm preview             # Preview production build
 
 # Code Quality
 pnpm lint                # ESLint
+pnpm check:design-tokens # Flag non-token color classes
+pnpm check:a11y          # Accessibility lint (jsx-a11y)
+pnpm lint:markdown       # Markdown lint
 pnpm test                # Vitest unit tests (410 tests across 37 files)
 
 # PWA Screenshots
