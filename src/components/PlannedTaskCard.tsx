@@ -101,6 +101,17 @@ const PlannedTaskCardComponent: React.FC<PlannedTaskCardProps> = ({
   const canStartDayAndPull = !isDayStarted && tasks.length === 0 && task.status !== "done";
   const startDayLabel = task.status === "in_progress" ? "Start Day and Resume" : "Start Day and Pull";
 
+  const quickAction = canStartDayAndPull
+    ? {
+      label: task.status === "in_progress" ? "Resume" : "Start",
+      run: () => startDayAndPullPlannedTask(task.id),
+    }
+    : canPull
+      ? { label: "Start", run: () => pullPlannedTaskToDay(task.id) }
+      : canAddToDay
+        ? { label: "Resume", run: () => addPlannedTaskToDay(task.id) }
+        : null;
+
   return (
     <>
       <ContextMenu>
@@ -176,6 +187,20 @@ const PlannedTaskCardComponent: React.FC<PlannedTaskCardProps> = ({
                         </Badge>
                       )}
                     </div>
+
+                    {quickAction && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="mt-2"
+                        aria-label={`${quickAction.label} ${task.title}`}
+                        onClick={quickAction.run}
+                      >
+                        <Play className="w-3 h-3 mr-1" />
+                        {quickAction.label}
+                      </Button>
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-1 shrink-0">
