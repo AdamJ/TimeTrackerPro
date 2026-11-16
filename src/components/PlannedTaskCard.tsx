@@ -38,6 +38,7 @@ import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, Play, MoveRight, MoreVertical, PencilIcon, Briefcase, Tag, Users, PlusCircle, Clock, CirclePlay } from "lucide-react";
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { getReadableTextColor } from "@/utils/colorUtils";
 
 interface PlannedTaskCardProps {
   task: PlannedTask;
@@ -152,7 +153,7 @@ const PlannedTaskCardComponent: React.FC<PlannedTaskCardProps> = ({
                           className="border-transparent"
                           style={{
                             backgroundColor: category.color,
-                            color: "#fff",
+                            color: getReadableTextColor(category.color),
                           }}
                         >
                           <Tag className="w-2.5 h-2.5 inline mr-0.5" />

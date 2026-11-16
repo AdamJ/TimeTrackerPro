@@ -72,17 +72,16 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
             />
           ))}
 
-          {status === "todo" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAddSheet(true)}
-              className="w-full text-muted-foreground hover:text-foreground border border-dashed border-border"
-            >
-              <Plus className="w-3 h-3 mr-1" />
-              Add task
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAddSheet(true)}
+            aria-label={`Add task to ${title}`}
+            className="w-full text-muted-foreground hover:text-foreground border border-dashed border-border"
+          >
+            <Plus className="w-3 h-3 mr-1" />
+            Add task
+          </Button>
 
           {tasks.length === 0 && (
             <p className="text-xs text-muted-foreground text-center py-4">
