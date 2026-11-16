@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Every Task Board column (In Progress, Blocked, Done — not just To Do) now has an "Add task" button that opens the new-task sheet pre-set to that column's status
+  — `src/components/KanbanColumn.tsx`
 - Task Board cards gain a one-click Start/Resume button that starts the day and pulls the task, pulls it into the running day, or resumes an in-progress task, depending on day state (previously only reachable through the card menu)
   — `src/components/PlannedTaskCard.tsx`
 - The sign-in form gains `autocomplete="username"`/`"current-password"`, a show/hide password toggle, plain-language error messages linked to the fields via `aria-describedby`, and closes immediately with a toast instead of after a 1-second delay
@@ -89,6 +91,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Task Board category badges always used white text, which was unreadable on light category colors. Text is now black or white, whichever has the higher WCAG contrast against the category color
+  — `src/components/PlannedTaskCard.tsx`, `src/utils/colorUtils.ts` (new)
 - Task Board category filter listed raw category ids (e.g. `project-management`) instead of names
   — `src/components/KanbanBoard.tsx`, `src/components/KanbanBoardControls.tsx`
 - Task Board "Priority" sort removed: nothing ever set a non-default priority, so it always sorted oldest-first. Saved `priority` choices now load as "Oldest first"

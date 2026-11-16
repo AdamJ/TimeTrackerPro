@@ -31,7 +31,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (~516 JS/TS tests across 47 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
+### Test File Inventory (~525 JS/TS tests across 49 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
 
 | File | Coverage |
 |---|---|
@@ -59,9 +59,11 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/components/NewTaskForm.test.tsx` | Form render, submit, validation, cancel, FAB toggle |
 | `src/components/TaskItem.test.tsx` | Badge render, delete confirm, edit dialog |
 | `src/components/PlannedTaskPicker.test.tsx` | Dashboard empty-day picker: ordering, filtering, start vs resume, list cap |
-| `src/components/PlannedTaskCard.test.tsx` | Card one-click Start/Resume button: start-day-and-pull, pull, resume, hidden for done/stale/unposted days |
+| `src/components/PlannedTaskCard.test.tsx` | Card one-click Start/Resume button: start-day-and-pull, pull, resume, hidden for done/stale/unposted days; category badge text contrast |
 | `src/components/KanbanBoard.test.tsx` | Category filter labels by name, stale saved filter reset (not while loading), filtered-out empty state and visible count |
 | `src/hooks/useTaskBoardView.test.ts` | Default sort, legacy `priority` sort migration, batched filter updates |
+| `src/components/KanbanColumn.test.tsx` | "Add task" in every column opens the new-task sheet with that column's status |
+| `src/utils/colorUtils.test.ts` | `getReadableTextColor` black/white pick by WCAG contrast, short hex, unparseable fallback |
 | `src/components/ArchiveEditDialog.test.tsx` | Archive edit dialog render, task editing flow, and end-before-start validation (day form and Add Task) |
 | `src/components/ArchivedTaskRow.test.tsx` | Inline expandable archived task row editing, including end-before-start validation |
 | `src/components/dateParsing.test.ts` | Date parsing utilities |

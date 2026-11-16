@@ -7,10 +7,11 @@ const pullPlannedTaskToDay = vi.fn();
 const addPlannedTaskToDay = vi.fn();
 const startDayAndPullPlannedTask = vi.fn();
 let tasks: Task[] = [];
+let categories: { id: string; name: string; color: string }[] = [];
 
 vi.mock("@/hooks/useTimeTracking", () => ({
   useTimeTracking: () => ({
-    categories: [],
+    categories,
     tasks,
     deletePlannedTask: vi.fn(),
     restoreDeletedPlannedTask: vi.fn(),
@@ -45,6 +46,7 @@ describe("PlannedTaskCard quick action", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     tasks = [];
+    categories = [];
   });
 
   it("starts the day and pulls a to-do task when no day is running", () => {
@@ -83,5 +85,23 @@ describe("PlannedTaskCard quick action", () => {
     tasks = [{ id: "x" } as Task];
     renderCard(makeTask({}), false);
     expect(screen.queryByRole("button", { name: /^(Start|Resume) / })).toBeNull();
+  });
+});
+
+describe("PlannedTaskCard category badge", () => {
+  beforeEach(() => {
+    tasks = [];
+  });
+
+  it("picks readable text for light and dark category colors", () => {
+    categories = [
+      { id: "light", name: "Light", color: "#facc15" },
+      { id: "dark", name: "Dark", color: "#1e40af" },
+    ];
+    const { unmount } = renderCard(makeTask({ category: "light" }), false);
+    expect(screen.getByText("Light").closest("[style]")).toHaveStyle({ color: "#000" });
+    unmount();
+    renderCard(makeTask({ category: "dark" }), false);
+    expect(screen.getByText("Dark").closest("[style]")).toHaveStyle({ color: "#fff" });
   });
 });
