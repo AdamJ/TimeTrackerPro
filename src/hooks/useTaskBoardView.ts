@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
 
-export type TaskSortOption = "priority" | "title" | "newest" | "oldest";
+export type TaskSortOption = "title" | "newest" | "oldest";
+
+const SORT_OPTIONS: TaskSortOption[] = ["title", "newest", "oldest"];
 
 export interface TaskBoardFilters {
   project: string;
@@ -15,10 +17,24 @@ export interface TaskBoardViewState {
 
 const STORAGE_KEY = "timetracker_task_board_view";
 
-const DEFAULT_STATE: TaskBoardViewState = {
-  sortBy: "priority",
-  filters: { project: "all", client: "all", category: "all" },
+export const DEFAULT_FILTERS: TaskBoardFilters = {
+  project: "all",
+  client: "all",
+  category: "all",
 };
+
+const DEFAULT_STATE: TaskBoardViewState = {
+  sortBy: "oldest",
+  filters: DEFAULT_FILTERS,
+};
+
+// Older saves may hold the removed "priority" sort; nothing ever set a
+// non-default priority, so it always ordered oldest-first anyway.
+function readSortBy(value: unknown): TaskSortOption {
+  return SORT_OPTIONS.includes(value as TaskSortOption)
+    ? (value as TaskSortOption)
+    : DEFAULT_STATE.sortBy;
+}
 
 function readState(): TaskBoardViewState {
   try {
@@ -26,11 +42,19 @@ function readState(): TaskBoardViewState {
     if (!raw) return DEFAULT_STATE;
     const parsed = JSON.parse(raw);
     return {
-      sortBy: parsed.sortBy ?? DEFAULT_STATE.sortBy,
-      filters: { ...DEFAULT_STATE.filters, ...parsed.filters },
+      sortBy: readSortBy(parsed.sortBy),
+      filters: { ...DEFAULT_FILTERS, ...parsed.filters },
     };
   } catch {
     return DEFAULT_STATE;
+  }
+}
+
+function writeState(next: TaskBoardViewState) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // localStorage unavailable; view choice won't persist across reloads
   }
 }
 
@@ -40,29 +64,36 @@ function readState(): TaskBoardViewState {
 export function useTaskBoardView() {
   const [state, setState] = useState<TaskBoardViewState>(readState);
 
-  const persist = useCallback((next: TaskBoardViewState) => {
-    setState(next);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // localStorage unavailable; view choice won't persist across reloads
-    }
-  }, []);
+  const update = useCallback(
+    (fn: (prev: TaskBoardViewState) => TaskBoardViewState) => {
+      setState((prev) => {
+        const next = fn(prev);
+        writeState(next);
+        return next;
+      });
+    },
+    [],
+  );
 
   const setSortBy = useCallback(
-    (sortBy: TaskSortOption) => persist({ ...state, sortBy }),
-    [state, persist],
+    (sortBy: TaskSortOption) => update((prev) => ({ ...prev, sortBy })),
+    [update],
+  );
+
+  const setFilters = useCallback(
+    (changes: Partial<TaskBoardFilters>) =>
+      update((prev) => ({ ...prev, filters: { ...prev.filters, ...changes } })),
+    [update],
   );
 
   const setFilter = useCallback(
-    (key: keyof TaskBoardFilters, value: string) =>
-      persist({ ...state, filters: { ...state.filters, [key]: value } }),
-    [state, persist],
+    (key: keyof TaskBoardFilters, value: string) => setFilters({ [key]: value }),
+    [setFilters],
   );
 
   const clearFilters = useCallback(
-    () => persist({ ...state, filters: DEFAULT_STATE.filters }),
-    [state, persist],
+    () => update((prev) => ({ ...prev, filters: DEFAULT_FILTERS })),
+    [update],
   );
 
   const hasActiveFilters =
@@ -76,6 +107,7 @@ export function useTaskBoardView() {
     hasActiveFilters,
     setSortBy,
     setFilter,
+    setFilters,
     clearFilters,
   };
 }

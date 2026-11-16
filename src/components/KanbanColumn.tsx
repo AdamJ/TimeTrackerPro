@@ -19,6 +19,7 @@ interface KanbanColumnProps {
   tasks: PlannedTask[];
   isDayStarted: boolean;
   isDayStale: boolean;
+  emptyMessage?: string;
 }
 
 const COLUMN_BADGE_COLORS: Record<PlannedTaskStatus, string> = {
@@ -41,6 +42,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   tasks,
   isDayStarted,
   isDayStale,
+  emptyMessage = "No tasks",
 }) => {
   const [showAddSheet, setShowAddSheet] = useState(false);
 
@@ -84,7 +86,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
 
           {tasks.length === 0 && (
             <p className="text-xs text-muted-foreground text-center py-4">
-              No tasks
+              {emptyMessage}
             </p>
           )}
         </CardContent>

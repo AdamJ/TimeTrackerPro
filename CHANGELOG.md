@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Task Board cards gain a one-click Start/Resume button that starts the day and pulls the task, pulls it into the running day, or resumes an in-progress task, depending on day state (previously only reachable through the card menu)
+  — `src/components/PlannedTaskCard.tsx`
 - The sign-in form gains `autocomplete="username"`/`"current-password"`, a show/hide password toggle, plain-language error messages linked to the fields via `aria-describedby`, and closes immediately with a toast instead of after a 1-second delay
   — `src/components/AuthDialog.tsx`
 - Client form fields now carry `section-client` autofill tokens (organization, address lines, postal code, country, contact name, email, URL), and the new-task title has `autocomplete="off"`
@@ -87,6 +89,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Task Board category filter listed raw category ids (e.g. `project-management`) instead of names
+  — `src/components/KanbanBoard.tsx`, `src/components/KanbanBoardControls.tsx`
+- Task Board "Priority" sort removed: nothing ever set a non-default priority, so it always sorted oldest-first. Saved `priority` choices now load as "Oldest first"
+  — `src/hooks/useTaskBoardView.ts`, `src/components/KanbanBoardControls.tsx`
+- A saved Task Board filter that no longer matched any task (deleted task, renamed project) left every column showing "No tasks" with no hint why. Such filters are reset once data loads; when filters hide everything, a "No tasks match the current filters" notice with a Clear button and a "Showing X of Y" count appear
+  — `src/components/KanbanBoard.tsx`, `src/components/KanbanBoardControls.tsx`, `src/components/KanbanColumn.tsx`
 - Signing out never copied account data to the device: `migrateToLocalStorage()` ran after `supabase.auth.signOut()` had ended the session, so it failed with "User not authenticated". `AuthContext` now runs a registered `setBeforeSignOut` handler while the session is still valid, and `TimeTrackingContext` uses it to copy the data when the user chooses "Keep a copy". After a session expiry the copy is still attempted, but only logs a warning on failure. The copy gets at most 5 seconds (`BEFORE_SIGN_OUT_TIMEOUT_MS`) before sign-out proceeds, so a slow or stalled network can't leave the user signed in
   — `src/contexts/AuthContext.tsx`, `src/contexts/TimeTrackingContext.tsx`, `src/contexts/AuthContext.test.tsx` (new)
 - "Continue without account" in the sign-in dialog was a submit button, so with both fields filled it signed the user in instead of staying in guest mode. It is now `type="button"` and labeled "Use on device"
