@@ -58,4 +58,25 @@ describe("useTaskBoardView", () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ sortBy: "title" }));
     expect(renderHook(() => useTaskBoardView()).result.current.activeStatus).toBe("todo");
   });
+  it("shows done tasks from the last 30 days by default, and that is not an active filter", () => {
+    const { result } = renderHook(() => useTaskBoardView());
+    expect(result.current.doneRange).toBe("30d");
+    expect(result.current.hasActiveFilters).toBe(false);
+  });
+
+  it("remembers the done range across mounts and keeps it when filters are cleared", () => {
+    const first = renderHook(() => useTaskBoardView());
+    act(() => first.result.current.setDoneRange("hide"));
+    act(() => first.result.current.clearFilters());
+    expect(first.result.current.doneRange).toBe("hide");
+    first.unmount();
+    expect(renderHook(() => useTaskBoardView()).result.current.doneRange).toBe("hide");
+  });
+
+  it("falls back to 30 days when the saved done range is missing or invalid", () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ doneRange: "forever" }));
+    expect(renderHook(() => useTaskBoardView()).result.current.doneRange).toBe("30d");
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ sortBy: "title" }));
+    expect(renderHook(() => useTaskBoardView()).result.current.doneRange).toBe("30d");
+  });
 });
