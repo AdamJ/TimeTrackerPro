@@ -31,7 +31,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (~538 JS/TS tests across 50 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
+### Test File Inventory (~546 JS/TS tests across 52 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
 
 | File | Coverage |
 |---|---|
@@ -54,6 +54,8 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/hooks/useElectronMenuActions.test.ts` | `menu:action` listener dispatch (event bridged from the Rust menu, not IPC; hook keeps its historical `Electron` name) |
 | `src/hooks/useKeyboardShortcuts.test.ts` | Global keyboard shortcut handling (new task, save, command palette, help) |
 | `src/hooks/useUndoableDelete.test.ts` | Undo-delete toast/timeout hook |
+| `src/hooks/useVisualViewport.test.ts` | Visible-area box follows `visualViewport` resize/scroll (keyboard open/close), null when disabled or unsupported, cleans up listeners |
+| `src/components/ui/dialog.test.tsx` | `DialogContent` `fullScreenOnMobile`: fills the screen on mobile, centered modal classes from `md` up, sized to the visual viewport, opt-in only |
 | `src/components/PageLayout.test.tsx` | `PageLayout` renders children, delegates title/actions to context |
 | `src/components/SummaryOutput.test.tsx` | Summary output rendering |
 | `src/components/NewTaskForm.test.tsx` | Form render, submit, validation, cancel, FAB toggle |
@@ -193,6 +195,7 @@ export const MyComponent = () => {
 | `src/components/PageLayout.tsx`               | Thin page wrapper — delegates title/badge/actions to `PageTitleContext` via `usePageTitle` |
 | `src/components/BackdatedEntryDialog.tsx`     | Multi-step dialog for logging past workdays; uses `addBackdatedDay` from context   |
 | `src/hooks/useLongPress.ts`                   | 500 ms hold detector for context menu trigger on touch                             |
+| `src/hooks/useVisualViewport.ts`              | Visible-area `{ top, height }` from `window.visualViewport` (shrinks when the iOS on-screen keyboard opens, unlike `dvh`); used by `DialogContent`'s `fullScreenOnMobile` so a full-screen panel ends above the keyboard |
 | `src/hooks/useHorizontalSwipe.ts`             | Touch handlers reporting a deliberate horizontal swipe (60px, mostly horizontal, ignores screen-edge and portaled-child touches); drives swipe between `KanbanBoard`'s mobile status tabs |
 | `src/components/ui/responsive-select.tsx`     | `ResponsiveSelect` — branches on `useIsMobile()` to render a native `<select>` on mobile (OS picker) vs the Radix `Select` on desktop; flat `options` array API shared by `NewTaskForm`, `ProjectSheet`, `BackdatedEntryDialog`, `PlannedTaskDialog`, `ArchivedTaskRow`, `KanbanBoardControls` |
 | `src/components/PlannedTaskPicker.tsx`        | Empty started-day card on the Dashboard: lists in-progress/to-do planned tasks with Start (`pullPlannedTaskToDay`) / Resume (`addPlannedTaskToDay`) buttons. Task Board cards and the Tasks page header can also start the day (`startDayAndPullPlannedTask`, "now" rounded to 15 min, no dialog) |

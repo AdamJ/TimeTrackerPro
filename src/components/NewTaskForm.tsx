@@ -88,7 +88,10 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, onCancel, de
       )}
 
       <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
-        <DialogContent className="max-w-[90dvw] sm:max-w-[980px] max-h-[90dvh] overflow-y-auto">
+        <DialogContent
+          fullScreenOnMobile
+          className="md:max-w-[980px] md:max-h-[90dvh] md:overflow-y-auto"
+        >
           <DialogHeader>
             <DialogTitle>Start New Task</DialogTitle>
           </DialogHeader>
@@ -202,7 +205,8 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, onCancel, de
               )}
             </div>
 
-            <DialogFooter>
+            {/* Pinned to the bottom of the scrolling panel so Start Task stays reachable above the keyboard */}
+            <DialogFooter className="sticky bottom-0 -mx-4 border-t bg-background px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:static md:mx-0 md:border-0 md:p-0">
               <Button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
