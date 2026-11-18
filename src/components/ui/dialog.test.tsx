@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { cleanup, render, screen } from "@testing-library/react";
+import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 
 let isMobile = true;
 let visible: { top: number; height: number } | null = null;
@@ -15,6 +15,9 @@ const renderDialog = (fullScreenOnMobile: boolean) =>
       <DialogContent fullScreenOnMobile={fullScreenOnMobile}>
         <DialogTitle>Title</DialogTitle>
         <p>Body</p>
+        <DialogFooter data-testid="footer">
+          <button type="button">Save</button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>,
   );
@@ -59,5 +62,19 @@ describe("DialogContent fullScreenOnMobile", () => {
     visible = { top: 8, height: 420 };
     renderDialog(true);
     expect(screen.getByRole("dialog").style.height).toBe("");
+  });
+
+  it("pins DialogFooter to the bottom of a full-screen panel", () => {
+    renderDialog(true);
+    expect(screen.getByTestId("footer")).toHaveClass("sticky", "bottom-0", "border-t");
+  });
+
+  it("leaves DialogFooter alone outside full-screen mode", () => {
+    renderDialog(false);
+    expect(screen.getByTestId("footer")).not.toHaveClass("sticky");
+    cleanup();
+    isMobile = false;
+    renderDialog(true);
+    expect(screen.getByTestId("footer")).not.toHaveClass("sticky");
   });
 });

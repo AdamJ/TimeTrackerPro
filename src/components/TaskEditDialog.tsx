@@ -205,7 +205,10 @@ export const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <DialogContent
+        fullScreenOnMobile
+        className="flex flex-col overflow-hidden md:max-h-[90vh] md:max-w-2xl md:overflow-hidden"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Clock className="w-5 h-5" />

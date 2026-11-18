@@ -418,7 +418,10 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[90dvw] max-h-[90dvh] overflow-y-auto">
+      <DialogContent
+        fullScreenOnMobile
+        className="md:max-w-[90dvw] md:max-h-[90dvh] md:overflow-y-auto"
+      >
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center space-x-2">

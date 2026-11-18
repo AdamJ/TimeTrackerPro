@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
@@ -173,7 +174,10 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent
+        fullScreenOnMobile
+        className="md:max-h-[90dvh] md:max-w-2xl md:overflow-y-auto"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             {mode === 'export' ? (
@@ -470,7 +474,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
           )}
 
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-2">
+          <DialogFooter>
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
@@ -500,7 +504,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
                 {isImporting ? 'Importing...' : 'Select CSV File'}
               </Button>
             )}
-          </div>
+          </DialogFooter>
 
           {/* Hidden file input for import */}
           <input

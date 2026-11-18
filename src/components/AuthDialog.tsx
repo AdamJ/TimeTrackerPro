@@ -76,7 +76,7 @@ export const AuthDialog: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
-      <DialogContent className="max-w-md">
+      <DialogContent fullScreenOnMobile className="md:max-w-md">
         <DialogHeader>
           <DialogTitle>Sign In</DialogTitle>
           <DialogDescription>Sign in to sync your data across devices.</DialogDescription>

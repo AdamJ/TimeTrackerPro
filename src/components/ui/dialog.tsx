@@ -8,6 +8,10 @@ import { useVisualViewport } from "@/hooks/useVisualViewport"
 
 const Dialog = DialogPrimitive.Root
 
+// True while the enclosing DialogContent is rendered full screen (fullScreenOnMobile
+// on a small screen), so DialogFooter can pin itself above the keyboard.
+const FullScreenContext = React.createContext(false)
+
 const DialogTrigger = DialogPrimitive.Trigger
 
 const DialogPortal = DialogPrimitive.Portal
@@ -67,7 +71,9 @@ const DialogContent = React.forwardRef<
         style={{ ...fullScreenStyle, ...style }}
         {...props}
       >
-        {children}
+        <FullScreenContext.Provider value={isFullScreen}>
+          {children}
+        </FullScreenContext.Provider>
         <DialogPrimitive.Close
           className={cn(
             "absolute right-1 top-1 rounded-sm py-2 px-2 ring-offset-background transition-opacity hover:bg-accent focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground",
@@ -101,15 +107,22 @@ DialogHeader.displayName = "DialogHeader"
 const DialogFooter = ({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
-      className
-    )}
-    {...props}
-  />
-)
+}: React.HTMLAttributes<HTMLDivElement>) => {
+  const fullScreen = React.useContext(FullScreenContext)
+  return (
+    <div
+      className={cn(
+        "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+        // Pinned to the bottom of the scrolling full-screen panel so the actions
+        // stay reachable above the on-screen keyboard.
+        fullScreen &&
+          "sticky bottom-0 z-10 -mx-4 gap-2 border-t bg-background px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:space-x-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
 DialogFooter.displayName = "DialogFooter"
 
 const DialogTitle = React.forwardRef<

@@ -205,8 +205,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, onCancel, de
               )}
             </div>
 
-            {/* Pinned to the bottom of the scrolling panel so Start Task stays reachable above the keyboard */}
-            <DialogFooter className="sticky bottom-0 -mx-4 border-t bg-background px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:static md:mx-0 md:border-0 md:p-0">
+            <DialogFooter>
               <Button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
