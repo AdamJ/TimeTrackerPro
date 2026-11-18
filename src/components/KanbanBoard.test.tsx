@@ -161,6 +161,17 @@ describe("KanbanBoard", () => {
       expect(screen.getByRole("tab", { name: /To Do/ })).toHaveAttribute("aria-selected", "true");
     });
 
+    it("slides the new column in from the direction of travel, not on first load", async () => {
+      const user = userEvent.setup();
+      render(<KanbanBoard />);
+      expect(screen.getByRole("tabpanel")).not.toHaveClass("animate-in");
+      await user.click(screen.getByRole("tab", { name: /Blocked/ }));
+      expect(screen.getByRole("tabpanel")).toHaveClass("animate-in", "slide-in-from-right-8");
+      await user.click(screen.getByRole("tab", { name: /In Progress/ }));
+      expect(screen.getByRole("tabpanel")).toHaveClass("animate-in", "slide-in-from-left-8");
+      expect(screen.getByRole("tabpanel")).toHaveClass("motion-reduce:animate-none");
+    });
+
     it("shows every column at once on wider screens", () => {
       isMobile = false;
       render(<KanbanBoard />);

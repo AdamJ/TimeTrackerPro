@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { PlannedTask, PlannedTaskStatus } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/components/KanbanBoardControls";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/util";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
 
@@ -124,6 +125,15 @@ export const KanbanBoard: React.FC = () => {
     },
     [setActiveStatus],
   );
+  // Direction of the last tab change, so the new column slides in from the side
+  // the user is heading towards. 0 until the first change, so nothing animates
+  // on page load. Adjusting state during render is React's pattern for this.
+  const [previousIndex, setPreviousIndex] = useState(activeIndex);
+  const [slideDirection, setSlideDirection] = useState<-1 | 0 | 1>(0);
+  if (previousIndex !== activeIndex) {
+    setPreviousIndex(activeIndex);
+    setSlideDirection(activeIndex > previousIndex ? 1 : -1);
+  }
   const swipeHandlers = useHorizontalSwipe({
     onSwipeLeft: () => goToColumn(activeIndex + 1),
     onSwipeRight: () => goToColumn(activeIndex - 1),
@@ -189,9 +199,19 @@ export const KanbanBoard: React.FC = () => {
         {filteredOutBanner}
         {/* pan-y hands horizontal gestures to the swipe handlers; the min height
             keeps a near-empty column easy to swipe. */}
-        <div className="min-h-[50svh] touch-pan-y" {...swipeHandlers}>
+        <div className="min-h-[50svh] touch-pan-y overflow-x-clip" {...swipeHandlers}>
           {COLUMNS.map(({ status, title }) => (
-            <TabsContent key={status} value={status} className="mt-0">
+            <TabsContent
+              key={status}
+              value={status}
+              className={cn(
+                "mt-0",
+                slideDirection !== 0 &&
+                  "animate-in fade-in-0 duration-200 ease-out motion-reduce:animate-none",
+                slideDirection === 1 && "slide-in-from-right-8",
+                slideDirection === -1 && "slide-in-from-left-8",
+              )}
+            >
               <KanbanColumn
                 status={status}
                 title={title}
