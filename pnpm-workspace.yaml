@@ -9,3 +9,25 @@ overrides:
   joi: "^18.3.1"
 
 saveExact: true
+
+# Never resolve a release younger than 30 days (value is in minutes: 30 * 24 * 60).
+# Applies to direct and transitive dependencies, including `pnpm update`.
+minimumReleaseAge: 43200
+
+# Versions already in the lockfile when the policy was added, which were younger
+# than 30 days at the time. Exact versions only: a newer release of any of these
+# packages is still held to the 30-day rule. Delete an entry once that release is
+# 30 days old (the last one, markdownlint-cli2@0.24.1, ages out on 2026-12-12);
+# the four security-floor overrides above are in this list for that reason.
+minimumReleaseAgeExclude:
+  - argparse@3.0.4            # 2026-10-24
+  - body-parser@2.4.0         # 2026-10-22 (security floor override)
+  - fast-uri@3.1.9            # 2026-10-19 (security floor override)
+  - joi@18.3.2                # 2026-11-04 (override)
+  - markdownlint-cli2@0.24.1  # 2026-11-12
+  - markdownlint@0.42.1       # 2026-11-07
+  - qs@6.17.1                 # 2026-10-28 (security floor override)
+  - re2js@2.9.1               # 2026-10-28
+  - react-router-dom@7.18.5   # 2026-10-27
+  - react-router@7.18.5       # 2026-10-27
+  - set-cookie-parser@2.7.3   # 2026-10-23
