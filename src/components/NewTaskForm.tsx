@@ -89,7 +89,6 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, onCancel, de
 
       <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
         <DialogContent
-          fullScreenOnMobile
           className="md:max-w-[980px] md:max-h-[90dvh] md:overflow-y-auto"
         >
           <DialogHeader>

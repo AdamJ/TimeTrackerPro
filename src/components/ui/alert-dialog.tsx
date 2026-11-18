@@ -3,6 +3,12 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
 import { cn } from "@/lib/util"
 import { Button, type ButtonProps } from "@/components/ui/button"
+import {
+  FULL_SCREEN_PANEL_CLASSES,
+  FullScreenContext,
+  PINNED_FOOTER_CLASSES,
+  useFullScreenPanel,
+} from "@/components/ui/full-screen-panel"
 
 const AlertDialog = AlertDialogPrimitive.Root
 
@@ -25,25 +31,42 @@ const AlertDialogOverlay = React.forwardRef<
 ))
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
 
+const ALERT_CENTERED_CLASSES =
+  "group/alert-dialog-content fixed left-[50%] top-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] data-[size=sm]:max-w-xs sm:data-[size=default]:max-w-lg sm:rounded-lg"
+
+// Full screen below md; from md up the same centered alert as before.
+const ALERT_FULL_SCREEN_CLASSES = `group/alert-dialog-content ${FULL_SCREEN_PANEL_CLASSES} gap-4 md:max-w-[calc(100%-2rem)] md:gap-4 md:p-6 md:data-[size=sm]:max-w-xs md:data-[size=default]:max-w-lg`
+
 const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content> & {
     size?: "default" | "sm"
+    /** Fill the screen below md (on by default); pass false to keep a centered alert. */
+    fullScreenOnMobile?: boolean
   }
->(({ className, size = "default", ...props }, ref) => (
-  <AlertDialogPortal>
-    <AlertDialogOverlay />
-    <AlertDialogPrimitive.Content
-      ref={ref}
-      data-size={size}
-      className={cn(
-        "group/alert-dialog-content fixed left-[50%] top-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] data-[size=sm]:max-w-xs sm:data-[size=default]:max-w-lg sm:rounded-lg",
-        className
-      )}
-      {...props}
-    />
-  </AlertDialogPortal>
-))
+>(({ className, size = "default", fullScreenOnMobile = true, style, children, ...props }, ref) => {
+  const { isFullScreen, style: fullScreenStyle } = useFullScreenPanel(fullScreenOnMobile)
+
+  return (
+    <AlertDialogPortal>
+      <AlertDialogOverlay />
+      <AlertDialogPrimitive.Content
+        ref={ref}
+        data-size={size}
+        className={cn(
+          fullScreenOnMobile ? ALERT_FULL_SCREEN_CLASSES : ALERT_CENTERED_CLASSES,
+          className
+        )}
+        style={{ ...fullScreenStyle, ...style }}
+        {...props}
+      >
+        <FullScreenContext.Provider value={isFullScreen}>
+          {children}
+        </FullScreenContext.Provider>
+      </AlertDialogPrimitive.Content>
+    </AlertDialogPortal>
+  )
+})
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName
 
 const AlertDialogHeader = ({
@@ -63,15 +86,19 @@ AlertDialogHeader.displayName = "AlertDialogHeader"
 const AlertDialogFooter = ({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col-reverse gap-2 group-data-[size=sm]/alert-dialog-content:grid group-data-[size=sm]/alert-dialog-content:grid-cols-2 sm:flex-row sm:justify-end",
-      className
-    )}
-    {...props}
-  />
-)
+}: React.HTMLAttributes<HTMLDivElement>) => {
+  const fullScreen = React.useContext(FullScreenContext)
+  return (
+    <div
+      className={cn(
+        "flex flex-col-reverse gap-2 group-data-[size=sm]/alert-dialog-content:grid group-data-[size=sm]/alert-dialog-content:grid-cols-2 sm:flex-row sm:justify-end",
+        fullScreen && PINNED_FOOTER_CLASSES,
+        className
+      )}
+      {...props}
+    />
+  )
+}
 AlertDialogFooter.displayName = "AlertDialogFooter"
 
 const AlertDialogTitle = React.forwardRef<

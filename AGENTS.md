@@ -31,7 +31,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (~551 JS/TS tests across 53 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
+### Test File Inventory (~555 JS/TS tests across 54 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
 
 | File | Coverage |
 |---|---|
@@ -55,7 +55,8 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/hooks/useKeyboardShortcuts.test.ts` | Global keyboard shortcut handling (new task, save, command palette, help) |
 | `src/hooks/useUndoableDelete.test.ts` | Undo-delete toast/timeout hook |
 | `src/hooks/useVisualViewport.test.ts` | Visible-area box follows `visualViewport` resize/scroll (keyboard open/close), null when disabled or unsupported, cleans up listeners |
-| `src/components/ui/dialog.test.tsx` | `DialogContent` `fullScreenOnMobile`: fills the screen on mobile, centered modal classes from `md` up, sized to the visual viewport, opt-in only; `DialogFooter` pins to the bottom only inside a full-screen panel |
+| `src/components/ui/dialog.test.tsx` | `DialogContent` full screen on mobile by default (`fullScreenOnMobile={false}` opts out), centered modal classes from `md` up, sized to the visual viewport; `DialogFooter` pins to the bottom only inside a full-screen panel |
+| `src/components/ui/alert-dialog.test.tsx` | `AlertDialogContent` full screen on mobile by default, keeps `size`/group styling for the centered layout from `md` up, `AlertDialogFooter` pins to the bottom, opt-out and wide-screen behavior |
 | `src/components/AppSidebar.test.tsx` | Mobile sidebar sheet: narrower than the screen (no `w-full` leftover from tailwind-merge v2 not knowing `w-(--var)`), visible Close button, closes after navigating |
 | `src/components/PageLayout.test.tsx` | `PageLayout` renders children, delegates title/actions to context |
 | `src/components/SummaryOutput.test.tsx` | Summary output rendering |
@@ -196,7 +197,8 @@ export const MyComponent = () => {
 | `src/components/PageLayout.tsx`               | Thin page wrapper — delegates title/badge/actions to `PageTitleContext` via `usePageTitle` |
 | `src/components/BackdatedEntryDialog.tsx`     | Multi-step dialog for logging past workdays; uses `addBackdatedDay` from context   |
 | `src/hooks/useLongPress.ts`                   | 500 ms hold detector for context menu trigger on touch                             |
-| `src/hooks/useVisualViewport.ts`              | Visible-area `{ top, height }` from `window.visualViewport` (shrinks when the iOS on-screen keyboard opens, unlike `dvh`); used by `DialogContent`'s `fullScreenOnMobile` so a full-screen panel ends above the keyboard. Opted in: `NewTaskForm`, `StartDayDialog`, `TaskEditDialog`, `BackdatedEntryDialog`, `ArchiveEditDialog`, `AuthDialog`, `ExportDialog` (form dialogs); confirm/info dialogs stay centered. Use `md:` prefixes for desktop sizing classes on opted-in dialogs |
+| `src/hooks/useVisualViewport.ts`              | Visible-area `{ top, height }` from `window.visualViewport` (shrinks when the iOS on-screen keyboard opens, unlike `dvh`); consumed by `useFullScreenPanel` |
+| `src/components/ui/full-screen-panel.tsx`     | Shared mobile full-screen dialog logic: panel/footer class constants, `FullScreenContext`, and `useFullScreenPanel` (full screen below `md`, sized to the visible area). Every `DialogContent` and `AlertDialogContent` uses it by default, so all dialogs are full screen on phones and the usual centered modal from `md` up; `fullScreenOnMobile={false}` opts out. Use `md:` prefixes for desktop sizing classes on dialogs. `DialogFooter`/`AlertDialogFooter` pin to the bottom of the screen inside a full-screen panel |
 | `src/hooks/useHorizontalSwipe.ts`             | Touch handlers reporting a deliberate horizontal swipe (60px, mostly horizontal, ignores screen-edge and portaled-child touches); drives swipe between `KanbanBoard`'s mobile status tabs |
 | `src/components/ui/responsive-select.tsx`     | `ResponsiveSelect` — branches on `useIsMobile()` to render a native `<select>` on mobile (OS picker) vs the Radix `Select` on desktop; flat `options` array API shared by `NewTaskForm`, `ProjectSheet`, `BackdatedEntryDialog`, `PlannedTaskDialog`, `ArchivedTaskRow`, `KanbanBoardControls` |
 | `src/components/PlannedTaskPicker.tsx`        | Empty started-day card on the Dashboard: lists in-progress/to-do planned tasks with Start (`pullPlannedTaskToDay`) / Resume (`addPlannedTaskToDay`) buttons. Task Board cards and the Tasks page header can also start the day (`startDayAndPullPlannedTask`, "now" rounded to 15 min, no dialog) |

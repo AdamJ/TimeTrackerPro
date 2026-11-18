@@ -9,7 +9,7 @@ vi.mock("@/hooks/useVisualViewport", () => ({
   useVisualViewport: (enabled: boolean) => (enabled ? visible : null),
 }));
 
-const renderDialog = (fullScreenOnMobile: boolean) =>
+const renderDialog = (fullScreenOnMobile?: boolean) =>
   render(
     <Dialog open>
       <DialogContent fullScreenOnMobile={fullScreenOnMobile}>
@@ -48,8 +48,11 @@ describe("DialogContent fullScreenOnMobile", () => {
     expect(dialog.style.height).toBe("420px");
   });
 
-  it("keeps the centered modal for dialogs that do not opt in", () => {
+  it("is full screen by default and keeps the centered modal when opted out", () => {
     visible = { top: 8, height: 420 };
+    renderDialog();
+    expect(screen.getByRole("dialog")).toHaveClass("h-dvh");
+    cleanup();
     renderDialog(false);
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveClass("max-w-lg");
@@ -66,7 +69,7 @@ describe("DialogContent fullScreenOnMobile", () => {
 
   it("pins DialogFooter to the bottom of a full-screen panel", () => {
     renderDialog(true);
-    expect(screen.getByTestId("footer")).toHaveClass("sticky", "-bottom-4", "border-t");
+    expect(screen.getByTestId("footer")).toHaveClass("sticky", "-bottom-4", "mt-auto", "border-t");
   });
 
   it("leaves DialogFooter alone outside full-screen mode", () => {

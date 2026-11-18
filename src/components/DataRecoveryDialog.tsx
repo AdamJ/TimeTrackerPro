@@ -3,6 +3,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
@@ -103,7 +104,7 @@ export const DataRecoveryDialog: React.FC<DataRecoveryDialogProps> = ({ isOpen, 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="md:max-h-[85vh] md:max-w-2xl md:overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Data recovery</DialogTitle>
             <DialogDescription>
@@ -170,7 +171,7 @@ export const DataRecoveryDialog: React.FC<DataRecoveryDialogProps> = ({ isOpen, 
             </div>
           )}
 
-          <div className="flex justify-end gap-2">
+          <DialogFooter>
             <Button variant="outline" onClick={onClose}>
               Close
             </Button>
@@ -178,7 +179,7 @@ export const DataRecoveryDialog: React.FC<DataRecoveryDialogProps> = ({ isOpen, 
               <RotateCcw className="w-4 h-4 mr-1" />
               Restore
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

@@ -175,7 +175,6 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        fullScreenOnMobile
         className="md:max-h-[90dvh] md:max-w-2xl md:overflow-y-auto"
       >
         <DialogHeader>
