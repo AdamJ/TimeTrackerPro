@@ -10,6 +10,7 @@ For the main overview, see [README.md](README.md).
 - [How to Use](#how-to-use)
   - [Daily Workflow](#daily-workflow)
   - [Keyboard Shortcuts](#keyboard-shortcuts)
+  - [Using Timetraked on a Phone](#using-timetraked-on-a-phone)
   - [Project Management](#project-management)
   - [Project Planning](#project-planning)
   - [Client Management](#client-management)
@@ -34,6 +35,7 @@ For the main overview, see [README.md](README.md).
 - [Theming](#theming)
 - [Development Workflow](#development-workflow)
   - [Git Workflow](#git-workflow)
+  - [Dependencies](#dependencies)
   - [Testing](#testing)
   - [Adding Features](#adding-features)
   - [Customizing Markdown Styles](#customizing-markdown-styles)
@@ -102,6 +104,16 @@ New Task uses a plain `N` rather than `Cmd/Ctrl+N` in the web/PWA build because 
 
 On the Tauri desktop build, `Cmd/Ctrl+S`/`Cmd/Ctrl+K` are native menu accelerators (File/View menus, built in Rust) dispatched to the frontend as a `menu:action` event; New Task keeps the native `Cmd/Ctrl+N` accelerator there too, since a native app menu doesn't have the browser's reservation. `?` has no native accelerator but works identically on both platforms since it isn't intercepted by the OS menu layer.
 
+### Using Timetraked on a Phone
+
+The layout adapts below the `md` breakpoint (768px):
+
+- **Task Board** — shows one status column at a time. Pick To Do, In Progress, Blocked, or Done from the tab bar (each shows a live count), or swipe left or right on the column. The last tab you used is remembered on that device. The sort and filter controls sit under the tabs.
+- **Forms and dialogs** — every form, confirmation, and alert opens full screen, sized to the visible area so the on-screen keyboard never covers the fields, with Cancel and the main action pinned to the bottom of the screen. On larger screens they are the usual centered dialogs.
+- **Navigation** — a compact bottom bar for Home, Tasks, Archive, and Settings (plus Report when signed in). Everything else is in the sidebar, opened from the menu button in the header; close it with its Close button, by tapping outside it, or by choosing a page.
+- **Touch targets** — on touch devices (including tablets) buttons and fields are at least 44×44 px; with a mouse they keep their compact size at any window width.
+- **Safe areas** — the bottom bar, sidebar, sheets, and dialogs keep clear of the notch, status bar, and home indicator when installed as a PWA.
+
 ### Sidebar Footer
 
 The sidebar footer contains two key elements:
@@ -129,7 +141,7 @@ Each project has its own Planning view (the "Planning" link on its project card)
 1. Click **New Initiative** and enter a name, an optional goal, an optional start date, and a deadline — either a specific date or a calendar quarter (shown on the timeline as that quarter's last day). The deadline pickers open pre-filled with today's date (specific date) or the current year (quarter), and the start date is left blank. The deadline can't fall before the start date. Leaving the start date blank uses the date the initiative was created; setting one lets you log past or future-dated work.
 2. Status (Not started / In progress / Done / Blocked) is set manually; new initiatives start as Not started and the status field is editable once an initiative exists.
 3. The timeline groups initiatives into collapsible, status-grouped swimlanes on a six-month, month-scale window with a "Today" line, styled after GitHub Projects' Roadmap view. Each bar spans from the initiative's start date (or its creation date, if none was set) to its deadline.
-4. Click an initiative's row to edit it, or delete it from the edit sheet (undoable, like other deletes in the app).
+4. Click an initiative's row to edit it, or delete it from the edit dialog (undoable, like other deletes in the app).
 
 Initiatives are scoped to one project — there is no cross-project planning view. Deleting a project deletes its initiatives too.
 
@@ -218,7 +230,7 @@ Task descriptions support **GitHub Flavored Markdown (GFM)**:
 
 **Offline Capability:** All features work without internet; data syncs automatically when the connection is restored.
 
-**Mobile Optimized:** Bottom navigation, 44×44 px minimum touch targets, safe-area support for notched devices, responsive layout, native OS picker (instead of an in-page popover) for dropdowns like category/project/client selection.
+**Mobile Optimized:** Compact bottom navigation, 44×44 px minimum touch targets on touch devices (keyed to `pointer: coarse`, so tablets are included), safe-area support for notched devices, full-screen forms and dialogs that stay above the on-screen keyboard, a one-column Task Board with swipeable tabs, responsive layout, and a native OS picker (instead of an in-page popover) for dropdowns like category/project/client selection. See [Using Timetraked on a Phone](#using-timetraked-on-a-phone).
 
 **Seamless Updates:** New versions install automatically with a refresh prompt; no data is lost.
 
@@ -373,6 +385,20 @@ const service = createDataService(isAuthenticated);
 - `useReportStorage()` — persists and restores generated AI report summaries
 - `useReportSummary()` — calls Gemini API to generate weekly summaries
 
+#### 4. Dialog & Form Pattern
+
+Every dialog and alert (`DialogContent`, `AlertDialogContent`) is full screen below `md` and a centered modal from `md` up, via the shared `ui/full-screen-panel.tsx`. The panel is sized to `window.visualViewport` (the iOS keyboard overlays the page without shrinking `dvh`), respects the safe-area insets, and its footer pins flush to the bottom edge. Pass `fullScreenOnMobile={false}` to opt out, and put desktop sizing on `md:`-prefixed classes.
+
+Every create/edit form uses the `FormDialog` shell: a modal dialog around a `noValidate` `<form>` that fills the panel, with Cancel and a submit button pinned to the bottom, an `isSubmitting` state, and an optional `secondaryAction` (for example Delete). Pressing either button does not blur the focused field, so blur validation cannot shift the layout out from under a click. react-hook-form forms (`ProjectDialog`, `ClientDialog`, `CategoryDialog`, `InitiativeDialog`) pass `onSubmit={form.handleSubmit(onSubmit)}`; the two task forms share `TaskFormFields` and `useTaskTitleField`. Sheets are no longer used for forms.
+
+#### 5. Mobile & Touch Conventions
+
+- Touch-target minimums key off the input device, not the viewport: `@media (pointer: coarse)` in `public/pwa.css` and Tailwind's `pointer-coarse:` variant in components.
+- `public/pwa.css` is unlayered, so its rules beat Tailwind utilities (a mobile `textarea { min-height }` overrides `min-h-*`); size textareas with `rows`.
+- A button that hides its text on small screens keeps an accessible name with `<span className="sr-only sm:not-sr-only">` (never `hidden sm:block`).
+- Fixed or overlay UI uses `env(safe-area-inset-*)` and sits above the bottom nav with `bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))]`.
+- `cn()` relies on `tailwind-merge` v3, which understands Tailwind 4 syntax such as `w-(--var)`.
+
 ### Data Flow
 
 ```text
@@ -407,7 +433,7 @@ Precache:      App shell (HTML, CSS, JS, icons)
 ```text
 src/
 ├── components/
-│   ├── ui/                       # Base components (49+ files, including adaptive-dialog, kbd, command)
+│   ├── ui/                       # Base components (50+ files, including adaptive-dialog, kbd, command, full-screen-panel)
 │   ├── AppSidebar.tsx            # Collapsible sidebar nav (replaces top Navigation)
 │   ├── ArchiveEditDialog.tsx
 │   ├── ArchiveFilter.tsx
@@ -423,6 +449,7 @@ src/
 │   ├── DaySummary.tsx
 │   ├── DeleteConfirmationDialog.tsx
 │   ├── ExportDialog.tsx
+│   ├── FormDialog.tsx             # Shared shell for every create/edit form (modal, noValidate form, pinned footer)
 │   ├── InitiativeDialog.tsx       # Add/edit/delete dialog for a project's planning Initiatives
 │   ├── InitiativeTimeline.tsx     # Roadmap-style status swimlanes for a project's Initiatives
 │   ├── InstallPrompt.tsx
@@ -445,6 +472,7 @@ src/
 │   ├── StartDayDialog.tsx
 │   ├── SummaryOutput.tsx
 │   ├── SyncStatus.tsx
+│   ├── TaskFormFields.tsx         # Title, description, category, project fields shared by both task forms
 │   ├── TaskEditDialog.tsx
 │   ├── TaskItem.tsx
 │   ├── TaskTrackingPanel.tsx
@@ -462,17 +490,20 @@ src/
 │   ├── use-toast.tsx             # Toast notification state management
 │   ├── useAuth.tsx               # Authentication state management
 │   ├── useElectronMenuActions.ts # menu:action event (Tauri-bridged) → navigate/save/command-palette/help
+│   ├── useHorizontalSwipe.ts     # Deliberate left/right swipe (drives the mobile Task Board tabs)
 │   ├── useKeyboardShortcuts.ts   # Global web/PWA keyboard shortcuts (N, Cmd/Ctrl+S/K, ?)
 │   ├── useLongPress.ts           # 500 ms hold detector
 │   ├── usePageTitle.ts           # Page title state management
 │   ├── useReportStorage.ts       # Persist generated report summaries
 │   ├── useReportSummary.ts       # Gemini AI summary generation
-│   ├── useTaskBoardView.ts       # Kanban board sort/filter state, persisted to localStorage
-│   └── useTimeTracking.tsx       # Time tracking state management
+│   ├── useTaskBoardView.ts       # Kanban board sort/filter and mobile status-tab state, persisted to localStorage
+│   ├── useTaskTitleField.ts      # Required task title (error after blur or failed submit; focuses the field)
+│   ├── useTimeTracking.tsx       # Time tracking state management
+│   └── useVisualViewport.ts      # Visible-area box (shrinks when the iOS keyboard opens)
 ├── lib/
 │   ├── electronMenuActions.ts     # Pending menu-action stash consumed by page-mount effects
 │   ├── platform.ts                # isMac/modKey — shortcut hint glyph per platform
-│   ├── supabase.ts               # Supabase client and call telemetry
+│   ├── supabase.ts               # Supabase client and call telemetry; inert placeholder client + isSupabaseConfigured without credentials
 │   └── utils.ts                  # Helper functions
 ├── pages/
 │   ├── Archive.tsx               # Archived days
@@ -514,6 +545,8 @@ src/
 | Hooks       | camelCase with `use` prefix (`useAuth.tsx`)          |
 | Utilities   | camelCase (`timeUtil.ts`)                            |
 | Constants   | UPPER_SNAKE_CASE (`STORAGE_KEYS`)                    |
+| Forms       | New create/edit forms use `FormDialog` (a modal, never a Sheet); dialogs are full screen below `md`, so size them with `md:` classes |
+| Touch       | Target sizes key off `pointer: coarse`, not viewport width; icon-only responsive buttons use `sr-only sm:not-sr-only` for their label |
 | Styling     | Prefer semantic tokens (`bg-primary`, `bg-muted`, etc.) for theming. Radix scale classes (`bg-mauve-3`, `text-blue-11`, `border-violet-6`) are allowed for explicit color needs — use steps 1-2 for backgrounds, 3-5 for component fills, 6-8 for borders, 9-10 for solid fills, 11-12 for text. Never use arbitrary Tailwind palette colors like `bg-blue-500`. |
 
 See [CLAUDE.md](CLAUDE.md) for comprehensive conventions.
@@ -541,6 +574,10 @@ To add a new theme color: add the HSL value to `:root`/`.dark`, then map it in `
 ---
 
 ## Development Workflow
+
+### Dependencies
+
+Direct dependencies are pinned to exact versions in `package.json`, and `saveExact: true` in `pnpm-workspace.yaml` makes `pnpm add` pin too, so `pnpm update` leaves them alone. Bump one deliberately with `pnpm add <pkg>@<version>` (choose a release at least 30 days old) and commit `package.json` and `pnpm-lock.yaml` together. `pnpm update` can still move transitive dependencies inside the lockfile, and `pnpm update --latest` rewrites the pins, so review lockfile diffs before committing.
 
 ### Git Workflow
 
@@ -579,7 +616,8 @@ git commit -m "refactor: split localStorageService into modules"
 
 - [ ] Guest mode (no auth)
 - [ ] Authenticated mode
-- [ ] Mobile viewport (DevTools)
+- [ ] Mobile viewport (DevTools with touch emulation, so `pointer: coarse` applies)
+- [ ] Forms and dialogs on a phone: full screen, keyboard never covers the fields, submit works on the first tap
 - [ ] Data persistence after page refresh
 - [ ] Export/import functionality
 - [ ] No console errors

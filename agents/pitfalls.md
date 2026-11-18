@@ -85,6 +85,28 @@ const duration = elapsedMs(startTime, endTime);
 
 Time forms that take a start and an end should also reject an end before the start with `isEndBeforeStart`.
 
+### 8. Hiding Button Text With `hidden sm:block`
+
+```tsx
+// ❌ WRONG — the text is display:none on phones, so the button has no accessible name
+<Button><Plus /><span className="hidden sm:block">Add Project</span></Button>
+
+// ✅ CORRECT — hidden visually on phones, still announced
+<Button><Plus /><span className="sr-only sm:not-sr-only">Add Project</span></Button>
+```
+
+### 9. Touch Targets by Viewport Width
+
+Size 44px touch targets with `@media (pointer: coarse)` / `pointer-coarse:`, not a `max-width` media query: a viewport width says nothing about the input device (touch tablets are wider than 768px, narrow desktop windows use a mouse).
+
+### 10. Validation That Moves the Submit Button
+
+An error message that appears on blur can push the submit button down between press and release, so the click misses it (the first tap is lost). Build forms on `FormDialog`, which keeps focus in the field when its buttons are pressed and keeps the footer at the bottom of the screen.
+
+### 11. `public/pwa.css` Beats Tailwind
+
+`public/pwa.css` is unlayered, so its rules win over Tailwind utilities regardless of specificity (a mobile `textarea { min-height: 44px }` overrides `min-h-[120px]`). Size textareas with `rows`.
+
 ---
 
 ## Architecture Gotchas

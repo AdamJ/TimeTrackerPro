@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Task Board on phones shows one status column at a time: below `md` a tab bar (To Do / In Progress / Blocked / Done, each with a live count) selects the column, and the filters sit under it in a two-column grid. The last tab used is remembered across visits (`localStorage` only, never synced), swiping left or right on the column moves between tabs (60px minimum, mostly horizontal, clamped at both ends, ignoring screen-edge and sheet/menu touches), and the new column slides in from the direction of travel (skipped on first load and under `prefers-reduced-motion`). Wider screens keep the full board
+  — `src/components/KanbanBoard.tsx`, `src/components/KanbanBoardControls.tsx`, `src/hooks/useTaskBoardView.ts`, `src/hooks/useHorizontalSwipe.ts` (new), `src/hooks/use-mobile.tsx`
+- Every dialog and alert is now full screen on phones (below `md`) and the usual centered modal from `md` up. The full-screen panel is sized to `window.visualViewport`, so it ends above the iOS on-screen keyboard (which overlays the page without shrinking `dvh`), respects the notch and home-indicator safe areas, and pins its footer flush to the bottom edge. `fullScreenOnMobile={false}` opts a dialog out
+  — `src/components/ui/full-screen-panel.tsx` (new), `src/components/ui/dialog.tsx`, `src/components/ui/alert-dialog.tsx`, `src/hooks/useVisualViewport.ts` (new)
+- Guest mode no longer needs Supabase credentials to start: without `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` the Supabase client is built from inert placeholders, `isSupabaseConfigured` is exported, and sign-in returns a clear "cloud sync isn't set up" message instead of calling Supabase
+  — `src/lib/supabase.ts`, `src/contexts/AuthContext.tsx`
+- Guard tests: every 44px rule in `public/pwa.css` sits under `(pointer: coarse)`, `tailwind-merge` understands Tailwind 4's `w-(--var)` shorthand, and the mobile sidebar is narrower than the screen
+  — `src/lib/pwaCss.test.ts` (new), `src/components/AppSidebar.test.tsx` (new)
+
 - Every Task Board column (In Progress, Blocked, Done — not just To Do) now has an "Add task" button that opens the new-task sheet pre-set to that column's status
   — `src/components/KanbanColumn.tsx`
 - Task Board cards gain a one-click Start/Resume button that starts the day and pulls the task, pulls it into the running day, or resumes an in-progress task, depending on day state (previously only reachable through the card menu)
@@ -37,6 +46,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   — `src/contexts/TimeTrackingContext.tsx`, `src/App.tsx`, `src/contexts/TimeTrackingContext.forceSync.test.tsx` (new)
 
 ### Changed
+
+- Every create/edit form is now one pattern: a modal dialog (full screen on phones) wrapping a `noValidate` `<form>` with Cancel and a submit button pinned to the bottom, instead of a mix of side Sheets and dialogs. The shared `FormDialog` shell (`isSubmitting` state, optional `secondaryAction` such as Delete) backs "Start New Task" (`NewTaskForm`), the Task Board's New/Edit Task (`PlannedTaskDialog`, previously a Sheet), and the project, client, category, and initiative forms, which were renamed from `ProjectSheet`/`ClientSheet`/`CategorySheet`/`InitiativeSheet` to `*Dialog` with their react-hook-form + Zod logic unchanged. The task forms share `TaskFormFields` (title with inline error, description with Edit/Preview tabs, category, project) and `useTaskTitleField`. Submit labels are actionable ("Add Project", "Save Changes"), every dialog has a description, required names are marked with `required`, and Enter in the project dialog's "new client" field adds the client instead of submitting the project form. `ui/sheet.tsx` is now only the mobile sidebar's container
+  — `src/components/FormDialog.tsx` (new), `src/components/TaskFormFields.tsx` (new), `src/hooks/useTaskTitleField.ts` (new), `src/components/NewTaskForm.tsx`, `src/components/PlannedTaskDialog.tsx`, `src/components/ProjectDialog.tsx`, `src/components/ClientDialog.tsx`, `src/components/CategoryDialog.tsx`, `src/components/InitiativeDialog.tsx`, `src/components/KanbanColumn.tsx`, `src/components/PlannedTaskCard.tsx`, `src/pages/TaskList.tsx`, `src/pages/ProjectList.tsx`, `src/pages/Categories.tsx`, `src/pages/ProjectPlanning.tsx`, `src/components/ClientManagement.tsx`
+- All 97 direct dependencies that used a `^` range are pinned to the exact version the lockfile already resolves (no runtime change), and `saveExact: true` in `pnpm-workspace.yaml` makes `pnpm add` pin new ones, so `pnpm update` no longer moves direct dependencies. Transitive dependencies can still move inside the lockfile on `pnpm update`, and `pnpm update --latest` rewrites the pins
+  — `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`
+- Touch-target minimums (44px for buttons and form fields) now key off the input device, `(pointer: coarse)`, instead of a viewport width below 768px, so touch tablets get them and a narrow desktop window with a mouse does not. `Button`'s class-based minimum (which covers `asChild` links) uses Tailwind's `pointer-coarse:` variant to match
+  — `public/pwa.css`, `src/components/ui/button.tsx`
+- `tailwind-merge` upgraded from 2.6.1 to 3.7.0 so `cn()` understands Tailwind 4 syntax such as `w-(--var)`
+  — `package.json`, `pnpm-lock.yaml`
+- Phone layout pass across the app: the page header wraps instead of overflowing, pages use `px-4 py-4 md:p-6` padding, the bottom nav is a compact 58px pill whose safe-area inset applies to the bottom edge only, the FAB, install prompt, and update banner sit above the nav on every platform, content clears the nav, sheets are full width and scroll, textareas and native selects use 16px text to avoid the iOS focus zoom, and `Button` has a 44px minimum so `asChild` links match buttons. Smooth scrolling now respects `prefers-reduced-motion`
+  — `src/App.tsx`, `src/components/MobileNav.tsx`, `src/components/NewTaskForm.tsx`, `src/components/InstallPrompt.tsx`, `src/components/PwaUpdatePrompt.tsx`, `src/components/ui/sheet.tsx`, `src/components/ui/textarea.tsx`, `src/components/ui/responsive-select.tsx`, `public/pwa.css`, `src/pages/*.tsx`, `src/components/ClientManagement.tsx`
 
 - Desktop build migrated from Electron to Tauri 2 — the native shell is now a Rust binary (`src-tauri/`) instead of a bundled Chromium + Node process, cutting installer size and removing the Node main-process attack surface entirely. `src/lib/tauriElectronApiShim.ts` bridges `window.electronAPI` onto Tauri's `invoke`/`listen`, so `useElectronBackup.ts`, `useElectronMenuActions.ts`, and `electron.d.ts` needed no changes and keep their historical names. Disk backups, the native app menu, and the quit-flush handshake are now Rust modules (`backup.rs`, `menu.rs`, `quit_flush.rs`); auto-updates are now frontend-driven and Ed25519-signed via `tauri-plugin-updater` (`src/lib/tauriUpdater.ts`) instead of `electron-updater`. New scripts `pnpm tauri`/`pnpm tauri:dev`/`pnpm tauri:build` replace the old `electron:*` scripts; `.github/workflows/tauri-release.yml` replaces `electron-release.yml`. `electron/`, `vite.electron.config.ts`, and all Electron npm dependencies are removed
   — `src-tauri/` (new), `src/lib/tauriElectronApiShim.ts` (new), `src/lib/tauriUpdater.ts` (new), `.github/workflows/tauri-release.yml` (new), `package.json`, `electron/` (removed), `vite.electron.config.ts` (removed), `.github/workflows/electron-release.yml` (removed)
@@ -90,6 +110,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   — `electron/main.ts`, `electron/menu.ts`
 
 ### Fixed
+
+- The mobile sidebar could not be closed. Its sheet filled the whole screen (the sheet's `w-full` survived the class merge because `tailwind-merge` 2 did not understand `w-(--sidebar-width)`), leaving no overlay to tap, its Close button was hidden, and tapping a link left it over the new page. It is now 18rem wide, shows its Close button, closes on outside tap, Escape, and navigation, and respects the safe areas
+  — `src/components/ui/sidebar.tsx`, `src/components/AppSidebar.tsx`, `src/components/ui/sheet.tsx`
+- The bottom navigation grew to about 118px tall in an installed iOS PWA (but looked normal in Safari) because the safe-area inset was applied as padding on all four sides; it now offsets only the bottom edge
+  — `src/components/MobileNav.tsx`
+- The page header's actions overflowed on narrow screens, widening the whole page so "New Task" was clipped and content was pushed off screen; the header now wraps
+  — `src/App.tsx`
+- The first tap or click on a form's submit button could be lost: blur validation showed an error that shifted the layout between press and release (reproduced on a phone, and on desktop with human-speed clicks, where the Client dialog fired no submit event). The form now fills the panel on phones so the footer stays at the bottom, and the shell prevents `mousedown` on its buttons so pressing them does not blur the focused field
+  — `src/components/FormDialog.tsx`
+- "Add task" in the In Progress, Blocked, or Done column created a To Do task because `addPlannedTask` ignored the column; it now takes an optional status
+  — `src/contexts/TimeTrackingContext.tsx`, `src/components/PlannedTaskDialog.tsx`
+- The Description textarea in both task forms had no accessible name (its label pointed at an `id` that did not exist), selects carried `aria-label`s that did not match their visible labels, and the Preview tab was disabled when empty
+  — `src/components/TaskFormFields.tsx`
+- Icon-only header and row buttons ("Add Project", "Add Client", "Add Category", "Edit", "Archive", "Restore", "Delete", ...) hid their text with `hidden sm:block`, leaving them unnamed to screen readers on phones; they now use `sr-only sm:not-sr-only`
+  — `src/components/ClientManagement.tsx`, `src/components/ArchiveItem.tsx`, `src/components/TaskItem.tsx`, `src/components/ArchiveEditDialog.tsx`, `src/pages/ProjectPlanning.tsx`, `src/pages/Categories.tsx`, `src/pages/ProjectList.tsx`
+- A deployment without Supabase credentials rendered a blank page (`createClient("", "")` threw at import), despite local-storage-only mode being documented; the test setup always injected fake credentials, which hid it. Regression test imports the real module with the variables cleared
+  — `src/lib/supabase.ts`, `src/lib/supabase.unconfigured.test.ts` (new)
+- The empty-state "Start Tracking Time" link on the Archive page nested a button inside a link
+  — `src/pages/Archive.tsx`
 
 - Task Board category badges always used white text, which was unreadable on light category colors. Text is now black or white, whichever has the higher WCAG contrast against the category color
   — `src/components/PlannedTaskCard.tsx`, `src/utils/colorUtils.ts` (new)

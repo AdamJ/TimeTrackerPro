@@ -83,8 +83,10 @@ body {
   }
 }
 
-/* Improve button touch targets on mobile */
-@media (max-width: 768px) {
+/* Touch targets: keyed to the input device, not the viewport width, so tablets
+   (touch, but wider than 768px) get 44px targets and a narrow desktop window
+   with a mouse does not. */
+@media (pointer: coarse) {
   button:not([aria-hidden='true']) {
     min-height: 44px;
     min-width: 44px;
@@ -95,8 +97,7 @@ body {
   }
 }
 
-/* Improve input targets on mobile */
-@media (max-width: 768px) {
+@media (pointer: coarse) {
   input:not([aria-hidden="true"]),
   textarea:not([aria-hidden="true"]),
   select:not([aria-hidden="true"]) {

@@ -1,6 +1,6 @@
 # AGENTS.md - AI Assistant Codebase Guide
 
-**Last Updated:** 2026-10-19
+**Last Updated:** 2026-11-18
 **Version:** 2.8.0
 
 Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and consultants, with dual storage (localStorage guest mode and optional Supabase cloud sync).
@@ -31,7 +31,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (~591 JS/TS tests across 59 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
+### Test File Inventory (~594 JS/TS tests across 60 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
 
 | File | Coverage |
 |---|---|
@@ -70,7 +70,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/components/PlannedTaskCard.test.tsx` | Card one-click Start/Resume button: start-day-and-pull, pull, resume, hidden for done/stale/unposted days; category badge text contrast |
 | `src/components/KanbanBoard.test.tsx` | Category filter labels by name, stale saved filter reset (not while loading), filtered-out empty state and visible count, one-column-at-a-time status tabs on mobile (remembered last tab, swipe left/right with clamping, short/vertical/edge gestures ignored, directional slide-in that is skipped on first load and under reduced motion) vs the full board on wider screens |
 | `src/hooks/useTaskBoardView.test.ts` | Default sort, legacy `priority` sort migration, batched filter updates, persisted active status tab with invalid-value fallback |
-| `src/components/KanbanColumn.test.tsx` | "Add task" in every column opens the new-task sheet with that column's status |
+| `src/components/KanbanColumn.test.tsx` | "Add task" in every column opens the new-task dialog with that column's status |
 | `src/utils/colorUtils.test.ts` | `getReadableTextColor` black/white pick by WCAG contrast, short hex, unparseable fallback |
 | `src/components/ArchiveEditDialog.test.tsx` | Archive edit dialog render, task editing flow, and end-before-start validation (day form and Add Task) |
 | `src/components/ArchivedTaskRow.test.tsx` | Inline expandable archived task row editing, including end-before-start validation |
@@ -85,6 +85,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/contexts/AuthContext.test.tsx` | `signOut` runs the `setBeforeSignOut` handler before `supabase.auth.signOut()`, passes the keep/remove choice, still signs out if the handler throws or exceeds `BEFORE_SIGN_OUT_TIMEOUT_MS`, and calls the `setOnSignOutFailed` handler only when Supabase fails to sign out; `signIn` returns a clear error without calling Supabase when `isSupabaseConfigured` is false |
 | `src/services/localStorageService/clearLocalData.test.ts` | "Remove from this device" clearing (data keys, backups, report summaries removed; UI prefs kept) and legacy service-worker cache deletion |
 | `server/app.test.ts` | SQL API bearer-token enforcement, open `/api/health`, CORS origin allowlist, `parseAllowedOrigins` (`// @vitest-environment node`) |
+| `src/lib/pwaCss.test.ts` | Every 44px touch-target rule in `public/pwa.css` sits under `(pointer: coarse)` (not a max-width query), and `tailwind-merge` replaces `w-full` with the later `w-(--var)` shorthand |
 | `src/lib/supabase.test.ts` | Per-user data cache keying (projects/categories/clients) |
 | `src/lib/supabase.unconfigured.test.ts` | Regression: importing `@/lib/supabase` with no `VITE_SUPABASE_*` vars must not throw (it used to blank the app) and reports `isSupabaseConfigured` correctly |
 | `src/lib/electronMenuActions.test.ts` | Menu action pending-action/navigate pattern (name predates the Tauri migration; still applies to both web and desktop menu actions) |
@@ -134,7 +135,7 @@ After implementing changes, run lint and tests before considering a task complet
 | UI Framework | React 18 + TypeScript 5.9                                                                                                          |
 | Build        | Vite 6 + SWC                                                                                                                       |
 | Routing      | React Router 6                                                                                                                     |
-| Styling      | Tailwind CSS 4 + Radix UI + shadcn/ui                                                                                              |
+| Styling      | Tailwind CSS 4 + Radix UI + shadcn/ui; `cn()` uses tailwind-merge 3 (needed for `w-(--var)`)                                       |
 | Icons        | Radix Icons (primary), Lucide (fallback)                                                                                           |
 | Forms        | React Hook Form + Zod                                                                                                              |
 | Backend      | Supabase (optional) or localStorage                                                                                                |
@@ -148,6 +149,7 @@ After implementing changes, run lint and tests before considering a task complet
 ⚠️ **These are hard project requirements enforced by the linter. Violating them causes build failures.**
 
 - **PNPM**: Use `pnpm` for package management — never `npm` or `yarn`
+- **Pinned dependencies**: every direct dependency in `package.json` is an exact version (no `^`/`~`), and `saveExact: true` in `pnpm-workspace.yaml` keeps `pnpm add` pinning. `pnpm update` therefore leaves direct dependencies alone; bump one on purpose with `pnpm add <pkg>@<version>` (use a release at least 30 days old) and commit the lockfile. `pnpm update` can still move transitive dependencies inside the lockfile, and `pnpm update --latest` rewrites the pins, so review any lockfile diff before committing
 - **Indentation**: Spaces (not tabs), width = 2
 - **Quotes**: Always double quotes (`""`) — never single quotes (`''`)
 - **Imports**: Always use `@/` alias — never relative paths like `../../`
@@ -165,6 +167,18 @@ export const MyComponent = () => {
   return <div className='bg-blue-500'>Hello</div>;
 };
 ```
+
+---
+
+## Mobile & Dialog Conventions
+
+- **Dialogs are full screen on phones.** Every `DialogContent`/`AlertDialogContent` fills the screen below `md` and is a centered modal from `md` up (`ui/full-screen-panel.tsx`); put desktop sizing on `md:`-prefixed classes, and pass `fullScreenOnMobile={false}` only to opt out.
+- **Forms are dialogs, never Sheets.** Build create/edit forms on `FormDialog` (modal + `noValidate` `<form>` + pinned Cancel/submit + `isSubmitting` + optional `secondaryAction`). Do not write your own footer; for react-hook-form pass `onSubmit={form.handleSubmit(fn)}`. `ui/sheet.tsx` is only the mobile sidebar's container.
+- **Taps must not lose their target.** Never let an error message or other content appear between press and release of a submit button; `FormDialog` prevents `mousedown` on its buttons so blur validation cannot shift the layout. Keep the submit button enabled and show errors (do not disable it to block validation).
+- **Touch targets key off the input device.** Use `@media (pointer: coarse)` (CSS) or the `pointer-coarse:` variant (Tailwind), never a viewport max-width, for 44px minimums. `public/pwa.css` is unlayered and beats Tailwind utilities, so size textareas with `rows`, not `min-h-*`.
+- **Icon-only on small screens still needs a name.** Use `<span className="sr-only sm:not-sr-only">Label</span>`, never `hidden sm:block`.
+- **Safe areas and the bottom nav.** Fixed or overlay UI pads with `env(safe-area-inset-*)` and sits above `MobileNav` with `bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))]`.
+- **Class merging.** `cn()` depends on tailwind-merge v3; with v2 a later `w-(--var)` silently failed to replace an earlier width.
 
 ---
 
@@ -198,6 +212,8 @@ export const MyComponent = () => {
 | `src/contexts/PageTitleContext.tsx`           | `PageTitleProvider` — holds title, badge, actions state for the sidebar header     |
 | `src/contexts/page-title-context.ts`          | Context object + default value + `PageTitleContextType` interface                  |
 | `src/hooks/usePageTitle.ts`                   | `usePageTitle()` hook — consumed by `PageLayout` (write) and sidebar header (read) |
+| `public/pwa.css`                              | Unlayered global CSS loaded from `index.html`: safe-area insets, nav clearance, 44px touch-target minimums under `(pointer: coarse)`, iOS input-zoom fix, reduced-motion-safe smooth scroll. Unlayered, so it beats Tailwind utilities |
+| `src/components/MobileNav.tsx`                | Compact bottom nav pill (`md:hidden`): safe-area inset offsets the bottom edge only; the FAB, install prompt, and update banner sit above it |
 | `src/components/PageLayout.tsx`               | Thin page wrapper — delegates title/badge/actions to `PageTitleContext` via `usePageTitle` |
 | `src/components/BackdatedEntryDialog.tsx`     | Multi-step dialog for logging past workdays; uses `addBackdatedDay` from context   |
 | `src/hooks/useLongPress.ts`                   | 500 ms hold detector for context menu trigger on touch                             |

@@ -19,6 +19,19 @@ pnpm dev
 # Opens on http://localhost:8080
 ```
 
+## Dependencies
+
+Direct dependencies are pinned to exact versions in `package.json`, and `saveExact: true` in `pnpm-workspace.yaml` makes `pnpm add` pin too, so `pnpm update` does not move them.
+
+```bash
+pnpm add <pkg>@<version>   # bump or add one dependency on purpose (pinned automatically)
+pnpm outdated              # see what newer releases exist
+```
+
+- Choose a release that is at least 30 days old, and commit `package.json` and `pnpm-lock.yaml` together.
+- `pnpm update` can still move transitive dependencies within their parents' ranges, and `pnpm update --latest` rewrites the pins; check the lockfile diff before committing either.
+- The `overrides` in `pnpm-workspace.yaml` are security floors (for example `body-parser: ">=2.4.0"`), so they are intentionally ranges.
+
 ## Available Commands
 
 ```bash

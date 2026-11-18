@@ -28,6 +28,32 @@ import { MyFeature } from "@/components/MyFeature";
 
 ---
 
+## Adding a Create/Edit Form
+
+Build it on `FormDialog` (`src/components/FormDialog.tsx`) rather than a Sheet or a bare `Dialog`:
+
+```tsx
+<FormDialog
+  open={open}
+  onClose={() => onOpenChange(false)}
+  title={mode === "add" ? "Add Widget" : "Edit Widget"}
+  description="Add a widget to track."
+  submitLabel={mode === "add" ? "Add Widget" : "Save Changes"}
+  isSubmitting={isSaving}
+  onSubmit={form.handleSubmit(onSubmit)}
+  secondaryAction={mode === "edit" ? <Button type="button" variant="outline" onClick={handleDelete}>Delete</Button> : undefined}
+>
+  {/* fields only: no <form>, no footer */}
+</FormDialog>
+```
+
+- The dialog is full screen on phones and centered from `md` up; size with `md:` classes.
+- Wrap it in the react-hook-form `<Form {...form}>` provider when using react-hook-form.
+- Give the first field `required` and an `aria-hidden` asterisk in its label; show errors inline (the shell sets `noValidate`).
+- Use a `useTaskTitleField`-style hook only for plain-state forms; react-hook-form already focuses the first invalid field.
+
+---
+
 ## Adding a New Page
 
 ```typescript
