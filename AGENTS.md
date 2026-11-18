@@ -31,7 +31,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (~528 JS/TS tests across 49 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
+### Test File Inventory (~534 JS/TS tests across 49 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
 
 | File | Coverage |
 |---|---|
@@ -60,8 +60,8 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/components/TaskItem.test.tsx` | Badge render, delete confirm, edit dialog |
 | `src/components/PlannedTaskPicker.test.tsx` | Dashboard empty-day picker: ordering, filtering, start vs resume, list cap |
 | `src/components/PlannedTaskCard.test.tsx` | Card one-click Start/Resume button: start-day-and-pull, pull, resume, hidden for done/stale/unposted days; category badge text contrast |
-| `src/components/KanbanBoard.test.tsx` | Category filter labels by name, stale saved filter reset (not while loading), filtered-out empty state and visible count, one-column-at-a-time status tabs on mobile vs the full board on wider screens |
-| `src/hooks/useTaskBoardView.test.ts` | Default sort, legacy `priority` sort migration, batched filter updates |
+| `src/components/KanbanBoard.test.tsx` | Category filter labels by name, stale saved filter reset (not while loading), filtered-out empty state and visible count, one-column-at-a-time status tabs on mobile (remembered last tab, swipe left/right with clamping, short/vertical/edge gestures ignored) vs the full board on wider screens |
+| `src/hooks/useTaskBoardView.test.ts` | Default sort, legacy `priority` sort migration, batched filter updates, persisted active status tab with invalid-value fallback |
 | `src/components/KanbanColumn.test.tsx` | "Add task" in every column opens the new-task sheet with that column's status |
 | `src/utils/colorUtils.test.ts` | `getReadableTextColor` black/white pick by WCAG contrast, short hex, unparseable fallback |
 | `src/components/ArchiveEditDialog.test.tsx` | Archive edit dialog render, task editing flow, and end-before-start validation (day form and Add Task) |
@@ -192,9 +192,10 @@ export const MyComponent = () => {
 | `src/components/PageLayout.tsx`               | Thin page wrapper — delegates title/badge/actions to `PageTitleContext` via `usePageTitle` |
 | `src/components/BackdatedEntryDialog.tsx`     | Multi-step dialog for logging past workdays; uses `addBackdatedDay` from context   |
 | `src/hooks/useLongPress.ts`                   | 500 ms hold detector for context menu trigger on touch                             |
+| `src/hooks/useHorizontalSwipe.ts`             | Touch handlers reporting a deliberate horizontal swipe (60px, mostly horizontal, ignores screen-edge and portaled-child touches); drives swipe between `KanbanBoard`'s mobile status tabs |
 | `src/components/ui/responsive-select.tsx`     | `ResponsiveSelect` — branches on `useIsMobile()` to render a native `<select>` on mobile (OS picker) vs the Radix `Select` on desktop; flat `options` array API shared by `NewTaskForm`, `ProjectSheet`, `BackdatedEntryDialog`, `PlannedTaskDialog`, `ArchivedTaskRow`, `KanbanBoardControls` |
 | `src/components/PlannedTaskPicker.tsx`        | Empty started-day card on the Dashboard: lists in-progress/to-do planned tasks with Start (`pullPlannedTaskToDay`) / Resume (`addPlannedTaskToDay`) buttons. Task Board cards and the Tasks page header can also start the day (`startDayAndPullPlannedTask`, "now" rounded to 15 min, no dialog) |
-| `src/hooks/useTaskBoardView.ts`               | Kanban board sort (oldest/newest/title; legacy saved `priority` maps to oldest) and filter (project/client/category) state; `KanbanBoard` resets saved filters that no longer match any task once data loads; persisted to `localStorage` (`timetracker_task_board_view`) only, never synced to Supabase. Consumed by `KanbanBoard.tsx`/`KanbanBoardControls.tsx` |
+| `src/hooks/useTaskBoardView.ts`               | Kanban board sort (oldest/newest/title; legacy saved `priority` maps to oldest), filter (project/client/category), and mobile active status tab state; `KanbanBoard` resets saved filters that no longer match any task once data loads; persisted to `localStorage` (`timetracker_task_board_view`) only, never synced to Supabase. Consumed by `KanbanBoard.tsx`/`KanbanBoardControls.tsx` |
 | `src/components/ArchivedTaskRow.tsx`          | Inline expandable row for editing a single task within `ArchiveEditDialog` (replaces the old `TaskEditInArchiveDialog` modal); disables Save and shows an inline alert when the end time is before the start |
 | `src/services/localStorageService/recovery.ts` | Lists/previews/restores localStorage schema-mismatch backup keys and desktop (Tauri) disk-backup snapshots; the read side of the write-only backup safety nets |
 | `src/hooks/useDataRecovery.ts`                | Unifies browser (`recovery.ts`) and desktop (`useElectronBackup`'s `listDiskBackups`/`readDiskBackup`, Tauri-backed) backup sources behind one list/preview/restore API |

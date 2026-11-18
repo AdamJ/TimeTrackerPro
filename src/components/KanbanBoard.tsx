@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { PlannedTask, PlannedTaskStatus } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import {
@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
 
 const COLUMNS: { status: PlannedTaskStatus; title: string }[] = [
   { status: "todo", title: "To Do" },
@@ -51,11 +52,11 @@ export const KanbanBoard: React.FC = () => {
   const { plannedTasks, categories, loading, isDayStarted, isDayStale } =
     useTimeTracking();
   const isMobile = useIsMobile();
-  // Phones show one status column at a time; wider screens show the full board.
-  const [activeStatus, setActiveStatus] = useState<PlannedTaskStatus>("todo");
   const {
     sortBy,
     filters,
+    activeStatus,
+    setActiveStatus,
     hasActiveFilters,
     setSortBy,
     setFilter,
@@ -112,6 +113,21 @@ export const KanbanBoard: React.FC = () => {
 
   const tasksByStatus = (status: PlannedTaskStatus) =>
     sortTasks(visibleTasks.filter((t) => t.status === status), sortBy);
+
+  // Phones show one status column at a time (remembered across visits); a
+  // horizontal swipe on the column steps to the neighbouring status.
+  const activeIndex = COLUMNS.findIndex((c) => c.status === activeStatus);
+  const goToColumn = useCallback(
+    (index: number) => {
+      const target = COLUMNS[index];
+      if (target) setActiveStatus(target.status);
+    },
+    [setActiveStatus],
+  );
+  const swipeHandlers = useHorizontalSwipe({
+    onSwipeLeft: () => goToColumn(activeIndex + 1),
+    onSwipeRight: () => goToColumn(activeIndex - 1),
+  });
 
   const filteredOutEverything =
     hasActiveFilters && visibleTasks.length === 0 && plannedTasks.length > 0;
@@ -171,18 +187,22 @@ export const KanbanBoard: React.FC = () => {
         </TabsList>
         {controls}
         {filteredOutBanner}
-        {COLUMNS.map(({ status, title }) => (
-          <TabsContent key={status} value={status} className="mt-0">
-            <KanbanColumn
-              status={status}
-              title={title}
-              tasks={tasksByStatus(status)}
-              isDayStarted={isDayStarted}
-              isDayStale={isDayStale}
-              emptyMessage={emptyMessage}
-            />
-          </TabsContent>
-        ))}
+        {/* pan-y hands horizontal gestures to the swipe handlers; the min height
+            keeps a near-empty column easy to swipe. */}
+        <div className="min-h-[50svh] touch-pan-y" {...swipeHandlers}>
+          {COLUMNS.map(({ status, title }) => (
+            <TabsContent key={status} value={status} className="mt-0">
+              <KanbanColumn
+                status={status}
+                title={title}
+                tasks={tasksByStatus(status)}
+                isDayStarted={isDayStarted}
+                isDayStale={isDayStale}
+                emptyMessage={emptyMessage}
+              />
+            </TabsContent>
+          ))}
+        </div>
       </Tabs>
     );
   }

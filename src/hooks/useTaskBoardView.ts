@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import type { PlannedTaskStatus } from "@/contexts/TimeTrackingContext";
 
 export type TaskSortOption = "title" | "newest" | "oldest";
 
@@ -10,9 +11,13 @@ export interface TaskBoardFilters {
   category: string;
 }
 
+const STATUSES: PlannedTaskStatus[] = ["todo", "in_progress", "blocked", "done"];
+
 export interface TaskBoardViewState {
   sortBy: TaskSortOption;
   filters: TaskBoardFilters;
+  /** Status tab shown on phones, where the board is one column at a time. */
+  activeStatus: PlannedTaskStatus;
 }
 
 const STORAGE_KEY = "timetracker_task_board_view";
@@ -26,6 +31,7 @@ export const DEFAULT_FILTERS: TaskBoardFilters = {
 const DEFAULT_STATE: TaskBoardViewState = {
   sortBy: "oldest",
   filters: DEFAULT_FILTERS,
+  activeStatus: "todo",
 };
 
 // Older saves may hold the removed "priority" sort; nothing ever set a
@@ -36,6 +42,12 @@ function readSortBy(value: unknown): TaskSortOption {
     : DEFAULT_STATE.sortBy;
 }
 
+function readActiveStatus(value: unknown): PlannedTaskStatus {
+  return STATUSES.includes(value as PlannedTaskStatus)
+    ? (value as PlannedTaskStatus)
+    : DEFAULT_STATE.activeStatus;
+}
+
 function readState(): TaskBoardViewState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -44,6 +56,7 @@ function readState(): TaskBoardViewState {
     return {
       sortBy: readSortBy(parsed.sortBy),
       filters: { ...DEFAULT_FILTERS, ...parsed.filters },
+      activeStatus: readActiveStatus(parsed.activeStatus),
     };
   } catch {
     return DEFAULT_STATE;
@@ -58,7 +71,7 @@ function writeState(next: TaskBoardViewState) {
   }
 }
 
-// View-only state (sort + filter choices for the Task board). Persisted to
+// View-only state (sort, filter, and mobile status-tab choices for the Task board). Persisted to
 // localStorage, never synced to Supabase — this is a per-browser UI
 // preference, not app data.
 export function useTaskBoardView() {
@@ -77,6 +90,12 @@ export function useTaskBoardView() {
 
   const setSortBy = useCallback(
     (sortBy: TaskSortOption) => update((prev) => ({ ...prev, sortBy })),
+    [update],
+  );
+
+  const setActiveStatus = useCallback(
+    (activeStatus: PlannedTaskStatus) =>
+      update((prev) => ({ ...prev, activeStatus })),
     [update],
   );
 
@@ -104,8 +123,10 @@ export function useTaskBoardView() {
   return {
     sortBy: state.sortBy,
     filters: state.filters,
+    activeStatus: state.activeStatus,
     hasActiveFilters,
     setSortBy,
+    setActiveStatus,
     setFilter,
     setFilters,
     clearFilters,

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import type { PlannedTask } from "@/contexts/TimeTrackingContext";
@@ -119,6 +119,46 @@ describe("KanbanBoard", () => {
       await user.click(screen.getByRole("tab", { name: /In Progress/ }));
       expect(screen.getByText("Doing task")).toBeInTheDocument();
       expect(screen.queryByText("Todo task")).not.toBeInTheDocument();
+    });
+
+    it("opens on the last status tab the user picked", async () => {
+      const user = userEvent.setup();
+      const first = render(<KanbanBoard />);
+      await user.click(screen.getByRole("tab", { name: /In Progress/ }));
+      first.unmount();
+      render(<KanbanBoard />);
+      expect(screen.getByRole("tab", { name: /In Progress/ })).toHaveAttribute("aria-selected", "true");
+      expect(screen.getByText("Doing task")).toBeInTheDocument();
+    });
+
+    const swipe = (from: number, to: number, dy = 0) => {
+      const panel = screen.getByRole("tabpanel");
+      fireEvent.touchStart(panel, { touches: [{ clientX: from, clientY: 200 }] });
+      fireEvent.touchEnd(panel, { changedTouches: [{ clientX: to, clientY: 200 + dy }] });
+    };
+
+    it("swipes left to the next tab and right to the previous one", () => {
+      render(<KanbanBoard />);
+      swipe(300, 150);
+      expect(screen.getByRole("tab", { name: /In Progress/ })).toHaveAttribute("aria-selected", "true");
+      swipe(150, 300);
+      expect(screen.getByRole("tab", { name: /To Do/ })).toHaveAttribute("aria-selected", "true");
+    });
+
+    it("stops at the first and last tabs instead of wrapping", () => {
+      render(<KanbanBoard />);
+      swipe(150, 300);
+      expect(screen.getByRole("tab", { name: /To Do/ })).toHaveAttribute("aria-selected", "true");
+      for (let i = 0; i < 5; i++) swipe(300, 150);
+      expect(screen.getByRole("tab", { name: /Done/ })).toHaveAttribute("aria-selected", "true");
+    });
+
+    it("ignores short, mostly vertical, and screen-edge gestures", () => {
+      render(<KanbanBoard />);
+      swipe(300, 270);
+      swipe(300, 200, 120);
+      swipe(10, -150);
+      expect(screen.getByRole("tab", { name: /To Do/ })).toHaveAttribute("aria-selected", "true");
     });
 
     it("shows every column at once on wider screens", () => {
