@@ -149,6 +149,7 @@ After implementing changes, run lint and tests before considering a task complet
 ⚠️ **These are hard project requirements enforced by the linter. Violating them causes build failures.**
 
 - **PNPM**: Use `pnpm` for package management — never `npm` or `yarn`
+- **Pinned dependencies**: every direct dependency in `package.json` is an exact version (no `^`/`~`), and `saveExact: true` in `pnpm-workspace.yaml` keeps `pnpm add` pinning. `pnpm update` therefore leaves direct dependencies alone; bump one on purpose with `pnpm add <pkg>@<version>` (use a release at least 30 days old) and commit the lockfile. `pnpm update` can still move transitive dependencies inside the lockfile, and `pnpm update --latest` rewrites the pins, so review any lockfile diff before committing
 - **Indentation**: Spaces (not tabs), width = 2
 - **Quotes**: Always double quotes (`""`) — never single quotes (`''`)
 - **Imports**: Always use `@/` alias — never relative paths like `../../`

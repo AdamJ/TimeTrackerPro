@@ -35,6 +35,7 @@ For the main overview, see [README.md](README.md).
 - [Theming](#theming)
 - [Development Workflow](#development-workflow)
   - [Git Workflow](#git-workflow)
+  - [Dependencies](#dependencies)
   - [Testing](#testing)
   - [Adding Features](#adding-features)
   - [Customizing Markdown Styles](#customizing-markdown-styles)
@@ -573,6 +574,10 @@ To add a new theme color: add the HSL value to `:root`/`.dark`, then map it in `
 ---
 
 ## Development Workflow
+
+### Dependencies
+
+Direct dependencies are pinned to exact versions in `package.json`, and `saveExact: true` in `pnpm-workspace.yaml` makes `pnpm add` pin too, so `pnpm update` leaves them alone. Bump one deliberately with `pnpm add <pkg>@<version>` (choose a release at least 30 days old) and commit `package.json` and `pnpm-lock.yaml` together. `pnpm update` can still move transitive dependencies inside the lockfile, and `pnpm update --latest` rewrites the pins, so review lockfile diffs before committing.
 
 ### Git Workflow
 
