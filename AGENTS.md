@@ -31,7 +31,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (~535 JS/TS tests across 49 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
+### Test File Inventory (~538 JS/TS tests across 50 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
 
 | File | Coverage |
 |---|---|
@@ -74,10 +74,11 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/components/TimerLiveRegion.test.tsx` | Screen-reader `aria-live` announcements for day/task start-stop transitions |
 | `src/pages/Settings.test.tsx` | Background notifications toggle, data recovery section visibility |
 | `src/components/AuthDialog.test.tsx` | "Use on device" button doesn't submit sign-in, autofill attributes, show/hide password, readable errors linked via `aria-describedby` |
-| `src/contexts/AuthContext.test.tsx` | `signOut` runs the `setBeforeSignOut` handler before `supabase.auth.signOut()`, passes the keep/remove choice, still signs out if the handler throws or exceeds `BEFORE_SIGN_OUT_TIMEOUT_MS`, and calls the `setOnSignOutFailed` handler only when Supabase fails to sign out |
+| `src/contexts/AuthContext.test.tsx` | `signOut` runs the `setBeforeSignOut` handler before `supabase.auth.signOut()`, passes the keep/remove choice, still signs out if the handler throws or exceeds `BEFORE_SIGN_OUT_TIMEOUT_MS`, and calls the `setOnSignOutFailed` handler only when Supabase fails to sign out; `signIn` returns a clear error without calling Supabase when `isSupabaseConfigured` is false |
 | `src/services/localStorageService/clearLocalData.test.ts` | "Remove from this device" clearing (data keys, backups, report summaries removed; UI prefs kept) and legacy service-worker cache deletion |
 | `server/app.test.ts` | SQL API bearer-token enforcement, open `/api/health`, CORS origin allowlist, `parseAllowedOrigins` (`// @vitest-environment node`) |
 | `src/lib/supabase.test.ts` | Per-user data cache keying (projects/categories/clients) |
+| `src/lib/supabase.unconfigured.test.ts` | Regression: importing `@/lib/supabase` with no `VITE_SUPABASE_*` vars must not throw (it used to blank the app) and reports `isSupabaseConfigured` correctly |
 | `src/lib/electronMenuActions.test.ts` | Menu action pending-action/navigate pattern (name predates the Tauri migration; still applies to both web and desktop menu actions) |
 | `src/lib/tauriElectronApiShim.test.ts` | `installTauriElectronApiShim` — populates `window.electronAPI` from Tauri `invoke`/`listen`, `onMenuAction` unsubscribe race guard |
 | `src/lib/tauriUpdater.test.ts` | `checkForUpdatesSilent`/`checkForUpdatesManual` — exponential backoff, download/install/relaunch prompts |
@@ -170,7 +171,7 @@ export const MyComponent = () => {
 | `src/services/sqlApiService.ts`               | `DataService` implementation that talks to the self-hosted `server/` REST API over `fetch` |
 | `server/`                                     | Optional self-hosted SQL backend (Express + Knex, Postgres/MySQL) — see `docs/SQL_BACKEND.md` |
 | `src/contexts/AuthContext.tsx`                | Authentication state management                                                    |
-| `src/lib/supabase.ts`                         | Supabase client configuration and caching                                          |
+| `src/lib/supabase.ts`                         | Supabase client configuration and caching; builds an inert placeholder client and exports `isSupabaseConfigured` when env vars are missing (local-storage-only mode) |
 | `src/config/categories.ts`                    | Default category definitions                                                       |
 | `src/config/projects.ts`                      | Default project definitions                                                        |
 | `src/components/ClientManagement.tsx`         | Client list UI: add, edit, archive (with active-project guard), and restore clients |

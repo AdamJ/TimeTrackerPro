@@ -25,6 +25,7 @@ vi.mock("@/lib/supabase", () => ({
 			}))
 		}))
 	},
+	isSupabaseConfigured: true,
 	getCachedUser: vi.fn(() => Promise.resolve(null)),
 	clearUserCache: vi.fn()
 }));

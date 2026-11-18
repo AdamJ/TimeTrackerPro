@@ -2,13 +2,20 @@ import { createClient, User } from '@supabase/supabase-js';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+/** False when the deployment has no Supabase credentials (local-storage-only mode). */
+export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+
+if (!isSupabaseConfigured) {
   console.warn('Supabase env vars not found. Supabase sync will be disabled.');
 }
 
+// createClient throws on an empty URL or key, which would blank the whole app
+// at import time. Without credentials, build an inert client from placeholders;
+// nothing talks to it because the app stays on local storage and sign-in is
+// refused (see AuthContext.signIn).
 export const supabase = createClient(
-  SUPABASE_URL ?? '',
-  SUPABASE_ANON_KEY ?? ''
+  SUPABASE_URL || 'http://localhost:54321',
+  SUPABASE_ANON_KEY || 'supabase-not-configured'
 );
 
 // User caching to reduce authentication calls
