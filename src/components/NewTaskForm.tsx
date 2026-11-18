@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { useTaskTitleField } from "@/hooks/useTaskTitleField";
-import { TaskFormDialog } from "@/components/TaskFormDialog";
+import { FormDialog } from "@/components/FormDialog";
 import { NO_SELECTION, TaskFormFields } from "@/components/TaskFormFields";
 
 interface NewTaskFormProps {
@@ -67,7 +67,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, onCancel, de
         </Button>
       )}
 
-      <TaskFormDialog
+      <FormDialog
         open={isOpen}
         onClose={handleCancel}
         title="Start New Task"
@@ -87,7 +87,7 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, onCancel, de
           project={selectedProject}
           onProjectChange={setSelectedProject}
         />
-      </TaskFormDialog>
+      </FormDialog>
     </>
   );
 };

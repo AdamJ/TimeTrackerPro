@@ -6,7 +6,7 @@ import { PlannedTask, PlannedTaskStatus } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { useTaskTitleField } from "@/hooks/useTaskTitleField";
 import { formatDuration } from "@/utils/reportUtils";
-import { TaskFormDialog } from "@/components/TaskFormDialog";
+import { FormDialog } from "@/components/FormDialog";
 import { NO_SELECTION, TaskFormFields } from "@/components/TaskFormFields";
 
 interface PlannedTaskDialogProps {
@@ -97,7 +97,7 @@ export const PlannedTaskDialog: React.FC<PlannedTaskDialogProps> = ({
   };
 
   return (
-    <TaskFormDialog
+    <FormDialog
       open={isOpen}
       onClose={onClose}
       title={isEditMode ? "Edit Task" : "New Task"}
@@ -146,6 +146,6 @@ export const PlannedTaskDialog: React.FC<PlannedTaskDialogProps> = ({
           </>
         )}
       </TaskFormFields>
-    </TaskFormDialog>
+    </FormDialog>
   );
 };

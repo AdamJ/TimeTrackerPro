@@ -31,7 +31,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (~572 JS/TS tests across 56 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
+### Test File Inventory (~589 JS/TS tests across 59 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
 
 | File | Coverage |
 |---|---|
@@ -62,7 +62,8 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/components/SummaryOutput.test.tsx` | Summary output rendering |
 | `src/components/NewTaskForm.test.tsx` | Form render, submit, validation (error linked to the title, focus returns to it), Enter submits, labelled description, dialog name/description and Escape, cancel, FAB toggle |
 | `src/components/PlannedTaskDialog.test.tsx` | Planned-task create/edit dialog: same shell and fields as Start New Task, inline title error instead of a disabled button, created in the column's status, Enter submits, Save Changes only when something changed, cancel/Escape |
-| `src/components/TaskFormDialog.test.tsx` | Shared task-form shell: named/described modal dialog, `noValidate` form that fills the panel, submit via button or Enter, Cancel/Escape, `submitDisabled` |
+| `src/components/FormDialog.test.tsx` | Shared form shell: named/described modal dialog, `noValidate` form that fills the panel, submit via button or Enter, Cancel/Escape, `submitDisabled`, submitting state, buttons keep focus in the field (no blur-validation layout shift) |
+| `src/components/ProjectDialog.test.tsx`, `ClientDialog.test.tsx`, `CategoryDialog.test.tsx` | Entity form dialogs: named/described dialog with a real form, required-field errors with focus on the first invalid field, add/edit submit paths, email validation (client), Enter in the new-client field adds the client (project) |
 | `src/components/TaskItem.test.tsx` | Badge render, delete confirm, edit dialog |
 | `src/components/PlannedTaskPicker.test.tsx` | Dashboard empty-day picker: ordering, filtering, start vs resume, list cap |
 | `src/components/PlannedTaskCard.test.tsx` | Card one-click Start/Resume button: start-day-and-pull, pull, resume, hidden for done/stale/unposted days; category badge text contrast |
@@ -181,9 +182,9 @@ export const MyComponent = () => {
 | `src/config/categories.ts`                    | Default category definitions                                                       |
 | `src/config/projects.ts`                      | Default project definitions                                                        |
 | `src/components/ClientManagement.tsx`         | Client list UI: add, edit, archive (with active-project guard), and restore clients |
-| `src/components/ClientSheet.tsx`              | Shared Sheet (drawer) for add and edit client forms; handles both modes via `mode` prop |
-| `src/components/ProjectSheet.tsx`             | Shared Sheet (drawer) for add and edit project forms; handles both modes via `mode` prop |
-| `src/components/CategorySheet.tsx`            | Shared Sheet (drawer) for add and edit category forms; handles both modes via `mode` prop |
+| `src/components/ClientDialog.tsx`             | Add/edit client form (react-hook-form + zod, address and contact) in a `FormDialog`; handles both modes via `mode` prop |
+| `src/components/ProjectDialog.tsx`            | Add/edit project form (react-hook-form + zod, inline "add client") in a `FormDialog`; handles both modes via `mode` prop |
+| `src/components/CategoryDialog.tsx`           | Add/edit category form (react-hook-form + zod, color picker) in a `FormDialog`; handles both modes via `mode` prop |
 | `src/pages/Clients.tsx`                       | Thin page wrapper around `ClientManagement` (route `/clients`)                     |
 | `src/pages/ProjectPlanning.tsx`               | Per-project Initiative planning view (route `/projects/:id/planning`); shows `InitiativeTimeline` and the add/edit `InitiativeSheet` |
 | `src/components/InitiativeSheet.tsx`          | Shared Sheet (drawer) for add/edit/delete of a planning `Initiative`; deadline pickers pre-fill with today / the current year; optional `startDate` (supersedes the creation-date floor on the deadline) plus a deadline that is a specific date or a calendar quarter |
@@ -202,8 +203,8 @@ export const MyComponent = () => {
 | `src/hooks/useVisualViewport.ts`              | Visible-area `{ top, height }` from `window.visualViewport` (shrinks when the iOS on-screen keyboard opens, unlike `dvh`); consumed by `useFullScreenPanel` |
 | `src/components/ui/full-screen-panel.tsx`     | Shared mobile full-screen dialog logic: panel/footer class constants, `FullScreenContext`, and `useFullScreenPanel` (full screen below `md`, sized to the visible area). Every `DialogContent` and `AlertDialogContent` uses it by default, so all dialogs are full screen on phones and the usual centered modal from `md` up; `fullScreenOnMobile={false}` opts out. Use `md:` prefixes for desktop sizing classes on dialogs. `DialogFooter`/`AlertDialogFooter` pin to the bottom of the screen inside a full-screen panel |
 | `src/hooks/useHorizontalSwipe.ts`             | Touch handlers reporting a deliberate horizontal swipe (60px, mostly horizontal, ignores screen-edge and portaled-child touches); drives swipe between `KanbanBoard`'s mobile status tabs |
-| `src/components/ui/responsive-select.tsx`     | `ResponsiveSelect` — branches on `useIsMobile()` to render a native `<select>` on mobile (OS picker) vs the Radix `Select` on desktop; flat `options` array API shared by `NewTaskForm`, `ProjectSheet`, `BackdatedEntryDialog`, `PlannedTaskDialog`, `ArchivedTaskRow`, `KanbanBoardControls` |
-| `src/components/TaskFormDialog.tsx`           | Shell shared by every task form ("Start New Task" in `NewTaskForm`, create/edit in `PlannedTaskDialog`): modal `Dialog` (full screen on phones) around a `noValidate` `<form>` with Cancel + submit pinned to the bottom |
+| `src/components/ui/responsive-select.tsx`     | `ResponsiveSelect` — branches on `useIsMobile()` to render a native `<select>` on mobile (OS picker) vs the Radix `Select` on desktop; flat `options` array API shared by `NewTaskForm`, `ProjectDialog`, `BackdatedEntryDialog`, `PlannedTaskDialog`, `ArchivedTaskRow`, `KanbanBoardControls` |
+| `src/components/FormDialog.tsx`               | Shell shared by every create/edit form (`NewTaskForm`, `PlannedTaskDialog`, `ProjectDialog`, `ClientDialog`, `CategoryDialog`): modal `Dialog` (full screen on phones) around a `noValidate` `<form>` that fills the panel, with Cancel + submit pinned to the bottom, an `isSubmitting` state, and `mousedown` prevented on both buttons so pressing them can't blur-validate and shift the layout under the click. Use it for new forms; `InitiativeSheet` is the one remaining Sheet form |
 | `src/components/TaskFormFields.tsx`           | Fields shared by both task forms: required title (inline error), description with Edit/Preview tabs and a labelled textarea, category, project; extra fields (status) go in as children. `NO_SELECTION` (`"none"`) is the select sentinel |
 | `src/hooks/useTaskTitleField.ts`              | Required-title state: error after blur or a failed submit (never while typing); a failed submit focuses the field |
 | `src/components/PlannedTaskPicker.tsx`        | Empty started-day card on the Dashboard: lists in-progress/to-do planned tasks with Start (`pullPlannedTaskToDay`) / Resume (`addPlannedTaskToDay`) buttons. Task Board cards and the Tasks page header can also start the day (`startDayAndPullPlannedTask`, "now" rounded to 15 min, no dialog) |

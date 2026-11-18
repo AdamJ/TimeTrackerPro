@@ -2,13 +2,7 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet";
+import { FormDialog } from "@/components/FormDialog";
 import {
   Form,
   FormField,
@@ -19,12 +13,11 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
 import { Client } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { toast } from "@/hooks/use-toast";
 
-interface ClientSheetProps {
+interface ClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: "add" | "edit";
@@ -59,7 +52,7 @@ const defaultFormValues: ClientFormValues = {
   contactWebsite: "",
 };
 
-export const ClientSheet: React.FC<ClientSheetProps> = ({
+export const ClientDialog: React.FC<ClientDialogProps> = ({
   open,
   onOpenChange,
   mode,
@@ -132,118 +125,57 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>
-            {mode === "add" ? "Add Client" : "Edit Client"}
-          </SheetTitle>
-        </SheetHeader>
+    <Form {...form}>
+      <FormDialog
+        open={open}
+        onClose={() => onOpenChange(false)}
+        title={mode === "add" ? "Add Client" : "Edit Client"}
+        description={mode === "add" ? "Add a client to bill your projects to." : "Update this client's details."}
+        submitLabel={mode === "add" ? "Add Client" : "Save Changes"}
+        isSubmitting={isSaving}
+        onSubmit={form.handleSubmit(onSubmit)}
+      >
+        <div className="space-y-5">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Client Name <span className="text-destructive" aria-hidden="true">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input autoComplete="section-client organization" placeholder="Enter client name" required {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-6 py-4"
-          >
+          <div className="space-y-3">
+            <p className="text-sm font-medium border-b">Address</p>
             <FormField
               control={form.control}
-              name="name"
+              name="addressStreet"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Client Name <span className="text-destructive">*</span>
-                  </FormLabel>
+                  <FormLabel>Street</FormLabel>
                   <FormControl>
-                    <Input autoComplete="section-client organization" placeholder="Enter client name" {...field} />
+                    <Input autoComplete="section-client address-line1" placeholder="123 Main St" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <div className="space-y-3">
-              <p className="text-sm font-medium border-b">Address</p>
+            <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
-                name="addressStreet"
+                name="addressCity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Street</FormLabel>
+                    <FormLabel>City</FormLabel>
                     <FormControl>
-                      <Input autoComplete="section-client address-line1" placeholder="123 Main St" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="addressCity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>City</FormLabel>
-                      <FormControl>
-                        <Input autoComplete="section-client address-level2" placeholder="Springfield" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="addressState"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>State / Province</FormLabel>
-                      <FormControl>
-                        <Input autoComplete="section-client address-level1" placeholder="IL" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="addressZip"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ZIP / Postal Code</FormLabel>
-                      <FormControl>
-                        <Input autoComplete="section-client postal-code" placeholder="62701" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="addressCountry"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Country</FormLabel>
-                      <FormControl>
-                        <Input autoComplete="section-client country-name" placeholder="USA" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-sm font-medium border-b">Contact</p>
-              <FormField
-                control={form.control}
-                name="contactName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input autoComplete="section-client name" placeholder="Jane Doe" {...field} />
+                      <Input autoComplete="section-client address-level2" placeholder="Springfield" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -251,49 +183,92 @@ export const ClientSheet: React.FC<ClientSheetProps> = ({
               />
               <FormField
                 control={form.control}
-                name="contactEmail"
+                name="addressState"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>State / Province</FormLabel>
                     <FormControl>
-                      <Input type="email" autoComplete="section-client email" spellCheck={false} placeholder="jane@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="contactWebsite"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Website</FormLabel>
-                    <FormControl>
-                      <Input type="url" autoComplete="section-client url" spellCheck={false} placeholder="https://example.com" {...field} />
+                      <Input autoComplete="section-client address-level1" placeholder="IL" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="addressZip"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ZIP / Postal Code</FormLabel>
+                    <FormControl>
+                      <Input autoComplete="section-client postal-code" placeholder="62701" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="addressCountry"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Country</FormLabel>
+                    <FormControl>
+                      <Input autoComplete="section-client country-name" placeholder="USA" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
 
-            <SheetFooter className="flex gap-2 pt-2">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => onOpenChange(false)}
-                disabled={isSaving}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSaving}>
-                {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {isSaving ? "Saving..." : mode === "add" ? "Add" : "Save"}
-              </Button>
-            </SheetFooter>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
+          <div className="space-y-3">
+            <p className="text-sm font-medium border-b">Contact</p>
+            <FormField
+              control={form.control}
+              name="contactName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input autoComplete="section-client name" placeholder="Jane Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="contactEmail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" autoComplete="section-client email" spellCheck={false} placeholder="jane@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="contactWebsite"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Website</FormLabel>
+                  <FormControl>
+                    <Input type="url" autoComplete="section-client url" spellCheck={false} placeholder="https://example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+      </FormDialog>
+    </Form>
   );
 };

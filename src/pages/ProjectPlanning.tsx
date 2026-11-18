@@ -35,7 +35,7 @@ const ProjectPlanning: React.FC = () => {
     () => (
       <Button onClick={handleOpenAdd} size="sm">
         <Plus className="w-4 h-4 sm:mr-1" />
-        <span className="hidden sm:block">New Initiative</span>
+        <span className="sr-only sm:not-sr-only">New Initiative</span>
       </Button>
     ),
     [handleOpenAdd]

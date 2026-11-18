@@ -442,7 +442,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                   className="text-blue-11 hover:text-blue-12"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  <span className="hidden md:block md:ml-2">Restore</span>
+                  <span className="sr-only md:not-sr-only md:ml-2">Restore</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Restore this day</TooltipContent>
@@ -457,7 +457,7 @@ export const ArchiveEditDialog: React.FC<ArchiveEditDialogProps> = ({
                   className="text-white"
                 >
                   <Trash2 className="w-4 h-4" />
-                  <span className="hidden md:block md:ml-2">Delete</span>
+                  <span className="sr-only md:not-sr-only md:ml-2">Delete</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Delete this day</TooltipContent>

@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { TaskFormDialog } from "@/components/TaskFormDialog";
+import { FormDialog } from "@/components/FormDialog";
 
-const renderDialog = (props: Partial<React.ComponentProps<typeof TaskFormDialog>> = {}) => {
+const renderDialog = (props: Partial<React.ComponentProps<typeof FormDialog>> = {}) => {
   const onClose = vi.fn();
   const onSubmit = vi.fn();
   render(
-    <TaskFormDialog
+    <FormDialog
       open
       onClose={onClose}
       onSubmit={onSubmit}
@@ -18,12 +18,12 @@ const renderDialog = (props: Partial<React.ComponentProps<typeof TaskFormDialog>
     >
       <label htmlFor="f">Field</label>
       <input id="f" />
-    </TaskFormDialog>,
+    </FormDialog>,
   );
   return { onClose, onSubmit };
 };
 
-describe("TaskFormDialog", () => {
+describe("FormDialog", () => {
   it("is a named, described modal dialog around a form that the fields validate themselves", () => {
     renderDialog();
     const dialog = screen.getByRole("dialog", { name: "Shell" });
@@ -59,5 +59,20 @@ describe("TaskFormDialog", () => {
     renderDialog({ submitDisabled: true });
     expect(screen.getByRole("button", { name: "Do it" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeEnabled();
+  });
+
+  it("while submitting, disables both buttons and shows the submitting label", () => {
+    renderDialog({ isSubmitting: true, submittingLabel: "Working..." });
+    expect(screen.getByRole("button", { name: "Working..." })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+  });
+
+  it("keeps focus in the field when the buttons are pressed, so blur validation can't shift the layout under the click", () => {
+    renderDialog();
+    for (const name of ["Do it", "Cancel"]) {
+      const button = screen.getByRole("button", { name });
+      // mousedown's default action is what moves focus (and blurs the field); it must be prevented
+      expect(fireEvent.mouseDown(button)).toBe(false);
+    }
   });
 });

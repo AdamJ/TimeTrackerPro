@@ -16,7 +16,7 @@ import { Plus, Edit, Trash2, Tag, Trash2Icon } from "lucide-react";
 import { TaskCategory } from "@/config/categories";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { PageLayout } from "@/components/PageLayout";
-import { CategorySheet } from "@/components/CategorySheet";
+import { CategoryDialog } from "@/components/CategoryDialog";
 import { Badge } from "@/components/ui/badge";
 import { Item, ItemContent, ItemMedia, ItemTitle, ItemDescription, ItemActions } from "@/components/ui/item";
 
@@ -54,7 +54,7 @@ const CategoryContent: React.FC = () => {
     () => (
       <Button onClick={handleOpenAdd} size="sm" variant="default">
         <Plus className="w-4 h-4 sm:mr-1" />
-        <span className="hidden sm:block">Add Category</span>
+        <span className="sr-only sm:not-sr-only">Add Category</span>
       </Button>
     ),
     [handleOpenAdd]
@@ -115,7 +115,7 @@ const CategoryContent: React.FC = () => {
                       onClick={() => handleEdit(category)}
                     >
                       <Edit className="w-4 h-4 mr-1" />
-                      <span className="hidden sm:block">Edit</span>
+                      <span className="sr-only sm:not-sr-only">Edit</span>
                     </Button>
                     <Button
                       size="sm"
@@ -125,7 +125,7 @@ const CategoryContent: React.FC = () => {
                       className="text-destructive hover:text-secondary bg-transparent hover:bg-destructive"
                     >
                       <Trash2 className="w-4 h-4 mr-1" />
-                      <span className="hidden sm:block">Delete</span>
+                      <span className="sr-only sm:not-sr-only">Delete</span>
                     </Button>
                   </ItemActions>
                 </Item>
@@ -161,7 +161,7 @@ const CategoryContent: React.FC = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <CategorySheet
+      <CategoryDialog
         open={sheetOpen}
         onOpenChange={(open) => {
           setSheetOpen(open);

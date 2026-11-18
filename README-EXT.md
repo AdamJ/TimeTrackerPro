@@ -416,9 +416,9 @@ src/
 │   ├── AuthDialog.tsx
 │   ├── BackdatedEntryDialog.tsx
 │   ├── CategoryManagement.tsx
-│   ├── CategorySheet.tsx
+│   ├── CategoryDialog.tsx
 │   ├── ClientManagement.tsx
-│   ├── ClientSheet.tsx
+│   ├── ClientDialog.tsx
 │   ├── CommandPalette.tsx        # Cmd/Ctrl+K "jump to" navigation + actions (built on ui/command)
 │   ├── DaySummary.tsx
 │   ├── DeleteConfirmationDialog.tsx
@@ -439,7 +439,7 @@ src/
 │   ├── PlannedTaskDialog.tsx
 │   ├── PlannedTaskPicker.tsx
 │   ├── ProjectManagement.tsx
-│   ├── ProjectSheet.tsx
+│   ├── ProjectDialog.tsx
 │   ├── PwaUpdatePrompt.tsx
 │   ├── StaleDayDialog.tsx
 │   ├── StartDayDialog.tsx

@@ -149,7 +149,7 @@ const TaskItemComponent: React.FC<TaskItemProps> = ({
                     className="flex items-center space-x-1 min-h-[44px] min-w-[44px] text-destructive hover:text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 className="w-3 h-3" />
-                    <span className="hidden sm:block">Delete</span>
+                    <span className="sr-only sm:not-sr-only">Delete</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Delete task</TooltipContent>
@@ -164,7 +164,7 @@ const TaskItemComponent: React.FC<TaskItemProps> = ({
                     className="flex items-center space-x-1 min-h-[44px] min-w-[44px]"
                   >
                     <Edit className="w-3 h-3" />
-                    <span className="hidden sm:block">Edit</span>
+                    <span className="sr-only sm:not-sr-only">Edit</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Edit task</TooltipContent>
