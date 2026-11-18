@@ -29,6 +29,7 @@ A Progressive Web App (PWA) for time tracking built with React, TypeScript, and 
 - **No Account Required** — full functionality with local storage; optional cloud sync via Supabase
 - **Self-Hosted SQL Backend** — optionally run against your own PostgreSQL or MySQL database instead of Supabase or local storage (see [docs/SQL_BACKEND.md](docs/SQL_BACKEND.md))
 - **Project Planning View** — set a goal, status, optional start date, and deadline (date or quarter) for initiatives scoped to a project, visualized as a Roadmap-style timeline
+- **Mobile-First Interface** — every form and dialog goes full screen on phones and stays above the on-screen keyboard, the Task Board shows one status column at a time with swipeable tabs, the bottom navigation and sidebar respect notches and home indicators (and the sidebar can always be closed), and buttons and fields get 44px touch targets on touch devices
 - **PWA** — installable on desktop/mobile
 
 ---
@@ -63,7 +64,7 @@ pnpm lint                # ESLint
 pnpm check:design-tokens # Flag non-token color classes
 pnpm check:a11y          # Accessibility lint (jsx-a11y)
 pnpm lint:markdown       # Markdown lint
-pnpm test                # Vitest unit tests (410 tests across 37 files)
+pnpm test                # Vitest unit tests (594 tests across 60 files)
 
 # PWA Screenshots
 pnpm screenshots:install   # Install Playwright (first time)
@@ -137,13 +138,16 @@ See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 
 **Recent highlights:**
 
+- **Mobile usability pass** — full-screen dialogs that sit above the iOS keyboard, a one-column Task Board with swipeable, remembered status tabs, a compact bottom nav that no longer balloons in an installed iOS PWA, a sidebar that can be closed, touch targets sized by input device (`pointer: coarse`), and unlabeled icon-only buttons fixed for screen readers
+- **One form pattern** — task, project, client, category, and initiative forms share a single modal `FormDialog` (replacing the mix of side sheets and dialogs), with inline validation, actionable button labels, and first-tap-safe submit buttons
+- **Guest mode without Supabase credentials** — the app now starts with no `VITE_SUPABASE_*` variables instead of rendering a blank page
 - **Security and sign-in hardening** — self-hosted SQL API locked to loopback with an optional bearer token, a rate-limited AI proxy, security headers for the web build, and a keep-or-remove choice at sign-out
 - **Project planning view** — per-project goal/start/deadline/status "Initiatives" shown on a GitHub-Projects-style Roadmap timeline (status swimlanes, month-scale header, "Today" line)
 - **Keyboard shortcuts** — global `N`/`Cmd/Ctrl+S`/`Cmd/Ctrl+K` shortcuts and a `?` help dialog in the web/PWA build, plus native `Cmd/Ctrl+N`/`Cmd/Ctrl+S`/`Cmd/Ctrl+K` menu accelerators in the Tauri desktop build
 - **Guest-mode data durability** — schema-mismatch backups, write-failure toasts, undo for hard deletes, Tauri desktop disk-based backup snapshots (independent of `localStorage`, including a final flush on app quit), and an in-app "Data Recovery" UI in Settings to preview and restore those backups
 - **Self-hosted SQL backend** — opt-in PostgreSQL/MySQL support via a small REST API (`server/`), alongside the existing Supabase and local storage modes
 - **Backdated entry creation** — "Add Past Entry" button on Archive page opens a multi-step dialog to log tasks for any past date
-- **Kanban planning board** — drag-and-drop task planning view (`KanbanBoard`, `KanbanColumn`, `PlannedTaskCard`); start the day (and a task) straight from the board with each card's one-click Start/Resume button, or pick a planned task from the Dashboard's empty-day card (`PlannedTaskPicker`); sort and filter controls (by date or title, and by project/client/category) apply across all columns and persist to `localStorage`
+- **Kanban planning board** — drag-and-drop task planning view (`KanbanBoard`, `KanbanColumn`, `PlannedTaskCard`); start the day (and a task) straight from the board with each card's one-click Start/Resume button, or pick a planned task from the Dashboard's empty-day card (`PlannedTaskPicker`); sort and filter controls (by date or title, and by project/client/category) apply across all columns and persist to `localStorage`; on phones the board shows one column at a time with swipeable tabs
 - Persistent report summaries saved to localStorage; markdown preview/export in the report output panel
 - `AppSidebar` collapsible sidebar navigation with live session timer; `PageTitleContext` decouples page header state from layout
 

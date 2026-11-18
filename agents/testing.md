@@ -21,7 +21,9 @@ pnpm build
 
 ---
 
-## Test Suite Overview (187 tests across 14 files)
+## Test Suite Overview (historical snapshot: 187 tests across 14 files)
+
+> The current suite is ~594 tests across 60 files. `AGENTS.md` keeps the up-to-date file-by-file inventory; the table below is the original baseline.
 
 | File | Tests | What's Covered |
 |---|---|---|
