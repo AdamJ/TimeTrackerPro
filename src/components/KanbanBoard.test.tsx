@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import type { PlannedTask } from "@/contexts/TimeTrackingContext";
 
@@ -16,7 +17,8 @@ vi.mock("@/hooks/useTimeTracking", () => ({
     isDayStale: false,
   }),
 }));
-vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => true }));
+let isMobile = true;
+vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => isMobile }));
 vi.mock("@/components/KanbanColumn", () => ({
   KanbanColumn: ({ title, tasks, emptyMessage }: { title: string; tasks: PlannedTask[]; emptyMessage: string }) => (
     <section aria-label={title}>
@@ -45,6 +47,7 @@ describe("KanbanBoard", () => {
   beforeEach(() => {
     localStorage.clear();
     loading = false;
+    isMobile = true;
     plannedTasks = [];
   });
 
@@ -86,9 +89,44 @@ describe("KanbanBoard", () => {
       makeTask({ id: "a", project: "Acme", client: "Initech" }),
       makeTask({ id: "b", project: "Other", client: "Globex" }),
     ];
+    isMobile = false;
     render(<KanbanBoard />);
     expect(screen.getByText("No tasks match the current filters.")).toBeInTheDocument();
     expect(screen.getByText("Showing 0 of 2")).toBeInTheDocument();
     expect(screen.getAllByText("No matching tasks")).toHaveLength(4);
+  });
+
+  describe("one column at a time on mobile", () => {
+    beforeEach(() => {
+      plannedTasks = [
+        makeTask({ id: "a", title: "Todo task", status: "todo" }),
+        makeTask({ id: "b", title: "Doing task", status: "in_progress" }),
+        makeTask({ id: "c", title: "Doing too", status: "in_progress" }),
+      ];
+    });
+
+    it("shows only the To Do column first, with a count on every status tab", () => {
+      render(<KanbanBoard />);
+      expect(screen.getByText("Todo task")).toBeInTheDocument();
+      expect(screen.queryByText("Doing task")).not.toBeInTheDocument();
+      expect(screen.getAllByRole("tab")).toHaveLength(4);
+      expect(screen.getByRole("tab", { name: /In Progress\s*2/ })).toBeInTheDocument();
+    });
+
+    it("switches columns when a status tab is selected", async () => {
+      const user = userEvent.setup();
+      render(<KanbanBoard />);
+      await user.click(screen.getByRole("tab", { name: /In Progress/ }));
+      expect(screen.getByText("Doing task")).toBeInTheDocument();
+      expect(screen.queryByText("Todo task")).not.toBeInTheDocument();
+    });
+
+    it("shows every column at once on wider screens", () => {
+      isMobile = false;
+      render(<KanbanBoard />);
+      expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+      expect(screen.getByText("Todo task")).toBeInTheDocument();
+      expect(screen.getByText("Doing task")).toBeInTheDocument();
+    });
   });
 });

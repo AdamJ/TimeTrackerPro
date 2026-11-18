@@ -53,41 +53,41 @@ export const KanbanBoardControls: React.FC<KanbanBoardControlsProps> = ({
   onClearFilters,
 }) => {
   return (
-    <div className="flex flex-wrap items-center gap-2 mb-4">
+    <div className="mb-4 grid grid-cols-2 items-center gap-2 md:flex md:flex-wrap">
       <ResponsiveSelect
         value={sortBy}
         onValueChange={(value) => onSortChange(value as TaskSortOption)}
         options={SORT_OPTIONS}
         aria-label="Sort tasks by"
-        className="w-[160px]"
+        className="w-full md:w-[160px]"
       />
       <ResponsiveSelect
         value={filters.project}
         onValueChange={(value) => onFilterChange("project", value)}
         options={withAll(projectOptions, "All projects")}
         aria-label="Filter by project"
-        className="w-[160px]"
+        className="w-full md:w-[160px]"
       />
       <ResponsiveSelect
         value={filters.client}
         onValueChange={(value) => onFilterChange("client", value)}
         options={withAll(clientOptions, "All clients")}
         aria-label="Filter by client"
-        className="w-[160px]"
+        className="w-full md:w-[160px]"
       />
       <ResponsiveSelect
         value={filters.category}
         onValueChange={(value) => onFilterChange("category", value)}
         options={withAll(categoryOptions, "All categories")}
         aria-label="Filter by category"
-        className="w-[160px]"
+        className="w-full md:w-[160px]"
       />
       {hasActiveFilters && (
         <>
-          <span className="text-sm text-muted-foreground" aria-live="polite">
+          <span className="col-span-2 text-sm text-muted-foreground md:col-span-1" aria-live="polite">
             Showing {visibleCount} of {totalCount}
           </span>
-          <Button variant="ghost" size="sm" onClick={onClearFilters}>
+          <Button variant="ghost" size="sm" className="col-span-2 md:col-span-1" onClick={onClearFilters}>
             <X className="w-3 h-3 mr-1" />
             Clear filters
           </Button>
