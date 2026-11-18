@@ -75,4 +75,10 @@ describe("FormDialog", () => {
       expect(fireEvent.mouseDown(button)).toBe(false);
     }
   });
+
+  it("renders a secondary action (such as Delete) first in the footer, so it ends up last on phones", () => {
+    renderDialog({ secondaryAction: <button type="button">Delete</button> });
+    const footerButtons = screen.getAllByRole("button").filter((b) => ["Delete", "Cancel", "Do it"].includes(b.textContent ?? ""));
+    expect(footerButtons.map((b) => b.textContent)).toEqual(["Delete", "Cancel", "Do it"]);
+  });
 });

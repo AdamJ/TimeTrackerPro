@@ -21,6 +21,8 @@ interface FormDialogProps {
   /** While true both buttons are disabled and the submit button shows a spinner and `submittingLabel`. */
   isSubmitting?: boolean;
   submittingLabel?: string;
+  /** An extra footer action, such as Delete. Rendered first, so on phones it ends up last (furthest from the submit button). */
+  secondaryAction?: React.ReactNode;
   /** Called when the form is submitted (Enter in a field, or the submit button). */
   onSubmit: () => void | Promise<void>;
   children: React.ReactNode;
@@ -40,6 +42,7 @@ export const FormDialog: React.FC<FormDialogProps> = ({
   submitDisabled = false,
   isSubmitting = false,
   submittingLabel = "Saving...",
+  secondaryAction,
   onSubmit,
   children,
 }) => {
@@ -66,6 +69,7 @@ export const FormDialog: React.FC<FormDialogProps> = ({
         >
           {children}
           <DialogFooter>
+            {secondaryAction}
             <Button
               type="button"
               variant="outline"

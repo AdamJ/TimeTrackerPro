@@ -423,7 +423,7 @@ src/
 │   ├── DaySummary.tsx
 │   ├── DeleteConfirmationDialog.tsx
 │   ├── ExportDialog.tsx
-│   ├── InitiativeSheet.tsx        # Add/edit/delete sheet for a project's planning Initiatives
+│   ├── InitiativeDialog.tsx       # Add/edit/delete dialog for a project's planning Initiatives
 │   ├── InitiativeTimeline.tsx     # Roadmap-style status swimlanes for a project's Initiatives
 │   ├── InstallPrompt.tsx
 │   ├── KanbanBoard.tsx            # Kanban planning board

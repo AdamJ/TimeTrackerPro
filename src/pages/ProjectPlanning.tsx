@@ -5,7 +5,7 @@ import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { PageLayout } from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
 import { InitiativeTimeline } from "@/components/InitiativeTimeline";
-import { InitiativeSheet } from "@/components/InitiativeSheet";
+import { InitiativeDialog } from "@/components/InitiativeDialog";
 import { Initiative } from "@/contexts/TimeTrackingContext";
 
 const ProjectPlanning: React.FC = () => {
@@ -66,7 +66,7 @@ const ProjectPlanning: React.FC = () => {
         <InitiativeTimeline initiatives={projectInitiatives} onSelect={handleSelect} />
       </div>
 
-      <InitiativeSheet
+      <InitiativeDialog
         open={sheetOpen}
         onOpenChange={(open) => {
           setSheetOpen(open);
