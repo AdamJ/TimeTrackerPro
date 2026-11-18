@@ -46,9 +46,9 @@ describe("AppSidebar on mobile", () => {
     await user.click(screen.getByRole("button", { name: /toggle sidebar/i }));
     const sheet = document.querySelector("[data-mobile=true]") as HTMLElement;
     expect(sheet).toBeInTheDocument();
-    // tailwind-merge v2 doesn't know w-(--var); a leftover w-full would cover the whole screen
+    // a leftover w-full (tailwind-merge before v3 didn't know w-(--var)) would cover the whole screen
     expect(sheet).not.toHaveClass("w-full");
-    expect(sheet).toHaveClass("w-[var(--sidebar-width)]");
+    expect(sheet).toHaveClass("w-(--sidebar-width)");
   });
 
   it("has a visible Close button that dismisses it", async () => {
