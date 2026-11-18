@@ -106,9 +106,9 @@ export const InstallPrompt = memo(function InstallPrompt() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 24, opacity: 0 }}
           transition={{ duration: 0.22, ease: "easeOut" }}
-          className="fixed bottom-4 right-4 z-50 print:hidden"
+          className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] right-4 md:bottom-4 z-50 print:hidden"
         >
-          <Card className="w-80 shadow-lg">
+          <Card className="w-[min(20rem,calc(100vw-2rem))] shadow-lg">
             <button
               onClick={handleDismiss}
               className="absolute top-2 right-2 p-1 rounded-full hover:bg-mauve-3 transition-colors"

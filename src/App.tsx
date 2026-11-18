@@ -105,15 +105,15 @@ const AppShell = () => {
       </a>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-12 shrink-0 items-center gap-2 px-4">
+        <header className="flex min-h-12 shrink-0 flex-wrap items-center gap-x-2 gap-y-1 px-4 py-1">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
-            className="mx-2 data-[orientation=vertical]:h-4"
+            className="mx-2 hidden data-[orientation=vertical]:h-4 md:block"
           />
-          <h1 className="text-base font-medium">{title}</h1>
+          <h1 className="min-w-0 text-base font-medium">{title}</h1>
           {badge}
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
             {actions}
             <Button
               variant="ghost"
@@ -128,7 +128,7 @@ const AppShell = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="size-7"
+              className="hidden size-7 md:inline-flex"
               onClick={openShortcutsHelp}
               aria-label="Keyboard shortcuts"
               title="Keyboard shortcuts (?)"

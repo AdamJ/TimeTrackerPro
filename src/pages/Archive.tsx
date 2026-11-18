@@ -117,7 +117,7 @@ const ArchiveContent: React.FC = () => {
       badge={pageBadge}
       actions={pageActions}
     >
-      <div className="max-w-6xl mx-auto p-6 print:p-2">
+      <div className="max-w-6xl mx-auto px-4 py-4 md:p-6 print:p-2">
         {filteredDays.length === 0 && archivedDays.length === 0 ? (
           <Card className="text-center py-12 print:hidden">
             <CardContent>
@@ -126,9 +126,9 @@ const ArchiveContent: React.FC = () => {
               <p className="text-muted-foreground mb-4">
                 Complete and post your first day to see it in the archive.
               </p>
-              <Link to="/">
-                <Button>Start Tracking Time</Button>
-              </Link>
+              <Button asChild>
+                <Link to="/">Start Tracking Time</Link>
+              </Button>
             </CardContent>
           </Card>
         ) : (

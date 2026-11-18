@@ -66,7 +66,7 @@ const CategoryContent: React.FC = () => {
       badge={pageBadge}
       actions={pageActions}
     >
-      <div className="max-w-6xl mx-auto p-6 print:p-4">
+      <div className="max-w-6xl mx-auto px-4 py-4 md:p-6 print:p-4">
         {/* Categories List */}
         <div className="space-y-4">
           {categories.length === 0 ? (

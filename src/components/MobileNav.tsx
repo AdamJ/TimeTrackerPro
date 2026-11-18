@@ -59,10 +59,8 @@ export const MobileNav = memo(function MobileNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 mb-2 mx-2 rounded-full border border-border bg-card/80 shadow-lg md:hidden z-40 print:hidden"
-      style={{
-        padding: "max(env(safe-area-inset-bottom, 8px), 8px)"
-      }}
+      aria-label="Primary"
+      className="fixed inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] rounded-full border border-border bg-card/95 p-1 shadow-lg backdrop-blur md:hidden z-40 print:hidden"
     >
       <div className={`grid ${gridClass} h-12`}>
         {navItems.map(({ path, icon: Icon, label }) => (

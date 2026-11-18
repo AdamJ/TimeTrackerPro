@@ -18,9 +18,9 @@ export const PwaUpdatePrompt = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: "100%", opacity: 0 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
-          className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around gap-4 bg-primary/90 px-4 py-2 text-primary-foreground"
+          className="fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] md:bottom-0 z-50 flex flex-wrap items-center justify-around gap-4 bg-primary/90 px-4 py-2 text-primary-foreground"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <p className="text-sm font-bold">A new version of Timetraked is available.</p>
             <Button
               size="sm"

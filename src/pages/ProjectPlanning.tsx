@@ -62,7 +62,7 @@ const ProjectPlanning: React.FC = () => {
 
   return (
     <PageLayout title={project.name} actions={pageActions}>
-      <div className="max-w-6xl mx-auto p-6 print:p-4">
+      <div className="max-w-6xl mx-auto px-4 py-4 md:p-6 print:p-4">
         <InitiativeTimeline initiatives={projectInitiatives} onSelect={handleSelect} />
       </div>
 
