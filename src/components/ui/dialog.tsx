@@ -114,9 +114,11 @@ const DialogFooter = ({
       className={cn(
         "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
         // Pinned to the bottom of the scrolling full-screen panel so the actions
-        // stay reachable above the on-screen keyboard.
+        // stay reachable above the on-screen keyboard. Sticky offsets are measured
+        // from the panel's content box, so -bottom-4 cancels its pb-4 and keeps
+        // the footer flush with the bottom edge (no scrolled content showing under it).
         fullScreen &&
-          "sticky bottom-0 z-10 -mx-4 gap-2 border-t bg-background px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:space-x-0",
+          "sticky -bottom-4 z-10 -mx-4 gap-2 border-t bg-background px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:space-x-0",
         className
       )}
       {...props}

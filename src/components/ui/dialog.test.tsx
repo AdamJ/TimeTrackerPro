@@ -66,7 +66,7 @@ describe("DialogContent fullScreenOnMobile", () => {
 
   it("pins DialogFooter to the bottom of a full-screen panel", () => {
     renderDialog(true);
-    expect(screen.getByTestId("footer")).toHaveClass("sticky", "bottom-0", "border-t");
+    expect(screen.getByTestId("footer")).toHaveClass("sticky", "-bottom-4", "border-t");
   });
 
   it("leaves DialogFooter alone outside full-screen mode", () => {
