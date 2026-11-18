@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 import {
   Brain,
@@ -38,6 +38,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar"
 
 const navItems = {
@@ -92,6 +93,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [showAuthDialog, setShowAuthDialog] = useState(false)
   const [showExportDialog, setShowExportDialog] = useState(false)
   const { pathname } = useLocation()
+  const { setOpenMobile } = useSidebar()
+
+  // On phones the sidebar is a sheet over the page; close it once a link has
+  // taken the user somewhere, otherwise it stays on top of the new page.
+  useEffect(() => {
+    setOpenMobile(false)
+  }, [pathname, setOpenMobile])
 
   const { isAuthenticated } = useAuth()
   const {

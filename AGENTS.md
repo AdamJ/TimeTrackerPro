@@ -31,7 +31,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (~548 JS/TS tests across 52 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
+### Test File Inventory (~551 JS/TS tests across 53 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
 
 | File | Coverage |
 |---|---|
@@ -56,6 +56,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/hooks/useUndoableDelete.test.ts` | Undo-delete toast/timeout hook |
 | `src/hooks/useVisualViewport.test.ts` | Visible-area box follows `visualViewport` resize/scroll (keyboard open/close), null when disabled or unsupported, cleans up listeners |
 | `src/components/ui/dialog.test.tsx` | `DialogContent` `fullScreenOnMobile`: fills the screen on mobile, centered modal classes from `md` up, sized to the visual viewport, opt-in only; `DialogFooter` pins to the bottom only inside a full-screen panel |
+| `src/components/AppSidebar.test.tsx` | Mobile sidebar sheet: narrower than the screen (no `w-full` leftover from tailwind-merge v2 not knowing `w-(--var)`), visible Close button, closes after navigating |
 | `src/components/PageLayout.test.tsx` | `PageLayout` renders children, delegates title/actions to context |
 | `src/components/SummaryOutput.test.tsx` | Summary output rendering |
 | `src/components/NewTaskForm.test.tsx` | Form render, submit, validation, cancel, FAB toggle |
@@ -187,7 +188,7 @@ export const MyComponent = () => {
 | `src/utils/initiativeUtils.ts`                | `resolveInitiativeDeadline`/`resolveInitiativeStart`/`parseLocalDate` — date-vs-quarter deadline and start-date resolution without the UTC-midnight day-shift bug; `isDeadlineBeforeStart` backs the form's start-vs-deadline validation; `toLocalDateString` formats the local day for date-input defaults |
 | `src/services/localStorageService/clients.ts` | Client persistence module for guest mode (versioned localStorage blob)             |
 | `supabase/migrations/20260530_clients.sql`    | `clients` table + RLS + one-time backfill from distinct project clients            |
-| `src/components/AppSidebar.tsx`               | Collapsible sidebar nav (Planning/Manage/Reports groups); reads page title/actions from `PageTitleContext`; footer has print button, sync status, and auth |
+| `src/components/AppSidebar.tsx`               | Collapsible sidebar nav (Planning/Manage/Reports groups); reads page title/actions from `PageTitleContext`; footer has print button, sync status, and auth. On mobile it is a sheet (see `ui/sidebar.tsx`) that closes on route change and via its Close button |
 | `src/components/SyncStatus.tsx`               | Footer status indicator showing sync state (connected/syncing/unsaved) with refresh button |
 | `src/contexts/PageTitleContext.tsx`           | `PageTitleProvider` — holds title, badge, actions state for the sidebar header     |
 | `src/contexts/page-title-context.ts`          | Context object + default value + `PageTitleContextType` interface                  |
