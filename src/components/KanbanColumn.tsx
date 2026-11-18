@@ -6,12 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 
 interface KanbanColumnProps {
   status: PlannedTaskStatus;
@@ -91,18 +85,11 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
         </CardContent>
       </Card>
 
-      <Sheet open={showAddSheet} onOpenChange={setShowAddSheet}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>New Task</SheetTitle>
-          </SheetHeader>
-          <PlannedTaskDialog
-            isOpen={showAddSheet}
-            onClose={() => setShowAddSheet(false)}
-            defaultStatus={status}
-          />
-        </SheetContent>
-      </Sheet>
+      <PlannedTaskDialog
+        isOpen={showAddSheet}
+        onClose={() => setShowAddSheet(false)}
+        defaultStatus={status}
+      />
     </>
   );
 };

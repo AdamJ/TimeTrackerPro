@@ -181,7 +181,7 @@ const TimeTrackerContent = () => {
   if (!isDayStarted && dayStartTime && tasks.length > 0) {
     return (
       <PageLayout>
-        <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <div className="max-w-4xl mx-auto px-4 py-4 md:p-6 space-y-6">
           <DaySummary
             tasks={tasks}
             totalDuration={getTotalDayDuration(tasks, currentTask, now)}

@@ -63,7 +63,7 @@ export const StartDayDialog: React.FC<StartDayDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="md:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Calendar aria-hidden="true" className="w-5 h-5 text-blue-9" />

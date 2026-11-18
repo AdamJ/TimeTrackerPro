@@ -1,10 +1,16 @@
 import React from "react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { AuthProvider, BEFORE_SIGN_OUT_TIMEOUT_MS } from "@/contexts/AuthContext";
+import {
+  AuthProvider,
+  BEFORE_SIGN_OUT_TIMEOUT_MS,
+  SUPABASE_NOT_CONFIGURED_MESSAGE
+} from "@/contexts/AuthContext";
 import { useAuth } from "@/hooks/useAuth";
 
 const calls: string[] = [];
+const supabaseState = vi.hoisted(() => ({ configured: true }));
+const signInMock = vi.hoisted(() => vi.fn());
 const signOutMock = vi.fn(async () => {
   calls.push("supabase.signOut");
   return { error: null };
@@ -16,8 +22,11 @@ vi.mock("@/lib/supabase", () => ({
       getSession: vi.fn(async () => ({ data: { session: null } })),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
       signOut: () => signOutMock(),
-      signInWithPassword: vi.fn()
+      signInWithPassword: signInMock
     }
+  },
+  get isSupabaseConfigured() {
+    return supabaseState.configured;
   },
   clearUserCache: vi.fn(),
   trackAuthCall: vi.fn()
@@ -127,5 +136,29 @@ describe("AuthContext.signOut", () => {
     });
 
     expect(signOutMock).toHaveBeenCalled();
+  });
+});
+
+describe("AuthContext.signIn without Supabase credentials", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    supabaseState.configured = false;
+  });
+
+  afterEach(() => {
+    supabaseState.configured = true;
+  });
+
+  it("returns a clear error and never calls Supabase", async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    let response: Awaited<ReturnType<typeof result.current.signIn>> | undefined;
+    await act(async () => {
+      response = await result.current.signIn("a@example.com", "pw");
+    });
+
+    expect(response?.error?.message).toBe(SUPABASE_NOT_CONFIGURED_MESSAGE);
+    expect(signInMock).not.toHaveBeenCalled();
   });
 });

@@ -416,14 +416,14 @@ src/
 │   ├── AuthDialog.tsx
 │   ├── BackdatedEntryDialog.tsx
 │   ├── CategoryManagement.tsx
-│   ├── CategorySheet.tsx
+│   ├── CategoryDialog.tsx
 │   ├── ClientManagement.tsx
-│   ├── ClientSheet.tsx
+│   ├── ClientDialog.tsx
 │   ├── CommandPalette.tsx        # Cmd/Ctrl+K "jump to" navigation + actions (built on ui/command)
 │   ├── DaySummary.tsx
 │   ├── DeleteConfirmationDialog.tsx
 │   ├── ExportDialog.tsx
-│   ├── InitiativeSheet.tsx        # Add/edit/delete sheet for a project's planning Initiatives
+│   ├── InitiativeDialog.tsx       # Add/edit/delete dialog for a project's planning Initiatives
 │   ├── InitiativeTimeline.tsx     # Roadmap-style status swimlanes for a project's Initiatives
 │   ├── InstallPrompt.tsx
 │   ├── KanbanBoard.tsx            # Kanban planning board
@@ -439,7 +439,7 @@ src/
 │   ├── PlannedTaskDialog.tsx
 │   ├── PlannedTaskPicker.tsx
 │   ├── ProjectManagement.tsx
-│   ├── ProjectSheet.tsx
+│   ├── ProjectDialog.tsx
 │   ├── PwaUpdatePrompt.tsx
 │   ├── StaleDayDialog.tsx
 │   ├── StartDayDialog.tsx

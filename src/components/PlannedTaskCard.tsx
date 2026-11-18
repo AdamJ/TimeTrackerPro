@@ -28,12 +28,6 @@ import {
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { useUndoableDelete } from "@/hooks/useUndoableDelete";
 import { PlannedTaskDialog } from "@/components/PlannedTaskDialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, Play, MoveRight, MoreVertical, PencilIcon, Briefcase, Tag, Users, PlusCircle, Clock, CirclePlay } from "lucide-react";
@@ -358,18 +352,11 @@ const PlannedTaskCardComponent: React.FC<PlannedTaskCardProps> = ({
         </ContextMenuContent>
       </ContextMenu>
 
-      <Sheet open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Edit Task</SheetTitle>
-          </SheetHeader>
-          <PlannedTaskDialog
-            task={task}
-            isOpen={showEditDialog}
-            onClose={() => setShowEditDialog(false)}
-          />
-        </SheetContent>
-      </Sheet>
+      <PlannedTaskDialog
+        task={task}
+        isOpen={showEditDialog}
+        onClose={() => setShowEditDialog(false)}
+      />
 
       <DeleteConfirmationDialog
         isOpen={showDeleteDialog}

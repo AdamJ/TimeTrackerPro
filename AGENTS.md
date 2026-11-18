@@ -31,7 +31,7 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 - When fixing a bug, add a regression test as part of the same change.
 - Verify version alignment between related dev tools (e.g., vitest + @vitest/coverage) when test errors appear.
 
-### Test File Inventory (~525 JS/TS tests across 49 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
+### Test File Inventory (~591 JS/TS tests across 59 files, plus 20 Rust unit tests across `src-tauri/src/backup.rs`/`menu.rs`/`quit_flush.rs` run via `cargo test`)
 
 | File | Coverage |
 |---|---|
@@ -54,14 +54,22 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/hooks/useElectronMenuActions.test.ts` | `menu:action` listener dispatch (event bridged from the Rust menu, not IPC; hook keeps its historical `Electron` name) |
 | `src/hooks/useKeyboardShortcuts.test.ts` | Global keyboard shortcut handling (new task, save, command palette, help) |
 | `src/hooks/useUndoableDelete.test.ts` | Undo-delete toast/timeout hook |
+| `src/hooks/useVisualViewport.test.ts` | Visible-area box follows `visualViewport` resize/scroll (keyboard open/close), null when disabled or unsupported, cleans up listeners |
+| `src/components/ui/dialog.test.tsx` | `DialogContent` full screen on mobile by default (`fullScreenOnMobile={false}` opts out), centered modal classes from `md` up, sized to the visual viewport; `DialogFooter` pins to the bottom only inside a full-screen panel |
+| `src/components/ui/alert-dialog.test.tsx` | `AlertDialogContent` full screen on mobile by default, keeps `size`/group styling for the centered layout from `md` up, `AlertDialogFooter` pins to the bottom, opt-out and wide-screen behavior |
+| `src/components/AppSidebar.test.tsx` | Mobile sidebar sheet: narrower than the screen (no `w-full` leftover from tailwind-merge v2 not knowing `w-(--var)`), visible Close button, closes after navigating |
 | `src/components/PageLayout.test.tsx` | `PageLayout` renders children, delegates title/actions to context |
 | `src/components/SummaryOutput.test.tsx` | Summary output rendering |
-| `src/components/NewTaskForm.test.tsx` | Form render, submit, validation, cancel, FAB toggle |
+| `src/components/NewTaskForm.test.tsx` | Form render, submit, validation (error linked to the title, focus returns to it), Enter submits, labelled description, dialog name/description and Escape, cancel, FAB toggle |
+| `src/components/PlannedTaskDialog.test.tsx` | Planned-task create/edit dialog: same shell and fields as Start New Task, inline title error instead of a disabled button, created in the column's status, Enter submits, Save Changes only when something changed, cancel/Escape |
+| `src/components/FormDialog.test.tsx` | Shared form shell: named/described modal dialog, `noValidate` form that fills the panel, submit via button or Enter, Cancel/Escape, `submitDisabled`, submitting state, buttons keep focus in the field (no blur-validation layout shift) |
+| `src/components/ProjectDialog.test.tsx`, `ClientDialog.test.tsx`, `CategoryDialog.test.tsx` | Entity form dialogs: named/described dialog with a real form, required-field errors with focus on the first invalid field, add/edit submit paths, email validation (client), Enter in the new-client field adds the client (project) |
+| `src/components/InitiativeDialog.test.tsx` | Initiative dialog: named/described dialog, required name, deadline validation (date vs quarter, start/creation floors), pre-filled defaults, optional start date, Delete in edit mode only |
 | `src/components/TaskItem.test.tsx` | Badge render, delete confirm, edit dialog |
 | `src/components/PlannedTaskPicker.test.tsx` | Dashboard empty-day picker: ordering, filtering, start vs resume, list cap |
 | `src/components/PlannedTaskCard.test.tsx` | Card one-click Start/Resume button: start-day-and-pull, pull, resume, hidden for done/stale/unposted days; category badge text contrast |
-| `src/components/KanbanBoard.test.tsx` | Category filter labels by name, stale saved filter reset (not while loading), filtered-out empty state and visible count |
-| `src/hooks/useTaskBoardView.test.ts` | Default sort, legacy `priority` sort migration, batched filter updates |
+| `src/components/KanbanBoard.test.tsx` | Category filter labels by name, stale saved filter reset (not while loading), filtered-out empty state and visible count, one-column-at-a-time status tabs on mobile (remembered last tab, swipe left/right with clamping, short/vertical/edge gestures ignored, directional slide-in that is skipped on first load and under reduced motion) vs the full board on wider screens |
+| `src/hooks/useTaskBoardView.test.ts` | Default sort, legacy `priority` sort migration, batched filter updates, persisted active status tab with invalid-value fallback |
 | `src/components/KanbanColumn.test.tsx` | "Add task" in every column opens the new-task sheet with that column's status |
 | `src/utils/colorUtils.test.ts` | `getReadableTextColor` black/white pick by WCAG contrast, short hex, unparseable fallback |
 | `src/components/ArchiveEditDialog.test.tsx` | Archive edit dialog render, task editing flow, and end-before-start validation (day form and Add Task) |
@@ -74,10 +82,11 @@ Timetraked is a React 18 + TypeScript time tracking PWA for freelancers and cons
 | `src/components/TimerLiveRegion.test.tsx` | Screen-reader `aria-live` announcements for day/task start-stop transitions |
 | `src/pages/Settings.test.tsx` | Background notifications toggle, data recovery section visibility |
 | `src/components/AuthDialog.test.tsx` | "Use on device" button doesn't submit sign-in, autofill attributes, show/hide password, readable errors linked via `aria-describedby` |
-| `src/contexts/AuthContext.test.tsx` | `signOut` runs the `setBeforeSignOut` handler before `supabase.auth.signOut()`, passes the keep/remove choice, still signs out if the handler throws or exceeds `BEFORE_SIGN_OUT_TIMEOUT_MS`, and calls the `setOnSignOutFailed` handler only when Supabase fails to sign out |
+| `src/contexts/AuthContext.test.tsx` | `signOut` runs the `setBeforeSignOut` handler before `supabase.auth.signOut()`, passes the keep/remove choice, still signs out if the handler throws or exceeds `BEFORE_SIGN_OUT_TIMEOUT_MS`, and calls the `setOnSignOutFailed` handler only when Supabase fails to sign out; `signIn` returns a clear error without calling Supabase when `isSupabaseConfigured` is false |
 | `src/services/localStorageService/clearLocalData.test.ts` | "Remove from this device" clearing (data keys, backups, report summaries removed; UI prefs kept) and legacy service-worker cache deletion |
 | `server/app.test.ts` | SQL API bearer-token enforcement, open `/api/health`, CORS origin allowlist, `parseAllowedOrigins` (`// @vitest-environment node`) |
 | `src/lib/supabase.test.ts` | Per-user data cache keying (projects/categories/clients) |
+| `src/lib/supabase.unconfigured.test.ts` | Regression: importing `@/lib/supabase` with no `VITE_SUPABASE_*` vars must not throw (it used to blank the app) and reports `isSupabaseConfigured` correctly |
 | `src/lib/electronMenuActions.test.ts` | Menu action pending-action/navigate pattern (name predates the Tauri migration; still applies to both web and desktop menu actions) |
 | `src/lib/tauriElectronApiShim.test.ts` | `installTauriElectronApiShim` — populates `window.electronAPI` from Tauri `invoke`/`listen`, `onMenuAction` unsubscribe race guard |
 | `src/lib/tauriUpdater.test.ts` | `checkForUpdatesSilent`/`checkForUpdatesManual` — exponential backoff, download/install/relaunch prompts |
@@ -170,21 +179,21 @@ export const MyComponent = () => {
 | `src/services/sqlApiService.ts`               | `DataService` implementation that talks to the self-hosted `server/` REST API over `fetch` |
 | `server/`                                     | Optional self-hosted SQL backend (Express + Knex, Postgres/MySQL) — see `docs/SQL_BACKEND.md` |
 | `src/contexts/AuthContext.tsx`                | Authentication state management                                                    |
-| `src/lib/supabase.ts`                         | Supabase client configuration and caching                                          |
+| `src/lib/supabase.ts`                         | Supabase client configuration and caching; builds an inert placeholder client and exports `isSupabaseConfigured` when env vars are missing (local-storage-only mode) |
 | `src/config/categories.ts`                    | Default category definitions                                                       |
 | `src/config/projects.ts`                      | Default project definitions                                                        |
 | `src/components/ClientManagement.tsx`         | Client list UI: add, edit, archive (with active-project guard), and restore clients |
-| `src/components/ClientSheet.tsx`              | Shared Sheet (drawer) for add and edit client forms; handles both modes via `mode` prop |
-| `src/components/ProjectSheet.tsx`             | Shared Sheet (drawer) for add and edit project forms; handles both modes via `mode` prop |
-| `src/components/CategorySheet.tsx`            | Shared Sheet (drawer) for add and edit category forms; handles both modes via `mode` prop |
+| `src/components/ClientDialog.tsx`             | Add/edit client form (react-hook-form + zod, address and contact) in a `FormDialog`; handles both modes via `mode` prop |
+| `src/components/ProjectDialog.tsx`            | Add/edit project form (react-hook-form + zod, inline "add client") in a `FormDialog`; handles both modes via `mode` prop |
+| `src/components/CategoryDialog.tsx`           | Add/edit category form (react-hook-form + zod, color picker) in a `FormDialog`; handles both modes via `mode` prop |
 | `src/pages/Clients.tsx`                       | Thin page wrapper around `ClientManagement` (route `/clients`)                     |
-| `src/pages/ProjectPlanning.tsx`               | Per-project Initiative planning view (route `/projects/:id/planning`); shows `InitiativeTimeline` and the add/edit `InitiativeSheet` |
-| `src/components/InitiativeSheet.tsx`          | Shared Sheet (drawer) for add/edit/delete of a planning `Initiative`; deadline pickers pre-fill with today / the current year; optional `startDate` (supersedes the creation-date floor on the deadline) plus a deadline that is a specific date or a calendar quarter |
+| `src/pages/ProjectPlanning.tsx`               | Per-project Initiative planning view (route `/projects/:id/planning`); shows `InitiativeTimeline` and the add/edit `InitiativeDialog` |
+| `src/components/InitiativeDialog.tsx`         | Add/edit/delete form for a planning `Initiative` (react-hook-form + zod) in a `FormDialog`, with Delete as the shell's `secondaryAction`; deadline pickers pre-fill with today / the current year; optional `startDate` (supersedes the creation-date floor on the deadline) plus a deadline that is a specific date or a calendar quarter |
 | `src/components/InitiativeTimeline.tsx`       | Roadmap-style timeline for a project's Initiatives — status-grouped collapsible swimlanes, month-scale header, "Today" line; bars run from `startDate` (else `createdAt`) to the deadline |
 | `src/utils/initiativeUtils.ts`                | `resolveInitiativeDeadline`/`resolveInitiativeStart`/`parseLocalDate` — date-vs-quarter deadline and start-date resolution without the UTC-midnight day-shift bug; `isDeadlineBeforeStart` backs the form's start-vs-deadline validation; `toLocalDateString` formats the local day for date-input defaults |
 | `src/services/localStorageService/clients.ts` | Client persistence module for guest mode (versioned localStorage blob)             |
 | `supabase/migrations/20260530_clients.sql`    | `clients` table + RLS + one-time backfill from distinct project clients            |
-| `src/components/AppSidebar.tsx`               | Collapsible sidebar nav (Planning/Manage/Reports groups); reads page title/actions from `PageTitleContext`; footer has print button, sync status, and auth |
+| `src/components/AppSidebar.tsx`               | Collapsible sidebar nav (Planning/Manage/Reports groups); reads page title/actions from `PageTitleContext`; footer has print button, sync status, and auth. On mobile it is a sheet (see `ui/sidebar.tsx`) that closes on route change and via its Close button |
 | `src/components/SyncStatus.tsx`               | Footer status indicator showing sync state (connected/syncing/unsaved) with refresh button |
 | `src/contexts/PageTitleContext.tsx`           | `PageTitleProvider` — holds title, badge, actions state for the sidebar header     |
 | `src/contexts/page-title-context.ts`          | Context object + default value + `PageTitleContextType` interface                  |
@@ -192,9 +201,15 @@ export const MyComponent = () => {
 | `src/components/PageLayout.tsx`               | Thin page wrapper — delegates title/badge/actions to `PageTitleContext` via `usePageTitle` |
 | `src/components/BackdatedEntryDialog.tsx`     | Multi-step dialog for logging past workdays; uses `addBackdatedDay` from context   |
 | `src/hooks/useLongPress.ts`                   | 500 ms hold detector for context menu trigger on touch                             |
-| `src/components/ui/responsive-select.tsx`     | `ResponsiveSelect` — branches on `useIsMobile()` to render a native `<select>` on mobile (OS picker) vs the Radix `Select` on desktop; flat `options` array API shared by `NewTaskForm`, `ProjectSheet`, `BackdatedEntryDialog`, `PlannedTaskDialog`, `ArchivedTaskRow`, `KanbanBoardControls` |
+| `src/hooks/useVisualViewport.ts`              | Visible-area `{ top, height }` from `window.visualViewport` (shrinks when the iOS on-screen keyboard opens, unlike `dvh`); consumed by `useFullScreenPanel` |
+| `src/components/ui/full-screen-panel.tsx`     | Shared mobile full-screen dialog logic: panel/footer class constants, `FullScreenContext`, and `useFullScreenPanel` (full screen below `md`, sized to the visible area). Every `DialogContent` and `AlertDialogContent` uses it by default, so all dialogs are full screen on phones and the usual centered modal from `md` up; `fullScreenOnMobile={false}` opts out. Use `md:` prefixes for desktop sizing classes on dialogs. `DialogFooter`/`AlertDialogFooter` pin to the bottom of the screen inside a full-screen panel |
+| `src/hooks/useHorizontalSwipe.ts`             | Touch handlers reporting a deliberate horizontal swipe (60px, mostly horizontal, ignores screen-edge and portaled-child touches); drives swipe between `KanbanBoard`'s mobile status tabs |
+| `src/components/ui/responsive-select.tsx`     | `ResponsiveSelect` — branches on `useIsMobile()` to render a native `<select>` on mobile (OS picker) vs the Radix `Select` on desktop; flat `options` array API shared by `NewTaskForm`, `ProjectDialog`, `BackdatedEntryDialog`, `PlannedTaskDialog`, `ArchivedTaskRow`, `KanbanBoardControls` |
+| `src/components/FormDialog.tsx`               | Shell shared by every create/edit form (`NewTaskForm`, `PlannedTaskDialog`, `ProjectDialog`, `ClientDialog`, `CategoryDialog`, `InitiativeDialog`): modal `Dialog` (full screen on phones) around a `noValidate` `<form>` that fills the panel, with Cancel + submit pinned to the bottom, an `isSubmitting` state, an optional `secondaryAction` (e.g. Delete), and `mousedown` prevented on both buttons so pressing them can't blur-validate and shift the layout under the click. Use it for new forms; `ui/sheet.tsx` is now only the mobile sidebar's container |
+| `src/components/TaskFormFields.tsx`           | Fields shared by both task forms: required title (inline error), description with Edit/Preview tabs and a labelled textarea, category, project; extra fields (status) go in as children. `NO_SELECTION` (`"none"`) is the select sentinel |
+| `src/hooks/useTaskTitleField.ts`              | Required-title state: error after blur or a failed submit (never while typing); a failed submit focuses the field |
 | `src/components/PlannedTaskPicker.tsx`        | Empty started-day card on the Dashboard: lists in-progress/to-do planned tasks with Start (`pullPlannedTaskToDay`) / Resume (`addPlannedTaskToDay`) buttons. Task Board cards and the Tasks page header can also start the day (`startDayAndPullPlannedTask`, "now" rounded to 15 min, no dialog) |
-| `src/hooks/useTaskBoardView.ts`               | Kanban board sort (oldest/newest/title; legacy saved `priority` maps to oldest) and filter (project/client/category) state; `KanbanBoard` resets saved filters that no longer match any task once data loads; persisted to `localStorage` (`timetracker_task_board_view`) only, never synced to Supabase. Consumed by `KanbanBoard.tsx`/`KanbanBoardControls.tsx` |
+| `src/hooks/useTaskBoardView.ts`               | Kanban board sort (oldest/newest/title; legacy saved `priority` maps to oldest), filter (project/client/category), and mobile active status tab state; `KanbanBoard` resets saved filters that no longer match any task once data loads; persisted to `localStorage` (`timetracker_task_board_view`) only, never synced to Supabase. Consumed by `KanbanBoard.tsx`/`KanbanBoardControls.tsx` |
 | `src/components/ArchivedTaskRow.tsx`          | Inline expandable row for editing a single task within `ArchiveEditDialog` (replaces the old `TaskEditInArchiveDialog` modal); disables Save and shows an inline alert when the end time is before the start |
 | `src/services/localStorageService/recovery.ts` | Lists/previews/restores localStorage schema-mismatch backup keys and desktop (Tauri) disk-backup snapshots; the read side of the write-only backup safety nets |
 | `src/hooks/useDataRecovery.ts`                | Unifies browser (`recovery.ts`) and desktop (`useElectronBackup`'s `listDiskBackups`/`readDiskBackup`, Tauri-backed) backup sources behind one list/preview/restore API |

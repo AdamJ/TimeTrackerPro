@@ -72,7 +72,7 @@ const SettingsContent: React.FC = () => {
 
   return (
     <PageLayout title="Settings" icon={<CogIcon className="w-6 h-6" />}>
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto px-4 py-4 md:p-6">
         <div className="grid gap-6">
           {/* Management Sections */}
           <h2 className="border-b font-semibold flex gap-3 pb-2">

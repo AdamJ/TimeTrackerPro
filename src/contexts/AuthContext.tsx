@@ -1,7 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { supabase, clearUserCache, trackAuthCall } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, clearUserCache, trackAuthCall } from '@/lib/supabase';
 import { clearSupabaseResponseCache } from '@/services/localStorageService/clearLocalData';
 import { User, Session, AuthError } from '@supabase/supabase-js';
+
+export const SUPABASE_NOT_CONFIGURED_MESSAGE =
+  "Cloud sync isn't set up for this app. Your data stays on this device.";
 
 interface AuthContextType {
   user: User | null;
@@ -95,6 +98,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (!isSupabaseConfigured) {
+      return { error: new AuthError(SUPABASE_NOT_CONFIGURED_MESSAGE) };
+    }
     trackAuthCall('signInWithPassword', 'AuthContext.signIn');
     const { error } = await supabase.auth.signInWithPassword({
       email,

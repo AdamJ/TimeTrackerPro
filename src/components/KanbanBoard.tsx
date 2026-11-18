@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { PlannedTask, PlannedTaskStatus } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import {
@@ -12,6 +12,10 @@ import {
   KanbanBoardControls,
 } from "@/components/KanbanBoardControls";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/util";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
 
 const COLUMNS: { status: PlannedTaskStatus; title: string }[] = [
   { status: "todo", title: "To Do" },
@@ -48,9 +52,12 @@ function sortTasks(tasks: PlannedTask[], sortBy: TaskSortOption) {
 export const KanbanBoard: React.FC = () => {
   const { plannedTasks, categories, loading, isDayStarted, isDayStale } =
     useTimeTracking();
+  const isMobile = useIsMobile();
   const {
     sortBy,
     filters,
+    activeStatus,
+    setActiveStatus,
     hasActiveFilters,
     setSortBy,
     setFilter,
@@ -108,35 +115,122 @@ export const KanbanBoard: React.FC = () => {
   const tasksByStatus = (status: PlannedTaskStatus) =>
     sortTasks(visibleTasks.filter((t) => t.status === status), sortBy);
 
+  // Phones show one status column at a time (remembered across visits); a
+  // horizontal swipe on the column steps to the neighbouring status.
+  const activeIndex = COLUMNS.findIndex((c) => c.status === activeStatus);
+  const goToColumn = useCallback(
+    (index: number) => {
+      const target = COLUMNS[index];
+      if (target) setActiveStatus(target.status);
+    },
+    [setActiveStatus],
+  );
+  // Direction of the last tab change, so the new column slides in from the side
+  // the user is heading towards. 0 until the first change, so nothing animates
+  // on page load. Adjusting state during render is React's pattern for this.
+  const [previousIndex, setPreviousIndex] = useState(activeIndex);
+  const [slideDirection, setSlideDirection] = useState<-1 | 0 | 1>(0);
+  if (previousIndex !== activeIndex) {
+    setPreviousIndex(activeIndex);
+    setSlideDirection(activeIndex > previousIndex ? 1 : -1);
+  }
+  const swipeHandlers = useHorizontalSwipe({
+    onSwipeLeft: () => goToColumn(activeIndex + 1),
+    onSwipeRight: () => goToColumn(activeIndex - 1),
+  });
+
   const filteredOutEverything =
     hasActiveFilters && visibleTasks.length === 0 && plannedTasks.length > 0;
 
+  const controls = (
+    <KanbanBoardControls
+      sortBy={sortBy}
+      filters={filters}
+      projectOptions={projectOptions}
+      clientOptions={clientOptions}
+      categoryOptions={categoryOptions}
+      hasActiveFilters={hasActiveFilters}
+      visibleCount={visibleTasks.length}
+      totalCount={plannedTasks.length}
+      onSortChange={setSortBy}
+      onFilterChange={setFilter}
+      onClearFilters={clearFilters}
+    />
+  );
+
+  const filteredOutBanner = filteredOutEverything && (
+    <div
+      role="status"
+      className="flex flex-wrap items-center justify-between gap-2 mb-4 rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground"
+    >
+      <span>No tasks match the current filters.</span>
+      <Button variant="outline" size="sm" onClick={clearFilters}>
+        Clear filters
+      </Button>
+    </div>
+  );
+
+  const emptyMessage = hasActiveFilters ? "No matching tasks" : "No tasks";
+
+  if (isMobile) {
+    return (
+      <Tabs
+        value={activeStatus}
+        onValueChange={(value) => setActiveStatus(value as PlannedTaskStatus)}
+      >
+        <TabsList
+          aria-label="Task status"
+          className="mb-4 grid h-auto w-full grid-cols-4"
+        >
+          {COLUMNS.map(({ status, title }) => (
+            <TabsTrigger
+              key={status}
+              value={status}
+              className="flex-col gap-0.5 whitespace-normal px-1 text-center text-xs leading-tight"
+            >
+              <span>{title}</span>
+              <span className="tabular-nums text-muted-foreground">
+                {tasksByStatus(status).length}
+              </span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        {controls}
+        {filteredOutBanner}
+        {/* pan-y hands horizontal gestures to the swipe handlers; the min height
+            keeps a near-empty column easy to swipe. */}
+        <div className="min-h-[50svh] touch-pan-y overflow-x-clip" {...swipeHandlers}>
+          {COLUMNS.map(({ status, title }) => (
+            <TabsContent
+              key={status}
+              value={status}
+              className={cn(
+                "mt-0",
+                slideDirection !== 0 &&
+                  "animate-in fade-in-0 duration-200 ease-out motion-reduce:animate-none",
+                slideDirection === 1 && "slide-in-from-right-8",
+                slideDirection === -1 && "slide-in-from-left-8",
+              )}
+            >
+              <KanbanColumn
+                status={status}
+                title={title}
+                tasks={tasksByStatus(status)}
+                isDayStarted={isDayStarted}
+                isDayStale={isDayStale}
+                emptyMessage={emptyMessage}
+              />
+            </TabsContent>
+          ))}
+        </div>
+      </Tabs>
+    );
+  }
+
   return (
     <>
-      <KanbanBoardControls
-        sortBy={sortBy}
-        filters={filters}
-        projectOptions={projectOptions}
-        clientOptions={clientOptions}
-        categoryOptions={categoryOptions}
-        hasActiveFilters={hasActiveFilters}
-        visibleCount={visibleTasks.length}
-        totalCount={plannedTasks.length}
-        onSortChange={setSortBy}
-        onFilterChange={setFilter}
-        onClearFilters={clearFilters}
-      />
-      {filteredOutEverything && (
-        <div
-          role="status"
-          className="flex flex-wrap items-center justify-between gap-2 mb-4 rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground"
-        >
-          <span>No tasks match the current filters.</span>
-          <Button variant="outline" size="sm" onClick={clearFilters}>
-            Clear filters
-          </Button>
-        </div>
-      )}
+      {controls}
+      {filteredOutBanner}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {COLUMNS.map(({ status, title }) => (
           <KanbanColumn
@@ -146,7 +240,7 @@ export const KanbanBoard: React.FC = () => {
             tasks={tasksByStatus(status)}
             isDayStarted={isDayStarted}
             isDayStale={isDayStale}
-            emptyMessage={hasActiveFilters ? "No matching tasks" : "No tasks"}
+            emptyMessage={emptyMessage}
           />
         ))}
       </div>

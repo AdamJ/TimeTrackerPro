@@ -103,7 +103,7 @@ const ArchiveItemComponent: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 									className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
 								>
 									<RotateCcw className="w-4 h-4 block" />
-									<span className="hidden md:block">Restore</span>
+									<span className="sr-only md:not-sr-only">Restore</span>
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent>Restore this day</TooltipContent>
@@ -118,7 +118,7 @@ const ArchiveItemComponent: React.FC<ArchiveItemProps> = ({ day, onEdit }) => {
 									className="flex items-center space-x-2"
 								>
 									<Edit className="w-4 h-4 block" />
-									<span className="hidden md:block">Edit</span>
+									<span className="sr-only md:not-sr-only">Edit</span>
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent>Edit this day</TooltipContent>

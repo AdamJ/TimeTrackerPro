@@ -42,4 +42,20 @@ describe("useTaskBoardView", () => {
     expect(result.current.hasActiveFilters).toBe(false);
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).filters.project).toBe("all");
   });
+
+  it("remembers the active status tab across mounts", () => {
+    const first = renderHook(() => useTaskBoardView());
+    expect(first.result.current.activeStatus).toBe("todo");
+    act(() => first.result.current.setActiveStatus("blocked"));
+    first.unmount();
+    const second = renderHook(() => useTaskBoardView());
+    expect(second.result.current.activeStatus).toBe("blocked");
+  });
+
+  it("falls back to To Do when the saved status is missing or invalid", () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ activeStatus: "archived" }));
+    expect(renderHook(() => useTaskBoardView()).result.current.activeStatus).toBe("todo");
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ sortBy: "title" }));
+    expect(renderHook(() => useTaskBoardView()).result.current.activeStatus).toBe("todo");
+  });
 });

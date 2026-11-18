@@ -29,8 +29,8 @@ describe("NewTaskForm", () => {
 
   it("renders category and project selects", () => {
     render(<NewTaskForm onSubmit={vi.fn()} defaultOpen={true} />);
-    expect(screen.getByLabelText(/select category/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/select project/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^category$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^project$/i)).toBeInTheDocument();
   });
 
   it("calls onSubmit with title when form is submitted", async () => {
@@ -111,5 +111,43 @@ describe("NewTaskForm", () => {
     await user.click(screen.getByRole("button", { name: /new task/i }));
 
     expect(screen.getByLabelText(/task title/i)).toBeInTheDocument();
+  });
+
+  it("gives the description textarea an accessible name", () => {
+    render(<NewTaskForm onSubmit={vi.fn()} defaultOpen={true} />);
+    expect(screen.getByRole("textbox", { name: /description/i })).toBeInTheDocument();
+  });
+
+  it("moves focus back to the title when submitted empty, and links the error to it", async () => {
+    const user = userEvent.setup();
+    render(<NewTaskForm onSubmit={vi.fn()} defaultOpen={true} />);
+
+    await user.click(screen.getByRole("button", { name: /start task/i }));
+
+    const title = screen.getByLabelText(/task title/i);
+    expect(title).toHaveFocus();
+    expect(title).toHaveAttribute("aria-invalid", "true");
+    expect(title).toHaveAccessibleDescription(/task title is required/i);
+  });
+
+  it("submits on Enter from the title field", async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(<NewTaskForm onSubmit={onSubmit} defaultOpen={true} />);
+
+    await user.type(screen.getByLabelText(/task title/i), "Quick one{Enter}");
+
+    expect(onSubmit).toHaveBeenCalledWith("Quick one", undefined, undefined, undefined, undefined);
+  });
+
+  it("is a dialog with a title and description, and Escape cancels it", async () => {
+    const onCancel = vi.fn();
+    const user = userEvent.setup();
+    render(<NewTaskForm onSubmit={vi.fn()} onCancel={onCancel} defaultOpen={true} />);
+
+    expect(screen.getByRole("dialog", { name: /start new task/i })).toHaveAccessibleDescription(/start the timer/i);
+    await user.keyboard("{Escape}");
+
+    expect(onCancel).toHaveBeenCalledOnce();
   });
 });

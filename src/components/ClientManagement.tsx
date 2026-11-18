@@ -28,7 +28,7 @@ import {
   ItemDescription,
   ItemActions,
 } from "./ui/item";
-import { ClientSheet } from "./ClientSheet";
+import { ClientDialog } from "@/components/ClientDialog";
 import { Client } from "@/contexts/TimeTrackingContext";
 
 export const ClientManagement: React.FC = () => {
@@ -103,7 +103,7 @@ export const ClientManagement: React.FC = () => {
     () => (
       <Button onClick={handleOpenAdd} size="sm" variant="default">
         <Plus className="w-4 h-4 sm:mr-1" />
-        <span className="hidden sm:block">Add Client</span>
+        <span className="sr-only sm:not-sr-only">Add Client</span>
       </Button>
     ),
     [handleOpenAdd]
@@ -115,7 +115,7 @@ export const ClientManagement: React.FC = () => {
       badge={pageBadge}
       actions={pageActions}
     >
-      <div className="max-w-6xl mx-auto p-6 print:p-4 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 py-4 md:p-6 print:p-4 space-y-6">
         {archiveError && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -238,7 +238,7 @@ export const ClientManagement: React.FC = () => {
                       onClick={() => handleOpenEdit(client)}
                     >
                       <Pencil className="w-4 h-4 mr-1" />
-                      <span className="hidden sm:block">Edit</span>
+                      <span className="sr-only sm:not-sr-only">Edit</span>
                     </Button>
                     <Button
                       variant="outline"
@@ -250,7 +250,7 @@ export const ClientManagement: React.FC = () => {
                       ) : (
                         <Archive className="w-4 h-4 mr-1" />
                       )}
-                      <span className="hidden sm:block">Archive</span>
+                      <span className="sr-only sm:not-sr-only">Archive</span>
                     </Button>
                   </ItemActions>
                 </Item>
@@ -293,7 +293,7 @@ export const ClientManagement: React.FC = () => {
                           ) : (
                             <RotateCcw className="w-3 h-3 sm:mr-2" />
                           )}
-                          <span className="hidden sm:block">Restore</span>
+                          <span className="sr-only sm:not-sr-only">Restore</span>
                         </Button>
                       </div>
                     </CardContent>
@@ -305,7 +305,7 @@ export const ClientManagement: React.FC = () => {
         )}
       </div>
 
-      <ClientSheet
+      <ClientDialog
         open={sheetOpen}
         onOpenChange={(open) => {
           setSheetOpen(open);

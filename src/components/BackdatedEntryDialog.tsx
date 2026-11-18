@@ -239,7 +239,9 @@ export const BackdatedEntryDialog: React.FC<BackdatedEntryDialogProps> = ({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className="max-w-[90dvw] max-h-[90dvh] overflow-y-auto">
+			<DialogContent
+				className="md:max-w-[90dvw] md:max-h-[90dvh] md:overflow-y-auto"
+			>
 				<DialogHeader>
 					<DialogTitle className="flex items-center space-x-2">
 						<Calendar className="w-5 h-5" />

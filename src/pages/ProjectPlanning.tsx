@@ -5,7 +5,7 @@ import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { PageLayout } from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
 import { InitiativeTimeline } from "@/components/InitiativeTimeline";
-import { InitiativeSheet } from "@/components/InitiativeSheet";
+import { InitiativeDialog } from "@/components/InitiativeDialog";
 import { Initiative } from "@/contexts/TimeTrackingContext";
 
 const ProjectPlanning: React.FC = () => {
@@ -35,7 +35,7 @@ const ProjectPlanning: React.FC = () => {
     () => (
       <Button onClick={handleOpenAdd} size="sm">
         <Plus className="w-4 h-4 sm:mr-1" />
-        <span className="hidden sm:block">New Initiative</span>
+        <span className="sr-only sm:not-sr-only">New Initiative</span>
       </Button>
     ),
     [handleOpenAdd]
@@ -62,11 +62,11 @@ const ProjectPlanning: React.FC = () => {
 
   return (
     <PageLayout title={project.name} actions={pageActions}>
-      <div className="max-w-6xl mx-auto p-6 print:p-4">
+      <div className="max-w-6xl mx-auto px-4 py-4 md:p-6 print:p-4">
         <InitiativeTimeline initiatives={projectInitiatives} onSelect={handleSelect} />
       </div>
 
-      <InitiativeSheet
+      <InitiativeDialog
         open={sheetOpen}
         onOpenChange={(open) => {
           setSheetOpen(open);

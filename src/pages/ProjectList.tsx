@@ -32,7 +32,7 @@ import {
 import { PageLayout } from "@/components/PageLayout";
 import { toast } from "@/hooks/use-toast";
 import { Item, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemMedia } from "@/components/ui/item";
-import { ProjectSheet } from "@/components/ProjectSheet";
+import { ProjectDialog } from "@/components/ProjectDialog";
 
 const ProjectContent: React.FC = () => {
   const {
@@ -113,11 +113,11 @@ const ProjectContent: React.FC = () => {
       <div className="flex space-x-2">
         <Button onClick={openResetDialog} size="sm" variant="outline">
           <RotateCcw className="w-4 h-4 sm:mr-1" />
-          <span className="hidden sm:block">Reset to Defaults</span>
+          <span className="sr-only sm:not-sr-only">Reset to Defaults</span>
         </Button>
         <Button onClick={handleOpenAdd} size="sm">
           <Plus className="w-4 h-4 sm:mr-1" />
-          <span className="hidden sm:block">Add Project</span>
+          <span className="sr-only sm:not-sr-only">Add Project</span>
         </Button>
       </div>
     ),
@@ -130,7 +130,7 @@ const ProjectContent: React.FC = () => {
       badge={pageBadge}
       actions={pageActions}
     >
-      <div className="max-w-6xl mx-auto p-6 print:p-4">
+      <div className="max-w-6xl mx-auto px-4 py-4 md:p-6 print:p-4">
         {/* Projects List */}
         <div className="space-y-6">
           {activeProjects.length === 0 ? (
@@ -195,7 +195,7 @@ const ProjectContent: React.FC = () => {
                       >
                         <Link to={`/projects/${project.id}/planning`}>
                           <CalendarRange className="w-4 h-4 mr-1" />
-                          <span className="hidden sm:block">Planning</span>
+                          <span className="sr-only sm:not-sr-only">Planning</span>
                         </Link>
                       </Button>
                       <Button
@@ -204,7 +204,7 @@ const ProjectContent: React.FC = () => {
                         onClick={() => handleEdit(project)}
                       >
                         <Edit className="w-4 h-4 mr-1" />
-                        <span className="hidden sm:block">Edit</span>
+                        <span className="sr-only sm:not-sr-only">Edit</span>
                       </Button>
                       <Button
                         variant="outline"
@@ -212,7 +212,7 @@ const ProjectContent: React.FC = () => {
                         onClick={() => handleArchiveProject(project.id)}
                       >
                         <Archive className="w-4 h-4 mr-1" />
-                        <span className="hidden sm:block">Archive</span>
+                        <span className="sr-only sm:not-sr-only">Archive</span>
                       </Button>
                       <Button
                         variant="outline"
@@ -221,7 +221,7 @@ const ProjectContent: React.FC = () => {
                         className="text-destructive hover:text-secondary bg-transparent hover:bg-destructive"
                       >
                         <Trash2 className="w-4 h-4 mr-1" />
-                        <span className="hidden sm:block">Delete</span>
+                        <span className="sr-only sm:not-sr-only">Delete</span>
                       </Button>
                     </ItemActions>
                   </Item>
@@ -274,7 +274,7 @@ const ProjectContent: React.FC = () => {
                             onClick={() => handleRestoreProject(project.id)}
                           >
                             <RotateCcw className="w-3 h-3 sm:mr-2" />
-                            <span className="hidden sm:block">Restore</span>
+                            <span className="sr-only sm:not-sr-only">Restore</span>
                           </Button>
                         </ItemActions>
                     </Item>
@@ -335,7 +335,7 @@ const ProjectContent: React.FC = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <ProjectSheet
+      <ProjectDialog
         open={sheetOpen}
         onOpenChange={(open) => {
           setSheetOpen(open);

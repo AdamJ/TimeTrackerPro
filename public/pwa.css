@@ -18,14 +18,19 @@ body {
 /* Add padding bottom for mobile nav on mobile devices */
 @media (max-width: 768px) {
   body {
-    padding-bottom: calc(3rem + var(--safe-area-inset-bottom));
+    padding-bottom: calc(5.5rem + var(--safe-area-inset-bottom, 0px));
   }
 }
 
 /* Smooth scrolling for PWA */
 html {
-  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 /* Prevent text selection on buttons in PWA */
@@ -142,7 +147,7 @@ body {
     }
 
     #root {
-      padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
     }
   }
 }
@@ -151,13 +156,6 @@ body {
 [data-vaul-drawer] {
   touch-action: pan-y;
   overscroll-behavior: contain;
-}
-
-/* Lift the floating action button above the mobile nav + home indicator */
-@supports (-webkit-touch-callout: none) {
-  .fab-nav-offset {
-    bottom: calc(4rem + env(safe-area-inset-bottom, 0px)) !important;
-  }
 }
 
 /* Page transitions via CSS View Transitions API */

@@ -2,13 +2,7 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet";
+import { FormDialog } from "@/components/FormDialog";
 import {
   Form,
   FormField,
@@ -22,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ResponsiveSelect } from "@/components/ui/responsive-select";
-import { Loader2 } from "lucide-react";
 import { Initiative, InitiativeStatus, InitiativeDeadlineType } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { useUndoableDelete } from "@/hooks/useUndoableDelete";
@@ -34,7 +27,7 @@ import {
   toLocalDateString,
 } from "@/utils/initiativeUtils";
 
-interface InitiativeSheetProps {
+interface InitiativeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: "add" | "edit";
@@ -51,7 +44,7 @@ const STATUS_OPTIONS: { value: InitiativeStatus; label: string }[] = [
 
 const QUARTER_OPTIONS = [1, 2, 3, 4].map((q) => ({ value: String(q), label: `Q${q}` }));
 
-export const InitiativeSheet: React.FC<InitiativeSheetProps> = ({
+export const InitiativeDialog: React.FC<InitiativeDialogProps> = ({
   open,
   onOpenChange,
   mode,
@@ -227,182 +220,170 @@ export const InitiativeSheet: React.FC<InitiativeSheetProps> = ({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>
-            {mode === "add" ? "Add Initiative" : "Edit Initiative"}
-          </SheetTitle>
-        </SheetHeader>
+    <Form {...form}>
+      <FormDialog
+        open={open}
+        onClose={() => onOpenChange(false)}
+        title={mode === "add" ? "Add Initiative" : "Edit Initiative"}
+        description={
+          mode === "add"
+            ? "Plan an outcome for this project, with a goal and a deadline."
+            : "Update this initiative."
+        }
+        submitLabel={mode === "add" ? "Add Initiative" : "Save Changes"}
+        isSubmitting={isSaving}
+        onSubmit={form.handleSubmit(onSubmit)}
+        secondaryAction={
+          mode === "edit" ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="bg-transparent text-destructive hover:bg-destructive hover:text-secondary sm:mr-auto"
+              onClick={handleDelete}
+              disabled={isSaving}
+            >
+              Delete
+            </Button>
+          ) : undefined
+        }
+      >
+        <div className="space-y-5">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Name <span className="text-destructive" aria-hidden="true">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="Redesign onboarding" required {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-6 py-4"
-          >
+          <FormField
+            control={form.control}
+            name="goal"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Goal</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="What outcome does this initiative commit to?" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <FormControl>
+                  <ResponsiveSelect
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    options={STATUS_OPTIONS}
+                    disabled={mode === "add"}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="startDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Start date</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormDescription>
+                  Optional. Defaults to the date the initiative was created.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div role="group" aria-label="Deadline type" className="flex gap-2">
+            <Button
+              type="button"
+              variant={deadlineType === "date" ? "default" : "outline"}
+              aria-pressed={deadlineType === "date"}
+              onClick={() => form.setValue("deadlineType", "date" as InitiativeDeadlineType)}
+            >
+              Specific date
+            </Button>
+            <Button
+              type="button"
+              variant={deadlineType === "quarter" ? "default" : "outline"}
+              aria-pressed={deadlineType === "quarter"}
+              onClick={() => form.setValue("deadlineType", "quarter" as InitiativeDeadlineType)}
+            >
+              Quarter
+            </Button>
+          </div>
+
+          {deadlineType === "date" ? (
             <FormField
               control={form.control}
-              name="name"
+              name="deadlineDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Name <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="Redesign onboarding" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="goal"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Goal</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="What outcome does this initiative commit to?" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <FormControl>
-                    <ResponsiveSelect
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      options={STATUS_OPTIONS}
-                      disabled={mode === "add"}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="startDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start date</FormLabel>
+                  <FormLabel>Deadline date</FormLabel>
                   <FormControl>
                     <Input type="date" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    Optional. Defaults to the date the initiative was created.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={deadlineType === "date" ? "default" : "outline"}
-                aria-pressed={deadlineType === "date"}
-                onClick={() => form.setValue("deadlineType", "date" as InitiativeDeadlineType)}
-              >
-                Specific date
-              </Button>
-              <Button
-                type="button"
-                variant={deadlineType === "quarter" ? "default" : "outline"}
-                aria-pressed={deadlineType === "quarter"}
-                onClick={() => form.setValue("deadlineType", "quarter" as InitiativeDeadlineType)}
-              >
-                Quarter
-              </Button>
-            </div>
-
-            {deadlineType === "date" ? (
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
-                name="deadlineDate"
+                name="deadlineQuarter"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Deadline date</FormLabel>
+                    <FormLabel>Deadline quarter</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <ResponsiveSelect
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        options={QUARTER_OPTIONS}
+                        placeholder="Quarter"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="deadlineQuarter"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Deadline quarter</FormLabel>
-                      <FormControl>
-                        <ResponsiveSelect
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          options={QUARTER_OPTIONS}
-                          placeholder="Quarter"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="deadlineYear"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Deadline year</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="2027" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            <SheetFooter className="flex gap-2 pt-2">
-              {mode === "edit" && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="text-destructive hover:text-secondary bg-transparent hover:bg-destructive mr-auto"
-                  onClick={handleDelete}
-                  disabled={isSaving}
-                >
-                  Delete
-                </Button>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => onOpenChange(false)}
-                disabled={isSaving}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSaving}>
-                {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {isSaving ? "Saving..." : mode === "add" ? "Add" : "Save"}
-              </Button>
-            </SheetFooter>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
+              <FormField
+                control={form.control}
+                name="deadlineYear"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Deadline year</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="2027" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+        </div>
+      </FormDialog>
+    </Form>
   );
 };

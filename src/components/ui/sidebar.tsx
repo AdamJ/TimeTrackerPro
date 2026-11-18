@@ -197,7 +197,11 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+            // tailwind-merge v2 doesn't know the w-(--var) shorthand, so use the
+            // bracket form or the sheet's own w-full wins and covers the whole screen
+            // (leaving nothing to tap outside to close it). The sheet's Close button
+            // stays visible: it is the explicit way to dismiss the menu.
+            className="w-[var(--sidebar-width)] bg-sidebar p-0 text-sidebar-foreground sm:w-[var(--sidebar-width)]"
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -205,7 +209,9 @@ const Sidebar = React.forwardRef<
             }
             side={side}
           >
-            <div className="flex h-full w-full flex-col">{children}</div>
+            <div className="flex h-full w-full flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+              {children}
+            </div>
           </SheetContent>
         </Sheet>
       )

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { InitiativeSheet } from "./InitiativeSheet";
+import { InitiativeDialog } from "@/components/InitiativeDialog";
 import { toLocalDateString } from "@/utils/initiativeUtils";
 
 const addInitiativeMock = vi.fn(() => ({ id: "new-id" }));
@@ -23,14 +23,24 @@ const EXISTING_INITIATIVE = {
   createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z"
 };
 
-describe("InitiativeSheet", () => {
-  it("renders the Add Initiative title in add mode", () => {
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
-    expect(screen.getByText("Add Initiative")).toBeInTheDocument();
+describe("InitiativeDialog", () => {
+  it("is a named, described modal dialog with a real form in add mode", () => {
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    const dialog = screen.getByRole("dialog", { name: "Add Initiative" });
+    expect(dialog).toHaveAccessibleDescription(/goal and a deadline/i);
+    expect(dialog.querySelector("form")).toHaveAttribute("novalidate");
+    expect(screen.getByLabelText(/^name/i)).toBeRequired();
+    expect(screen.getByRole("group", { name: "Deadline type" })).toBeInTheDocument();
+  });
+
+  it("is titled Edit Initiative in edit mode", () => {
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="edit" projectId="proj-1" initiative={EXISTING_INITIATIVE} />);
+    expect(screen.getByRole("dialog", { name: "Edit Initiative" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save Changes" })).toHaveAttribute("type", "submit");
   });
 
   it("requires a name before submitting", async () => {
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     fireEvent.click(screen.getByRole("button", { name: /add/i }));
     await waitFor(() => {
       expect(screen.getByText(/name is required/i)).toBeInTheDocument();
@@ -39,7 +49,7 @@ describe("InitiativeSheet", () => {
   });
 
   it("rejects a date deadline before today when adding", async () => {
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "Backdated" } });
     fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "2000-01-01" } });
     fireEvent.click(screen.getByRole("button", { name: /add/i }));
@@ -50,7 +60,7 @@ describe("InitiativeSheet", () => {
   });
 
   it("requires a deadline date when the deadline type is date", async () => {
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "No deadline date" } });
     fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "" } });
     fireEvent.click(screen.getByRole("button", { name: /add/i }));
@@ -61,7 +71,7 @@ describe("InitiativeSheet", () => {
   });
 
   it("requires both a quarter and a year when the deadline type is quarter", async () => {
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "Partial quarter" } });
     fireEvent.click(screen.getByRole("button", { name: /^quarter$/i }));
     fireEvent.change(screen.getByLabelText(/deadline year/i), { target: { value: "2027" } });
@@ -73,7 +83,7 @@ describe("InitiativeSheet", () => {
   });
 
   it("rejects a non-4-digit year for a quarter deadline", async () => {
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "Two digit year" } });
     fireEvent.click(screen.getByRole("button", { name: /^quarter$/i }));
     fireEvent.change(screen.getByLabelText(/deadline year/i), { target: { value: "27" } });
@@ -86,7 +96,7 @@ describe("InitiativeSheet", () => {
 
   it("submits a valid date-deadline initiative", async () => {
     const onOpenChange = vi.fn();
-    render(<InitiativeSheet open onOpenChange={onOpenChange} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={onOpenChange} mode="add" projectId="proj-1" />);
     fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "Redesign onboarding" } });
     fireEvent.change(screen.getByLabelText(/goal/i), { target: { value: "Cut drop-off" } });
     fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "2099-12-15" } });
@@ -100,26 +110,26 @@ describe("InitiativeSheet", () => {
   });
 
   it("pre-fills the deadline date with today's local date in add mode", () => {
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     const input = screen.getByLabelText(/deadline date/i) as HTMLInputElement;
     expect(input.value).toBe(toLocalDateString(new Date()));
   });
 
   it("pre-fills the quarter deadline year with the current year, leaving the quarter unset", () => {
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     fireEvent.click(screen.getByRole("button", { name: /^quarter$/i }));
     const year = screen.getByLabelText(/deadline year/i) as HTMLInputElement;
     expect(year.value).toBe(String(new Date().getFullYear()));
   });
 
   it("leaves the optional start date blank by default", () => {
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     expect((screen.getByLabelText(/start date/i) as HTMLInputElement).value).toBe("");
   });
 
   it("submits with only a name when the pre-filled deadline date is accepted", async () => {
     addInitiativeMock.mockClear();
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "Defaults only" } });
     fireEvent.click(screen.getByRole("button", { name: /add/i }));
     await waitFor(() => {
@@ -131,13 +141,13 @@ describe("InitiativeSheet", () => {
 
   it("keeps an existing initiative's saved deadline instead of the defaults in edit mode", () => {
     render(
-      <InitiativeSheet open onOpenChange={() => {}} mode="edit" projectId="proj-1" initiative={EXISTING_INITIATIVE} />
+      <InitiativeDialog open onOpenChange={() => {}} mode="edit" projectId="proj-1" initiative={EXISTING_INITIATIVE} />
     );
     expect((screen.getByLabelText(/deadline date/i) as HTMLInputElement).value).toBe("2099-01-01");
   });
 
   it("submits an optional start date alongside the deadline", async () => {
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "With start" } });
     fireEvent.change(screen.getByLabelText(/start date/i), { target: { value: "2099-11-01" } });
     fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "2099-12-15" } });
@@ -151,7 +161,7 @@ describe("InitiativeSheet", () => {
 
   it("leaves startDate undefined when the start date is left blank", async () => {
     addInitiativeMock.mockClear();
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "No start" } });
     fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "2099-12-15" } });
     fireEvent.click(screen.getByRole("button", { name: /add/i }));
@@ -161,7 +171,7 @@ describe("InitiativeSheet", () => {
 
   it("rejects a deadline before the start date", async () => {
     addInitiativeMock.mockClear();
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "Inverted" } });
     fireEvent.change(screen.getByLabelText(/start date/i), { target: { value: "2099-12-15" } });
     fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "2099-11-01" } });
@@ -174,7 +184,7 @@ describe("InitiativeSheet", () => {
 
   it("allows a backdated start and deadline, since an explicit start supersedes the creation floor", async () => {
     addInitiativeMock.mockClear();
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "Past work" } });
     fireEvent.change(screen.getByLabelText(/start date/i), { target: { value: "2000-01-01" } });
     fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "2000-02-01" } });
@@ -189,7 +199,7 @@ describe("InitiativeSheet", () => {
   it("pre-fills the start date in edit mode and clears it when emptied", async () => {
     updateInitiativeMock.mockClear();
     render(
-      <InitiativeSheet
+      <InitiativeDialog
         open
         onOpenChange={() => {}}
         mode="edit"
@@ -207,14 +217,14 @@ describe("InitiativeSheet", () => {
   });
 
   it("does not render a Delete button in add mode", () => {
-    render(<InitiativeSheet open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
+    render(<InitiativeDialog open onOpenChange={() => {}} mode="add" projectId="proj-1" />);
     expect(screen.queryByRole("button", { name: /delete/i })).not.toBeInTheDocument();
   });
 
-  it("deletes the initiative and closes the sheet when Delete is clicked in edit mode", () => {
+  it("deletes the initiative and closes the dialog when Delete is clicked in edit mode", () => {
     const onOpenChange = vi.fn();
     render(
-      <InitiativeSheet
+      <InitiativeDialog
         open
         onOpenChange={onOpenChange}
         mode="edit"
