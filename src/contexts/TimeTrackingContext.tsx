@@ -257,7 +257,8 @@ interface TimeTrackingContextType {
 
   // Planned tasks (kanban board)
   plannedTasks: PlannedTask[];
-  addPlannedTask: (data: Omit<PlannedTask, "id" | "createdAt" | "updatedAt" | "status" | "timeEntries" | "timeSpent">) => void;
+  /** `status` defaults to "todo"; the Task board passes the column the task was added from. */
+  addPlannedTask: (data: Omit<PlannedTask, "id" | "createdAt" | "updatedAt" | "status" | "timeEntries" | "timeSpent"> & { status?: PlannedTaskStatus }) => void;
   updatePlannedTask: (id: string, updates: Partial<PlannedTask>) => void;
   deletePlannedTask: (id: string) => void;
   restoreDeletedPlannedTask: (task: PlannedTask) => void;
@@ -1731,12 +1732,12 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // === PLANNED TASKS ===
 
-  const addPlannedTask = useCallback((data: Omit<PlannedTask, "id" | "createdAt" | "updatedAt" | "status" | "timeEntries" | "timeSpent">) => {
+  const addPlannedTask = useCallback((data: Omit<PlannedTask, "id" | "createdAt" | "updatedAt" | "status" | "timeEntries" | "timeSpent"> & { status?: PlannedTaskStatus }) => {
     const now = new Date().toISOString();
     const newTask: PlannedTask = {
       ...data,
       id: `planned-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      status: "todo",
+      status: data.status ?? "todo",
       timeEntries: [],
       timeSpent: 0,
       createdAt: now,

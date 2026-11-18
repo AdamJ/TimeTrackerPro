@@ -884,6 +884,20 @@ describe("TimeTrackingContext", () => {
       });
     });
 
+    it("adds a planned task with the status it was created with (the board column)", async () => {
+      const { result } = renderHook(() => useTimeTracking(), { wrapper });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await act(async () => {
+        result.current.addPlannedTask({ title: "Already underway", status: "in_progress" });
+      });
+
+      await waitFor(() => {
+        expect(result.current.plannedTasks).toHaveLength(1);
+        expect(result.current.plannedTasks[0].status).toBe("in_progress");
+      });
+    });
+
     it("updates a planned task's title", async () => {
       const { result } = renderHook(() => useTimeTracking(), { wrapper });
       await waitFor(() => expect(result.current.loading).toBe(false));

@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { ResponsiveSelect } from "@/components/ui/responsive-select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SheetFooter } from "@/components/ui/sheet";
-import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import { PlannedTask, PlannedTaskStatus } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
+import { useTaskTitleField } from "@/hooks/useTaskTitleField";
 import { formatDuration } from "@/utils/reportUtils";
-import { Field, FieldLabel } from "./ui/field";
+import { TaskFormDialog } from "@/components/TaskFormDialog";
+import { NO_SELECTION, TaskFormFields } from "@/components/TaskFormFields";
 
 interface PlannedTaskDialogProps {
   task?: PlannedTask;
@@ -26,68 +23,67 @@ const STATUS_LABELS: Record<PlannedTaskStatus, string> = {
   blocked: "Blocked",
 };
 
+/** Create or edit a planned task (a card on the Task board). Same shell and fields as "Start New Task". */
 export const PlannedTaskDialog: React.FC<PlannedTaskDialogProps> = ({
   task,
   isOpen,
   onClose,
   defaultStatus = "todo",
 }) => {
-  const { addPlannedTask, updatePlannedTask, projects, categories } =
-    useTimeTracking();
+  const { addPlannedTask, updatePlannedTask, projects } = useTimeTracking();
 
-  const [title, setTitle] = useState("");
+  const titleField = useTaskTitleField();
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<PlannedTaskStatus>(defaultStatus);
-  const [project, setProject] = useState("none");
-  const [category, setCategory] = useState("none");
-  const [descTab, setDescTab] = useState<"edit" | "preview">("edit");
+  const [project, setProject] = useState(NO_SELECTION);
+  const [category, setCategory] = useState(NO_SELECTION);
   const [hasChanges, setHasChanges] = useState(false);
 
   const isEditMode = !!task;
+  const { reset: resetTitle } = titleField;
 
   useEffect(() => {
     if (isOpen) {
       if (task) {
-        setTitle(task.title);
+        resetTitle(task.title);
         setDescription(task.description ?? "");
         setStatus(task.status);
-        setProject(projects.find((p) => p.name === task.project)?.id ?? "none");
-        setCategory(task.category ?? "none");
+        setProject(projects.find((p) => p.name === task.project)?.id ?? NO_SELECTION);
+        setCategory(task.category ?? NO_SELECTION);
       } else {
-        setTitle("");
+        resetTitle();
         setDescription("");
         setStatus(defaultStatus);
-        setProject("none");
-        setCategory("none");
+        setProject(NO_SELECTION);
+        setCategory(NO_SELECTION);
       }
-      setDescTab("edit");
       setHasChanges(false);
     }
-  }, [isOpen, task, projects, defaultStatus]);
+  }, [isOpen, task, projects, defaultStatus, resetTitle]);
 
   useEffect(() => {
     if (!isOpen || !task) return;
     const originalProject =
-      projects.find((p) => p.name === task.project)?.id ?? "none";
+      projects.find((p) => p.name === task.project)?.id ?? NO_SELECTION;
     const changed =
-      title !== task.title ||
+      titleField.title !== task.title ||
       description !== (task.description ?? "") ||
       status !== task.status ||
       project !== originalProject ||
-      category !== (task.category ?? "none");
+      category !== (task.category ?? NO_SELECTION);
     setHasChanges(changed);
-  }, [title, description, status, project, category, task, projects, isOpen]);
+  }, [titleField.title, description, status, project, category, task, projects, isOpen]);
 
   const handleSave = () => {
-    if (!title.trim()) return;
+    if (!titleField.validate()) return;
 
     const selectedProject = projects.find((p) => p.id === project);
     const data = {
-      title: title.trim(),
+      title: titleField.title.trim(),
       description: description.trim() || undefined,
       project: selectedProject?.name,
       client: selectedProject?.client,
-      category: category === "none" ? undefined : category,
+      category: category === NO_SELECTION ? undefined : category,
       priority: task?.priority ?? 0,
       linkedTaskId: task?.linkedTaskId,
     };
@@ -95,125 +91,61 @@ export const PlannedTaskDialog: React.FC<PlannedTaskDialogProps> = ({
     if (isEditMode && task) {
       updatePlannedTask(task.id, { ...data, status });
     } else {
-      addPlannedTask(data);
+      addPlannedTask({ ...data, status: defaultStatus });
     }
     onClose();
   };
 
-  const canSave = title.trim().length > 0 && (!isEditMode || hasChanges);
-
   return (
-    <div className="flex flex-col gap-4 py-4">
-      <div>
-        <Label htmlFor="planned-title">Title</Label>
-        <Input
-          id="planned-title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="What needs to be done?"
-          onKeyDown={(e) => e.key === "Enter" && canSave && handleSave()}
-          className="mt-1"
-          aria-required="true"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="planned-description">Description</Label>
-        <Tabs
-          value={descTab}
-          onValueChange={(v) => setDescTab(v as "edit" | "preview")}
-          className="mt-1"
-        >
-          <TabsList>
-            <TabsTrigger value="edit">Edit</TabsTrigger>
-            <TabsTrigger value="preview" disabled={!description.trim()}>
-              Preview
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="edit">
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Optional details, links, checklist items..."
-              rows={4}
-              className="min-h-[80px]"
-            />
-          </TabsContent>
-          <TabsContent value="preview">
-            <div className="w-full min-h-[80px] p-3 border rounded-md bg-background">
-              <MarkdownDisplay content={description} />
+    <TaskFormDialog
+      open={isOpen}
+      onClose={onClose}
+      title={isEditMode ? "Edit Task" : "New Task"}
+      description={isEditMode ? "Update this task." : "Add a task to your board to work on later."}
+      submitLabel={isEditMode ? "Save Changes" : "Add Task"}
+      submitDisabled={isEditMode && !hasChanges}
+      onSubmit={handleSave}
+    >
+      <TaskFormFields
+        idPrefix="planned"
+        titleField={titleField}
+        titlePlaceholder="What needs to be done?"
+        description={description}
+        onDescriptionChange={setDescription}
+        descriptionPlaceholder="Optional details, links, checklist items..."
+        category={category}
+        onCategoryChange={setCategory}
+        project={project}
+        onProjectChange={setProject}
+      >
+        {isEditMode && task && (
+          <>
+            <div className="space-y-1">
+              <Label htmlFor="planned-status">Status</Label>
+              <ResponsiveSelect
+                id="planned-status"
+                className="w-full"
+                value={status}
+                onValueChange={(v) => setStatus(v as PlannedTaskStatus)}
+                options={(Object.keys(STATUS_LABELS) as PlannedTaskStatus[]).map((s) => ({
+                  value: s,
+                  label: STATUS_LABELS[s],
+                }))}
+              />
             </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-
-      {isEditMode && (
-        <>
-        <div>
-          <Label htmlFor="planned-status">Status</Label>
-          <ResponsiveSelect
-            id="planned-status"
-            className="mt-1"
-            value={status}
-            onValueChange={(v) => setStatus(v as PlannedTaskStatus)}
-            options={(Object.keys(STATUS_LABELS) as PlannedTaskStatus[]).map((s) => ({
-              value: s,
-              label: STATUS_LABELS[s],
-            }))}
-          />
-        </div>
-        <Field>
-          <FieldLabel htmlFor="planned-time-spent">Time Spent</FieldLabel>
-          <Input
-            id="planned-time-spent"
-            name="planned-time-spent"
-            readOnly
-            aria-readonly="true"
-
-            value={formatDuration(task.timeSpent)}
-          />
-        </Field>
-        </>
-      )}
-
-      <div>
-        <Label htmlFor="planned-category">Category</Label>
-        <ResponsiveSelect
-          id="planned-category"
-          className="mt-1"
-          value={category}
-          onValueChange={setCategory}
-          placeholder="No category"
-          options={[
-            { value: "none", label: "No category" },
-            ...categories.map((c) => ({ value: c.id, label: c.name })),
-          ]}
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="planned-project">Project</Label>
-        <ResponsiveSelect
-          id="planned-project"
-          className="mt-1"
-          value={project}
-          onValueChange={setProject}
-          placeholder="No project"
-          options={[
-            { value: "none", label: "No project" },
-            ...projects.map((p) => ({ value: p.id, label: p.name })),
-          ]}
-        />
-      </div>
-
-      <SheetFooter className="mt-2">
-        <Button variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button onClick={handleSave} disabled={!canSave}>
-          {isEditMode ? "Save Changes" : "Add Task"}
-        </Button>
-      </SheetFooter>
-    </div>
+            <div className="space-y-1">
+              <Label htmlFor="planned-time-spent">Time Spent</Label>
+              <Input
+                id="planned-time-spent"
+                name="planned-time-spent"
+                readOnly
+                aria-readonly="true"
+                value={formatDuration(task.timeSpent)}
+              />
+            </div>
+          </>
+        )}
+      </TaskFormFields>
+    </TaskFormDialog>
   );
 };

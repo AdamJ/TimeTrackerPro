@@ -1,20 +1,10 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ResponsiveSelect } from "@/components/ui/responsive-select";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MarkdownDisplay } from "@/components/MarkdownDisplay";
 import { Plus } from "lucide-react";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
+import { useTaskTitleField } from "@/hooks/useTaskTitleField";
+import { TaskFormDialog } from "@/components/TaskFormDialog";
+import { NO_SELECTION, TaskFormFields } from "@/components/TaskFormFields";
 
 interface NewTaskFormProps {
   onSubmit: (
@@ -30,40 +20,32 @@ interface NewTaskFormProps {
 
 export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, onCancel, defaultOpen = false }) => {
   const { projects, categories } = useTimeTracking();
-  const [title, setTitle] = useState("");
-  const [titleTouched, setTitleTouched] = useState(false);
+  const titleField = useTaskTitleField();
   const [description, setDescription] = useState("");
-  const [selectedProject, setSelectedProject] = useState<string>("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedProject, setSelectedProject] = useState(NO_SELECTION);
+  const [selectedCategory, setSelectedCategory] = useState(NO_SELECTION);
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
-  const selectedProjectData = projects.find((p) => p.id === selectedProject);
-  const selectedCategoryData = categories.find(
-    (c) => c.id === selectedCategory
-  );
-
   const resetForm = () => {
-    setTitle("");
-    setTitleTouched(false);
+    titleField.reset();
     setDescription("");
-    setSelectedProject("");
-    setSelectedCategory("");
+    setSelectedProject(NO_SELECTION);
+    setSelectedCategory(NO_SELECTION);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setTitleTouched(true);
-    if (title.trim()) {
-      onSubmit(
-        title.trim(),
-        description.trim() || undefined,
-        selectedProjectData?.name,
-        selectedProjectData?.client,
-        selectedCategoryData?.id
-      );
-      resetForm();
-      setIsOpen(false);
-    }
+  const handleSubmit = () => {
+    if (!titleField.validate()) return;
+    const project = projects.find((p) => p.id === selectedProject);
+    const category = categories.find((c) => c.id === selectedCategory);
+    onSubmit(
+      titleField.title.trim(),
+      description.trim() || undefined,
+      project?.name,
+      project?.client,
+      category?.id
+    );
+    resetForm();
+    setIsOpen(false);
   };
 
   const handleCancel = () => {
@@ -71,8 +53,6 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, onCancel, de
     resetForm();
     onCancel?.();
   };
-
-  const titleError = titleTouched && !title.trim() ? "Task title is required." : "";
 
   return (
     <>
@@ -87,139 +67,27 @@ export const NewTaskForm: React.FC<NewTaskFormProps> = ({ onSubmit, onCancel, de
         </Button>
       )}
 
-      <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
-        <DialogContent
-          className="md:max-w-[980px] md:max-h-[90dvh] md:overflow-y-auto"
-        >
-          <DialogHeader>
-            <DialogTitle>Start New Task</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="space-y-1">
-              <Label htmlFor="new-task-title">
-                Task Title <span className="text-destructive" aria-hidden="true">*</span>
-              </Label>
-              <Input
-                id="new-task-title"
-                type="text"
-                autoComplete="off"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={() => setTitleTouched(true)}
-                placeholder="What are you working on?"
-                aria-required="true"
-                aria-invalid={!!titleError}
-                aria-describedby={titleError ? "new-task-title-error" : undefined}
-                autoFocus
-              />
-              {titleError && (
-                <p id="new-task-title-error" className="text-sm text-destructive" role="alert">
-                  {titleError}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <Label>Description</Label>
-                <span className="text-xs text-muted-foreground">Markdown supported</span>
-              </div>
-              <Tabs defaultValue="edit" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="edit">Edit</TabsTrigger>
-                  <TabsTrigger value="preview">Preview</TabsTrigger>
-                </TabsList>
-                <TabsContent value="edit">
-                  <Textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Enter task description (optional, supports Markdown)"
-                    className="w-full min-h-[160px] resize-none"
-                  />
-                </TabsContent>
-                <TabsContent value="preview">
-                  <div className="w-full min-h-[160px] p-3 border rounded-md bg-background">
-                    {description ? (
-                      <MarkdownDisplay content={description} />
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No description to preview</p>
-                    )}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {categories.length > 0 && (
-                <div className="space-y-1">
-                  <Label htmlFor="new-task-category">Category</Label>
-                  <ResponsiveSelect
-                    id="new-task-category"
-                    className="w-full"
-                    aria-label="Select category"
-                    value={selectedCategory}
-                    onValueChange={setSelectedCategory}
-                    placeholder="Select a category"
-                    options={categories.map((category) => ({
-                      value: category.id,
-                      textLabel: category.name,
-                      label: (
-                        <div className="flex items-center space-x-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: category.color }}
-                          />
-                          <span>{category.name}</span>
-                        </div>
-                      ),
-                    }))}
-                  />
-                </div>
-              )}
-
-              {projects.length > 0 && (
-                <div className="space-y-1">
-                  <Label htmlFor="new-task-project">Project</Label>
-                  <ResponsiveSelect
-                    id="new-task-project"
-                    className="w-full"
-                    aria-label="Select project"
-                    value={selectedProject}
-                    onValueChange={setSelectedProject}
-                    placeholder="Select a project"
-                    options={projects.map((project) => ({
-                      value: project.id,
-                      textLabel: `${project.name} (${project.client})`,
-                      label: (
-                        <div className="flex flex-col">
-                          <span>{project.name}</span>
-                          <span className="text-sm text-muted-foreground">
-                            {project.client}
-                          </span>
-                        </div>
-                      ),
-                    }))}
-                  />
-                </div>
-              )}
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={handleCancel}
-                variant="ghost"
-              >
-                Cancel
-              </Button>
-              <Button type="submit" variant="default">
-                Start Task
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <TaskFormDialog
+        open={isOpen}
+        onClose={handleCancel}
+        title="Start New Task"
+        description="Start the timer on a new task now."
+        submitLabel="Start Task"
+        onSubmit={handleSubmit}
+      >
+        <TaskFormFields
+          idPrefix="new-task"
+          titleField={titleField}
+          titlePlaceholder="What are you working on?"
+          description={description}
+          onDescriptionChange={setDescription}
+          descriptionPlaceholder="Optional details, links, checklist items..."
+          category={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          project={selectedProject}
+          onProjectChange={setSelectedProject}
+        />
+      </TaskFormDialog>
     </>
   );
 };

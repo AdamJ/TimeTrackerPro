@@ -4,12 +4,6 @@ import { KanbanBoard } from "@/components/KanbanBoard";
 import { PlannedTaskDialog } from "@/components/PlannedTaskDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { CirclePlay, Plus } from "lucide-react";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import { toast } from "@/hooks/use-toast";
@@ -55,17 +49,10 @@ const TaskList = () => {
       <div className="max-w-7xl mx-auto pt-4 pb-6 px-4 md:p-6">
         <KanbanBoard />
       </div>
-      <Sheet open={showNewTaskSheet} onOpenChange={setShowNewTaskSheet}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>New Task</SheetTitle>
-          </SheetHeader>
-          <PlannedTaskDialog
-            isOpen={showNewTaskSheet}
-            onClose={() => setShowNewTaskSheet(false)}
-          />
-        </SheetContent>
-      </Sheet>
+      <PlannedTaskDialog
+        isOpen={showNewTaskSheet}
+        onClose={() => setShowNewTaskSheet(false)}
+      />
     </PageLayout>
   );
 };
