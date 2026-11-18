@@ -14,6 +14,9 @@ interface KanbanColumnProps {
   isDayStarted: boolean;
   isDayStale: boolean;
   emptyMessage?: string;
+  /** Tasks left out of this column by the board's completed-task range. */
+  hiddenCount?: number;
+  onShowAll?: () => void;
 }
 
 const COLUMN_BADGE_COLORS: Record<PlannedTaskStatus, string> = {
@@ -37,6 +40,8 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   isDayStarted,
   isDayStale,
   emptyMessage = "No tasks",
+  hiddenCount = 0,
+  onShowAll,
 }) => {
   const [showAddSheet, setShowAddSheet] = useState(false);
 
@@ -81,6 +86,17 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
             <p className="text-xs text-muted-foreground text-center py-4">
               {emptyMessage}
             </p>
+          )}
+
+          {hiddenCount > 0 && onShowAll && (
+            <Button
+              variant="link"
+              size="sm"
+              onClick={onShowAll}
+              className="w-full text-xs text-muted-foreground"
+            >
+              Show {hiddenCount} hidden {hiddenCount === 1 ? "task" : "tasks"}
+            </Button>
           )}
         </CardContent>
       </Card>

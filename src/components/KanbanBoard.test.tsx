@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import type { PlannedTask } from "@/contexts/TimeTrackingContext";
@@ -20,9 +20,24 @@ vi.mock("@/hooks/useTimeTracking", () => ({
 let isMobile = true;
 vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => isMobile }));
 vi.mock("@/components/KanbanColumn", () => ({
-  KanbanColumn: ({ title, tasks, emptyMessage }: { title: string; tasks: PlannedTask[]; emptyMessage: string }) => (
+  KanbanColumn: ({
+    title,
+    tasks,
+    emptyMessage,
+    hiddenCount = 0,
+    onShowAll,
+  }: {
+    title: string;
+    tasks: PlannedTask[];
+    emptyMessage: string;
+    hiddenCount?: number;
+    onShowAll?: () => void;
+  }) => (
     <section aria-label={title}>
       {tasks.length === 0 ? emptyMessage : tasks.map((t) => <p key={t.id}>{t.title}</p>)}
+      {hiddenCount > 0 && (
+        <button onClick={onShowAll}>{hiddenCount} older hidden, show all</button>
+      )}
     </section>
   ),
 }));
@@ -178,6 +193,90 @@ describe("KanbanBoard", () => {
       expect(screen.queryByRole("tab")).not.toBeInTheDocument();
       expect(screen.getByText("Todo task")).toBeInTheDocument();
       expect(screen.getByText("Doing task")).toBeInTheDocument();
+    });
+  });
+  describe("completed tasks", () => {
+    const daysAgo = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
+
+    beforeEach(() => {
+      isMobile = false;
+      plannedTasks = [
+        makeTask({ id: "a", title: "Open task", status: "todo", updatedAt: daysAgo(90) }),
+        makeTask({ id: "b", title: "Done today", status: "done", updatedAt: daysAgo(0) }),
+        makeTask({ id: "c", title: "Done 10 days ago", status: "done", updatedAt: daysAgo(10) }),
+        makeTask({ id: "d", title: "Done 60 days ago", status: "done", updatedAt: daysAgo(60) }),
+      ];
+    });
+
+    const saveDoneRange = (doneRange: string) =>
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ doneRange }));
+
+    const doneColumn = () => within(screen.getByRole("region", { name: "Done" }));
+
+    it("hides done tasks older than 30 days by default but never touches other columns", () => {
+      render(<KanbanBoard />);
+      expect(screen.getByText("Open task")).toBeInTheDocument();
+      expect(screen.getByText("Done today")).toBeInTheDocument();
+      expect(screen.getByText("Done 10 days ago")).toBeInTheDocument();
+      expect(screen.queryByText("Done 60 days ago")).not.toBeInTheDocument();
+    });
+
+    it("tells the Done column how many older tasks are hidden and can reveal them", async () => {
+      const user = userEvent.setup();
+      render(<KanbanBoard />);
+      await user.click(doneColumn().getByRole("button", { name: "1 older hidden, show all" }));
+      expect(screen.getByText("Done 60 days ago")).toBeInTheDocument();
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).doneRange).toBe("all");
+    });
+
+    it("changes the range from the control", async () => {
+      isMobile = true;
+      const user = userEvent.setup();
+      render(<KanbanBoard />);
+      await user.selectOptions(screen.getByLabelText("Show completed tasks"), "hide");
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).doneRange).toBe("hide");
+      expect(screen.getByRole("tab", { name: /Done\s*0/ })).toBeInTheDocument();
+    });
+
+    it("limits to the last 7 days", () => {
+      saveDoneRange("7d");
+      render(<KanbanBoard />);
+      expect(screen.getByText("Done today")).toBeInTheDocument();
+      expect(screen.queryByText("Done 10 days ago")).not.toBeInTheDocument();
+      expect(doneColumn().getByText("2 older hidden, show all")).toBeInTheDocument();
+    });
+
+    it("hides every completed task", () => {
+      saveDoneRange("hide");
+      render(<KanbanBoard />);
+      expect(screen.queryByText("Done today")).not.toBeInTheDocument();
+      expect(screen.getByText("Open task")).toBeInTheDocument();
+      expect(doneColumn().getByText("3 older hidden, show all")).toBeInTheDocument();
+    });
+
+    it("shows everything when set to all", () => {
+      saveDoneRange("all");
+      render(<KanbanBoard />);
+      expect(screen.getByText("Done 60 days ago")).toBeInTheDocument();
+      expect(screen.queryByText(/older hidden/)).not.toBeInTheDocument();
+    });
+
+    it("does not report a filtered-out board when only done tasks are hidden", () => {
+      plannedTasks = [makeTask({ id: "d", status: "done", updatedAt: daysAgo(60) })];
+      render(<KanbanBoard />);
+      expect(screen.queryByText("No tasks match the current filters.")).not.toBeInTheDocument();
+    });
+
+    it("counts only visible done tasks on the mobile Done tab", () => {
+      isMobile = true;
+      render(<KanbanBoard />);
+      expect(screen.getByRole("tab", { name: /Done\s*2/ })).toBeInTheDocument();
+    });
+
+    it("treats a done task with an unparseable date as recent rather than losing it", () => {
+      plannedTasks = [makeTask({ id: "x", title: "Odd date", status: "done", updatedAt: "not-a-date" })];
+      render(<KanbanBoard />);
+      expect(screen.getByText("Odd date")).toBeInTheDocument();
     });
   });
 });

@@ -5,6 +5,11 @@ export type TaskSortOption = "title" | "newest" | "oldest";
 
 const SORT_OPTIONS: TaskSortOption[] = ["title", "newest", "oldest"];
 
+/** How far back completed tasks stay on the board; older ones are hidden, not deleted. */
+export type DoneRange = "hide" | "7d" | "30d" | "all";
+
+const DONE_RANGES: DoneRange[] = ["hide", "7d", "30d", "all"];
+
 export interface TaskBoardFilters {
   project: string;
   client: string;
@@ -18,6 +23,7 @@ export interface TaskBoardViewState {
   filters: TaskBoardFilters;
   /** Status tab shown on phones, where the board is one column at a time. */
   activeStatus: PlannedTaskStatus;
+  doneRange: DoneRange;
 }
 
 const STORAGE_KEY = "timetracker_task_board_view";
@@ -32,6 +38,7 @@ const DEFAULT_STATE: TaskBoardViewState = {
   sortBy: "oldest",
   filters: DEFAULT_FILTERS,
   activeStatus: "todo",
+  doneRange: "30d",
 };
 
 // Older saves may hold the removed "priority" sort; nothing ever set a
@@ -48,6 +55,12 @@ function readActiveStatus(value: unknown): PlannedTaskStatus {
     : DEFAULT_STATE.activeStatus;
 }
 
+function readDoneRange(value: unknown): DoneRange {
+  return DONE_RANGES.includes(value as DoneRange)
+    ? (value as DoneRange)
+    : DEFAULT_STATE.doneRange;
+}
+
 function readState(): TaskBoardViewState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -57,6 +70,7 @@ function readState(): TaskBoardViewState {
       sortBy: readSortBy(parsed.sortBy),
       filters: { ...DEFAULT_FILTERS, ...parsed.filters },
       activeStatus: readActiveStatus(parsed.activeStatus),
+      doneRange: readDoneRange(parsed.doneRange),
     };
   } catch {
     return DEFAULT_STATE;
@@ -99,6 +113,11 @@ export function useTaskBoardView() {
     [update],
   );
 
+  const setDoneRange = useCallback(
+    (doneRange: DoneRange) => update((prev) => ({ ...prev, doneRange })),
+    [update],
+  );
+
   const setFilters = useCallback(
     (changes: Partial<TaskBoardFilters>) =>
       update((prev) => ({ ...prev, filters: { ...prev.filters, ...changes } })),
@@ -124,9 +143,11 @@ export function useTaskBoardView() {
     sortBy: state.sortBy,
     filters: state.filters,
     activeStatus: state.activeStatus,
+    doneRange: state.doneRange,
     hasActiveFilters,
     setSortBy,
     setActiveStatus,
+    setDoneRange,
     setFilter,
     setFilters,
     clearFilters,

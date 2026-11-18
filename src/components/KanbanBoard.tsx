@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { PlannedTask, PlannedTaskStatus } from "@/contexts/TimeTrackingContext";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
 import {
+  DoneRange,
   TaskBoardFilters,
   TaskSortOption,
   useTaskBoardView,
@@ -37,6 +38,24 @@ function toFilterOptions(
     .sort((a, b) => a.label.localeCompare(b.label));
 }
 
+const DONE_RANGE_DAYS: Record<DoneRange, number> = {
+  hide: 0,
+  "7d": 7,
+  "30d": 30,
+  all: Infinity,
+};
+
+// Tasks carry no completion timestamp, so the last update stands in for it: a
+// task moved to Done isn't touched again unless someone edits it. An unreadable
+// date counts as recent so a bad value never makes a task vanish.
+function isHiddenByDoneRange(task: PlannedTask, range: DoneRange, now: number) {
+  if (task.status !== "done" || range === "all") return false;
+  if (range === "hide") return true;
+  const updated = Date.parse(task.updatedAt);
+  if (Number.isNaN(updated)) return false;
+  return now - updated > DONE_RANGE_DAYS[range] * 86_400_000;
+}
+
 function sortTasks(tasks: PlannedTask[], sortBy: TaskSortOption) {
   const sorted = [...tasks];
   switch (sortBy) {
@@ -57,9 +76,11 @@ export const KanbanBoard: React.FC = () => {
     sortBy,
     filters,
     activeStatus,
+    doneRange,
     setActiveStatus,
     hasActiveFilters,
     setSortBy,
+    setDoneRange,
     setFilter,
     setFilters,
     clearFilters,
@@ -101,7 +122,7 @@ export const KanbanBoard: React.FC = () => {
     if (Object.keys(stale).length > 0) setFilters(stale);
   }, [loading, filters, projectOptions, clientOptions, categoryOptions, setFilters]);
 
-  const visibleTasks = useMemo(
+  const matchingTasks = useMemo(
     () =>
       plannedTasks.filter(
         (t) =>
@@ -111,6 +132,17 @@ export const KanbanBoard: React.FC = () => {
       ),
     [plannedTasks, filters],
   );
+
+  const { visibleTasks, hiddenDoneCount } = useMemo(() => {
+    const now = Date.now();
+    const visible = matchingTasks.filter(
+      (t) => !isHiddenByDoneRange(t, doneRange, now),
+    );
+    return {
+      visibleTasks: visible,
+      hiddenDoneCount: matchingTasks.length - visible.length,
+    };
+  }, [matchingTasks, doneRange]);
 
   const tasksByStatus = (status: PlannedTaskStatus) =>
     sortTasks(visibleTasks.filter((t) => t.status === status), sortBy);
@@ -140,11 +172,12 @@ export const KanbanBoard: React.FC = () => {
   });
 
   const filteredOutEverything =
-    hasActiveFilters && visibleTasks.length === 0 && plannedTasks.length > 0;
+    hasActiveFilters && matchingTasks.length === 0 && plannedTasks.length > 0;
 
   const controls = (
     <KanbanBoardControls
       sortBy={sortBy}
+      doneRange={doneRange}
       filters={filters}
       projectOptions={projectOptions}
       clientOptions={clientOptions}
@@ -153,6 +186,7 @@ export const KanbanBoard: React.FC = () => {
       visibleCount={visibleTasks.length}
       totalCount={plannedTasks.length}
       onSortChange={setSortBy}
+      onDoneRangeChange={setDoneRange}
       onFilterChange={setFilter}
       onClearFilters={clearFilters}
     />
@@ -219,6 +253,8 @@ export const KanbanBoard: React.FC = () => {
                 isDayStarted={isDayStarted}
                 isDayStale={isDayStale}
                 emptyMessage={emptyMessage}
+                hiddenCount={status === "done" ? hiddenDoneCount : 0}
+                onShowAll={() => setDoneRange("all")}
               />
             </TabsContent>
           ))}
@@ -241,6 +277,8 @@ export const KanbanBoard: React.FC = () => {
             isDayStarted={isDayStarted}
             isDayStale={isDayStale}
             emptyMessage={emptyMessage}
+            hiddenCount={status === "done" ? hiddenDoneCount : 0}
+            onShowAll={() => setDoneRange("all")}
           />
         ))}
       </div>

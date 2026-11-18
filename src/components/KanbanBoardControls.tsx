@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/responsive-select";
 import { X } from "lucide-react";
 import {
+  DoneRange,
   TaskBoardFilters,
   TaskSortOption,
 } from "@/hooks/useTaskBoardView";
@@ -16,6 +17,13 @@ const SORT_OPTIONS: ResponsiveSelectOption[] = [
   { value: "title", label: "Title (A–Z)" },
 ];
 
+const DONE_RANGE_OPTIONS: ResponsiveSelectOption[] = [
+  { value: "7d", label: "Done: last 7 days" },
+  { value: "30d", label: "Done: last 30 days" },
+  { value: "all", label: "Done: all" },
+  { value: "hide", label: "Done: hidden" },
+];
+
 export interface FilterOption {
   value: string;
   label: string;
@@ -23,6 +31,7 @@ export interface FilterOption {
 
 interface KanbanBoardControlsProps {
   sortBy: TaskSortOption;
+  doneRange: DoneRange;
   filters: TaskBoardFilters;
   projectOptions: FilterOption[];
   clientOptions: FilterOption[];
@@ -31,6 +40,7 @@ interface KanbanBoardControlsProps {
   visibleCount: number;
   totalCount: number;
   onSortChange: (value: TaskSortOption) => void;
+  onDoneRangeChange: (value: DoneRange) => void;
   onFilterChange: (key: keyof TaskBoardFilters, value: string) => void;
   onClearFilters: () => void;
 }
@@ -41,6 +51,7 @@ function withAll(options: FilterOption[], allLabel: string): ResponsiveSelectOpt
 
 export const KanbanBoardControls: React.FC<KanbanBoardControlsProps> = ({
   sortBy,
+  doneRange,
   filters,
   projectOptions,
   clientOptions,
@@ -49,6 +60,7 @@ export const KanbanBoardControls: React.FC<KanbanBoardControlsProps> = ({
   visibleCount,
   totalCount,
   onSortChange,
+  onDoneRangeChange,
   onFilterChange,
   onClearFilters,
 }) => {
@@ -81,6 +93,13 @@ export const KanbanBoardControls: React.FC<KanbanBoardControlsProps> = ({
         options={withAll(categoryOptions, "All categories")}
         aria-label="Filter by category"
         className="w-full md:w-[160px]"
+      />
+      <ResponsiveSelect
+        value={doneRange}
+        onValueChange={(value) => onDoneRangeChange(value as DoneRange)}
+        options={DONE_RANGE_OPTIONS}
+        aria-label="Show completed tasks"
+        className="w-full md:w-[180px]"
       />
       {hasActiveFilters && (
         <>
