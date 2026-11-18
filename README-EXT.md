@@ -577,7 +577,7 @@ To add a new theme color: add the HSL value to `:root`/`.dark`, then map it in `
 
 ### Dependencies
 
-Direct dependencies are pinned to exact versions in `package.json`, and `saveExact: true` in `pnpm-workspace.yaml` makes `pnpm add` pin too, so `pnpm update` leaves them alone. Bump one deliberately with `pnpm add <pkg>@<version>` (choose a release at least 30 days old) and commit `package.json` and `pnpm-lock.yaml` together. `pnpm update` can still move transitive dependencies inside the lockfile, and `pnpm update --latest` rewrites the pins, so review lockfile diffs before committing.
+Direct dependencies are pinned to exact versions in `package.json`, and `saveExact: true` in `pnpm-workspace.yaml` makes `pnpm add` pin too, so `pnpm update` leaves them alone. Bump one deliberately with `pnpm add <pkg>@<version>` and commit `package.json` and `pnpm-lock.yaml` together. `minimumReleaseAge: 43200` (30 days, in minutes) in the same file also stops pnpm resolving any release younger than 30 days, direct or transitive, so `pnpm add` and `pnpm update` can only reach releases that have had a month in the registry. `minimumReleaseAgeExclude` lists exact versions that were already locked when the policy was added; remove each once it is 30 days old. `pnpm update` can still move transitive dependencies inside the lockfile (to releases at least 30 days old), and `pnpm update --latest` rewrites the pins, so review lockfile diffs before committing.
 
 ### Git Workflow
 

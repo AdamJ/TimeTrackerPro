@@ -28,8 +28,9 @@ pnpm add <pkg>@<version>   # bump or add one dependency on purpose (pinned autom
 pnpm outdated              # see what newer releases exist
 ```
 
-- Choose a release that is at least 30 days old, and commit `package.json` and `pnpm-lock.yaml` together.
-- `pnpm update` can still move transitive dependencies within their parents' ranges, and `pnpm update --latest` rewrites the pins; check the lockfile diff before committing either.
+- `minimumReleaseAge: 43200` (30 days, in minutes) in `pnpm-workspace.yaml` makes pnpm refuse to resolve any release younger than that, for direct and transitive dependencies, including `pnpm update`. Asking for a younger version fails with `ERR_PNPM_NO_MATCHING_VERSION`; wait until it is 30 days old. Commit `package.json` and `pnpm-lock.yaml` together.
+- `minimumReleaseAgeExclude` lists exact versions that were already in the lockfile when the policy was added (including the four security-floor overrides). Delete an entry once that release is 30 days old; do not add entries to force an install through. If `pnpm install` fails with `ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`, a locked version is younger than the policy, so inspect the lockfile change that introduced it.
+- `pnpm update` can still move transitive dependencies within their parents' ranges (only to releases at least 30 days old), and `pnpm update --latest` rewrites the pins; check the lockfile diff before committing either.
 - The `overrides` in `pnpm-workspace.yaml` are security floors (for example `body-parser: ">=2.4.0"`), so they are intentionally ranges.
 
 ## Available Commands
